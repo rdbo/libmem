@@ -138,6 +138,13 @@
 #define _MEM_DETOUR_METHOD5    _MEM_CALL, _MEM_DWORD
 #endif
 
+#define MEM_DETOUR_INT_METHOD0 0
+#define MEM_DETOUR_INT_METHOD1 1
+#define MEM_DETOUR_INT_METHOD2 2
+#define MEM_DETOUR_INT_METHOD3 3
+#define MEM_DETOUR_INT_METHOD4 4
+#define MEM_DETOUR_INT_METHOD5 5
+
 //Other
 #define mem_false 0
 #define mem_true  1
@@ -233,29 +240,108 @@ typedef struct _mem_string_t
 {
     mem_bool_t  is_initialized;
     mem_char_t* buffer;
-    mem_void_t(*clear)(struct _mem_string_t* strptr);
-    mem_size_t(*size)(struct _mem_string_t* strptr);
-    mem_void_t(*resize)(struct _mem_string_t* strptr, mem_size_t size);
-    mem_size_t(*length)(struct _mem_string_t* strptr);
-    mem_char_t*(*begin)(struct _mem_string_t* strptr);
-    mem_char_t*(*end)(struct _mem_string_t* strptr);
-    mem_size_t(*find)(struct _mem_string_t* strptr, const mem_char_t* substr);
-    mem_void_t(*str)(struct _mem_string_t* strptr, const mem_char_t* new_str);
-    mem_char_t*(*c_str)(struct _mem_string_t* strptr);
-    struct _mem_string_t(*substr)(struct _mem_string_t* strptr, mem_size_t start, mem_size_t end);
+    mem_void_t(*clear)(struct _mem_string_t* p_string);
+    mem_size_t(*size)(struct _mem_string_t* p_string);
+    mem_void_t(*resize)(struct _mem_string_t* p_string, mem_size_t size);
+    mem_size_t(*length)(struct _mem_string_t* p_string);
+    mem_char_t*(*begin)(struct _mem_string_t* p_string);
+    mem_char_t*(*end)(struct _mem_string_t* p_string);
+    mem_size_t(*find)(struct _mem_string_t* p_string, const mem_char_t* substr);
+    mem_void_t(*value)(struct _mem_string_t* p_string, const mem_char_t* new_str);
+    mem_char_t*(*c_str)(struct _mem_string_t* p_string);
+    mem_bool_t(*compare)(struct _mem_string_t* p_string, struct _mem_string_t str);
+    struct _mem_string_t(*substr)(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 }mem_string_t;
 
 struct _mem_string_t mem_string_init();
-mem_void_t           mem_string_clear(struct _mem_string_t* strptr);
-mem_size_t           mem_string_size  (struct _mem_string_t* strptr);
-mem_void_t           mem_string_resize(struct _mem_string_t* strptr, mem_size_t size);
-mem_size_t           mem_string_length(struct _mem_string_t* strptr);
-mem_char_t*          mem_string_begin (struct _mem_string_t* strptr);
-mem_char_t*          mem_string_end   (struct _mem_string_t* strptr);
-mem_size_t           mem_string_find  (struct _mem_string_t* strptr, const mem_char_t* substr);
-mem_void_t           mem_string_str   (struct _mem_string_t* strptr, const mem_char_t* new_str);
-mem_char_t*          mem_string_c_str (struct _mem_string_t* strptr);
-struct _mem_string_t mem_string_substr(struct _mem_string_t* strptr, mem_size_t start, mem_size_t end);
+mem_void_t           mem_string_clear (struct _mem_string_t* p_string);
+mem_size_t           mem_string_size   (struct _mem_string_t* p_string);
+mem_void_t           mem_string_resize (struct _mem_string_t* p_string, mem_size_t size);
+mem_size_t           mem_string_length (struct _mem_string_t* p_string);
+mem_char_t*          mem_string_begin  (struct _mem_string_t* p_string);
+mem_char_t*          mem_string_end    (struct _mem_string_t* p_string);
+mem_size_t           mem_string_find   (struct _mem_string_t* p_string, const mem_char_t* substr);
+mem_void_t           mem_string_value  (struct _mem_string_t* p_string, const mem_char_t* new_str);
+mem_char_t*          mem_string_c_str  (struct _mem_string_t* p_string);
+mem_bool_t           mem_string_compare(struct _mem_string_t* p_string, struct _mem_string_t str);
+struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 
+//mem_process_t
+
+typedef struct _mem_process_t
+{
+    mem_bool_t   is_initialized;
+    mem_string_t name;
+    mem_pid_t    pid;
+#   if defined(MEM_WIN)
+    HANDLE       handle;
+#   elif defined(MEM_LINUX)
+#   endif
+    mem_bool_t(* is_valid)(struct _mem_process_t* p_process);
+    mem_bool_t(* compare)(struct _mem_process_t* p_process, struct _mem_process_t process);
+}mem_process_t;
+
+struct _mem_process_t mem_process_init();
+mem_bool_t            mem_process_is_valid(struct _mem_process_t* p_process);
+mem_bool_t            mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process);
+
+//mem_module_t
+
+typedef struct _mem_module_t
+{
+    mem_bool_t is_initialized;
+    mem_string_t name;
+    mem_string_t path;
+    mem_voidptr_t base;
+    mem_voidptr_t end;
+    mem_uintptr_t size;
+    mem_bool_t(* is_valid)(struct _mem_module_t* p_mod);
+    mem_bool_t(* compare)(struct _mem_module_t* p_mod, struct _mem_module_t mod);
+}mem_module_t;
+
+struct _mem_module_t mem_module_init();
+mem_bool_t           mem_module_is_valid(struct _mem_module_t* p_mod);
+mem_bool_t           mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t mod);
+
+//mem_alloc_t
+
+typedef struct _mem_alloc_t
+{
+    mem_bool_t is_initialized;
+    mem_prot_t protection;
+    mem_alloc_type_t type;
+    mem_bool_t(* is_valid)(struct _mem_alloc_t* p_alloc);
+}mem_alloc_t;
+
+struct _mem_alloc_t mem_alloc_init();
+mem_bool_t          mem_alloc_is_valid(struct _mem_alloc_t* p_alloc);
+
+//mem_lib_t
+
+typedef struct _mem_lib_t
+{
+    mem_bool_t is_initialized;
+    mem_string_t path;
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+    mem_int_t    mode;
+#   endif
+    mem_bool_t(* is_valid)(struct _mem_lib_t* p_lib);
+}mem_lib_t;
+
+struct _mem_lib_t mem_lib_init();
+mem_bool_t        mem_lib_is_valid(struct _mem_lib_t* p_lib);
+
+typedef enum _mem_detour_int_t
+{
+    method0 = MEM_DETOUR_INT_METHOD0,
+    method1 = MEM_DETOUR_INT_METHOD1,
+    method2 = MEM_DETOUR_INT_METHOD2,
+    method3 = MEM_DETOUR_INT_METHOD3,
+    method4 = MEM_DETOUR_INT_METHOD4,
+    method5 = MEM_DETOUR_INT_METHOD5
+}mem_detour_int_t;
+
+//libmem
 #endif //MEM_COMPATIBLE
 #endif //MEM

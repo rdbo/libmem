@@ -165,6 +165,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #if defined(MEM_WIN)
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -181,6 +182,7 @@
 #include <sys/uio.h>
 #include <dlfcn.h>
 #include <link.h>
+#include <fcntl.h>
 #endif
 
 typedef enum { False = 0, True = 1 } mem_bool_t;
@@ -240,31 +242,40 @@ typedef struct _mem_string_t
 {
     mem_bool_t  is_initialized;
     mem_char_t* buffer;
-    mem_void_t(*clear)(struct _mem_string_t* p_string);
-    mem_size_t(*size)(struct _mem_string_t* p_string);
-    mem_void_t(*resize)(struct _mem_string_t* p_string, mem_size_t size);
-    mem_size_t(*length)(struct _mem_string_t* p_string);
-    mem_char_t*(*begin)(struct _mem_string_t* p_string);
-    mem_char_t*(*end)(struct _mem_string_t* p_string);
-    mem_size_t(*find)(struct _mem_string_t* p_string, const mem_char_t* substr);
-    mem_void_t(*value)(struct _mem_string_t* p_string, const mem_char_t* new_str);
-    mem_char_t*(*c_str)(struct _mem_string_t* p_string);
-    mem_bool_t(*compare)(struct _mem_string_t* p_string, struct _mem_string_t str);
-    struct _mem_string_t(*substr)(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
+    mem_void_t(* clear)(struct _mem_string_t* p_string);
+    mem_void_t(* empty)(struct _mem_string_t* p_string);
+    mem_size_t(* size)(struct _mem_string_t* p_string);
+    mem_void_t(* resize)(struct _mem_string_t* p_string, mem_size_t size);
+    mem_size_t(* length)(struct _mem_string_t* p_string);
+    mem_char_t*(* begin)(struct _mem_string_t* p_string);
+    mem_char_t*(* end)(struct _mem_string_t* p_string);
+    mem_size_t(* find)(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+    mem_size_t(* rfind)(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+    mem_char_t(* at)(struct _mem_string_t* p_string, mem_size_t pos);
+    mem_void_t(* value)(struct _mem_string_t* p_string, const mem_char_t* new_str);
+    mem_void_t(* c_set)(struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
+    mem_char_t*(* c_str)(struct _mem_string_t* p_string);
+    mem_bool_t(* compare)(struct _mem_string_t* p_string, struct _mem_string_t str);
+    struct _mem_string_t(* substr)(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 }mem_string_t;
 
 struct _mem_string_t mem_string_init();
-mem_void_t           mem_string_clear (struct _mem_string_t* p_string);
+struct _mem_string_t mem_string_new(const mem_char_t* c_string);
+mem_void_t           mem_string_clear  (struct _mem_string_t* p_string);
+mem_void_t           mem_string_empty  (struct _mem_string_t* p_string);
 mem_size_t           mem_string_size   (struct _mem_string_t* p_string);
 mem_void_t           mem_string_resize (struct _mem_string_t* p_string, mem_size_t size);
 mem_size_t           mem_string_length (struct _mem_string_t* p_string);
 mem_char_t*          mem_string_begin  (struct _mem_string_t* p_string);
 mem_char_t*          mem_string_end    (struct _mem_string_t* p_string);
-mem_size_t           mem_string_find   (struct _mem_string_t* p_string, const mem_char_t* substr);
+mem_size_t           mem_string_find   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+mem_size_t           mem_string_rfind  (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+mem_char_t           mem_string_at     (struct _mem_string_t* p_string, mem_size_t pos);
 mem_void_t           mem_string_value  (struct _mem_string_t* p_string, const mem_char_t* new_str);
 mem_char_t*          mem_string_c_str  (struct _mem_string_t* p_string);
+mem_void_t           mem_string_c_set  (struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
 mem_bool_t           mem_string_compare(struct _mem_string_t* p_string, struct _mem_string_t str);
-struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
+struct _mem_string_t mem_string_substr (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 
 //mem_process_t
 
@@ -342,6 +353,25 @@ typedef enum _mem_detour_int_t
     method5 = MEM_DETOUR_INT_METHOD5
 }mem_detour_int_t;
 
+
 //libmem
+
+mem_string_t  mem_parse_mask(mem_string_t mask);
+
+//ex
+mem_pid_t     mem_ex_get_pid(mem_string_t process_name);
+mem_process_t mem_ex_get_process(mem_pid_t pid);
+mem_string_t  mem_ex_get_process_name(mem_pid_t pid);
+mem_module_t  mem_ex_get_module(mem_process_t process, mem_string_t module_name);
+mem_bool_t    mem_ex_is_process_running(mem_process_t process);
+mem_int_t     mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
+mem_int_t     mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t data, mem_size_t size);
+mem_int_t     mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t byte, mem_size_t size);
+mem_int_t     mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection);
+mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end);
+mem_int_t     mem_ex_load_library(mem_process_t process, mem_lib_t lib);
+
+//in
+
 #endif //MEM_COMPATIBLE
 #endif //MEM

@@ -30,7 +30,9 @@ const mem_byte_t MEM_MOV_REGAX[]  = ASM_GENERATE(_MEM_MOVABS_RAX);
 struct _mem_string_t mem_string_init()
 {
     struct _mem_string_t _string;
-    _string.buffer         = (mem_char_t*)MEM_STR("");
+    mem_size_t _size = sizeof(MEM_STR(""));
+    _string.buffer         = (mem_char_t*)malloc(_size);
+    memset(_string.buffer, '\0', _size);
     _string.clear          = &mem_string_clear;
     _string.empty          = &mem_string_empty;
     _string.size           = &mem_string_size;
@@ -88,6 +90,7 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
     mem_size_t old_size = mem_string_size(p_string);
     memcpy((void*)_buffer, (void*)p_string->buffer, (size_t)(size > old_size ? old_size : size));
     _buffer[size - 1] = MEM_STR('\0');
+    free(p_string->buffer);
     p_string->buffer = _buffer;
 }
 
@@ -110,11 +113,11 @@ mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* sub
 {
     mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
     if(p_string->is_initialized != mem_true) return ret;
-    mem_size_t str_len    = mem_string_length(p_string);
+    mem_size_t str_len    = mem_string_length(p_string) + 1;
     mem_size_t substr_len = MEM_STR_LEN(substr);
-    for(; offset + substr_len <= str_len + 1; offset++)
+    for(; offset + substr_len <= str_len; offset++)
     {
-        if(!MEM_STR_N_CMP(p_string->buffer + offset, substr, substr_len))
+        if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + offset), substr, substr_len))
         {
             ret = offset;
             break;
@@ -128,11 +131,11 @@ mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* su
 {
     mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
     if(p_string->is_initialized != mem_true) return ret;
-    mem_size_t str_len    = mem_string_length(p_string);
+    mem_size_t str_len    = mem_string_length(p_string) + 1;
     mem_size_t substr_len = MEM_STR_LEN(substr);
-    for(; offset - substr_len >= 0; offset--)
+    for(; str_len > substr_len && offset > 0; offset--)
     {
-        if(!MEM_STR_N_CMP(p_string->buffer + offset, substr, substr_len))
+        if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + offset), substr, substr_len))
         {
             ret = offset;
             break;
@@ -152,7 +155,14 @@ mem_char_t mem_string_at(struct _mem_string_t* p_string, mem_size_t pos)
 
 mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* new_str)
 {
-    p_string->buffer = (mem_char_t*)new_str;
+    mem_size_t size = MEM_STR_LEN(new_str) + 1;
+    if(size < 1) return;
+    mem_char_t* _buffer = (mem_char_t*)malloc(size);
+    memcpy(_buffer, new_str, size - 1);
+    _buffer[size] = MEM_STR('\0');
+    free(p_string->buffer);
+    *p_string = mem_string_init();
+    p_string->buffer = _buffer;
 }
 
 mem_char_t* mem_string_c_str(struct _mem_string_t* p_string)
@@ -177,10 +187,10 @@ struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_
     mem_size_t size = end - start;
     if(end > start && mem_string_length(p_string) > size)
     {
-        mem_size_t buffer_size = size * sizeof(mem_char_t) + 1;
+        mem_size_t buffer_size = size * sizeof(mem_char_t);
         mem_char_t* _buffer = (mem_char_t*)malloc(buffer_size);
-        memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start), (size_t)size);
-        _buffer[buffer_size - 1] = MEM_STR('\0');
+        memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start), (size_t)size + 1);
+        _buffer[buffer_size] = MEM_STR('\0');
         new_str.buffer = _buffer;
     }
 
@@ -202,7 +212,6 @@ struct _mem_process_t mem_process_init()
 
 mem_bool_t mem_process_is_valid(struct _mem_process_t* p_process)
 {
-    mem_string_t str = mem_string_init();
     return (mem_bool_t)(
         p_process->is_initialized == mem_true &&
         MEM_STR_CMP(mem_string_c_str(&p_process->name), MEM_STR("")) &&
@@ -396,18 +405,26 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
     CloseHandle(hSnap);
 #   elif defined(MEM_LINUX)
     char path_buffer[64];
-	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", pid);
-	int fd = open(path_buffer, O_RDONLY);
+    snprintf(path_buffer, sizeof(path_buffer) - 1, "/proc/%i/maps", pid);
+    int fd = open(path_buffer, O_RDONLY);
     if(fd == -1) return process_name;
-    size_t file_size  = lseek(fd, 0, SEEK_END);
-    char* file_buffer = (char*)malloc(file_size + 1);
-    lseek(fd, 0, SEEK_SET);
-    read(fd, file_buffer, file_size);
-    file_buffer[file_size] = '\0';
+    mem_string_t file_buffer = mem_string_init();
+    mem_size_t   file_size   = 1;
+    int read_check = 0;
+    for(char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
+    {
+        mem_string_resize(&file_buffer, file_size);
+        mem_string_c_set(&file_buffer,  file_size, c);
+        if(mem_string_at(&file_buffer, file_size) == '\n') break;
+    }
 
-    mem_string_t file_buffer_str = mem_string_init();
-    mem_string_empty(&file_buffer_str);
-    free(file_buffer);
+    mem_size_t process_name_end = mem_string_find(&file_buffer, "\n", 0);
+    mem_size_t process_name_pos = mem_string_rfind(&file_buffer, "/", process_name_end) + 1;
+    if(process_name_end == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)(MEM_BAD_RETURN + 1)) return process_name;
+    mem_string_empty(&process_name);
+    process_name = mem_string_substr(&file_buffer, process_name_pos, process_name_end);
+    mem_string_empty(&file_buffer);
+    close(fd);
 #   endif
     return process_name;
 }

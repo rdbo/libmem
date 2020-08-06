@@ -146,8 +146,6 @@
 #define MEM_DETOUR_INT_METHOD5 5
 
 //Other
-#define mem_false 0
-#define mem_true  1
 #define MEM_BAD_RETURN         -1
 #define MEM_RETURN             !MEM_BAD_RETURN
 #define MEM_KNOWN_BYTE         MEM_STR('x')
@@ -173,8 +171,8 @@
 #elif defined(MEM_LINUX)
 #include <dirent.h>
 #include <errno.h>
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
@@ -185,56 +183,56 @@
 #include <fcntl.h>
 #endif
 
-typedef enum { False = 0, True = 1 } mem_bool_t;
-typedef int                          mem_int_t;
-typedef void                         mem_void_t;
+typedef enum { mem_false = 0, mem_true = 1 } mem_bool_t;
+typedef int                                  mem_int_t;
+typedef void                                 mem_void_t;
 
-typedef char                         mem_int8_t;
-typedef short                        mem_int16_t;
-typedef int                          mem_int32_t;
-typedef long long                    mem_int64_t;
+typedef char                                 mem_int8_t;
+typedef short                                mem_int16_t;
+typedef int                                  mem_int32_t;
+typedef long long                            mem_int64_t;
 
-typedef unsigned char                mem_uint8_t;
-typedef unsigned short               mem_uint16_t;
-typedef unsigned int                 mem_uint32_t;
-typedef unsigned long long           mem_uint64_t;
+typedef unsigned char                        mem_uint8_t;
+typedef unsigned short                       mem_uint16_t;
+typedef unsigned int                         mem_uint32_t;
+typedef unsigned long long                   mem_uint64_t;
 
 #if defined(MEM_WIN)
-typedef mem_uint32_t                 mem_pid_t;
-typedef mem_uint32_t                 mem_prot_t;
-typedef HMODULE                      mem_module_handle_t;
-typedef mem_uint32_t                 mem_alloc_type_t;
+typedef mem_uint32_t                         mem_pid_t;
+typedef mem_uint32_t                         mem_prot_t;
+typedef HMODULE                              mem_module_handle_t;
+typedef mem_uint32_t                         mem_alloc_type_t;
 #elif defined(MEM_LINUX)
-typedef mem_int32_t                  mem_pid_t;
-typedef mem_int32_t                  mem_prot_t;
-typedef void*                        mem_module_handle_t;
-typedef mem_int32_t                  mem_alloc_type_t;
+typedef mem_int32_t                          mem_pid_t;
+typedef mem_int32_t                          mem_prot_t;
+typedef void*                                mem_module_handle_t;
+typedef mem_int32_t                          mem_alloc_type_t;
 #endif
 
 #if defined(MEM_86)
-typedef mem_int32_t                  mem_intptr_t;
-typedef mem_uint32_t                 mem_uintptr_t;
+typedef mem_int32_t                          mem_intptr_t;
+typedef mem_uint32_t                         mem_uintptr_t;
 #elif defined(MEM_64)
-typedef mem_int64_t                  mem_intptr_t;
-typedef mem_uint64_t                 mem_uintptr_t;
+typedef mem_int64_t                          mem_intptr_t;
+typedef mem_uint64_t                         mem_uintptr_t;
 #endif
 
-typedef mem_uint8_t                  mem_byte_t;
-typedef mem_uint16_t                 mem_word_t;
-typedef mem_uint32_t                 mem_dword_t;
-typedef mem_uint64_t                 mem_qword_t;
+typedef mem_uint8_t                          mem_byte_t;
+typedef mem_uint16_t                         mem_word_t;
+typedef mem_uint32_t                         mem_dword_t;
+typedef mem_uint64_t                         mem_qword_t;
 
-typedef mem_int16_t                  mem_wchar_t;
+typedef mem_int16_t                          mem_wchar_t;
 #if defined(MEM_UCS)
-typedef mem_wchar_t                  mem_char_t;
+typedef mem_wchar_t                          mem_char_t;
 #elif defined(MEM_MBCS)
-typedef char                         mem_char_t;
+typedef char                                 mem_char_t;
 #endif
 
-typedef mem_byte_t*                  mem_byteptr_t;
-typedef mem_int8_t*                  mem_bytearray_t;
-typedef mem_void_t*                  mem_voidptr_t;
-typedef unsigned long                mem_size_t;
+typedef mem_byte_t*                          mem_byteptr_t;
+typedef mem_int8_t*                          mem_bytearray_t;
+typedef mem_void_t*                          mem_voidptr_t;
+typedef unsigned long                        mem_size_t;
 
 //mem_string_t
 

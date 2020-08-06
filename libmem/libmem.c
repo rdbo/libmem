@@ -32,6 +32,7 @@ struct _mem_string_t mem_string_init()
     struct _mem_string_t _string;
     mem_size_t _size = sizeof(MEM_STR(""));
     _string.buffer         = (mem_char_t*)malloc(_size);
+    _string.npos           = (mem_size_t)-1;
     memset(_string.buffer, '\0', _size);
     _string.clear          = &mem_string_clear;
     _string.empty          = &mem_string_empty;
@@ -130,6 +131,7 @@ mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* sub
 mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset)
 {
     mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
+    if(offset == (mem_size_t)-1) offset = mem_string_length(p_string) + 1;
     if(p_string->is_initialized != mem_true) return ret;
     mem_size_t str_len    = mem_string_length(p_string) + 1;
     mem_size_t substr_len = MEM_STR_LEN(substr);
@@ -184,6 +186,7 @@ mem_bool_t mem_string_compare(struct _mem_string_t* p_string, struct _mem_string
 struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end)
 {
     struct _mem_string_t new_str = mem_string_init();
+    if(end == -1) end = mem_string_length(p_string) + 1;
     mem_size_t size = end - start;
     if(end > start && mem_string_length(p_string) > size)
     {
@@ -348,7 +351,7 @@ mem_pid_t mem_ex_get_pid(mem_string_t process_name)
 		{
 			do
 			{
-				if (!lstrcmp(procEntry.szExeFile, process_name.c_str()))
+				if (!MEM_STR_CMP(procEntry.szExeFile, mem_string_c_str(&process_name)))
 				{
 					pid = procEntry.th32ProcessID;
 					break;
@@ -395,8 +398,9 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 			{
 				if (pid == procEntry.th32ProcessID)
 				{
-					process_name = string_t(procEntry.szExeFile);
-					process_name = process_name.substr(process_name.rfind('\\', process_name.length()) + 1, process_name.length());
+					process_name = mem_string_new(procEntry.szExeFile);
+                    process_name = mem_string_substr(&process_name, mem_string_rfind(&process_name, '\\', mem_string_length(&process_name)) + 1, mem_string_length(&process_name));
+					//process_name = process_name.substr(process_name.rfind('\\', process_name.length()) + 1, process_name.length());
 					break;
 				}
 			} while (Process32Next(hSnap, &procEntry));
@@ -427,6 +431,221 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
     close(fd);
 #   endif
     return process_name;
+}
+
+mem_process_t mem_ex_get_process(mem_pid_t pid)
+{
+    mem_process_t process = mem_process_init();
+    process.pid  = pid;
+    process.name = mem_ex_get_process_name(process.pid);
+#	if defined(MEM_WIN)
+	process.handle = OpenProcess(PROCESS_ALL_ACCESS, NULL, process.pid);
+#	elif defined(MEM_LINUX)
+#	endif
+    return process;
+}
+
+mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
+{
+    mem_module_t modinfo = mem_module_init();
+#   if defined(MEM_WIN)
+    HMODULE hMod;
+	mem_char_t modpath[MAX_PATH];
+	GetModuleHandleEx(NULL, mem_string_c_str(&module_name), &hMod);
+	MODULEINFO module_info = { 0 };
+	GetModuleInformation(process.handle, hMod, &module_info, sizeof(module_info));
+	GetModuleFileName(hMod, modpath, sizeof(modpath) / sizeof(mem_char_t));
+	modinfo.base = (voidptr_t)module_info.lpBaseOfDll;
+	modinfo.size = (size_t)module_info.SizeOfImage;
+	modinfo.end = (voidptr_t)((uintptr_t)modinfo.base + modinfo.size);
+	modinfo.handle = (module_handle_t)hMod;
+	modinfo.path = mem_string_new(modpath);
+#   elif defined(MEM_LINUX)
+    char path_buffer[64];
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+    int fd = open(path_buffer, O_RDONLY);
+    if(fd == -1) return modinfo;
+    mem_string_t file_buffer = mem_string_init();
+    mem_size_t   file_size   = 1;
+    int read_check = 0;
+    for(char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
+    {
+        mem_string_resize(&file_buffer, file_size);
+        mem_string_c_set(&file_buffer,  file_size, c);
+    }
+
+    mem_size_t module_name_pos = 0;
+    mem_size_t module_name_end = 0;
+    mem_size_t next            = 0;
+    mem_string_t module_name_str = mem_string_init();
+    while((next = mem_string_find(&file_buffer, mem_string_c_str(&module_name), module_name_end)) != file_buffer.npos && (module_name_pos = mem_string_find(&file_buffer, "/", next)) != file_buffer.npos)
+    {
+        module_name_end = mem_string_find(&file_buffer, "\n", module_name_pos);
+        module_name_pos = mem_string_rfind(&file_buffer, "/", module_name_end) + 1;
+        module_name_str = mem_string_substr(&file_buffer, module_name_pos, module_name_end);
+        if(mem_string_length(&module_name_str) >= mem_string_length(&module_name))
+        {
+            if(!MEM_STR_N_CMP(mem_string_c_str(&module_name_str), mem_string_c_str(&module_name), mem_string_length(&module_name)))
+                break;
+        }
+    }
+
+    if(module_name_pos == 0 || module_name_end == 0 || module_name_pos == file_buffer.npos || module_name_end == file_buffer.npos) return modinfo;
+    mem_size_t module_name_str_match_size = mem_string_length(&module_name_str) + 2;
+    mem_char_t* module_name_str_match = (mem_char_t*)malloc(module_name_str_match_size);
+    module_name_str_match[0] = '/';
+    memcpy((void*)(module_name_str_match + 1), (void*)mem_string_c_str(&module_name_str), module_name_str_match_size - 2);
+    module_name_str_match[module_name_str_match_size - 1] = '\n';
+    module_name_str_match[module_name_str_match_size] = '\0';
+
+    mem_size_t   base_address_pos = mem_string_rfind(&file_buffer, "\n", module_name_pos) + 1;
+    mem_size_t   base_address_end = mem_string_find(&file_buffer, "-", base_address_pos);
+    if(base_address_pos == file_buffer.npos || base_address_end == file_buffer.npos) return modinfo;
+    mem_string_t base_address_str = mem_string_substr(&file_buffer, base_address_pos, base_address_end);
+
+    mem_size_t   end_address_pos = mem_string_rfind(&file_buffer, "\n", mem_string_rfind(&file_buffer, module_name_str_match, mem_string_length(&file_buffer)));
+    end_address_pos = mem_string_find(&file_buffer, "-", end_address_pos) + 1;
+    mem_size_t   end_address_end = mem_string_find(&file_buffer, " ", end_address_pos);
+    if(end_address_pos == file_buffer.npos || end_address_end == file_buffer.npos) return modinfo;
+    mem_string_t end_address_str = mem_string_substr(&file_buffer, end_address_pos, end_address_end);
+
+    mem_size_t   module_path_pos = mem_string_find(&file_buffer, "/", end_address_end);
+    mem_size_t   module_path_end = mem_string_find(&file_buffer, "\n", module_path_pos);
+    if(module_path_pos == 0 || module_path_end == 0 || module_path_pos == file_buffer.npos || module_path_end == file_buffer.npos) return modinfo;
+    mem_string_t module_path_str = mem_string_substr(&file_buffer, module_path_pos, module_path_end);
+
+    mem_uintptr_t base_address = (mem_uintptr_t)MEM_BAD_RETURN;
+    mem_uintptr_t end_address  = (mem_uintptr_t)MEM_BAD_RETURN;
+
+#   if defined(MEM_86)
+	base_address = strtoul(mem_string_c_str(&base_address_str), NULL, 16);
+	end_address = strtoul(mem_string_c_str(&end_address_str), NULL, 16);
+#   elif defined(MEM_64)
+	base_address = strtoul(mem_string_c_str(&base_address_str), NULL, 16);
+	end_address = strtoul(mem_string_c_str(&end_address_str), NULL, 16);
+#   endif
+
+    mem_module_handle_t handle = (mem_module_handle_t)MEM_BAD_RETURN;
+    if(MEM_STR_CMP(mem_string_c_str(&process.name), mem_string_c_str(&module_name_str)))
+	    handle = (mem_module_handle_t)dlopen(mem_string_c_str(&module_path_str), RTLD_LAZY);
+
+    modinfo.name = module_name_str;
+	modinfo.base = (mem_voidptr_t)base_address;
+	modinfo.end  = (mem_voidptr_t)end_address;
+	modinfo.size = end_address - base_address;
+	modinfo.path = module_path_str;
+	modinfo.handle = handle;
+
+    file_buffer.empty(&file_buffer);
+    close(fd);
+
+#   endif
+    return modinfo;
+}
+
+mem_bool_t mem_ex_is_process_running(mem_process_t process)
+{
+    mem_bool_t ret = mem_false;
+    if(!mem_process_is_valid(&process)) return ret;
+#   if defined(MEM_WIN)
+    DWORD exit_code;
+	GetExitCodeProcess(process.handle, &exit_code);
+	ret = (mem_bool_t)(exit_code == STILL_ACTIVE);
+#   elif defined(MEM_LINUX)
+    struct stat sb;
+	char path_buffer[64];
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i", process.pid);
+	stat(path_buffer, &sb);
+	ret = (mem_bool_t)S_ISDIR(sb.st_mode);
+#   endif
+
+    return ret;
+}
+
+mem_int_t mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
+{
+    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+#   if defined(MEM_WIN)
+    ret = (mem_int_t)ReadProcessMemory(process.handle, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL);
+#   elif defined(MEM_LINUX)
+    struct iovec iosrc;
+	struct iovec iodst;
+	iodst.iov_base = dst;
+	iodst.iov_len = size;
+	iosrc.iov_base = src;
+	iosrc.iov_len = size;
+	ret = (mem_int_t)process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0);
+#   endif
+
+    return ret;
+}
+
+mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t data, mem_size_t size)
+{
+    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    if(!mem_process_is_valid(&process)) return ret;
+#   if defined(MEM_WIN)
+    ret = (mem_int_t)WriteProcessMemory(process.handle, (LPVOID)src, (LPCVOID)data, (SIZE_T)size, NULL);
+#   elif defined(MEM_LINUX)
+    struct iovec iosrc;
+	struct iovec iodst;
+	iosrc.iov_base = data;
+	iosrc.iov_len = size;
+	iodst.iov_base = src;
+	iodst.iov_len = size;
+	ret = (mem_int_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0);
+#   endif
+
+    return ret;
+}
+
+mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
+{
+    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    mem_byte_t data[size];
+    memset(data, byte, size);
+    ret = (mem_int_t)mem_ex_write(process, src, data, size);
+    return ret;
+}
+
+mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection)
+{
+    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    if(!mem_process_is_valid(&process)) return ret;
+#	if defined(MEM_WIN)
+	DWORD old_protect;
+	if (process.handle == (HANDLE)NULL || src <= (mem_voidptr_t)NULL || size == 0 || protection <= NULL) return ret;
+	ret = (mem_int_t)VirtualProtectEx(process.handle, (LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect);
+#	elif defined(MEM_LINUX)
+#	endif
+	return ret;
+}
+
+mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end)
+{
+    mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
+    if(!mem_process_is_valid(&process)) return ret;
+    mask = mem_parse_mask(mask);
+	mem_uintptr_t scan_size = (mem_uintptr_t)end - (mem_uintptr_t)base;
+
+	for (mem_uintptr_t i = 0; i < scan_size; i++)
+	{
+		mem_bool_t found = mem_true;
+		int8_t pbyte;
+		for (mem_uintptr_t j = 0; j < MEM_STR_LEN(pattern); j++)
+		{
+			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i + j), &pbyte, 1);
+			found &= mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte;
+		}
+
+		if (found)
+		{
+			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
+			break;
+		}
+	}
+
+	return ret;
 }
 
 //in

@@ -177,6 +177,7 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <sys/io.h>
 #include <sys/uio.h>
 #include <dlfcn.h>
 #include <link.h>
@@ -240,6 +241,7 @@ typedef struct _mem_string_t
 {
     mem_bool_t  is_initialized;
     mem_char_t* buffer;
+    mem_size_t  npos;
     mem_void_t(* clear)(struct _mem_string_t* p_string);
     mem_void_t(* empty)(struct _mem_string_t* p_string);
     mem_size_t(* size)(struct _mem_string_t* p_string);
@@ -304,6 +306,7 @@ typedef struct _mem_module_t
     mem_voidptr_t base;
     mem_voidptr_t end;
     mem_uintptr_t size;
+    mem_module_handle_t handle;
     mem_bool_t(* is_valid)(struct _mem_module_t* p_mod);
     mem_bool_t(* compare)(struct _mem_module_t* p_mod, struct _mem_module_t mod);
 }mem_module_t;
@@ -351,6 +354,13 @@ typedef enum _mem_detour_int_t
     method5 = MEM_DETOUR_INT_METHOD5
 }mem_detour_int_t;
 
+//external definitions
+
+#if defined(MEM_WIN)
+#elif defined(MEM_LINUX)
+extern ssize_t process_vm_readv(pid_t pid, const struct iovec *local_iov, unsigned long liovcnt, const struct iovec *remote_iov, unsigned long riovcnt, unsigned long flags);
+extern ssize_t process_vm_writev(pid_t pid, const struct iovec *local_iov, unsigned long liovcnt, const struct iovec *remote_iov, unsigned long riovcnt, unsigned long flags);
+#endif
 
 //libmem
 
@@ -358,8 +368,8 @@ mem_string_t  mem_parse_mask(mem_string_t mask);
 
 //ex
 mem_pid_t     mem_ex_get_pid(mem_string_t process_name);
-mem_process_t mem_ex_get_process(mem_pid_t pid);
 mem_string_t  mem_ex_get_process_name(mem_pid_t pid);
+mem_process_t mem_ex_get_process(mem_pid_t pid);
 mem_module_t  mem_ex_get_module(mem_process_t process, mem_string_t module_name);
 mem_bool_t    mem_ex_is_process_running(mem_process_t process);
 mem_int_t     mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);

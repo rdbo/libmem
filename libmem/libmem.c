@@ -650,4 +650,307 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 
 //in
 
+mem_pid_t mem_in_get_pid()
+{
+    mem_pid_t pid = (mem_pid_t)MEM_BAD_RETURN;
+#   if defined(MEM_WIN)
+    pid = (mem_pid_t)GetCurrentProcessId();
+#   elif defined(MEM_LINUX)
+    pid = (mem_pid_t)getpid();
+#   endif
+    return pid;
+}
+
+mem_process_t mem_in_get_process()
+{
+    mem_process_t process = mem_process_init();
+    process.pid  = mem_in_get_pid();
+    process.name = mem_in_get_process_name();
+#   if defined(MEM_WIN)
+    process.handle = GetCurrentProcess();
+#   elif defined(MEM_LINUX)
+#   endif
+    return process;
+}
+
+mem_string_t mem_in_get_process_name()
+{
+    mem_string_t process_name = mem_string_init();
+#   if defined(MEM_WIN)
+    char_t buffer[MAX_PATH];
+	GetModuleFileName(NULL, buffer, sizeof(buffer)/sizeof(char_t));
+    process_name = mem_string_new(buffer);
+    process_name = mem_string_substr(&process_name, mem_string_rfind(&process_name, "\\", mem_string_length(&process_name)), mem_string_length(&process_name));
+#   elif defined(MEM_LINUX)
+    process_name = mem_ex_get_process_name(mem_in_get_pid());
+#   endif
+    return process_name;
+}
+
+mem_module_t mem_in_get_module(mem_string_t module_name)
+{
+    mem_module_t modinfo = mem_module_init();
+#   if defined(MEM_WIN)
+    MODULEINFO module_info;
+	HMODULE hmod = GetModuleHandle(mem_string_c_str(&module_name));
+	HANDLE cur_handle = mem_in_get_process().handle;
+	if (hmod == NULL) return modinfo;
+    mem_char_t path_buffer[MAX_PATH];
+	GetModuleInformation(cur_handle, hmod, &module_info, sizeof(module_info));
+    GetModuleFileName(hmod, &path_buffer, sizeof(path_buffer)/sizeof(mem_char_t));
+    modinfo.name = mem_string_new(path_buffer);
+    modinfo.name = mem_string_substr(&modinfo.name, mem_string_rfind(&modinfo.name, "\\", mem_string_length(&modinfo.name)), mem_string_length(&modinfo.name));
+    modinfo.path = mem_string_new(path_buffer);
+	modinfo.base = (mem_voidptr_t)module_info.lpBaseOfDll;
+	modinfo.size = (mem_size_t)module_info.SizeOfImage;
+	modinfo.end = (mem_voidptr_t)((uintptr_t)modinfo.base + modinfo.size);
+	modinfo.handle = hmod;
+#   elif defined(MEM_LINUX)
+    modinfo = mem_ex_get_module(mem_in_get_process(), module_name);
+#   endif
+    return modinfo;
+}
+
+mem_void_t mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, size_t size)
+{
+    memcpy(dst, src, size);
+}
+
+mem_void_t mem_in_write(mem_voidptr_t src, mem_voidptr_t data, mem_size_t size)
+{
+    memcpy(src, data, size);
+}
+
+mem_void_t mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
+{
+    memset(src, byte, size);
+}
+
+mem_int_t mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protection)
+{
+    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    if(src == (mem_voidptr_t)MEM_BAD_RETURN || size == (mem_size_t)MEM_BAD_RETURN || size == 0 || protection == (mem_prot_t)MEM_BAD_RETURN) return ret;
+#   if defined(MEM_WIN)
+    ret = (mem_int_t)VirtualProtect((LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect);
+#   elif defined(MEM_LINUX)
+    long pagesize = sysconf(_SC_PAGE_SIZE);
+	uintptr_t src_page = (uintptr_t)src - ((uintptr_t)src % pagesize);
+	ret = (mem_int_t)mprotect((void*)src_page, size, protection);
+#   endif
+    return ret;
+}
+
+mem_voidptr_t mem_in_allocate(mem_size_t size, mem_alloc_t allocation)
+{
+    mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD_RETURN;
+#   if defined(MEM_WIN)
+    addr = (mem_voidptr_t)VirtualAlloc(NULL, (SIZE_T)size, allocation.type, (DWORD)allocation.protection);
+#   elif defined(MEM_LINUX)
+    addr = (mem_voidptr_t)mmap(NULL, size, allocation.protection, allocation.type, -1, 0);
+#   endif
+
+    return addr;
+}
+
+mem_bool_t mem_in_compare(mem_voidptr_t pdata1, mem_voidptr_t pdata2, mem_size_t size)
+{
+    return (mem_bool_t)(memcmp(pdata1, pdata2, size) == 0);
+}
+
+mem_voidptr_t mem_in_scan(mem_voidptr_t data, mem_voidptr_t base, mem_voidptr_t end, mem_size_t size)
+{
+    mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
+	for(mem_uintptr_t i = 0; (mem_uintptr_t)base + i < (mem_uintptr_t)end; i += size)
+	{
+		if(mem_in_compare(data, (mem_voidptr_t)((mem_uintptr_t)base + i), size))
+		{
+			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
+			break;
+		}
+	}
+
+	return ret;
+}
+
+mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_size_t size)
+{
+    mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
+	mask = mem_parse_mask(mask);
+	mem_uintptr_t scan_size = size;
+
+	for (mem_uintptr_t i = 0; i < scan_size; i++)
+	{
+		mem_bool_t found = mem_true;
+		for (mem_uintptr_t j = 0; j < scan_size; j++)
+		{
+			found &= mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == *(mem_int8_t*)((mem_uintptr_t)base + i + j);
+		}
+
+		if (found)
+		{
+			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
+			break;
+		}
+	}
+
+	return ret;   
+}
+
+mem_size_t mem_in_detour_length(mem_detour_int_t method)
+{
+    mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
+    switch (method)
+	{
+		case method0: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD0); break;
+		case method1: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD1); break;
+		case method2: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD2); break;
+		case method3: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD3); break;
+		case method4: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD4); break;
+		case method5: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD5); break;
+	}
+
+	return ret;
+}
+
+mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes)
+{
+    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    mem_size_t detour_size = mem_in_detour_length(method);
+	mem_prot_t protection;
+#	if defined(MEM_WIN)
+	protection = PAGE_EXECUTE_READWRITE;
+#	elif defined(MEM_LINUX)
+	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+#	endif
+	if (detour_size == MEM_BAD_RETURN || size < detour_size || mem_in_protect(src, size, protection) == MEM_BAD_RETURN) return ret;
+
+    if(stolen_bytes != NULL)
+	{
+		*stolen_bytes = (mem_bytearray_t)malloc(size);
+        for(mem_size_t i = 0; i < size; i++)
+        	*stolen_bytes[i] = *(mem_int8_t*)(src + i);
+	}
+
+    switch (method)
+	{
+        case method0:
+        {
+            mem_byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD0);
+            *(mem_uintptr_t*)((mem_uintptr_t)detour_buffer + sizeof(MEM_MOV_REGAX)) = (mem_uintptr_t)dst;
+            mem_in_write(src, detour_buffer, sizeof(detour_buffer));
+            break;
+        }
+
+        case method1:
+        {
+            mem_byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD1);
+            *(mem_dword_t*)((mem_uintptr_t)detour_buffer + sizeof(MEM_JMP)) = (mem_dword_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
+            mem_in_write(src, detour_buffer, sizeof(detour_buffer));
+            break;
+        }
+
+        case method2:
+        {
+            mem_byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD2);
+            *(mem_uintptr_t*)((mem_uintptr_t)detour_buffer + sizeof(MEM_MOV_REGAX)) = (mem_uintptr_t)dst;
+            mem_in_write(src, detour_buffer, sizeof(detour_buffer));
+            break;
+        }
+
+        case method3:
+        {
+            mem_byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD3);
+            *(mem_dword_t*)((mem_uintptr_t)detour_buffer + sizeof(MEM_PUSH)) = (mem_dword_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
+            mem_in_write(src, detour_buffer, sizeof(detour_buffer));
+            break;
+        }
+
+        case method4:
+        {
+            mem_byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD4);
+            *(mem_uintptr_t*)((mem_uintptr_t)detour_buffer + sizeof(MEM_MOV_REGAX)) = (mem_uintptr_t)dst;
+            mem_in_write(src, detour_buffer, sizeof(detour_buffer));
+            break;
+        }
+
+        case method5:
+        {
+            mem_byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD5);
+            *(mem_dword_t*)((mem_uintptr_t)detour_buffer + sizeof(MEM_CALL)) = (mem_dword_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
+            mem_in_write(src, detour_buffer, sizeof(detour_buffer));
+            break;
+        }
+
+        default:
+        {
+            return (mem_int_t)ret;
+            break;
+        }
+    }
+
+    ret = (mem_int_t)!MEM_BAD_RETURN;
+    return ret;
+}
+
+mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes)
+{
+    mem_voidptr_t gateway = (mem_voidptr_t)MEM_BAD_RETURN;
+    mem_size_t detour_size = mem_in_detour_length(method);
+	mem_alloc_t allocation;
+	mem_prot_t protection;
+#   if defined(MEM_WIN)
+    protection = PAGE_EXECUTE_READWRITE;
+	allocation.type = MEM_COMMIT | MEM_RESERVE;
+	allocation.protection = PAGE_EXECUTE_READWRITE;
+#   elif defined(MEM_LINUX)
+    protection = PROT_EXEC | PROT_READ | PROT_WRITE;;
+	allocation.protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+	allocation.type = MAP_ANON | MAP_PRIVATE;
+#   endif
+
+    if (detour_size == (mem_size_t)MEM_BAD_RETURN || size < detour_size || mem_in_protect(src, size, protection) == MEM_BAD_RETURN) return gateway;
+    mem_size_t gateway_size = size + detour_size;
+    gateway = mem_in_allocate(gateway_size, allocation);
+    if (!gateway || gateway == (mem_voidptr_t)MEM_BAD_RETURN) return (mem_voidptr_t)MEM_BAD_RETURN;
+    mem_in_set(gateway, 0x0, gateway_size);
+    mem_in_write(gateway, src, size);
+    mem_in_detour((mem_voidptr_t)((mem_uintptr_t)gateway + size), (mem_voidptr_t)((mem_uintptr_t)src + size), detour_size, method, NULL);
+    mem_in_detour(src, dst, size, method, stolen_bytes);
+
+    return gateway;
+}
+
+mem_void_t mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size)
+{
+    mem_prot_t protection;
+#   if defined(MEM_WIN)
+    protection = PAGE_EXECUTE_READWRITE;
+#   elif defined(MEM_LINUX)
+    protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+#   endif
+    if(mem_in_protect(src, size, protection) != MEM_BAD_RETURN)
+	    mem_in_write(src, (mem_voidptr_t)stolen_bytes, (mem_size_t)size);
+}
+
+mem_int_t mem_in_load_library(mem_lib_t lib, mem_module_t* mod)
+{
+    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    if(!mem_lib_is_valid(&lib)) return ret;
+#   if defined(MEM_WIN)
+    HMODULE h_mod = LoadLibrary(mem_string_c_str(&lib.path));
+    *mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, '\\', mem_string_length(&lib.path)), mem_string_length(&lib.path)));
+    ret = h_mod != (HMODULE)NULL;
+#   elif defined(MEM_LINUX)
+    void* h_mod = dlopen(mem_string_c_str(&lib.path), lib.mode);
+	ret = (h_mod == (mem_voidptr_t)-1 ? MEM_BAD_RETURN : !MEM_BAD_RETURN);
+	if(mod != NULL && ret != (mem_int_t)MEM_BAD_RETURN)
+	{
+		*mod = mem_in_get_module(lib.path);
+		mod->handle = h_mod;
+	}
+#   endif
+
+    return ret;
+}
+
 #endif //MEM_COMPATIBLE

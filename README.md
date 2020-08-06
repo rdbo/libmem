@@ -60,8 +60,8 @@ WIP
 
 # TODO
 
-. Add support for allocating/protecting memory externally on Linux
-. Add support for loading libraries externally on Linux
-. Add documentation
-. Add examples/projects
-. Clean up code
+. Add support for allocating/protecting memory externally on Linux  
+. Add support for loading libraries externally on Linux  
+. Add documentation  
+. Add examples/projects  
+. Clean up code  

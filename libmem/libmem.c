@@ -498,7 +498,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
     module_name_str_match[module_name_str_match_size - 1] = '\n';
     module_name_str_match[module_name_str_match_size] = '\0';
 
-    mem_size_t   base_address_pos = mem_string_rfind(&file_buffer, "\n", module_name_pos) + 1;
+    mem_size_t   base_address_pos = mem_string_rfind(&file_buffer, "\n", mem_string_find(&file_buffer, module_name_str_match, 0)) + 1;
     mem_size_t   base_address_end = mem_string_find(&file_buffer, "-", base_address_pos);
     if(base_address_pos == file_buffer.npos || base_address_end == file_buffer.npos) return modinfo;
     mem_string_t base_address_str = mem_string_substr(&file_buffer, base_address_pos, base_address_end);
@@ -536,6 +536,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 	modinfo.path = module_path_str;
 	modinfo.handle = handle;
 
+    free(module_name_str_match);
     file_buffer.empty(&file_buffer);
     close(fd);
 
@@ -711,7 +712,7 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
     return modinfo;
 }
 
-mem_void_t mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, size_t size)
+mem_void_t mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
 {
     memcpy(dst, src, size);
 }

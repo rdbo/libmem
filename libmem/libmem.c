@@ -250,10 +250,10 @@ mem_bool_t mem_module_is_valid(struct _mem_module_t* p_mod)
 {
     return (mem_bool_t)(
         p_mod->is_initialized                         &&
-        !MEM_STR_CMP(mem_string_c_str(&p_mod->name), MEM_STR("")) &&
-        !MEM_STR_CMP(mem_string_c_str(&p_mod->path), MEM_STR("")) &&
+        MEM_STR_CMP(mem_string_c_str(&p_mod->name), MEM_STR("")) &&
+        MEM_STR_CMP(mem_string_c_str(&p_mod->path), MEM_STR("")) &&
         p_mod->base != (mem_voidptr_t)MEM_BAD_RETURN  &&
-        p_mod->size != (mem_size_t)MEM_BAD_RETURN     &&
+        p_mod->size != (mem_uintptr_t)MEM_BAD_RETURN     &&
         p_mod->end  != (mem_voidptr_t)MEM_BAD_RETURN
     );
 }

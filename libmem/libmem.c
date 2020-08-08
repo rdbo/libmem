@@ -956,7 +956,7 @@ mem_int_t mem_in_load_library(mem_lib_t lib, mem_module_t* mod)
 mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol)
 {
     mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD_RETURN;
-    if(mem_module_is_valid(&mod))
+    if(mem_module_is_valid(&mod) == mem_false)
         return addr;
 
 #   if defined(MEM_WIN)

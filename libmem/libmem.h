@@ -150,6 +150,10 @@
 #define MEM_RETURN             !MEM_BAD_RETURN
 #define MEM_KNOWN_BYTE         MEM_STR('x')
 #define MEM_UNKNOWN_BYTE       MEM_STR('?')
+#if defined(MEM_WIN)
+#elif defined(MEM_LINUX)
+#define _GNU_SOURCE
+#endif
 
 //Compatibility
 
@@ -398,6 +402,7 @@ mem_int_t     mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t siz
 mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
 mem_void_t    mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size);
 mem_int_t     mem_in_load_library(mem_lib_t lib, mem_module_t* mod);
+mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol);
 
 #endif //MEM_COMPATIBLE
 #endif //MEM

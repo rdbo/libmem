@@ -828,8 +828,7 @@ mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, m
     if(stolen_bytes != NULL)
 	{
 		*stolen_bytes = (mem_bytearray_t)malloc(size);
-        for(mem_size_t i = 0; i < size; i++)
-        	*stolen_bytes[i] = *(mem_int8_t*)(src + i);
+        mem_in_read(src, (mem_voidptr_t)*stolen_bytes, size);
 	}
 
     switch (method)
@@ -952,6 +951,21 @@ mem_int_t mem_in_load_library(mem_lib_t lib, mem_module_t* mod)
 #   endif
 
     return ret;
+}
+
+mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol)
+{
+    mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD_RETURN;
+    if(mem_module_is_valid(&mod) || mod.handle == NULL || mod.handle == (mem_module_handle_t)MEM_BAD_RETURN)
+        return addr;
+
+#   if defined(MEM_WIN)
+    addr = (mem_voidptr_t)GetProcAddress(mod.handle, symbol);
+#   elif defined(MEM_LINUX)
+    addr = (mem_voidptr_t)dlsym(mod.handle, symbol);
+#   endif
+
+    return addr;
 }
 
 #endif //MEM_COMPATIBLE

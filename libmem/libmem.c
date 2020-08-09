@@ -940,10 +940,13 @@ mem_void_t mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_bytes
 mem_int_t mem_in_load_library(mem_lib_t lib, mem_module_t* mod)
 {
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    if(mod != NULL)
+        *mod = mem_module_init();
     if(!mem_lib_is_valid(&lib)) return ret;
 #   if defined(MEM_WIN)
     HMODULE h_mod = LoadLibrary(mem_string_c_str(&lib.path));
-    *mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, '\\', mem_string_length(&lib.path)), mem_string_length(&lib.path)));
+    if(mod != NULL)
+        *mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, '\\', mem_string_length(&lib.path)), mem_string_length(&lib.path)));
     ret = h_mod != (HMODULE)NULL;
 #   elif defined(MEM_LINUX)
     void* h_mod = dlopen(mem_string_c_str(&lib.path), lib.mode);

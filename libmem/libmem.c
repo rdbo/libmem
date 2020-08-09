@@ -56,7 +56,9 @@ struct _mem_string_t mem_string_init()
 struct _mem_string_t mem_string_new(const mem_char_t* c_string)
 {
     struct _mem_string_t _str = mem_string_init();
-    _str.buffer = (mem_char_t*)c_string;
+    mem_size_t size = MEM_STR_LEN(c_string) * sizeof(mem_char_t);
+    _str.buffer = (mem_char_t*)malloc(size);
+    memcpy(_str.buffer, c_string, size);
     return _str;
 }
 
@@ -68,7 +70,8 @@ mem_void_t mem_string_clear(struct _mem_string_t* p_string)
 
 mem_void_t mem_string_empty(struct _mem_string_t* p_string)
 {
-    free(p_string->buffer);
+    if(p_string->buffer)
+        free(p_string->buffer);
     *p_string = mem_string_init();
 }
 
@@ -91,7 +94,8 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
     mem_size_t old_size = mem_string_size(p_string);
     memcpy((void*)_buffer, (void*)p_string->buffer, (size_t)(size > old_size ? old_size : size));
     _buffer[size - 1] = MEM_STR('\0');
-    free(p_string->buffer);
+    if(p_string->buffer)
+        free(p_string->buffer);
     p_string->buffer = _buffer;
 }
 
@@ -162,7 +166,8 @@ mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* ne
     mem_char_t* _buffer = (mem_char_t*)malloc(size);
     memcpy(_buffer, new_str, size - 1);
     _buffer[size] = MEM_STR('\0');
-    free(p_string->buffer);
+    if(p_string->buffer)
+        free(p_string->buffer);
     *p_string = mem_string_init();
     p_string->buffer = _buffer;
 }

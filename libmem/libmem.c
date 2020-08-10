@@ -320,7 +320,7 @@ mem_bool_t mem_lib_is_valid(struct _mem_lib_t* p_lib)
 {
     return (mem_bool_t)(
         p_lib->is_initialized &&
-        !MEM_STR_CMP(mem_string_c_str(&p_lib->path), MEM_STR(""))
+        MEM_STR_CMP(mem_string_c_str(&p_lib->path), MEM_STR(""))
     );
 }
 

@@ -46,6 +46,8 @@ struct _mem_string_t mem_string_init()
     _string.at             = &mem_string_at;
     _string.c_set          = &mem_string_c_set;
     _string.value          = &mem_string_value;
+    _string.insert         = &mem_string_insert;
+    _string.replace        = &mem_string_replace;
     _string.c_str          = &mem_string_c_str;
     _string.substr         = &mem_string_substr;
     _string.compare        = &mem_string_compare;
@@ -159,6 +161,13 @@ mem_char_t mem_string_at(struct _mem_string_t* p_string, mem_size_t pos)
     return c;
 }
 
+mem_void_t mem_string_insert(struct _mem_string_t* p_string, const mem_char_t* str)
+{
+    mem_size_t old_length = mem_string_length(p_string);
+    mem_string_resize(p_string, (old_length * sizeof(mem_char_t)) + MEM_STR_LEN(str));
+    memcpy((void*)(p_string->buffer + old_length), str, MEM_STR_LEN(str) * sizeof(mem_char_t));
+}
+
 mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* new_str)
 {
     mem_size_t size = MEM_STR_LEN(new_str) + 1;
@@ -170,6 +179,22 @@ mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* ne
         free(p_string->buffer);
     *p_string = mem_string_init();
     p_string->buffer = _buffer;
+}
+
+mem_void_t mem_string_replace(struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str)
+{
+    mem_size_t old_length = mem_string_length(p_string);
+    mem_size_t old_str_len = MEM_STR_LEN(old_str);
+    mem_size_t new_str_len = MEM_STR_LEN(new_str);
+    for(mem_size_t i = 0; (i = mem_string_find(p_string, old_str, i)) != p_string->npos && i != MEM_BAD_RETURN && i + 1 <= old_length;)
+    {
+        mem_string_t holder = mem_string_substr(p_string, 0, i);
+        mem_string_insert(&holder, new_str);
+        mem_string_insert(&holder, (const mem_char_t*)(p_string->buffer + i + old_str_len + 1));
+        mem_string_c_set(&holder, i + new_str_len - old_str_len + (mem_string_length(p_string) - i) + 1, '\0');
+        i += new_str_len + 1;
+        *p_string = holder;
+    }
 }
 
 mem_char_t* mem_string_c_str(struct _mem_string_t* p_string)

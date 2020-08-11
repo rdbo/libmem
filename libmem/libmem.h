@@ -257,6 +257,8 @@ typedef struct _mem_string_t
     mem_size_t(* rfind)(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
     mem_char_t(* at)(struct _mem_string_t* p_string, mem_size_t pos);
     mem_void_t(* value)(struct _mem_string_t* p_string, const mem_char_t* new_str);
+    mem_void_t(* insert)(struct _mem_string_t* p_string, const mem_char_t* str);
+    mem_void_t(* replace)(struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str);
     mem_void_t(* c_set)(struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
     mem_char_t*(* c_str)(struct _mem_string_t* p_string);
     mem_bool_t(* compare)(struct _mem_string_t* p_string, struct _mem_string_t str);
@@ -275,7 +277,9 @@ mem_char_t*          mem_string_end    (struct _mem_string_t* p_string);
 mem_size_t           mem_string_find   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
 mem_size_t           mem_string_rfind  (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
 mem_char_t           mem_string_at     (struct _mem_string_t* p_string, mem_size_t pos);
+mem_void_t           mem_string_insert (struct _mem_string_t* p_string, const mem_char_t* str);
 mem_void_t           mem_string_value  (struct _mem_string_t* p_string, const mem_char_t* new_str);
+mem_void_t           mem_string_replace(struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str);
 mem_char_t*          mem_string_c_str  (struct _mem_string_t* p_string);
 mem_void_t           mem_string_c_set  (struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
 mem_bool_t           mem_string_compare(struct _mem_string_t* p_string, struct _mem_string_t str);

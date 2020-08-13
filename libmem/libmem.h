@@ -181,6 +181,8 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <sys/user.h>
+#include <sys/syscall.h>
 #include <sys/io.h>
 #include <sys/uio.h>
 #include <dlfcn.h>
@@ -366,8 +368,8 @@ typedef enum _mem_detour_int_t
 
 #if defined(MEM_WIN)
 #elif defined(MEM_LINUX)
-extern ssize_t process_vm_readv(pid_t pid, const struct iovec *local_iov, unsigned long liovcnt, const struct iovec *remote_iov, unsigned long riovcnt, unsigned long flags);
-extern ssize_t process_vm_writev(pid_t pid, const struct iovec *local_iov, unsigned long liovcnt, const struct iovec *remote_iov, unsigned long riovcnt, unsigned long flags);
+//extern ssize_t process_vm_readv(pid_t pid, const struct iovec *local_iov, unsigned long liovcnt, const struct iovec *remote_iov, unsigned long riovcnt, unsigned long flags);
+//extern ssize_t process_vm_writev(pid_t pid, const struct iovec *local_iov, unsigned long liovcnt, const struct iovec *remote_iov, unsigned long riovcnt, unsigned long flags);
 #endif
 
 //libmem
@@ -384,6 +386,7 @@ mem_int_t     mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_
 mem_int_t     mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t data, mem_size_t size);
 mem_int_t     mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t byte, mem_size_t size);
 mem_int_t     mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection);
+mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection);
 mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end);
 mem_int_t     mem_ex_load_library(mem_process_t process, mem_lib_t lib);
 

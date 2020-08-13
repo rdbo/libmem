@@ -886,13 +886,13 @@ mem_int_t mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protecti
     return ret;
 }
 
-mem_voidptr_t mem_in_allocate(mem_size_t size, mem_alloc_t allocation)
+mem_voidptr_t mem_in_allocate(mem_size_t size, mem_prot_t protection)
 {
     mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD_RETURN;
 #   if defined(MEM_WIN)
-    addr = (mem_voidptr_t)VirtualAlloc(NULL, (SIZE_T)size, allocation.type, (DWORD)allocation.protection);
+    addr = (mem_voidptr_t)VirtualAlloc(NULL, (SIZE_T)size, MEM_COMMIT | MEM_RESERVE, protection);
 #   elif defined(MEM_LINUX)
-    addr = (mem_voidptr_t)mmap(NULL, size, allocation.protection, allocation.type, -1, 0);
+    addr = (mem_voidptr_t)mmap(NULL, size, protection, MAP_PRIVATE | MAP_ANON, -1, 0);
 #   endif
 
     return addr;
@@ -1041,21 +1041,16 @@ mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem
 {
     mem_voidptr_t gateway = (mem_voidptr_t)MEM_BAD_RETURN;
     mem_size_t detour_size = mem_in_detour_length(method);
-	mem_alloc_t allocation;
 	mem_prot_t protection;
 #   if defined(MEM_WIN)
     protection = PAGE_EXECUTE_READWRITE;
-	allocation.type = MEM_COMMIT | MEM_RESERVE;
-	allocation.protection = PAGE_EXECUTE_READWRITE;
 #   elif defined(MEM_LINUX)
     protection = PROT_EXEC | PROT_READ | PROT_WRITE;;
-	allocation.protection = PROT_EXEC | PROT_READ | PROT_WRITE;
-	allocation.type = MAP_ANON | MAP_PRIVATE;
 #   endif
 
     if (detour_size == (mem_size_t)MEM_BAD_RETURN || size < detour_size || mem_in_protect(src, size, protection) == MEM_BAD_RETURN) return gateway;
     mem_size_t gateway_size = size + detour_size;
-    gateway = mem_in_allocate(gateway_size, allocation);
+    gateway = mem_in_allocate(gateway_size, protection);
     if (!gateway || gateway == (mem_voidptr_t)MEM_BAD_RETURN) return (mem_voidptr_t)MEM_BAD_RETURN;
     mem_in_set(gateway, 0x0, gateway_size);
     mem_in_write(gateway, src, size);

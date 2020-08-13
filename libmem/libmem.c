@@ -92,7 +92,7 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
 {
     if(p_string->is_initialized != mem_true) return;
     size = size * sizeof(mem_char_t) + 1;
-    mem_char_t* _buffer = (mem_char_t*)malloc(size);
+    mem_char_t* _buffer = (mem_char_t*)malloc(size * sizeof(mem_char_t));
     mem_size_t old_size = mem_string_size(p_string);
     memcpy((void*)_buffer, (void*)p_string->buffer, (size_t)(size > old_size ? old_size : size));
     _buffer[size - 1] = MEM_STR('\0');
@@ -164,7 +164,7 @@ mem_char_t mem_string_at(struct _mem_string_t* p_string, mem_size_t pos)
 mem_void_t mem_string_insert(struct _mem_string_t* p_string, const mem_char_t* str)
 {
     mem_size_t old_length = mem_string_length(p_string);
-    mem_string_resize(p_string, (old_length * sizeof(mem_char_t)) + MEM_STR_LEN(str));
+    mem_string_resize(p_string, old_length + MEM_STR_LEN(str));
     memcpy((void*)(p_string->buffer + old_length), str, MEM_STR_LEN(str) * sizeof(mem_char_t));
 }
 

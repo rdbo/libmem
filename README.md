@@ -60,7 +60,6 @@ WIP
 
 # TODO
 . Add support for ARM  
-. Add support for loading libraries externally on Linux  
 . Add documentation  
 . Add examples/projects  
 . Clean up code  

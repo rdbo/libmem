@@ -461,7 +461,7 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
     mem_size_t process_name_pos = mem_string_rfind(&file_buffer, "/", process_name_end) + 1;
     if(process_name_end == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)(MEM_BAD_RETURN + 1)) return process_name;
     process_name = mem_string_substr(&file_buffer, process_name_pos, process_name_end);
-    //mem_string_empty(&file_buffer);
+    mem_string_empty(&file_buffer);
     close(fd);
 #   endif
     return process_name;

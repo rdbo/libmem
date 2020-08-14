@@ -482,6 +482,7 @@ mem_process_t mem_ex_get_process(mem_pid_t pid)
 mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 {
     mem_module_t modinfo = mem_module_init();
+    if(!mem_process_is_valid(&process)) return modinfo;
 #   if defined(MEM_WIN)
     HMODULE hMod;
 	mem_char_t modpath[MAX_PATH];
@@ -600,6 +601,7 @@ mem_bool_t mem_ex_is_process_running(mem_process_t process)
 mem_int_t mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
 {
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    if(!mem_process_is_valid(&process)) return ret;
 #   if defined(MEM_WIN)
     ret = (mem_int_t)ReadProcessMemory(process.handle, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL);
 #   elif defined(MEM_LINUX)
@@ -637,6 +639,7 @@ mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t d
 mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
 {
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
+    if(!mem_process_is_valid(&process)) return ret;
     mem_byte_t data[size];
     memset(data, byte, size);
     ret = (mem_int_t)mem_ex_write(process, src, data, size);

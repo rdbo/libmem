@@ -672,8 +672,8 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
 #   if defined(MEM_86)
     const mem_byte_t injection_buffer[] = 
     {
-        0x80,       //int80 (syscall)
-        0xcc        //int3  (SIGTRAP)
+        0xcd, 0x80, //int 0x80 (syscall)
+        0xcc        //int 0x3  (SIGTRAP)
     };
 #   elif defined(MEM_64)
     const mem_byte_t injection_buffer[] = 
@@ -738,8 +738,8 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 #   if defined(MEM_86)
     const mem_byte_t injection_buffer[] = 
     {
-        0x80,       //int80 (syscall)
-        0xcc        //int3  (SIGTRAP)
+        0xcd, 0x80, //int 0x80 (syscall)
+        0xcc        //int 0x3  (SIGTRAP)
     };
 #   elif defined(MEM_64)
     const mem_byte_t injection_buffer[] = 
@@ -833,7 +833,7 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 
     ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
 
-    if(alloc_addr == (mem_voidptr_t)__NR_mmap)
+    if(alloc_addr == (mem_voidptr_t)__NR_mmap || (mem_uintptr_t)alloc_addr > (mem_uintptr_t)-4096)
         alloc_addr = (mem_voidptr_t)MEM_BAD_RETURN;
 
 #   endif

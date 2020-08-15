@@ -689,10 +689,12 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
     ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
     regs = old_regs;
 
+    mem_uintptr_t round = (mem_uintptr_t)src % sysconf(_SC_PAGE_SIZE);
+
 #   if defined(MEM_86)
     regs.eax = __NR_mprotect;                    //syscall number
-    regs.ebx = (mem_uintptr_t)src;               //arg0 (void* address)
-    regs.ecx = (mem_uintptr_t)size;              //arg1 (size_t length)
+    regs.ebx = (mem_uintptr_t)src - round;               //arg0 (void* address)
+    regs.ecx = (mem_uintptr_t)size + round;              //arg1 (size_t length)
     regs.edx = (mem_uintptr_t)protection;        //arg2 (int protection)
     regs.esi = 0;                                //arg3 (-)
     regs.edi = 0;                                //arg4 (-)
@@ -700,8 +702,8 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
     regs.eip = (mem_uintptr_t)injection_address; //next instruction
 #   elif defined(MEM_64)
     regs.rax = __NR_mprotect;                    //syscall number
-    regs.rdi = (mem_uintptr_t)src;               //arg0 (void* address)
-    regs.rsi = (mem_uintptr_t)size;              //arg1 (size_t length)
+    regs.rdi = (mem_uintptr_t)src - round;               //arg0 (void* address)
+    regs.rsi = (mem_uintptr_t)size + round;              //arg1 (size_t length)
     regs.rdx = (mem_uintptr_t)protection;        //arg2 (int protection)
     regs.r10 = 0;                                //arg3 (-)
     regs.r8  = 0;                                //arg4 (-)
@@ -1146,8 +1148,9 @@ mem_int_t mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protecti
     ret = (mem_int_t)VirtualProtect((LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect);
 #   elif defined(MEM_LINUX)
     long pagesize = sysconf(_SC_PAGE_SIZE);
-	uintptr_t src_page = (uintptr_t)src - ((uintptr_t)src % pagesize);
-	ret = (mem_int_t)mprotect((void*)src_page, size, protection);
+    mem_uintptr_t round = ((uintptr_t)src % pagesize);
+	mem_uintptr_t src_page = (uintptr_t)src - round;
+	ret = (mem_int_t)mprotect((void*)src_page, size + round, protection);
 #   endif
     return ret;
 }

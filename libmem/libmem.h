@@ -248,6 +248,7 @@ typedef struct _mem_string_t
     mem_bool_t  is_initialized;
     mem_char_t* buffer;
     mem_size_t  npos;
+    mem_bool_t(* is_valid)(struct _mem_string_t* p_string);
     mem_void_t(* clear)(struct _mem_string_t* p_string);
     mem_void_t(* empty)(struct _mem_string_t* p_string);
     mem_size_t(* size)(struct _mem_string_t* p_string);
@@ -269,23 +270,24 @@ typedef struct _mem_string_t
 
 struct _mem_string_t mem_string_init();
 struct _mem_string_t mem_string_new(const mem_char_t* c_string);
-mem_void_t           mem_string_clear  (struct _mem_string_t* p_string);
-mem_void_t           mem_string_empty  (struct _mem_string_t* p_string);
-mem_size_t           mem_string_size   (struct _mem_string_t* p_string);
-mem_void_t           mem_string_resize (struct _mem_string_t* p_string, mem_size_t size);
-mem_size_t           mem_string_length (struct _mem_string_t* p_string);
-mem_char_t*          mem_string_begin  (struct _mem_string_t* p_string);
-mem_char_t*          mem_string_end    (struct _mem_string_t* p_string);
-mem_size_t           mem_string_find   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
-mem_size_t           mem_string_rfind  (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
-mem_char_t           mem_string_at     (struct _mem_string_t* p_string, mem_size_t pos);
-mem_void_t           mem_string_insert (struct _mem_string_t* p_string, const mem_char_t* str);
-mem_void_t           mem_string_value  (struct _mem_string_t* p_string, const mem_char_t* new_str);
-mem_void_t           mem_string_replace(struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str);
-mem_char_t*          mem_string_c_str  (struct _mem_string_t* p_string);
-mem_void_t           mem_string_c_set  (struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
-mem_bool_t           mem_string_compare(struct _mem_string_t* p_string, struct _mem_string_t str);
-struct _mem_string_t mem_string_substr (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
+mem_bool_t           mem_string_is_valid(struct _mem_string_t* p_string);
+mem_void_t           mem_string_clear   (struct _mem_string_t* p_string);
+mem_void_t           mem_string_empty   (struct _mem_string_t* p_string);
+mem_size_t           mem_string_size    (struct _mem_string_t* p_string);
+mem_void_t           mem_string_resize  (struct _mem_string_t* p_string, mem_size_t size);
+mem_size_t           mem_string_length  (struct _mem_string_t* p_string);
+mem_char_t*          mem_string_begin   (struct _mem_string_t* p_string);
+mem_char_t*          mem_string_end     (struct _mem_string_t* p_string);
+mem_size_t           mem_string_find    (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+mem_size_t           mem_string_rfind   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+mem_char_t           mem_string_at      (struct _mem_string_t* p_string, mem_size_t pos);
+mem_void_t           mem_string_insert  (struct _mem_string_t* p_string, const mem_char_t* str);
+mem_void_t           mem_string_value   (struct _mem_string_t* p_string, const mem_char_t* new_str);
+mem_void_t           mem_string_replace (struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str);
+mem_char_t*          mem_string_c_str   (struct _mem_string_t* p_string);
+mem_void_t           mem_string_c_set   (struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
+mem_bool_t           mem_string_compare (struct _mem_string_t* p_string, struct _mem_string_t str);
+struct _mem_string_t mem_string_substr  (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 
 //mem_process_t
 

@@ -33,6 +33,7 @@ struct _mem_string_t mem_string_init()
     mem_size_t _size = sizeof(MEM_STR("")) * sizeof(mem_char_t);
     _string.buffer         = (mem_char_t*)malloc(_size);
     _string.npos           = (mem_size_t)-1;
+    _string.is_valid       = &mem_string_is_valid;
     _string.clear          = &mem_string_clear;
     _string.empty          = &mem_string_empty;
     _string.size           = &mem_string_size;
@@ -65,6 +66,15 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
     memcpy(_str.buffer, c_string, size);
     _str.buffer[size - 1] = '\0';
     return _str;
+}
+
+mem_bool_t mem_string_is_valid(struct _mem_string_t* p_string)
+{
+    return (mem_bool_t)(
+        p_string &&
+        p_string->is_initialized == mem_true &&
+        MEM_STR_CMP(p_string->buffer, MEM_STR(""))
+    );
 }
 
 mem_void_t mem_string_clear(struct _mem_string_t* p_string)

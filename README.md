@@ -30,7 +30,11 @@ mem_int_t     mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t by
 mem_int_t     mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection);
 mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection);
 mem_int_t     mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
+mem_voidptr_t mem_ex_scan(mem_process_t process, mem_bytearray_t data, mem_voidptr_t base, mem_voidptr_t end, mem_size_t size);
 mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end);
+mem_int_t     mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
+mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
+mem_void_t    mem_ex_detour_restore(mem_process_t process, mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size);
 mem_int_t     mem_ex_load_library(mem_process_t process, mem_lib_t lib);
 mem_voidptr_t mem_ex_get_symbol(mem_module_t mod, const char* symbol);
 

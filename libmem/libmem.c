@@ -43,6 +43,8 @@ struct _mem_string_t mem_string_init()
     _string.end            = &mem_string_end;
     _string.find           = &mem_string_find;
     _string.rfind          = &mem_string_rfind;
+    _string.count          = &mem_string_count;
+    _string.rcount         = &mem_string_rcount;
     _string.at             = &mem_string_at;
     _string.c_set          = &mem_string_c_set;
     _string.value          = &mem_string_value;
@@ -167,6 +169,22 @@ mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* su
     }
 
     return ret;
+}
+
+mem_size_t mem_string_count(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset)
+{
+    mem_size_t count = 0;
+    for(mem_size_t next = offset; (next = mem_string_find(p_string, substr, next)) != (mem_size_t)MEM_BAD_RETURN; next++)
+        count++;
+    return count;
+}
+
+mem_size_t mem_string_rcount(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset)
+{
+    mem_size_t count = 0;
+    for(mem_size_t next = offset; (next = mem_string_rfind(p_string, substr, next)) != (mem_size_t)MEM_BAD_RETURN; next--)
+        count++;
+    return count;
 }
 
 mem_char_t mem_string_at(struct _mem_string_t* p_string, mem_size_t pos)

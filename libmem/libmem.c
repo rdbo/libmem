@@ -51,6 +51,8 @@ struct _mem_string_t mem_string_init()
     _string.insert         = &mem_string_insert;
     _string.replace        = &mem_string_replace;
     _string.c_str          = &mem_string_c_str;
+    _string.to_lower       = &mem_string_to_lower;
+    _string.to_upper       = &mem_string_to_upper;
     _string.substr         = &mem_string_substr;
     _string.compare        = &mem_string_compare;
     _string.is_initialized = mem_true;
@@ -247,6 +249,26 @@ mem_bool_t mem_string_compare(struct _mem_string_t* p_string, struct _mem_string
     return (mem_bool_t)(MEM_STR_CMP(mem_string_c_str(p_string), mem_string_c_str(&str)) == 0);
 }
 
+struct _mem_string_t* mem_string_to_lower(struct _mem_string_t* p_string)
+{
+    if(!mem_string_is_valid(p_string)) return p_string;
+    
+    for(mem_size_t i = 0; i < mem_string_length(p_string); i++)
+        mem_string_c_set(p_string, i, tolower(mem_string_at(p_string, i)));
+
+    return p_string;
+}
+
+struct _mem_string_t* mem_string_to_upper(struct _mem_string_t* p_string)
+{
+    if(!mem_string_is_valid(p_string)) return p_string;
+    
+    for(mem_size_t i = 0; i < mem_string_length(p_string); i++)
+        mem_string_c_set(p_string, i, toupper(mem_string_at(p_string, i)));
+
+    return p_string;
+}
+
 struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end)
 {
     struct _mem_string_t new_str = mem_string_init();
@@ -401,6 +423,7 @@ mem_string_t  mem_parse_mask(mem_string_t mask)
 }
 
 //ex
+
 mem_pid_t mem_ex_get_pid(mem_string_t process_name)
 {
     mem_pid_t pid = (mem_pid_t)MEM_BAD_RETURN;

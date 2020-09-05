@@ -645,7 +645,7 @@ mem_int_t mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t ds
     return ret;
 }
 
-mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t data, mem_size_t size)
+mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
 {
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
     if(!mem_process_is_valid(&process)) return ret;
@@ -654,9 +654,9 @@ mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t d
 #   elif defined(MEM_LINUX)
     struct iovec iosrc;
 	struct iovec iodst;
-	iosrc.iov_base = data;
+	iosrc.iov_base = src;
 	iosrc.iov_len = size;
-	iodst.iov_base = src;
+	iodst.iov_base = dst;
 	iodst.iov_len = size;
 	ret = (mem_int_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0);
 #   endif
@@ -1226,9 +1226,9 @@ mem_void_t mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
     memcpy(dst, src, size);
 }
 
-mem_void_t mem_in_write(mem_voidptr_t src, mem_voidptr_t data, mem_size_t size)
+mem_void_t mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
 {
-    memcpy(src, data, size);
+    memcpy(dst, src, size);
 }
 
 mem_void_t mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
@@ -1461,6 +1461,17 @@ mem_module_t mem_in_load_library(mem_lib_t lib)
 #   endif
 
     return mod;
+}
+
+mem_void_t mem_in_unload_library(mem_module_t mod)
+{
+    if(!mem_module_is_valid(&mod)) return;
+
+#   if defined(MEM_WIN)
+    FreeLibrary(mod.handle);
+#   elif defined(MEM_LINUX)
+    dlclose(mod.handle);
+#   endif
 }
 
 mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol)

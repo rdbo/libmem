@@ -476,7 +476,7 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
     int fd = open(path_buffer, O_RDONLY);
     if(fd == -1) return process_name;
     mem_string_t file_buffer = mem_string_init();
-    mem_size_t   file_size   = 1;
+    mem_size_t   file_size   = 0;
     int read_check = 0;
     for(char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
     {
@@ -529,7 +529,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
     int fd = open(path_buffer, O_RDONLY);
     if(fd == -1) return modinfo;
     mem_string_t file_buffer = mem_string_init();
-    mem_size_t   file_size   = 1;
+    mem_size_t   file_size   = 0;
     int read_check = 0;
     for(char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
     {
@@ -711,8 +711,8 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
 
 #   if defined(MEM_86)
     regs.eax = __NR_mprotect;                    //syscall number
-    regs.ebx = (mem_uintptr_t)src - round;               //arg0 (void* address)
-    regs.ecx = (mem_uintptr_t)size + round;              //arg1 (size_t length)
+    regs.ebx = (mem_uintptr_t)src - round;       //arg0 (void* address)
+    regs.ecx = (mem_uintptr_t)size + round;      //arg1 (size_t length)
     regs.edx = (mem_uintptr_t)protection;        //arg2 (int protection)
     regs.esi = 0;                                //arg3 (-)
     regs.edi = 0;                                //arg4 (-)
@@ -720,8 +720,8 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
     regs.eip = (mem_uintptr_t)injection_address; //next instruction
 #   elif defined(MEM_64)
     regs.rax = __NR_mprotect;                    //syscall number
-    regs.rdi = (mem_uintptr_t)src - round;               //arg0 (void* address)
-    regs.rsi = (mem_uintptr_t)size + round;              //arg1 (size_t length)
+    regs.rdi = (mem_uintptr_t)src - round;       //arg0 (void* address)
+    regs.rsi = (mem_uintptr_t)size + round;      //arg1 (size_t length)
     regs.rdx = (mem_uintptr_t)protection;        //arg2 (int protection)
     regs.r10 = 0;                                //arg3 (-)
     regs.r8  = 0;                                //arg4 (-)
@@ -1092,7 +1092,7 @@ mem_int_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
     mem_lib_t libdl_load = mem_lib_init();
     libdl_load.path = libdl_ex.path;
     libdl_load.mode = RTLD_LAZY;
-    mem_in_load_library(libdl_load, &libdl_in);
+    libdl_in = mem_in_load_library(libdl_load);
     if(!mem_module_is_valid(&libdl_in)) return ret;
 
     dlopen_in = mem_in_get_symbol(libdl_in, "dlopen");
@@ -1146,7 +1146,7 @@ mem_voidptr_t mem_ex_get_symbol(mem_module_t mod, const char* symbol)
 #   endif
 
     mem_module_t mod_in;
-    mem_in_load_library(lib, &mod_in);
+    mod_in = mem_in_load_library(lib);
     if(!mem_module_is_valid(&mod_in)) return addr;
     mem_voidptr_t addr_in = mem_in_get_symbol(mod_in, symbol);
     if(!addr_in || addr_in == (mem_voidptr_t)MEM_BAD_RETURN) return addr;
@@ -1446,28 +1446,21 @@ mem_void_t mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_bytes
 	    mem_in_write(src, (mem_voidptr_t)stolen_bytes, (mem_size_t)size);
 }
 
-mem_int_t mem_in_load_library(mem_lib_t lib, mem_module_t* mod)
+mem_module_t mem_in_load_library(mem_lib_t lib)
 {
-    mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
-    if(mod != NULL)
-        *mod = mem_module_init();
-    if(!mem_lib_is_valid(&lib)) return ret;
+    mem_module_t mod = mem_module_init();
+    if(!mem_lib_is_valid(&lib)) return mod;
 #   if defined(MEM_WIN)
     HMODULE h_mod = LoadLibrary(mem_string_c_str(&lib.path));
-    if(mod != NULL)
-        *mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, '\\', mem_string_length(&lib.path)), mem_string_length(&lib.path)));
-    ret = h_mod != (HMODULE)NULL;
+    mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, '\\', mem_string_length(&lib.path)), mem_string_length(&lib.path)));
+    mod.handle = h_mod;
 #   elif defined(MEM_LINUX)
     void* h_mod = dlopen(mem_string_c_str(&lib.path), lib.mode);
-	ret = (h_mod == (mem_voidptr_t)-1 ? MEM_BAD_RETURN : MEM_RETURN);
-	if(mod != NULL && ret != (mem_int_t)MEM_BAD_RETURN)
-	{
-		*mod = mem_in_get_module(lib.path);
-		mod->handle = h_mod;
-	}
+    mod = mem_in_get_module(lib.path);
+    mod.handle = h_mod;
 #   endif
 
-    return ret;
+    return mod;
 }
 
 mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol)

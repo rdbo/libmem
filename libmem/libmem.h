@@ -417,7 +417,7 @@ mem_size_t    mem_in_detour_length(mem_detour_int_t method);
 mem_int_t     mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
 mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
 mem_void_t    mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size);
-mem_int_t     mem_in_load_library(mem_lib_t lib, mem_module_t* mod);
+mem_module_t  mem_in_load_library(mem_lib_t lib);
 mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol);
 
 #endif //MEM_COMPATIBLE

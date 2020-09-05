@@ -821,7 +821,11 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 
     injection_address_end = mem_string_find(&file_buffer, "-", injection_address_pos);
     injection_address_str = mem_string_substr(&file_buffer, injection_address_pos, injection_address_end);
+#   if defined(MEM_86)
+    injection_address = (mem_voidptr_t)strtoul(mem_string_c_str(&injection_address_str), NULL, 16);
+#   elif defined(MEM_64)
     injection_address = (mem_voidptr_t)strtoull(mem_string_c_str(&injection_address_str), NULL, 16);
+#   endif
     if(injection_address == (mem_voidptr_t)MEM_BAD_RETURN || injection_address == (mem_voidptr_t)0) return alloc_addr;
 
     //Inject

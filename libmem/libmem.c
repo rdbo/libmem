@@ -29,8 +29,8 @@ const mem_byte_t MEM_MOV_REGAX[]  = ASM_GENERATE(_MEM_MOVABS_RAX);
 //mem_string_t
 struct _mem_string_t mem_string_init()
 {
-	struct _mem_string_t _string;
-    mem_size_t _size = sizeof(MEM_STR(""));
+	struct _mem_string_t _string = {0};
+    mem_size_t _size = sizeof(mem_char_t) * 1;
     _string.buffer         = (mem_char_t*)malloc(_size);
     _string.npos           = (mem_size_t)-1;
     _string.is_valid       = &mem_string_is_valid;
@@ -57,7 +57,7 @@ struct _mem_string_t mem_string_init()
     _string.compare        = &mem_string_compare;
     _string.is_initialized = mem_true && (_string.buffer);
 	if (!_string.is_initialized) return _string;
-    memset(_string.buffer, '\0', _size);
+    memset(_string.buffer, 0x0, _size);
     return _string;
 }
 
@@ -67,7 +67,11 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
     mem_string_empty(&_str);
     mem_size_t size = (mem_size_t)(MEM_STR_LEN(c_string) + 1) * sizeof(mem_char_t);
     _str.buffer = (mem_char_t*)malloc(size);
-	if (_str.buffer == 0) return mem_string_init();
+	if (_str.buffer == 0)
+	{
+		_str.is_initialized = mem_false;
+		return _str;
+	}
     memset(_str.buffer, 0x0, size);
     memcpy(_str.buffer, c_string, size);
 	_str.buffer[((size / sizeof(mem_char_t)) - 1) * sizeof(mem_char_t)] = MEM_STR('\0');
@@ -119,7 +123,7 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
         memcpy((void*)_buffer, (void*)p_string->buffer, (size_t)(size > old_size ? old_size : size));
         free(p_string->buffer);
     }
-    _buffer[size - 1] = MEM_STR('\0');
+    _buffer[size/sizeof(mem_char_t) - 1] = MEM_STR('\0');
     p_string->buffer = _buffer;
 }
 
@@ -203,20 +207,18 @@ mem_void_t mem_string_insert(struct _mem_string_t* p_string, const mem_char_t* s
 {
     mem_size_t old_length = mem_string_length(p_string);
     mem_string_resize(p_string, old_length + (mem_size_t)MEM_STR_LEN(str));
-    memcpy((void*)(p_string->buffer + old_length), str, MEM_STR_LEN(str) * sizeof(mem_char_t));
+    memcpy((void*)(p_string->buffer + old_length * sizeof(mem_char_t)), str, MEM_STR_LEN(str) * sizeof(mem_char_t));
 }
 
 mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* new_str)
 {
-    mem_size_t size = (mem_size_t)MEM_STR_LEN(new_str) + 1;
-    if(size < 1) return;
+	if (!p_string || !p_string->is_initialized || !new_str) return;
+    mem_size_t size = (mem_size_t)(MEM_STR_LEN(new_str) + 1) * sizeof(mem_char_t);
     mem_char_t* _buffer = (mem_char_t*)malloc(size);
 	if (_buffer == 0) return;
-    memcpy(_buffer, new_str, size - 1);
-    _buffer[size] = MEM_STR('\0');
-    if(p_string->buffer)
-        free(p_string->buffer);
-    *p_string = mem_string_init();
+    memcpy(_buffer, new_str, size - 1 * sizeof(mem_char_t));
+    _buffer[size/sizeof(mem_char_t) - 1] = MEM_STR('\0');
+	mem_string_empty(p_string);
     p_string->buffer = _buffer;
 }
 
@@ -279,7 +281,7 @@ struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_
     mem_size_t size = end - start;
     if(end > start && mem_string_length(p_string) > size)
     {
-        mem_size_t buffer_size = size * sizeof(mem_char_t);
+        mem_size_t buffer_size = size + 1 * sizeof(mem_char_t);
         mem_char_t* _buffer = (mem_char_t*)malloc(buffer_size);
 		if (_buffer == 0) return new_str;
         memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start), (size_t)size + 1);
@@ -489,7 +491,7 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 			{
 				if (pid == procEntry.th32ProcessID)
 				{
-					process_name = mem_string_new(procEntry.szExeFile);
+					mem_string_value(&process_name, procEntry.szExeFile);
 					break;
 				}
 			} while (Process32Next(hSnap, &procEntry));
@@ -717,6 +719,7 @@ mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, 
 	if (data == 0) return ret;
     memset((void*)data, (int)byte, (size_t)size);
     ret = (mem_int_t)mem_ex_write(process, dst, data, size);
+	free(data);
     return ret;
 }
 
@@ -991,6 +994,8 @@ mem_voidptr_t mem_ex_scan(mem_process_t process, mem_bytearray_t data, mem_voidp
 		}
 	}
 
+	free(buffer);
+
 	return ret;
 }
 
@@ -1189,6 +1194,7 @@ mem_voidptr_t mem_ex_get_symbol(mem_module_t mod, const char* symbol)
     mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD_RETURN;
     if(!mem_module_is_valid(&mod)) return addr;
     mem_lib_t lib = mem_lib_init();
+	mem_string_empty(&lib.path);
     lib.path = mod.path;
 #   if defined(MEM_WIN)
 #   elif defined(MEM_LINUX)

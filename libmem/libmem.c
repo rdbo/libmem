@@ -65,7 +65,7 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
 {
     struct _mem_string_t _str = mem_string_init();
     mem_string_empty(&_str);
-    mem_size_t size = (MEM_STR_LEN(c_string) + 1) * sizeof(mem_char_t);
+    mem_size_t size = (mem_size_t)(MEM_STR_LEN(c_string) + 1) * sizeof(mem_char_t);
     _str.buffer = (mem_char_t*)malloc(size);
 	if (_str.buffer == 0) return mem_string_init();
     memset(_str.buffer, 0x0, size);
@@ -125,7 +125,7 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
 
 mem_size_t mem_string_length(struct _mem_string_t* p_string)
 {
-    return (p_string->is_initialized == mem_true ? MEM_STR_LEN(p_string->buffer) : (mem_size_t)MEM_BAD_RETURN);
+    return (mem_size_t)(p_string->is_initialized == mem_true ? MEM_STR_LEN(p_string->buffer) : (mem_size_t)MEM_BAD_RETURN);
 }
 
 mem_char_t* mem_string_begin(struct _mem_string_t* p_string)
@@ -143,7 +143,7 @@ mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* sub
     mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
     if(p_string->is_initialized != mem_true) return ret;
     mem_size_t str_len    = mem_string_length(p_string) + 1;
-    mem_size_t substr_len = MEM_STR_LEN(substr);
+    mem_size_t substr_len = (mem_size_t)MEM_STR_LEN(substr);
     for(; offset + substr_len <= str_len; offset++)
     {
         if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + offset * sizeof(mem_char_t)), substr, substr_len))
@@ -162,7 +162,7 @@ mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* su
     if(offset == (mem_size_t)-1) offset = mem_string_length(p_string) + 1;
     if(!p_string || p_string->is_initialized != mem_true || !substr) return ret;
     mem_size_t str_len    = mem_string_length(p_string) + 1;
-    mem_size_t substr_len = MEM_STR_LEN(substr);
+    mem_size_t substr_len = (mem_size_t)MEM_STR_LEN(substr);
     for(; str_len > substr_len && (offset - substr_len) * sizeof(mem_char_t) > 0; offset--)
     {
         if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + (offset - substr_len) * sizeof(mem_char_t)), substr, substr_len))
@@ -202,13 +202,13 @@ mem_char_t mem_string_at(struct _mem_string_t* p_string, mem_size_t pos)
 mem_void_t mem_string_insert(struct _mem_string_t* p_string, const mem_char_t* str)
 {
     mem_size_t old_length = mem_string_length(p_string);
-    mem_string_resize(p_string, old_length + MEM_STR_LEN(str));
+    mem_string_resize(p_string, old_length + (mem_size_t)MEM_STR_LEN(str));
     memcpy((void*)(p_string->buffer + old_length), str, MEM_STR_LEN(str) * sizeof(mem_char_t));
 }
 
 mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* new_str)
 {
-    mem_size_t size = MEM_STR_LEN(new_str) + 1;
+    mem_size_t size = (mem_size_t)MEM_STR_LEN(new_str) + 1;
     if(size < 1) return;
     mem_char_t* _buffer = (mem_char_t*)malloc(size);
 	if (_buffer == 0) return;
@@ -223,8 +223,8 @@ mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* ne
 mem_void_t mem_string_replace(struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str)
 {
     mem_size_t old_length = mem_string_length(p_string);
-    mem_size_t old_str_len = MEM_STR_LEN(old_str);
-    mem_size_t new_str_len = MEM_STR_LEN(new_str);
+    mem_size_t old_str_len = (mem_size_t)MEM_STR_LEN(old_str);
+    mem_size_t new_str_len = (mem_size_t)MEM_STR_LEN(new_str);
     for(mem_size_t i = 0; (i = mem_string_find(p_string, old_str, i)) != p_string->npos && i != MEM_BAD_RETURN && i + 1 <= old_length;)
     {
         mem_string_t holder = mem_string_substr(p_string, 0, i);

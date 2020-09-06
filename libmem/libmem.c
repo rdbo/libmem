@@ -538,18 +538,36 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
     mem_module_t modinfo = mem_module_init();
     if(!mem_process_is_valid(&process)) return modinfo;
 #   if defined(MEM_WIN)
-    HMODULE hMod;
-	mem_char_t modpath[MAX_PATH];
-	GetModuleHandleEx(process.pid, mem_string_c_str(&module_name), &hMod);
-	MODULEINFO module_info = { 0 };
-	GetModuleInformation(process.handle, hMod, &module_info, sizeof(module_info));
-	GetModuleFileName(hMod, modpath, sizeof(modpath) / sizeof(mem_char_t));
-	modinfo.base = (mem_voidptr_t)module_info.lpBaseOfDll;
-	modinfo.size = (size_t)module_info.SizeOfImage;
+
+	MODULEENTRY32 module_info = { 0 };
+
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		MODULEENTRY32 modEntry;
+		modEntry.dwSize = sizeof(modEntry);
+		if (Module32First(hSnap, &modEntry))
+		{
+			do
+			{
+				if (!MEM_STR_CMP(modEntry.szModule, mem_string_c_str(&module_name)))
+				{
+					module_info = modEntry;
+					break;
+				}
+			} while (Module32Next(hSnap, &modEntry));
+		}
+	}
+
+	CloseHandle(hSnap);
+
+	modinfo.base = (mem_voidptr_t)module_info.modBaseAddr;
+	modinfo.size = (size_t)module_info.modBaseSize;
 	modinfo.end = (mem_voidptr_t)((uintptr_t)modinfo.base + modinfo.size);
-	modinfo.handle = (mem_module_handle_t)hMod;
-	modinfo.path = mem_string_new(modpath);
-	modinfo.name = mem_string_substr(&modinfo.path, mem_string_rfind(&modinfo.path, MEM_STR("\\"), -1), -1);
+	modinfo.handle = (mem_module_handle_t)module_info.hModule;
+	modinfo.path = mem_string_new(module_info.szExePath);
+	modinfo.name = mem_string_new(module_info.szModule);
+	//modinfo.name = mem_string_substr(&modinfo.path, mem_string_rfind(&modinfo.path, MEM_STR("\\"), -1), -1);
 #   elif defined(MEM_LINUX)
     char path_buffer[64];
 	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
@@ -691,14 +709,14 @@ mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t s
     return ret;
 }
 
-mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
+mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size)
 {
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
     if(!mem_process_is_valid(&process)) return ret;
     mem_byte_t* data = malloc(size);
 	if (data == 0) return ret;
     memset((void*)data, (int)byte, (size_t)size);
-    ret = (mem_int_t)mem_ex_write(process, src, data, size);
+    ret = (mem_int_t)mem_ex_write(process, dst, data, size);
     return ret;
 }
 
@@ -1240,9 +1258,8 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
     mem_char_t path_buffer[MAX_PATH];
 	GetModuleInformation(cur_handle, hmod, &module_info, sizeof(module_info));
     GetModuleFileName(hmod, path_buffer, sizeof(path_buffer)/sizeof(mem_char_t));
-    modinfo.name = mem_string_new(path_buffer);
-    modinfo.name = mem_string_substr(&modinfo.name, mem_string_rfind(&modinfo.name, MEM_STR("\\"), mem_string_length(&modinfo.name)), mem_string_length(&modinfo.name));
     modinfo.path = mem_string_new(path_buffer);
+	modinfo.name = mem_string_substr(&modinfo.path, mem_string_rfind(&modinfo.path, MEM_STR("\\"), -1), -1);
 	modinfo.base = (mem_voidptr_t)module_info.lpBaseOfDll;
 	modinfo.size = (mem_size_t)module_info.SizeOfImage;
 	modinfo.end = (mem_voidptr_t)((uintptr_t)modinfo.base + modinfo.size);

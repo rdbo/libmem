@@ -56,6 +56,7 @@ struct _mem_string_t mem_string_init()
     _string.substr         = &mem_string_substr;
     _string.compare        = &mem_string_compare;
     _string.is_initialized = mem_true && (_string.buffer);
+	if (!_string.is_initialized) return _string;
     memset(_string.buffer, '\0', _size);
     return _string;
 }
@@ -66,9 +67,10 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
     mem_string_empty(&_str);
     mem_size_t size = (MEM_STR_LEN(c_string) + 1) * sizeof(mem_char_t);
     _str.buffer = (mem_char_t*)malloc(size);
+	if (_str.buffer == 0) return mem_string_init();
     memset(_str.buffer, 0x0, size);
     memcpy(_str.buffer, c_string, size);
-    _str.buffer[size - 1 * sizeof(mem_char_t)] = MEM_STR('\0');
+    _str.buffer[size - (1 * sizeof(mem_char_t))] = MEM_STR('\0');
     return _str;
 }
 
@@ -209,6 +211,7 @@ mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* ne
     mem_size_t size = MEM_STR_LEN(new_str) + 1;
     if(size < 1) return;
     mem_char_t* _buffer = (mem_char_t*)malloc(size);
+	if (_buffer == 0) return;
     memcpy(_buffer, new_str, size - 1);
     _buffer[size] = MEM_STR('\0');
     if(p_string->buffer)
@@ -272,12 +275,13 @@ struct _mem_string_t* mem_string_to_upper(struct _mem_string_t* p_string)
 struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end)
 {
     struct _mem_string_t new_str = mem_string_init();
-    if(end == -1) end = mem_string_length(p_string) + 1;
+    if(end == (mem_size_t)-1) end = mem_string_length(p_string) + 1;
     mem_size_t size = end - start;
     if(end > start && mem_string_length(p_string) > size)
     {
         mem_size_t buffer_size = size * sizeof(mem_char_t);
         mem_char_t* _buffer = (mem_char_t*)malloc(buffer_size);
+		if (_buffer == 0) return new_str;
         memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start), (size_t)size + 1);
         _buffer[buffer_size] = MEM_STR('\0');
         new_str.buffer = _buffer;
@@ -523,7 +527,7 @@ mem_process_t mem_ex_get_process(mem_pid_t pid)
     process.pid  = pid;
     process.name = mem_ex_get_process_name(process.pid);
 #	if defined(MEM_WIN)
-	process.handle = OpenProcess(PROCESS_ALL_ACCESS, NULL, process.pid);
+	process.handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 #	elif defined(MEM_LINUX)
 #	endif
     return process;
@@ -536,7 +540,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 #   if defined(MEM_WIN)
     HMODULE hMod;
 	mem_char_t modpath[MAX_PATH];
-	GetModuleHandleEx(NULL, mem_string_c_str(&module_name), &hMod);
+	GetModuleHandleEx(process.pid, mem_string_c_str(&module_name), &hMod);
 	MODULEINFO module_info = { 0 };
 	GetModuleInformation(process.handle, hMod, &module_info, sizeof(module_info));
 	GetModuleFileName(hMod, modpath, sizeof(modpath) / sizeof(mem_char_t));
@@ -545,6 +549,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 	modinfo.end = (mem_voidptr_t)((uintptr_t)modinfo.base + modinfo.size);
 	modinfo.handle = (mem_module_handle_t)hMod;
 	modinfo.path = mem_string_new(modpath);
+	modinfo.name = mem_string_substr(&modinfo.path, mem_string_rfind(&modinfo.path, MEM_STR("\\"), -1), -1);
 #   elif defined(MEM_LINUX)
     char path_buffer[64];
 	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
@@ -691,6 +696,7 @@ mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t byte, 
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
     if(!mem_process_is_valid(&process)) return ret;
     mem_byte_t* data = malloc(size);
+	if (data == 0) return ret;
     memset((void*)data, (int)byte, (size_t)size);
     ret = (mem_int_t)mem_ex_write(process, src, data, size);
     return ret;
@@ -889,9 +895,9 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 mem_int_t mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size)
 {
     mem_int_t ret = MEM_BAD_RETURN;
-    if(!mem_process_is_valid(&process) || size == 0) return ret;
+    if(!mem_process_is_valid(&process) || !src || src == (mem_voidptr_t)-1 || size == 0) return ret;
 #   if defined(MEM_WIN)
-    ret = (mem_int_t)VirtualFreeEx(process.handle, src, size, MEM_RELEASE);
+    ret = (mem_int_t)VirtualFreeEx(process.handle, src, 0, MEM_RELEASE);
 #   elif defined(MEM_LINUX)
     mem_voidptr_t injection_address;
     struct user_regs_struct old_regs, regs;
@@ -981,7 +987,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 	{
 		mem_bool_t found = mem_true;
 		mem_int8_t pbyte;
-		for (mem_uintptr_t j = 0; j < MEM_STR_LEN(pattern); j++)
+		for (mem_uintptr_t j = 0; j < strlen(pattern); j++)
 		{
 			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i + j), &pbyte, 1);
 			found &= mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte;
@@ -1069,11 +1075,11 @@ mem_int_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
     if(!libpath_ex || libpath_ex == (mem_voidptr_t)-1) return ret;
     mem_ex_set(process, libpath_ex, 0x0, buffer_size);
     mem_ex_write(process, libpath_ex, (mem_voidptr_t)mem_string_c_str(&lib.path), buffer_size);
-    HANDLE h_thread = CreateRemoteThread(process.handle, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibrary, libpath_ex, 0, 0);
+    HANDLE h_thread = (HANDLE)CreateRemoteThread(process.handle, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, libpath_ex, 0, 0);
     if(!h_thread || h_thread == INVALID_HANDLE_VALUE) return ret;
     WaitForSingleObject(h_thread, -1);
     CloseHandle(h_thread);
-    VirtualFreeEx(process.handle, libpath_ex, NULL, MEM_RELEASE);
+    VirtualFreeEx(process.handle, libpath_ex, 0, MEM_RELEASE);
     ret = !ret;
 #   elif defined(MEM_LINUX)
     mem_prot_t protection = PROT_EXEC | PROT_READ | PROT_WRITE;
@@ -1233,9 +1239,9 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
 	if (hmod == NULL) return modinfo;
     mem_char_t path_buffer[MAX_PATH];
 	GetModuleInformation(cur_handle, hmod, &module_info, sizeof(module_info));
-    GetModuleFileName(hmod, &path_buffer, sizeof(path_buffer)/sizeof(mem_char_t));
+    GetModuleFileName(hmod, path_buffer, sizeof(path_buffer)/sizeof(mem_char_t));
     modinfo.name = mem_string_new(path_buffer);
-    modinfo.name = mem_string_substr(&modinfo.name, mem_string_rfind(&modinfo.name, "\\", mem_string_length(&modinfo.name)), mem_string_length(&modinfo.name));
+    modinfo.name = mem_string_substr(&modinfo.name, mem_string_rfind(&modinfo.name, MEM_STR("\\"), mem_string_length(&modinfo.name)), mem_string_length(&modinfo.name));
     modinfo.path = mem_string_new(path_buffer);
 	modinfo.base = (mem_voidptr_t)module_info.lpBaseOfDll;
 	modinfo.size = (mem_size_t)module_info.SizeOfImage;
@@ -1294,7 +1300,7 @@ mem_void_t mem_in_deallocate(mem_voidptr_t src, mem_size_t size)
 {
 	if (size == 0) return;
 #   if defined(MEM_WIN)
-    VirtualFree(src, size, MEM_RELEASE);
+    VirtualFree(src, 0, MEM_RELEASE);
 #   elif defined(MEM_LINUX)
     munmap(src, size);
 #   endif
@@ -1480,7 +1486,7 @@ mem_module_t mem_in_load_library(mem_lib_t lib)
     if(!mem_lib_is_valid(&lib)) return mod;
 #   if defined(MEM_WIN)
     HMODULE h_mod = LoadLibrary(mem_string_c_str(&lib.path));
-    mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, '\\', mem_string_length(&lib.path)), mem_string_length(&lib.path)));
+    mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, MEM_STR("\\"), mem_string_length(&lib.path)), mem_string_length(&lib.path)));
     mod.handle = h_mod;
 #   elif defined(MEM_LINUX)
     void* h_mod = dlopen(mem_string_c_str(&lib.path), lib.mode);

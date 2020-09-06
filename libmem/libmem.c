@@ -74,7 +74,7 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
 	}
     memset(_str.buffer, 0x0, size);
     memcpy(_str.buffer, c_string, size);
-	_str.buffer[((size / sizeof(mem_char_t)) - 1) * sizeof(mem_char_t)] = MEM_STR('\0');
+	_str.buffer[((size / sizeof(mem_char_t)) - 1)] = MEM_STR('\0');
     return _str;
 }
 

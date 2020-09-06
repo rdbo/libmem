@@ -148,7 +148,7 @@
 #define MEM_DETOUR_INT_METHOD5 5
 
 //Other
-#if defined(__cplusplus) || defined(___cplusplus)
+#if defined(__cplusplus)
 #define MEM_CPP
 #endif
 #define MEM_BAD_RETURN         -1

@@ -30,7 +30,7 @@ const mem_byte_t MEM_MOV_REGAX[]  = ASM_GENERATE(_MEM_MOVABS_RAX);
 struct _mem_string_t mem_string_init()
 {
 	struct _mem_string_t _string;
-    mem_size_t _size = sizeof(MEM_STR("\0"));
+    mem_size_t _size = sizeof(MEM_STR(""));
     _string.buffer         = (mem_char_t*)malloc(_size);
     _string.npos           = (mem_size_t)-1;
     _string.is_valid       = &mem_string_is_valid;
@@ -57,7 +57,7 @@ struct _mem_string_t mem_string_init()
     _string.compare        = &mem_string_compare;
     _string.is_initialized = mem_true && (_string.buffer);
 	if (!_string.is_initialized) return _string;
-    memset(_string.buffer, MEM_STR('\0'), _size);
+    memset(_string.buffer, '\0', _size);
     return _string;
 }
 

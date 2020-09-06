@@ -103,6 +103,8 @@
 #define MEM_STR_LEN(str) strlen(str)
 #endif
 
+#define MEM_THISCALL(obj, func, ...) obj.func(&obj, __VA_ARGS__)
+
 //Assembly
 
 #define _MEM_JMP        0xE9
@@ -238,7 +240,7 @@ typedef mem_uint64_t                         mem_qword_t;
 typedef wchar_t                              mem_wchar_t;
 typedef mem_wchar_t                          mem_char_t;
 #elif defined(MEM_MBCS)
-typedef mem_int16_t                          mem_wchar_t;
+typedef mem_uint16_t                         mem_wchar_t;
 typedef char                                 mem_char_t;
 #endif
 

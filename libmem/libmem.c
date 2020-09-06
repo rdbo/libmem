@@ -30,7 +30,7 @@ const mem_byte_t MEM_MOV_REGAX[]  = ASM_GENERATE(_MEM_MOVABS_RAX);
 struct _mem_string_t mem_string_init()
 {
 	struct _mem_string_t _string;
-    mem_size_t _size = sizeof(MEM_STR(""));
+    mem_size_t _size = sizeof(MEM_STR("\0"));
     _string.buffer         = (mem_char_t*)malloc(_size);
     _string.npos           = (mem_size_t)-1;
     _string.is_valid       = &mem_string_is_valid;
@@ -57,7 +57,7 @@ struct _mem_string_t mem_string_init()
     _string.compare        = &mem_string_compare;
     _string.is_initialized = mem_true && (_string.buffer);
 	if (!_string.is_initialized) return _string;
-    memset(_string.buffer, '\0', _size);
+    memset(_string.buffer, MEM_STR('\0'), _size);
     return _string;
 }
 
@@ -70,7 +70,7 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
 	if (_str.buffer == 0) return mem_string_init();
     memset(_str.buffer, 0x0, size);
     memcpy(_str.buffer, c_string, size);
-    _str.buffer[size - (1 * sizeof(mem_char_t))] = MEM_STR('\0');
+	_str.buffer[((size / sizeof(mem_char_t)) - 1) * sizeof(mem_char_t)] = MEM_STR('\0');
     return _str;
 }
 
@@ -135,7 +135,7 @@ mem_char_t* mem_string_begin(struct _mem_string_t* p_string)
 
 mem_char_t* mem_string_end(struct _mem_string_t* p_string)
 {
-    return (mem_char_t*)((mem_uintptr_t)p_string->buffer + mem_string_size(p_string));
+    return (mem_char_t*)((mem_uintptr_t)p_string->buffer + mem_string_length(p_string) * sizeof(mem_char_t));
 }
 
 mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset)
@@ -708,7 +708,7 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
     if(!mem_process_is_valid(&process)) return ret;
 #	if defined(MEM_WIN)
 	DWORD old_protect;
-	if (process.handle == (HANDLE)NULL || src <= (mem_voidptr_t)NULL || size == 0 || protection <= 0) return ret;
+	if (process.handle == (HANDLE)INVALID_HANDLE_VALUE || src <= (mem_voidptr_t)NULL || size == 0 || protection <= 0) return ret;
 	ret = (mem_int_t)VirtualProtectEx(process.handle, (LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect);
 #	elif defined(MEM_LINUX)
     mem_voidptr_t injection_address;
@@ -987,7 +987,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 	{
 		mem_bool_t found = mem_true;
 		mem_int8_t pbyte;
-		for (mem_uintptr_t j = 0; j < strlen(pattern); j++)
+		for (mem_uintptr_t j = 0; j < mem_string_length(&mask); j++)
 		{
 			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i + j), &pbyte, 1);
 			found &= mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte;

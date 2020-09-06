@@ -146,6 +146,9 @@
 #define MEM_DETOUR_INT_METHOD5 5
 
 //Other
+#if defined(__cplusplus) || defined(___cplusplus)
+#define MEM_CPP
+#endif
 #define MEM_BAD_RETURN         -1
 #define MEM_RETURN             !MEM_BAD_RETURN
 #define MEM_KNOWN_BYTE         MEM_STR('x')
@@ -231,10 +234,11 @@ typedef mem_uint16_t                         mem_word_t;
 typedef mem_uint32_t                         mem_dword_t;
 typedef mem_uint64_t                         mem_qword_t;
 
-typedef mem_int16_t                          mem_wchar_t;
 #if defined(MEM_UCS)
+typedef wchar_t                              mem_wchar_t;
 typedef mem_wchar_t                          mem_char_t;
 #elif defined(MEM_MBCS)
+typedef mem_int16_t                          mem_wchar_t;
 typedef char                                 mem_char_t;
 #endif
 
@@ -274,6 +278,11 @@ typedef struct _mem_string_t
     struct _mem_string_t  (* substr)  (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 }mem_string_t;
 
+#ifdef MEM_CPP
+extern "C"
+{
+#endif
+
 struct _mem_string_t  mem_string_init();
 struct _mem_string_t  mem_string_new(const mem_char_t* c_string);
 mem_bool_t            mem_string_is_valid(struct _mem_string_t* p_string);
@@ -299,6 +308,10 @@ struct _mem_string_t* mem_string_to_lower(struct _mem_string_t* p_string);
 struct _mem_string_t* mem_string_to_upper(struct _mem_string_t* p_string);
 struct _mem_string_t  mem_string_substr  (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 
+#ifdef MEM_CPP
+}
+#endif
+
 //mem_process_t
 
 typedef struct _mem_process_t
@@ -314,9 +327,18 @@ typedef struct _mem_process_t
     mem_bool_t(* compare)(struct _mem_process_t* p_process, struct _mem_process_t process);
 }mem_process_t;
 
+#ifdef MEM_CPP
+extern "C"
+{
+#endif
+
 struct _mem_process_t mem_process_init();
 mem_bool_t            mem_process_is_valid(struct _mem_process_t* p_process);
 mem_bool_t            mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process);
+
+#ifdef MEM_CPP
+}
+#endif
 
 //mem_module_t
 
@@ -333,9 +355,18 @@ typedef struct _mem_module_t
     mem_bool_t(* compare)(struct _mem_module_t* p_mod, struct _mem_module_t mod);
 }mem_module_t;
 
+#ifdef MEM_CPP
+extern "C"
+{
+#endif
+
 struct _mem_module_t mem_module_init();
 mem_bool_t           mem_module_is_valid(struct _mem_module_t* p_mod);
 mem_bool_t           mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t mod);
+
+#ifdef MEM_CPP
+}
+#endif
 
 //mem_alloc_t
 
@@ -347,8 +378,17 @@ typedef struct _mem_alloc_t
     mem_bool_t(* is_valid)(struct _mem_alloc_t* p_alloc);
 }mem_alloc_t;
 
+#ifdef MEM_CPP
+extern "C"
+{
+#endif
+
 struct _mem_alloc_t mem_alloc_init();
 mem_bool_t          mem_alloc_is_valid(struct _mem_alloc_t* p_alloc);
+
+#ifdef MEM_CPP
+}
+#endif
 
 //mem_lib_t
 
@@ -363,8 +403,18 @@ typedef struct _mem_lib_t
     mem_bool_t(* is_valid)(struct _mem_lib_t* p_lib);
 }mem_lib_t;
 
+
+#ifdef MEM_CPP
+extern "C"
+{
+#endif
+
 struct _mem_lib_t mem_lib_init();
 mem_bool_t        mem_lib_is_valid(struct _mem_lib_t* p_lib);
+
+#ifdef MEM_CPP
+}
+#endif
 
 //mem_detour_int_t
 
@@ -379,6 +429,11 @@ typedef enum _mem_detour_int_t
 }mem_detour_int_t;
 
 //libmem
+
+#ifdef MEM_CPP
+extern "C"
+{
+#endif
 
 mem_string_t  mem_parse_mask(mem_string_t mask);
 
@@ -424,6 +479,10 @@ mem_void_t    mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_by
 mem_module_t  mem_in_load_library(mem_lib_t lib);
 mem_void_t    mem_in_unload_library(mem_module_t mod);
 mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol);
+
+#ifdef MEM_CPP
+}
+#endif
 
 #endif //MEM_COMPATIBLE
 #endif //MEM

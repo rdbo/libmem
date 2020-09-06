@@ -29,8 +29,8 @@ const mem_byte_t MEM_MOV_REGAX[]  = ASM_GENERATE(_MEM_MOVABS_RAX);
 //mem_string_t
 struct _mem_string_t mem_string_init()
 {
-    struct _mem_string_t _string;
-    mem_size_t _size = sizeof(MEM_STR("")) * sizeof(mem_char_t);
+	struct _mem_string_t _string;
+    mem_size_t _size = sizeof(MEM_STR(""));
     _string.buffer         = (mem_char_t*)malloc(_size);
     _string.npos           = (mem_size_t)-1;
     _string.is_valid       = &mem_string_is_valid;
@@ -55,7 +55,7 @@ struct _mem_string_t mem_string_init()
     _string.to_upper       = &mem_string_to_upper;
     _string.substr         = &mem_string_substr;
     _string.compare        = &mem_string_compare;
-    _string.is_initialized = mem_true;
+    _string.is_initialized = mem_true && (_string.buffer);
     memset(_string.buffer, '\0', _size);
     return _string;
 }
@@ -68,7 +68,7 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
     _str.buffer = (mem_char_t*)malloc(size);
     memset(_str.buffer, 0x0, size);
     memcpy(_str.buffer, c_string, size);
-    _str.buffer[size - 1] = '\0';
+    _str.buffer[size - 1 * sizeof(mem_char_t)] = MEM_STR('\0');
     return _str;
 }
 
@@ -123,7 +123,7 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
 
 mem_size_t mem_string_length(struct _mem_string_t* p_string)
 {
-    return (p_string->is_initialized == mem_true ? MEM_STR_LEN(p_string->buffer) : MEM_BAD_RETURN);
+    return (p_string->is_initialized == mem_true ? MEM_STR_LEN(p_string->buffer) : (mem_size_t)MEM_BAD_RETURN);
 }
 
 mem_char_t* mem_string_begin(struct _mem_string_t* p_string)
@@ -133,7 +133,7 @@ mem_char_t* mem_string_begin(struct _mem_string_t* p_string)
 
 mem_char_t* mem_string_end(struct _mem_string_t* p_string)
 {
-    return (mem_char_t*)((mem_uintptr_t)p_string->buffer + mem_string_length(p_string));
+    return (mem_char_t*)((mem_uintptr_t)p_string->buffer + mem_string_size(p_string));
 }
 
 mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset)
@@ -144,7 +144,7 @@ mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* sub
     mem_size_t substr_len = MEM_STR_LEN(substr);
     for(; offset + substr_len <= str_len; offset++)
     {
-        if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + offset), substr, substr_len))
+        if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + offset * sizeof(mem_char_t)), substr, substr_len))
         {
             ret = offset;
             break;
@@ -158,12 +158,12 @@ mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* su
 {
     mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
     if(offset == (mem_size_t)-1) offset = mem_string_length(p_string) + 1;
-    if(p_string->is_initialized != mem_true) return ret;
+    if(!p_string || p_string->is_initialized != mem_true || !substr) return ret;
     mem_size_t str_len    = mem_string_length(p_string) + 1;
     mem_size_t substr_len = MEM_STR_LEN(substr);
-    for(; str_len > substr_len && offset > 0; offset--)
+    for(; str_len > substr_len && (offset - substr_len) * sizeof(mem_char_t) > 0; offset--)
     {
-        if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + offset), substr, substr_len))
+        if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + (offset - substr_len) * sizeof(mem_char_t)), substr, substr_len))
         {
             ret = offset;
             break;
@@ -486,7 +486,6 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 				if (pid == procEntry.th32ProcessID)
 				{
 					process_name = mem_string_new(procEntry.szExeFile);
-                    process_name = mem_string_substr(&process_name, mem_string_rfind(&process_name, '\\', mem_string_length(&process_name)) + 1, mem_string_length(&process_name));
 					break;
 				}
 			} while (Process32Next(hSnap, &procEntry));
@@ -541,10 +540,10 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 	MODULEINFO module_info = { 0 };
 	GetModuleInformation(process.handle, hMod, &module_info, sizeof(module_info));
 	GetModuleFileName(hMod, modpath, sizeof(modpath) / sizeof(mem_char_t));
-	modinfo.base = (voidptr_t)module_info.lpBaseOfDll;
+	modinfo.base = (mem_voidptr_t)module_info.lpBaseOfDll;
 	modinfo.size = (size_t)module_info.SizeOfImage;
-	modinfo.end = (voidptr_t)((uintptr_t)modinfo.base + modinfo.size);
-	modinfo.handle = (module_handle_t)hMod;
+	modinfo.end = (mem_voidptr_t)((uintptr_t)modinfo.base + modinfo.size);
+	modinfo.handle = (mem_module_handle_t)hMod;
 	modinfo.path = mem_string_new(modpath);
 #   elif defined(MEM_LINUX)
     char path_buffer[64];
@@ -673,7 +672,7 @@ mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t s
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
     if(!mem_process_is_valid(&process)) return ret;
 #   if defined(MEM_WIN)
-    ret = (mem_int_t)WriteProcessMemory(process.handle, (LPVOID)src, (LPCVOID)data, (SIZE_T)size, NULL);
+    ret = (mem_int_t)WriteProcessMemory(process.handle, (LPVOID)dst, (LPCVOID)src, (SIZE_T)size, NULL);
 #   elif defined(MEM_LINUX)
     struct iovec iosrc;
 	struct iovec iodst;
@@ -691,8 +690,8 @@ mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t src, mem_byte_t byte, 
 {
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
     if(!mem_process_is_valid(&process)) return ret;
-    mem_byte_t data[size];
-    memset(data, byte, size);
+    mem_byte_t* data = malloc(size);
+    memset((void*)data, (int)byte, (size_t)size);
     ret = (mem_int_t)mem_ex_write(process, src, data, size);
     return ret;
 }
@@ -703,7 +702,7 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
     if(!mem_process_is_valid(&process)) return ret;
 #	if defined(MEM_WIN)
 	DWORD old_protect;
-	if (process.handle == (HANDLE)NULL || src <= (mem_voidptr_t)NULL || size == 0 || protection <= NULL) return ret;
+	if (process.handle == (HANDLE)NULL || src <= (mem_voidptr_t)NULL || size == 0 || protection <= 0) return ret;
 	ret = (mem_int_t)VirtualProtectEx(process.handle, (LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect);
 #	elif defined(MEM_LINUX)
     mem_voidptr_t injection_address;
@@ -890,7 +889,7 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 mem_int_t mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size)
 {
     mem_int_t ret = MEM_BAD_RETURN;
-    if(!mem_process_is_valid(&process)) return ret;
+    if(!mem_process_is_valid(&process) || size == 0) return ret;
 #   if defined(MEM_WIN)
     ret = (mem_int_t)VirtualFreeEx(process.handle, src, size, MEM_RELEASE);
 #   elif defined(MEM_LINUX)
@@ -981,7 +980,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 	for (mem_uintptr_t i = 0; i < scan_size; i++)
 	{
 		mem_bool_t found = mem_true;
-		int8_t pbyte;
+		mem_int8_t pbyte;
 		for (mem_uintptr_t j = 0; j < MEM_STR_LEN(pattern); j++)
 		{
 			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i + j), &pbyte, 1);
@@ -1214,10 +1213,10 @@ mem_string_t mem_in_get_process_name()
 {
     mem_string_t process_name = mem_string_init();
 #   if defined(MEM_WIN)
-    char_t buffer[MAX_PATH];
-	GetModuleFileName(NULL, buffer, sizeof(buffer)/sizeof(char_t));
+    mem_char_t buffer[MAX_PATH];
+	GetModuleFileName(NULL, buffer, sizeof(buffer)/sizeof(mem_char_t));
     process_name = mem_string_new(buffer);
-    process_name = mem_string_substr(&process_name, mem_string_rfind(&process_name, "\\", mem_string_length(&process_name)), mem_string_length(&process_name));
+    process_name = mem_string_substr(&process_name, mem_string_rfind(&process_name, MEM_STR("\\"), mem_string_length(&process_name)), mem_string_length(&process_name));
 #   elif defined(MEM_LINUX)
     process_name = mem_ex_get_process_name(mem_in_get_pid());
 #   endif
@@ -1268,7 +1267,8 @@ mem_int_t mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protecti
     mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
     if(src == (mem_voidptr_t)MEM_BAD_RETURN || size == (mem_size_t)MEM_BAD_RETURN || size == 0 || protection == (mem_prot_t)MEM_BAD_RETURN) return ret;
 #   if defined(MEM_WIN)
-    ret = (mem_int_t)VirtualProtect((LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect);
+	mem_prot_t old_protection;
+    ret = (mem_int_t)VirtualProtect((LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protection);
 #   elif defined(MEM_LINUX)
     long pagesize = sysconf(_SC_PAGE_SIZE);
     mem_uintptr_t round = ((uintptr_t)src % pagesize);
@@ -1292,6 +1292,7 @@ mem_voidptr_t mem_in_allocate(mem_size_t size, mem_prot_t protection)
 
 mem_void_t mem_in_deallocate(mem_voidptr_t src, mem_size_t size)
 {
+	if (size == 0) return;
 #   if defined(MEM_WIN)
     VirtualFree(src, size, MEM_RELEASE);
 #   elif defined(MEM_LINUX)

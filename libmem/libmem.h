@@ -217,10 +217,10 @@ typedef unsigned int                         mem_uint32_t;
 typedef unsigned long long                   mem_uint64_t;
 
 #if defined(MEM_WIN)
-typedef mem_uint32_t                         mem_pid_t;
-typedef mem_uint32_t                         mem_prot_t;
+typedef DWORD                                mem_pid_t;
+typedef DWORD                                mem_prot_t;
 typedef HMODULE                              mem_module_handle_t;
-typedef mem_uint32_t                         mem_alloc_type_t;
+typedef DWORD                                mem_alloc_type_t;
 #elif defined(MEM_LINUX)
 typedef mem_int32_t                          mem_pid_t;
 typedef mem_int32_t                          mem_prot_t;

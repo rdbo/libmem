@@ -1247,7 +1247,7 @@ mem_string_t mem_in_get_process_name()
     mem_char_t buffer[MAX_PATH];
 	GetModuleFileName(NULL, buffer, sizeof(buffer)/sizeof(mem_char_t));
     process_name = mem_string_new(buffer);
-    process_name = mem_string_substr(&process_name, mem_string_rfind(&process_name, MEM_STR("\\"), mem_string_length(&process_name)), mem_string_length(&process_name));
+    process_name = mem_string_substr(&process_name, mem_string_rfind(&process_name, MEM_STR("\\"), mem_string_length(&process_name)) + 1, mem_string_length(&process_name));
 #   elif defined(MEM_LINUX)
     process_name = mem_ex_get_process_name(mem_in_get_pid());
 #   endif
@@ -1266,7 +1266,7 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
 	GetModuleInformation(cur_handle, hmod, &module_info, sizeof(module_info));
     GetModuleFileName(hmod, path_buffer, sizeof(path_buffer)/sizeof(mem_char_t));
     modinfo.path = mem_string_new(path_buffer);
-	modinfo.name = mem_string_substr(&modinfo.path, mem_string_rfind(&modinfo.path, MEM_STR("\\"), -1), -1);
+	modinfo.name = mem_string_substr(&modinfo.path, mem_string_rfind(&modinfo.path, MEM_STR("\\"), -1) + 1, -1);
 	modinfo.base = (mem_voidptr_t)module_info.lpBaseOfDll;
 	modinfo.size = (mem_size_t)module_info.SizeOfImage;
 	modinfo.end = (mem_voidptr_t)((uintptr_t)modinfo.base + modinfo.size);

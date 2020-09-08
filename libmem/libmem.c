@@ -167,11 +167,11 @@ mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* su
     if(!p_string || p_string->is_initialized != mem_true || !substr) return ret;
     mem_size_t str_len    = mem_string_length(p_string) + 1;
     mem_size_t substr_len = (mem_size_t)MEM_STR_LEN(substr);
-    for(; str_len > substr_len && (offset - substr_len) * sizeof(mem_char_t) > 0; offset--)
+    for(; str_len > substr_len && (offset - substr_len) * sizeof(mem_char_t) >= 0; offset--)
     {
         if(!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + (offset - substr_len) * sizeof(mem_char_t)), substr, substr_len))
         {
-            ret = offset;
+            ret = offset - 1;
             break;
         }
     }
@@ -277,15 +277,16 @@ struct _mem_string_t* mem_string_to_upper(struct _mem_string_t* p_string)
 struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_t start, mem_size_t end)
 {
     struct _mem_string_t new_str = mem_string_init();
+	if (!mem_string_is_valid(p_string)) return new_str;
     if(end == (mem_size_t)-1) end = mem_string_length(p_string) + 1;
-    mem_size_t size = end - start;
-    if(end > start && mem_string_length(p_string) > size)
+    mem_size_t len = end - start;
+    if(end > start && mem_string_length(p_string) > len)
     {
-        mem_size_t buffer_size = size + 1 * sizeof(mem_char_t);
+        mem_size_t buffer_size = (len + 1) * sizeof(mem_char_t);
         mem_char_t* _buffer = (mem_char_t*)malloc(buffer_size);
 		if (_buffer == 0) return new_str;
-        memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start), (size_t)size + 1);
-        _buffer[buffer_size] = MEM_STR('\0');
+        memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start * sizeof(mem_char_t)), (size_t)(len * sizeof(mem_char_t)));
+        _buffer[len] = MEM_STR('\0');
         new_str.buffer = _buffer;
     }
 

@@ -2,7 +2,7 @@
 
 
 #if defined(MEM_WIN)     //Windows specific
-#define PROCESS_NAME MEM_STR("libmem.exe")
+#define PROCESS_NAME MEM_STR("example.exe")
 #define PROTECTION PAGE_EXECUTE_READWRITE
 #if defined(MEM_86) //32 bit only
 #define CALL __cdecl
@@ -12,7 +12,7 @@
 #define HOOK_SIZE 12
 #endif
 #elif defined(MEM_LINUX) //Linux specific
-#define PROCESS_NAME MEM_STR("libmem")
+#define PROCESS_NAME MEM_STR("example")
 #define PROTECTION PROT_EXEC | PROT_READ | PROT_WRITE
 #define CALL
 #if defined(MEM_86)   //32 bit only
@@ -76,8 +76,8 @@ int main()
 	tprint("Read  '%i' from:    %p", read_buffer_ex, alloc_ex);
 
 	//-- Pattern Scanning
-	mem_int8_t pattern[] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0x00, 0xB0 };
-	mem_string_t mask = mem_string_new(MEM_STR("xxxxxxxxxx?x"));
+	mem_int8_t pattern[] = { (mem_int8_t)0x10, (mem_int8_t)0x20, (mem_int8_t)0x0, (mem_int8_t)0x30, (mem_int8_t)0x40, (mem_int8_t)0x50,(mem_int8_t)0x60, (mem_int8_t)0x70, (mem_int8_t)0x80, (mem_int8_t)0x90, (mem_int8_t)0xA0, (mem_int8_t)0x00, (mem_int8_t)0xB0 };
+	mem_string_t mask = mem_string_new(MEM_STR("xx?xxxxxxxx?x"));
 	mem_voidptr_t scan = mem_ex_pattern_scan(process_ex, pattern, mask, (mem_voidptr_t)((mem_uintptr_t)pattern - 0x10), (mem_voidptr_t)((mem_uintptr_t)pattern + 0x10));
 	tprint("Pattern Scan:       %p", scan);
 	tprint(" (expected result): %p", (mem_voidptr_t)pattern);

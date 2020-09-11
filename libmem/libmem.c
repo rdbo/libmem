@@ -439,7 +439,7 @@ mem_pid_t mem_ex_get_pid(mem_string_t process_name)
 	if (hSnap != INVALID_HANDLE_VALUE)
 	{
 		PROCESSENTRY32 procEntry;
-		procEntry.dwSize = sizeof(procEntry);
+		procEntry.dwSize = sizeof(PROCESSENTRY32);
 
 		if (Process32First(hSnap, &procEntry))
 		{
@@ -543,12 +543,13 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 #   if defined(MEM_WIN)
 
 	MODULEENTRY32 module_info = { 0 };
+	module_info.dwSize = sizeof(MODULEENTRY32);
 
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
 	if (hSnap != INVALID_HANDLE_VALUE)
 	{
 		MODULEENTRY32 modEntry;
-		modEntry.dwSize = sizeof(modEntry);
+		modEntry.dwSize = sizeof(MODULEENTRY32);
 		if (Module32First(hSnap, &modEntry))
 		{
 			do

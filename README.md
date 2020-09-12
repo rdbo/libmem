@@ -62,7 +62,7 @@ mem_in_get_symbol
 ```
 
 # Projects
-Made with libmem:
+Made with libmem:  
 <a href="https://github.com/karliky/Crazymem">Crazymem - NodeJS Memory Library</a>  
 
 # TODO

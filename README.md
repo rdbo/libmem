@@ -63,9 +63,7 @@ mem_in_get_symbol
 
 # Projects
 Made with libmem:
-```
-WIP
-```
+<a href="https://github.com/karliky/Crazymem">Crazymem - NodeJS Memory Library</a>  
 
 # TODO
 . Add support for ARM  

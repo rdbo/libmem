@@ -1352,21 +1352,26 @@ mem_voidptr_t mem_in_scan(mem_voidptr_t data, mem_voidptr_t base, mem_voidptr_t 
 	return ret;
 }
 
-mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_size_t size)
+mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end)
 {
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
 	mask = mem_parse_mask(mask);
-	mem_uintptr_t scan_size = size;
+	if((mem_uintptr_t)base < (mem_uintptr_t)end) return ret;
+	mem_uintptr_t scan_size = (mem_uintptr_t)end - (mem_uintptr_t)base;
+	mem_size_t pattern_size = mem_string_length(&mask);
 
-	for (mem_uintptr_t i = 0; i < scan_size; i++)
+	for(mem_uintptr_t i = 0; i < scan_size; i++)
 	{
 		mem_bool_t found = mem_true;
-		for (mem_uintptr_t j = 0; j < scan_size; j++)
+		for(mem_uintptr_t j = 0; i + j < pattern_size; j++)
 		{
-			found &= (mem_bool_t)(mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == *(mem_int8_t*)((mem_uintptr_t)base + i + j));
+			mem_int8_t cur_byte;
+			mem_in_read((mem_voidptr_t)((mem_uintptr_t)base + i + j), &cur_byte, sizeof(cur_byte));
+			found &= (mem_bool_t)(mem_string_at(&mask, (mem_size_t)j) == MEM_UNKNOWN_BYTE || pattern[j] == cur_byte);
+			if(!found) break;
 		}
 
-		if (found)
+		if(found)
 		{
 			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
 			break;

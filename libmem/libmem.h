@@ -419,7 +419,7 @@ mem_pid_t     mem_in_get_pid();
 mem_process_t mem_in_get_process();
 mem_string_t  mem_in_get_process_name();
 mem_module_t  mem_in_get_module(mem_string_t module_name);
-mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_size_t size);
+mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end);
 mem_void_t    mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
 mem_void_t    mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
 mem_void_t    mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size);

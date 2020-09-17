@@ -1,4 +1,4 @@
-# libmem
+![libmem-logo](https://github.com/rdbo/libmem/blob/master/img/logo.png)
 Memory library written in C (Windows/Linux)  
 
 # Usage

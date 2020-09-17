@@ -1029,7 +1029,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 	return ret;
 }
 
-mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes)
+mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
 {
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);
@@ -1055,7 +1055,7 @@ mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t 
 	return ret;
 }
 
-mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes)
+mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
 {
 	mem_voidptr_t gateway = (mem_voidptr_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);
@@ -1381,7 +1381,7 @@ mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, me
 	return ret;
 }
 
-mem_size_t mem_in_detour_length(mem_detour_int_t method)
+mem_size_t mem_in_detour_length(mem_detour_t method)
 {
 	mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
 	switch (method)
@@ -1397,7 +1397,7 @@ mem_size_t mem_in_detour_length(mem_detour_int_t method)
 	return ret;
 }
 
-mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes)
+mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
 {
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);
@@ -1476,7 +1476,7 @@ mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, m
 	return ret;
 }
 
-mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes)
+mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
 {
 	mem_voidptr_t gateway = (mem_voidptr_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);

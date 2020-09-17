@@ -377,9 +377,9 @@ typedef struct _mem_lib_t
 struct _mem_lib_t mem_lib_init();
 mem_bool_t        mem_lib_is_valid(struct _mem_lib_t* p_lib);
 
-//mem_detour_int_t
+//mem_detour_t
 
-typedef enum _mem_detour_int_t
+typedef enum _mem_detour_t
 {
     MEM_DT_M0 = MEM_DETOUR_INT_METHOD0,
     MEM_DT_M1 = MEM_DETOUR_INT_METHOD1,
@@ -387,7 +387,7 @@ typedef enum _mem_detour_int_t
     MEM_DT_M3 = MEM_DETOUR_INT_METHOD3,
     MEM_DT_M4 = MEM_DETOUR_INT_METHOD4,
     MEM_DT_M5 = MEM_DETOUR_INT_METHOD5
-}mem_detour_int_t;
+}mem_detour_t;
 
 //libmem
 
@@ -407,8 +407,8 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 mem_int_t     mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
 mem_voidptr_t mem_ex_scan(mem_process_t process, mem_bytearray_t data, mem_voidptr_t base, mem_voidptr_t end, mem_size_t size);
 mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end);
-mem_int_t     mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
-mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
+mem_int_t     mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes);
+mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes);
 mem_void_t    mem_ex_detour_restore(mem_process_t process, mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size);
 mem_int_t     mem_ex_load_library(mem_process_t process, mem_lib_t lib);
 mem_voidptr_t mem_ex_get_symbol(mem_module_t mod, const char* symbol);
@@ -428,9 +428,9 @@ mem_voidptr_t mem_in_allocate(mem_size_t size, mem_prot_t protection);
 mem_void_t    mem_in_deallocate(mem_voidptr_t src, mem_size_t size);
 mem_bool_t    mem_in_compare(mem_voidptr_t pdata1, mem_voidptr_t pdata2, mem_size_t size);
 mem_voidptr_t mem_in_scan(mem_voidptr_t data, mem_voidptr_t base, mem_voidptr_t end, mem_size_t size);
-mem_size_t    mem_in_detour_length(mem_detour_int_t method);
-mem_int_t     mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
-mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_int_t method, mem_bytearray_t* stolen_bytes);
+mem_size_t    mem_in_detour_length(mem_detour_t method);
+mem_int_t     mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes);
+mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes);
 mem_void_t    mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size);
 mem_module_t  mem_in_load_library(mem_lib_t lib);
 mem_void_t    mem_in_unload_library(mem_module_t mod);

@@ -1,4 +1,4 @@
-#include "libmem/libmem.h"
+#include "../libmem/libmem.h"
 
 
 #if defined(MEM_WIN)     //Windows specific
@@ -12,7 +12,7 @@
 #define HOOK_SIZE 12
 #endif
 #elif defined(MEM_LINUX) //Linux specific
-#define PROCESS_NAME MEM_STR("example")
+#define PROCESS_NAME MEM_STR("example.o")
 #define PROTECTION PROT_EXEC | PROT_READ | PROT_WRITE
 #define CALL
 #if defined(MEM_86)   //32 bit only

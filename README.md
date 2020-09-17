@@ -1,5 +1,4 @@
 ![libmem-logo](https://github.com/rdbo/libmem/blob/master/img/logo.png)  
-Memory library written in C (Windows/Linux)  
 
 # Usage
 Copy the 'libmem' folder to your project directory.  

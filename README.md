@@ -1,4 +1,6 @@
-![libmem-logo](https://github.com/rdbo/libmem/blob/master/img/logo.png)  
+<p align="center">
+  <img src="https://github.com/rdbo/libmem/blob/master/img/logo.png"/>
+</p>  
 
 # Usage
 Copy the 'libmem' folder to your project directory.  

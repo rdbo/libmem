@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/rdbo/libmem/blob/master/img/logo.png"/>
+  <a href="https://github.com/rdbo/libmem"><img src="https://github.com/rdbo/libmem/blob/master/img/logo.png"/></a>
 </p>  
 
 # Usage

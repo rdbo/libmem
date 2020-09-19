@@ -103,7 +103,8 @@
 #define MEM_STR_LEN(str) strlen(str)
 #endif
 
-#define MEM_THISCALL(obj, func, ...) obj.func(&obj, __VA_ARGS__)
+#define VA_ARGS(...) , ##__VA_ARGS__
+#define MEM_THISCALL(obj, func, ...) obj.func(&obj VA_ARGS(__VA_ARGS__))
 
 //Assembly
 
@@ -316,6 +317,33 @@ typedef struct _mem_process_t
 struct _mem_process_t mem_process_init();
 mem_bool_t            mem_process_is_valid(struct _mem_process_t* p_process);
 mem_bool_t            mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process);
+
+//mem_process_list_t
+
+typedef struct _mem_process_list_t
+{
+    mem_size_t     _length;
+    mem_process_t* _buffer;
+    mem_bool_t     is_initialized;
+
+    mem_process_t (* at)      (struct _mem_process_list_t* p_process_list, mem_size_t pos);
+    mem_bool_t    (* is_valid)(struct _mem_process_list_t* p_process_list);
+    mem_size_t    (* length)  (struct _mem_process_list_t* p_process_list);
+    mem_process_t*(* buffer)  (struct _mem_process_list_t* p_process_list);
+    mem_size_t    (* size)    (struct _mem_process_list_t* p_process_list);
+    mem_void_t    (* resize)  (struct _mem_process_list_t* p_process_list, mem_size_t size);
+    mem_void_t    (* append)  (struct _mem_process_list_t* p_process_list, mem_process_t process);
+}mem_process_list_t;
+
+mem_process_list_t    mem_process_list_init();
+mem_process_t         mem_process_list_at      (struct _mem_process_list_t* p_process_list, mem_size_t pos);
+mem_bool_t            mem_process_list_is_valid(struct _mem_process_list_t* p_process_list);
+mem_size_t            mem_process_list_length  (struct _mem_process_list_t* p_process_list);
+mem_process_t*        mem_process_list_buffer  (struct _mem_process_list_t* p_process_list);
+mem_size_t            mem_process_list_size    (struct _mem_process_list_t* p_process_list);
+mem_void_t            mem_process_list_resize  (struct _mem_process_list_t* p_process_list, mem_size_t size);
+mem_void_t            mem_process_list_append  (struct _mem_process_list_t* p_process_list, mem_process_t process);
+
 
 //mem_module_t
 

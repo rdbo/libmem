@@ -302,6 +302,89 @@ mem_bool_t mem_process_compare(struct _mem_process_t* p_process, struct _mem_pro
 		);
 }
 
+//mem_process_list_t
+
+mem_process_list_t mem_process_list_init()
+{
+	mem_process_list_t proc_list = {0};
+
+	proc_list._length  = 0;
+	proc_list._buffer  = NULL;
+	proc_list.at       = &mem_process_list_at;
+	proc_list.is_valid = &mem_process_list_is_valid;
+	proc_list.buffer   = &mem_process_list_buffer;
+	proc_list.length   = &mem_process_list_length;
+	proc_list.resize   = &mem_process_list_resize;
+	proc_list.size     = &mem_process_list_size;
+	proc_list.append   = &mem_process_list_append;
+	proc_list.is_initialized = mem_true;
+
+	return proc_list;
+}
+
+mem_process_t mem_process_list_at(struct _mem_process_list_t* p_process_list, mem_size_t pos)
+{
+	mem_process_t ret = mem_process_init();
+	mem_size_t    length = mem_process_list_length(p_process_list);
+	ret.is_initialized = mem_false;
+
+	if(pos < length) ret = mem_process_list_buffer(p_process_list)[pos];
+
+	return ret;
+}
+
+mem_bool_t mem_process_list_is_valid(struct _mem_process_list_t* p_process_list)
+{
+	return (mem_bool_t)(
+		p_process_list != NULL &&
+		p_process_list->is_initialized
+	);
+}
+
+mem_size_t mem_process_list_length(struct _mem_process_list_t* p_process_list)
+{
+	if(!mem_process_list_is_valid(p_process_list)) return (mem_size_t)MEM_BAD_RETURN;
+	return p_process_list->_length;
+}
+
+mem_process_t* mem_process_list_buffer(struct _mem_process_list_t* p_process_list)
+{
+	if(!mem_process_list_is_valid(p_process_list)) return (mem_process_t*)MEM_BAD_RETURN;
+	return p_process_list->_buffer;
+}
+
+mem_size_t mem_process_list_size(struct _mem_process_list_t* p_process_list)
+{
+	return mem_process_list_length(p_process_list) * sizeof(mem_process_t);
+}
+
+mem_void_t mem_process_list_resize(struct _mem_process_list_t* p_process_list, mem_size_t size)
+{
+	if(!mem_process_list_is_valid(p_process_list) || size == 0) return;
+	mem_size_t old_size = mem_process_list_size(p_process_list);
+	mem_size_t length = size;
+	size *= sizeof(mem_process_t);
+
+	mem_process_t* _buffer = (mem_process_t*)malloc(size);
+
+	if(p_process_list->_buffer)
+	{
+		memcpy((void*)_buffer, (void*)p_process_list->_buffer, (size > old_size ? old_size : size));
+		free(p_process_list->_buffer);
+	}
+
+	p_process_list->_buffer = _buffer;
+	p_process_list->_length = length;
+}
+
+mem_void_t mem_process_list_append(struct _mem_process_list_t* p_process_list, mem_process_t process)
+{
+	mem_size_t old_length = mem_process_list_length(p_process_list);
+	mem_process_list_resize(p_process_list, old_length + 1);
+
+	p_process_list->_buffer[old_length] = process;
+}
+
 //mem_module_t
 
 struct _mem_module_t mem_module_init()

@@ -142,11 +142,12 @@ mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* sub
 mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset)
 {
 	mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
+	if(!mem_string_is_valid(p_string)) return ret;
 	if (offset == (mem_size_t)-1) offset = mem_string_length(p_string) + 1;
 	if (!p_string || p_string->is_initialized != mem_true || !substr) return ret;
 	mem_size_t str_len = mem_string_length(p_string) + 1;
 	mem_size_t substr_len = (mem_size_t)MEM_STR_LEN(substr);
-	for (; str_len > substr_len && (offset - substr_len) * sizeof(mem_char_t) >= 0; offset--)
+	for (; str_len > substr_len && offset >= substr_len && (offset - substr_len) * sizeof(mem_char_t) >= 0; offset--)
 	{
 		if (!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + (offset - substr_len) * sizeof(mem_char_t)), substr, substr_len))
 		{
@@ -525,7 +526,7 @@ mem_pid_t mem_ex_get_pid(mem_string_t process_name)
 	struct dirent* pdirent;
 	while (pid < 0 && (pdirent = readdir(pdir)))
 	{
-		pid_t id = atoi(pdirent->d_name);
+		mem_pid_t id = atoi(pdirent->d_name);
 		if (id > 0)
 		{
 			mem_string_t proc_name = mem_ex_get_process_name(id);
@@ -573,10 +574,10 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 	{
 		mem_string_resize(&file_buffer, file_size);
 		mem_string_c_set(&file_buffer, file_size, c);
-		if (mem_string_at(&file_buffer, file_size) == '\n') break;
+		if (mem_string_at(&file_buffer, file_size) == '\n' && file_size > 0 && mem_string_rfind(&file_buffer, "/", file_size - 1) != (mem_size_t)MEM_BAD_RETURN) break;
 	}
 
-	mem_size_t process_name_end = mem_string_find(&file_buffer, "\n", 0);
+	mem_size_t process_name_end = mem_string_find(&file_buffer, "\n", mem_string_find(&file_buffer, "/", 0));
 	mem_size_t process_name_pos = mem_string_rfind(&file_buffer, "/", process_name_end) + 1;
 	if (process_name_end == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)(MEM_BAD_RETURN + 1)) return process_name;
 	process_name = mem_string_substr(&file_buffer, process_name_pos, process_name_end);
@@ -596,6 +597,40 @@ mem_process_t mem_ex_get_process(mem_pid_t pid)
 #	elif defined(MEM_LINUX)
 #	endif
 	return process;
+}
+
+mem_process_list_t mem_ex_get_process_list()
+{
+	mem_process_list_t proc_list = mem_process_list_init();
+
+#	if defined(MEM_WIN)
+#	elif defined(MEM_LINUX)
+	DIR* pdir = opendir("/proc");
+	if (!pdir) return proc_list;
+
+	struct dirent* pdirent;
+	mem_string_t   empty_str = mem_string_init();
+	while ((pdirent = readdir(pdir)))
+	{
+		mem_pid_t id = atoi(pdirent->d_name);
+		if (id > 0)
+		{
+			mem_string_t proc_name = mem_ex_get_process_name(id);
+			if (1/*!mem_string_compare(&proc_name, empty_str)*/)
+			{
+				mem_process_t process = mem_process_init();
+				process.name = proc_name;
+				process.pid  = id;
+
+				mem_process_list_append(&proc_list, process);
+			}
+		}
+	}
+	closedir(pdir);
+	mem_string_empty(&empty_str);
+#	endif
+
+	return proc_list;
 }
 
 mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)

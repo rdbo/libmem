@@ -956,8 +956,11 @@ mem_module_list_t mem_ex_get_module_list(mem_process_t process)
 #   	endif
 
 		mem_module_handle_t handle = (mem_module_handle_t)MEM_BAD_RETURN;
+		
+		/*
 		if (MEM_STR_CMP(mem_string_c_str(&process.name), mem_string_c_str(&module_name_str)))
 			handle = (mem_module_handle_t)dlopen(mem_string_c_str(&module_path_str), RTLD_LAZY);
+		*/
 
 		mem_module_t modinfo = mem_module_init();
 		mem_module_free(&modinfo);

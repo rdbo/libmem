@@ -298,6 +298,7 @@ mem_bool_t            mem_string_compare (struct _mem_string_t* p_string, struct
 struct _mem_string_t* mem_string_to_lower(struct _mem_string_t* p_string);
 struct _mem_string_t* mem_string_to_upper(struct _mem_string_t* p_string);
 struct _mem_string_t  mem_string_substr  (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
+mem_void_t            mem_string_free    (struct _mem_string_t* p_string);
 
 //mem_process_t
 
@@ -317,6 +318,7 @@ typedef struct _mem_process_t
 struct _mem_process_t mem_process_init();
 mem_bool_t            mem_process_is_valid(struct _mem_process_t* p_process);
 mem_bool_t            mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process);
+mem_void_t            mem_process_free(struct _mem_process_t* p_process);
 
 //mem_process_list_t
 
@@ -363,6 +365,33 @@ typedef struct _mem_module_t
 struct _mem_module_t mem_module_init();
 mem_bool_t           mem_module_is_valid(struct _mem_module_t* p_mod);
 mem_bool_t           mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t mod);
+mem_void_t           mem_module_free(struct _mem_module_t* p_mod);
+
+//mem_module_list_t
+
+typedef struct _mem_module_list_t
+{
+    mem_size_t    _length;
+    mem_module_t* _buffer;
+    mem_bool_t    is_initialized;
+
+    mem_module_t  (* at)      (struct _mem_module_list_t* p_module_list, mem_size_t pos);
+    mem_bool_t    (* is_valid)(struct _mem_module_list_t* p_module_list);
+    mem_size_t    (* length)  (struct _mem_module_list_t* p_module_list);
+    mem_module_t* (* buffer)  (struct _mem_module_list_t* p_module_list);
+    mem_size_t    (* size)    (struct _mem_module_list_t* p_module_list);
+    mem_void_t    (* resize)  (struct _mem_module_list_t* p_module_list, mem_size_t size);
+    mem_void_t    (* append)  (struct _mem_module_list_t* p_module_list, mem_module_t process);
+}mem_module_list_t;
+
+mem_module_list_t     mem_module_list_init();
+mem_module_t          mem_module_list_at      (struct _mem_module_list_t* p_module_list, mem_size_t pos);
+mem_bool_t            mem_module_list_is_valid(struct _mem_module_list_t* p_module_list);
+mem_size_t            mem_module_list_length  (struct _mem_module_list_t* p_module_list);
+mem_module_t*         mem_module_list_buffer  (struct _mem_module_list_t* p_module_list);
+mem_size_t            mem_module_list_size    (struct _mem_module_list_t* p_module_list);
+mem_void_t            mem_module_list_resize  (struct _mem_module_list_t* p_module_list, mem_size_t size);
+mem_void_t            mem_module_list_append  (struct _mem_module_list_t* p_module_list, mem_module_t mod);
 
 //mem_alloc_t
 
@@ -415,6 +444,7 @@ mem_string_t       mem_ex_get_process_name(mem_pid_t pid);
 mem_process_t      mem_ex_get_process(mem_pid_t pid);
 mem_process_list_t mem_ex_get_process_list();
 mem_module_t       mem_ex_get_module(mem_process_t process, mem_string_t module_name);
+mem_module_list_t  mem_ex_get_module_list(mem_process_t process);
 mem_bool_t         mem_ex_is_process_running(mem_process_t process);
 mem_int_t          mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
 mem_int_t          mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t data, mem_size_t size);

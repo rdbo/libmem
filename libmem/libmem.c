@@ -267,10 +267,16 @@ struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_
 		if (_buffer == 0) return new_str;
 		memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start * sizeof(mem_char_t)), (size_t)(len * sizeof(mem_char_t)));
 		_buffer[len] = MEM_STR('\0');
+		free(new_str.buffer);
 		new_str.buffer = _buffer;
 	}
 
 	return new_str;
+}
+
+mem_void_t mem_string_free(struct _mem_string_t* p_string)
+{
+	mem_string_empty(p_string);
 }
 
 //mem_process_t
@@ -301,6 +307,12 @@ mem_bool_t mem_process_compare(struct _mem_process_t* p_process, struct _mem_pro
 		mem_string_compare(&p_process->name, process.name) == mem_true &&
 		p_process->pid == process.pid
 		);
+}
+
+mem_void_t mem_process_free(struct _mem_process_t* p_process)
+{
+	if(!mem_process_is_valid(p_process)) return;
+	free(p_process->name.buffer);
 }
 
 //mem_process_list_t
@@ -423,6 +435,96 @@ mem_bool_t mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t 
 		p_mod->size == mod.size                    &&
 		p_mod->end == mod.end
 		);
+}
+
+mem_void_t mem_module_free(struct _mem_module_t* p_mod)
+{
+	if(!mem_module_is_valid(p_mod)) return;
+	free(p_mod->name.buffer);
+	free(p_mod->path.buffer);
+}
+
+//mem_module_list_t
+
+mem_module_list_t mem_module_list_init()
+{
+	mem_module_list_t mod_list = {0};
+	mod_list._length  = 0;
+	mod_list._buffer  = NULL;
+	mod_list.at       = &mem_module_list_at;
+	mod_list.is_valid = &mem_module_list_is_valid;
+	mod_list.length   = &mem_module_list_length;
+	mod_list.buffer   = &mem_module_list_buffer;
+	mod_list.size     = &mem_module_list_size;
+	mod_list.resize   = &mem_module_list_resize;
+	mod_list.append   = &mem_module_list_append;
+	mod_list.is_initialized = mem_true;
+
+	return mod_list;
+}
+
+mem_module_t mem_module_list_at(struct _mem_module_list_t* p_module_list, mem_size_t pos)
+{
+	mem_module_t ret = mem_module_init();
+	ret.is_initialized = mem_false;
+	if(!mem_module_list_is_valid(p_module_list)) return ret;
+	mem_size_t   length = mem_module_list_length(p_module_list);
+
+	if(pos < length) ret = mem_module_list_buffer(p_module_list)[pos];
+
+	return ret;
+}
+
+mem_bool_t mem_module_list_is_valid(struct _mem_module_list_t* p_module_list)
+{
+	return (mem_bool_t)(
+		p_module_list != NULL &&
+		p_module_list->is_initialized
+	);
+}
+
+mem_size_t mem_module_list_length  (struct _mem_module_list_t* p_module_list)
+{
+	if(!mem_module_list_is_valid(p_module_list)) return (mem_size_t)MEM_BAD_RETURN;
+	return p_module_list->_length;
+}
+
+mem_module_t* mem_module_list_buffer(struct _mem_module_list_t* p_module_list)
+{
+	if(!mem_module_list_is_valid(p_module_list)) return (mem_module_t*)MEM_BAD_RETURN;
+	return p_module_list->_buffer;
+}
+
+mem_size_t mem_module_list_size(struct _mem_module_list_t* p_module_list)
+{
+	return mem_module_list_length(p_module_list) * sizeof(mem_module_t);
+}
+
+mem_void_t mem_module_list_resize(struct _mem_module_list_t* p_module_list, mem_size_t size)
+{
+	if(!mem_module_list_is_valid(p_module_list) || size == 0) return;
+	mem_size_t old_size = mem_module_list_size(p_module_list);
+	mem_size_t length = size;
+	size *= sizeof(mem_module_t);
+
+	mem_module_t* _buffer = (mem_module_t*)malloc(size);
+
+	if(p_module_list->_buffer)
+	{
+		memcpy((void*)_buffer, (void*)p_module_list->_buffer, (size > old_size ? old_size : size));
+		free(p_module_list->_buffer);
+	}
+
+	p_module_list->_buffer = _buffer;
+	p_module_list->_length = length;
+}
+
+mem_void_t mem_module_list_append(struct _mem_module_list_t* p_module_list, mem_module_t mod)
+{
+	mem_size_t old_length = mem_module_list_length(p_module_list);
+	mem_module_list_resize(p_module_list, old_length + 1);
+
+	p_module_list->_buffer[old_length] = mod;
 }
 
 //mem_alloc_t
@@ -775,6 +877,16 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 
 #   endif
 	return modinfo;
+}
+
+mem_module_list_t mem_ex_get_module_list(mem_process_t process)
+{
+	mem_module_list_t mod_list = mem_module_list_init();
+#	if defined(MEM_WIN)
+#	elif defined(MEM_LINUX)
+#	endif
+
+	return mod_list;
 }
 
 mem_bool_t mem_ex_is_process_running(mem_process_t process)

@@ -604,30 +604,53 @@ mem_process_list_t mem_ex_get_process_list()
 	mem_process_list_t proc_list = mem_process_list_init();
 
 #	if defined(MEM_WIN)
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32 procEntry;
+		procEntry.dwSize = sizeof(PROCESSENTRY32);
+
+		if (Process32First(hSnap, &procEntry))
+		{
+			do
+			{
+				if (1)
+				{
+					mem_pid_t pid = procEntry.th32ProcessID;
+					mem_string_t process_name = mem_ex_get_process_name(pid);
+					mem_process_t process = mem_process_init();
+					process.pid  = pid;
+					process.name = process_name;
+
+					mem_process_list_append(&proc_list, process);
+				}
+			} while (Process32Next(hSnap, &procEntry));
+
+		}
+	}
+	CloseHandle(hSnap);
 #	elif defined(MEM_LINUX)
 	DIR* pdir = opendir("/proc");
 	if (!pdir) return proc_list;
 
 	struct dirent* pdirent;
-	mem_string_t   empty_str = mem_string_init();
 	while ((pdirent = readdir(pdir)))
 	{
 		mem_pid_t id = atoi(pdirent->d_name);
 		if (id > 0)
 		{
 			mem_string_t proc_name = mem_ex_get_process_name(id);
-			if (1/*!mem_string_compare(&proc_name, empty_str)*/)
+			if (1)
 			{
 				mem_process_t process = mem_process_init();
-				process.name = proc_name;
 				process.pid  = id;
+				process.name = proc_name;
 
 				mem_process_list_append(&proc_list, process);
 			}
 		}
 	}
 	closedir(pdir);
-	mem_string_empty(&empty_str);
 #	endif
 
 	return proc_list;

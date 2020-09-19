@@ -23,6 +23,7 @@ mem_string_t  mem_parse_mask
 mem_ex_get_pid
 mem_ex_get_process_name
 mem_ex_get_process
+mem_ex_get_process_list
 mem_ex_get_module
 mem_ex_is_process_running
 mem_ex_read

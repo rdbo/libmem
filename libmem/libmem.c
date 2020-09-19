@@ -884,6 +884,31 @@ mem_module_list_t mem_ex_get_module_list(mem_process_t process)
 	mem_module_list_t mod_list = mem_module_list_init();
 
 #	if defined(MEM_WIN)
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+	if(hSnap != INVALID_HANDLE_VALUE)
+	{
+		MODULEENTRY32 modEntry;
+		modEntry.dwSize = sizeof(MODULEENTRY32);
+
+		if(Module32First(hSnap, &modEntry))
+		{
+			do
+			{
+				mem_module_t modinfo = mem_module_init();
+				mem_module_free(&modinfo);
+				modinfo.base = (mem_voidptr_t)modEntry.modBaseAddr;
+				modinfo.size = (mem_uintptr_t)modEntry.modBaseSize;
+				modinfo.end  = (mem_voidptr_t)((mem_uintptr_t)modinfo.base + modinfo.size);
+				modinfo.name = mem_string_new(modEntry.szModule);
+				modinfo.path = mem_string_new(modEntry.szExePath);
+				modinfo.handle = modEntry.hModule;
+
+				mem_module_list_append(&mod_list, modinfo);
+			} while(Module32Next(hSnap, &modEntry));
+		}
+	}
+
+	CloseHandle(hSnap);
 #	elif defined(MEM_LINUX)
 	char path_buffer[64];
 	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);

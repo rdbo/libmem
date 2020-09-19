@@ -1606,6 +1606,11 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
 	return modinfo;
 }
 
+mem_module_list_t mem_in_get_module_list()
+{
+	return mem_ex_get_module_list(mem_in_get_process());
+}
+
 mem_void_t mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
 {
 	memcpy(dst, src, size);

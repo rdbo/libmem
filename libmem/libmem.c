@@ -75,7 +75,7 @@ mem_void_t mem_string_clear(struct _mem_string_t* p_string)
 
 mem_void_t mem_string_empty(struct _mem_string_t* p_string)
 {
-	if (p_string->buffer)
+	if (mem_string_is_valid(p_string) && p_string->buffer)
 		free(p_string->buffer);
 }
 
@@ -872,7 +872,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 	modinfo.handle = handle;
 
 	free(module_name_str_match);
-	file_buffer.empty(&file_buffer);
+	mem_string_free(&file_buffer);
 	close(fd);
 
 #   endif
@@ -882,8 +882,78 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 mem_module_list_t mem_ex_get_module_list(mem_process_t process)
 {
 	mem_module_list_t mod_list = mem_module_list_init();
+
 #	if defined(MEM_WIN)
 #	elif defined(MEM_LINUX)
+	char path_buffer[64];
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+	int fd = open(path_buffer, O_RDONLY);
+	if (fd == -1) return mod_list;
+	mem_string_t file_buffer = mem_string_init();
+	mem_size_t   file_size = 0;
+	int read_check = 0;
+	for (char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
+	{
+		mem_string_resize(&file_buffer, file_size);
+		mem_string_c_set(&file_buffer, file_size, c);
+	}
+
+	mem_size_t module_path_pos = 0;
+	mem_size_t module_path_end = 0;
+	mem_size_t next = 0;
+	while((module_path_pos = mem_string_find(&file_buffer, "/", next)) && module_path_pos != (mem_size_t)MEM_BAD_RETURN && module_path_pos != file_buffer.npos)
+	{
+		module_path_end = mem_string_find(&file_buffer, "\n", module_path_pos);
+		mem_string_t module_path_str = mem_string_substr(&file_buffer, module_path_pos, module_path_end);
+
+		mem_size_t module_name_pos = mem_string_rfind(&file_buffer, "/", module_path_end) + 1;
+		mem_size_t module_name_end = module_path_end;
+		mem_string_t module_name_str = mem_string_substr(&file_buffer, module_name_pos, module_name_end);
+
+		mem_size_t base_address_pos = mem_string_rfind(&file_buffer, "\n", module_path_pos) + 1;
+		mem_size_t base_address_end = mem_string_find(&file_buffer, "-", base_address_pos);
+		mem_string_t base_address_str = mem_string_substr(&file_buffer, base_address_pos, base_address_end);
+
+		mem_size_t   end_address_pos = mem_string_rfind(&file_buffer, "\n", mem_string_rfind(&file_buffer, mem_string_c_str(&module_path_str), -1));
+		end_address_pos = mem_string_find(&file_buffer, "-", end_address_pos) + 1;
+		mem_size_t   end_address_end = mem_string_find(&file_buffer, " ", end_address_pos);
+		mem_string_t end_address_str = mem_string_substr(&file_buffer, end_address_pos, end_address_end);
+
+		mem_uintptr_t base_address = (mem_uintptr_t)MEM_BAD_RETURN;
+		mem_uintptr_t end_address = (mem_uintptr_t)MEM_BAD_RETURN;
+
+#		if defined(MEM_86)
+		base_address = strtoul(mem_string_c_str(&base_address_str), NULL, 16);
+		end_address = strtoul(mem_string_c_str(&end_address_str), NULL, 16);
+#   	elif defined(MEM_64)
+		base_address = strtoul(mem_string_c_str(&base_address_str), NULL, 16);
+		end_address = strtoul(mem_string_c_str(&end_address_str), NULL, 16);
+#   	endif
+
+		mem_module_handle_t handle = (mem_module_handle_t)MEM_BAD_RETURN;
+		if (MEM_STR_CMP(mem_string_c_str(&process.name), mem_string_c_str(&module_name_str)))
+			handle = (mem_module_handle_t)dlopen(mem_string_c_str(&module_path_str), RTLD_LAZY);
+
+		mem_module_t modinfo = mem_module_init();
+		mem_module_free(&modinfo);
+		modinfo.name = module_name_str;
+		modinfo.path = module_path_str;
+		modinfo.base = (mem_voidptr_t)base_address;
+		modinfo.end = (mem_voidptr_t)end_address;
+		modinfo.size = end_address - base_address;
+		modinfo.handle = handle;
+
+		mem_module_list_append(&mod_list, modinfo);
+
+		next = mem_string_find(&file_buffer, "\n", end_address_end);
+
+		if(next == (mem_size_t)MEM_BAD_RETURN || next == file_buffer.npos) break;
+
+	}
+
+	mem_string_free(&file_buffer);
+	close(fd);
+
 #	endif
 
 	return mod_list;

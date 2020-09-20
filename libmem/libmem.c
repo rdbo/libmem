@@ -583,7 +583,7 @@ mem_string_t  mem_parse_mask(mem_string_t mask)
 {
 	mem_size_t size = mem_string_length(&mask);
 	mem_string_t new_mask = mem_string_init();
-	new_mask.resize(&new_mask, size + 1);
+	mem_string_resize(&new_mask, size + 1);
 	for (mem_size_t i = 0; i <= size; i++)
 	{
 		mem_char_t c = mem_string_at(&mask, i);

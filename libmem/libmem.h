@@ -139,6 +139,8 @@
 //Other
 #if defined(__cplusplus)
 #define MEM_CPP
+#else
+#define MEM_C
 #endif
 #define MEM_BAD_RETURN         -1
 #define MEM_RETURN             !MEM_BAD_RETURN

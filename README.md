@@ -72,6 +72,3 @@ Made with libmem:
 
 # TODO
 . Add support for ARM  
-. Add documentation  
-. Add examples/projects  
-. Clean up code  

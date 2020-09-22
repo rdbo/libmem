@@ -30,6 +30,14 @@
 #define MEM_MBCS
 #endif
 
+//Language
+
+#if defined(__cplusplus)
+#define MEM_CPP
+#else
+#define MEM_C
+#endif
+
 //Functions
 
 #if defined(_MSC_VER)
@@ -104,7 +112,11 @@
 #endif
 
 #define VA_ARGS(...) , ##__VA_ARGS__
+#if defined(MEM_C)
 #define MEM_THISCALL(obj, func, ...) obj.func(&obj VA_ARGS(__VA_ARGS__))
+#elif defined(MEM_CPP)
+#define MEM_THISCALL(obj, func, ...) obj.func(__VA_ARGS__)
+#endif
 
 //Assembly
 
@@ -137,11 +149,6 @@
 #define MEM_DETOUR_INT_METHOD5 5
 
 //Other
-#if defined(__cplusplus)
-#define MEM_CPP
-#else
-#define MEM_C
-#endif
 #define MEM_BAD_RETURN         -1
 #define MEM_RETURN             !MEM_BAD_RETURN
 #define MEM_KNOWN_BYTE         MEM_STR('x')
@@ -247,35 +254,7 @@ typedef unsigned long                        mem_size_t;
 
 //mem_string_t
 
-typedef struct _mem_string_t
-{
-    mem_bool_t  is_initialized;
-    mem_char_t* buffer;
-    mem_size_t  npos;
-    mem_bool_t  (* is_valid)(struct _mem_string_t* p_string);
-    mem_void_t  (* clear)   (struct _mem_string_t* p_string);
-    mem_void_t  (* empty)   (struct _mem_string_t* p_string);
-    mem_size_t  (* size)    (struct _mem_string_t* p_string);
-    mem_void_t  (* resize)  (struct _mem_string_t* p_string, mem_size_t size);
-    mem_size_t  (* length)  (struct _mem_string_t* p_string);
-    mem_char_t* (* begin)   (struct _mem_string_t* p_string);
-    mem_char_t* (* end)     (struct _mem_string_t* p_string);
-    mem_size_t  (* find)    (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
-    mem_size_t  (* rfind)   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
-    mem_size_t  (* count)   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
-    mem_size_t  (* rcount)  (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
-    mem_char_t  (* at)      (struct _mem_string_t* p_string, mem_size_t pos);
-    mem_void_t  (* value)   (struct _mem_string_t* p_string, const mem_char_t* new_str);
-    mem_void_t  (* insert)  (struct _mem_string_t* p_string, const mem_char_t* str);
-    mem_void_t  (* replace) (struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str);
-    mem_void_t  (* c_set)   (struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
-    mem_char_t* (* c_str)   (struct _mem_string_t* p_string);
-    mem_bool_t  (* compare) (struct _mem_string_t* p_string, struct _mem_string_t str);
-    struct _mem_string_t* (* to_lower)(struct _mem_string_t* p_string);
-    struct _mem_string_t* (* to_upper)(struct _mem_string_t* p_string);
-    struct _mem_string_t  (* substr)  (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
-}mem_string_t;
-
+struct _mem_string_t;
 struct _mem_string_t  mem_string_init();
 struct _mem_string_t  mem_string_new(const mem_char_t* c_string);
 mem_bool_t            mem_string_is_valid(struct _mem_string_t* p_string);
@@ -302,7 +281,67 @@ struct _mem_string_t* mem_string_to_upper(struct _mem_string_t* p_string);
 struct _mem_string_t  mem_string_substr  (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
 mem_void_t            mem_string_free    (struct _mem_string_t* p_string);
 
+typedef struct _mem_string_t
+{
+    mem_bool_t  is_initialized;
+    mem_char_t* buffer;
+    mem_size_t  npos;
+#   if defined(MEM_C)
+    mem_bool_t  (* is_valid)(struct _mem_string_t* p_string);
+    mem_void_t  (* clear)   (struct _mem_string_t* p_string);
+    mem_void_t  (* empty)   (struct _mem_string_t* p_string);
+    mem_size_t  (* size)    (struct _mem_string_t* p_string);
+    mem_void_t  (* resize)  (struct _mem_string_t* p_string, mem_size_t size);
+    mem_size_t  (* length)  (struct _mem_string_t* p_string);
+    mem_char_t* (* begin)   (struct _mem_string_t* p_string);
+    mem_char_t* (* end)     (struct _mem_string_t* p_string);
+    mem_size_t  (* find)    (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+    mem_size_t  (* rfind)   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+    mem_size_t  (* count)   (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+    mem_size_t  (* rcount)  (struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset);
+    mem_char_t  (* at)      (struct _mem_string_t* p_string, mem_size_t pos);
+    mem_void_t  (* value)   (struct _mem_string_t* p_string, const mem_char_t* new_str);
+    mem_void_t  (* insert)  (struct _mem_string_t* p_string, const mem_char_t* str);
+    mem_void_t  (* replace) (struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str);
+    mem_void_t  (* c_set)   (struct _mem_string_t* p_string, mem_size_t pos, mem_char_t c);
+    mem_char_t* (* c_str)   (struct _mem_string_t* p_string);
+    mem_bool_t  (* compare) (struct _mem_string_t* p_string, struct _mem_string_t str);
+    struct _mem_string_t* (* to_lower)(struct _mem_string_t* p_string);
+    struct _mem_string_t* (* to_upper)(struct _mem_string_t* p_string);
+    struct _mem_string_t  (* substr)  (struct _mem_string_t* p_string, mem_size_t start, mem_size_t end);
+#   elif defined(MEM_CPP)
+    mem_bool_t  is_valid() { return mem_string_is_valid(this); }
+    mem_void_t  clear   () { return mem_string_clear(this); }
+    mem_void_t  empty   () { return mem_string_empty(this); }
+    mem_size_t  size    () { return mem_string_size(this); }
+    mem_void_t  resize  (mem_size_t size) { return mem_string_resize(this, size); }
+    mem_size_t  length  () { return mem_string_length(this); }
+    mem_char_t* begin   () { return mem_string_begin(this); }
+    mem_char_t* end     () { return mem_string_end(this); }
+    mem_size_t  find    (const mem_char_t* substr, mem_size_t offset) { return mem_string_find(this, substr, offset); }
+    mem_size_t  rfind   (const mem_char_t* substr, mem_size_t offset) { return mem_string_rfind(this, substr, offset); }
+    mem_size_t  count   (const mem_char_t* substr, mem_size_t offset) { return mem_string_count(this, substr, offset); } 
+    mem_size_t  rcount  (const mem_char_t* substr, mem_size_t offset) { return mem_string_rcount(this, substr, offset); }
+    mem_char_t  at      (mem_size_t pos) { return mem_string_at(this, pos); }
+    mem_void_t  value   (const mem_char_t* new_str) { return mem_string_value(this, new_str); }
+    mem_void_t  insert  (const mem_char_t* str) { return mem_string_insert(this, str); }
+    mem_void_t  replace (const mem_char_t* old_str, const mem_char_t* new_str) { return mem_string_replace(this, old_str, new_str); }
+    mem_void_t  c_set   (mem_size_t pos, mem_char_t c) { return mem_string_c_set(this, pos, c); }
+    mem_char_t* c_str   () { return mem_string_c_str(this); }
+    mem_bool_t  compare (struct _mem_string_t str) { return mem_string_compare(this, str); }
+    struct _mem_string_t* to_lower() { return mem_string_to_lower(this); }
+    struct _mem_string_t* to_upper() { return mem_string_to_upper(this); }
+    struct _mem_string_t  substr  (mem_size_t start, mem_size_t end) { return mem_string_substr(this, start, end); }
+#   endif
+}mem_string_t;
+
 //mem_process_t
+
+struct _mem_process_t;
+struct _mem_process_t mem_process_init();
+mem_bool_t            mem_process_is_valid(struct _mem_process_t* p_process);
+mem_bool_t            mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process);
+mem_void_t            mem_process_free(struct _mem_process_t* p_process);
 
 typedef struct _mem_process_t
 {
@@ -313,16 +352,27 @@ typedef struct _mem_process_t
     HANDLE       handle;
 #   elif defined(MEM_LINUX)
 #   endif
+
+#   if defined(MEM_C)
     mem_bool_t(* is_valid)(struct _mem_process_t* p_process);
     mem_bool_t(* compare)(struct _mem_process_t* p_process, struct _mem_process_t process);
+#   elif defined(MEM_CPP)
+    mem_bool_t is_valid() { return mem_process_is_valid(this); }
+    mem_bool_t compare(struct _mem_process_t process) { return mem_process_compare(this, process); }
+#   endif
 }mem_process_t;
 
-struct _mem_process_t mem_process_init();
-mem_bool_t            mem_process_is_valid(struct _mem_process_t* p_process);
-mem_bool_t            mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process);
-mem_void_t            mem_process_free(struct _mem_process_t* p_process);
-
 //mem_process_list_t
+
+struct _mem_process_list_t;
+struct _mem_process_list_t mem_process_list_init();
+mem_process_t              mem_process_list_at      (struct _mem_process_list_t* p_process_list, mem_size_t pos);
+mem_bool_t                 mem_process_list_is_valid(struct _mem_process_list_t* p_process_list);
+mem_size_t                 mem_process_list_length  (struct _mem_process_list_t* p_process_list);
+mem_process_t*             mem_process_list_buffer  (struct _mem_process_list_t* p_process_list);
+mem_size_t                 mem_process_list_size    (struct _mem_process_list_t* p_process_list);
+mem_void_t                 mem_process_list_resize  (struct _mem_process_list_t* p_process_list, mem_size_t size);
+mem_void_t                 mem_process_list_append  (struct _mem_process_list_t* p_process_list, mem_process_t process);
 
 typedef struct _mem_process_list_t
 {
@@ -330,6 +380,7 @@ typedef struct _mem_process_list_t
     mem_process_t* _buffer;
     mem_bool_t     is_initialized;
 
+#   if defined(MEM_C)
     mem_process_t (* at)      (struct _mem_process_list_t* p_process_list, mem_size_t pos);
     mem_bool_t    (* is_valid)(struct _mem_process_list_t* p_process_list);
     mem_size_t    (* length)  (struct _mem_process_list_t* p_process_list);
@@ -337,19 +388,25 @@ typedef struct _mem_process_list_t
     mem_size_t    (* size)    (struct _mem_process_list_t* p_process_list);
     mem_void_t    (* resize)  (struct _mem_process_list_t* p_process_list, mem_size_t size);
     mem_void_t    (* append)  (struct _mem_process_list_t* p_process_list, mem_process_t process);
+#   elif defined(MEM_CPP)
+    mem_process_t  at      (mem_size_t pos) { return mem_process_list_at(this, pos); }
+    mem_bool_t     is_valid() { return mem_process_list_is_valid(this); }
+    mem_size_t     length  () { return mem_process_list_length(this); }
+    mem_process_t* buffer  () { return mem_process_list_buffer(this); }
+    mem_size_t     size    () { return mem_process_list_size(this); }
+    mem_void_t     resize  (mem_size_t size) { return mem_process_list_resize(this, size); }
+    mem_void_t     append  (mem_process_t process) { return mem_process_list_append(this, process); }
+#   endif
 }mem_process_list_t;
-
-mem_process_list_t    mem_process_list_init();
-mem_process_t         mem_process_list_at      (struct _mem_process_list_t* p_process_list, mem_size_t pos);
-mem_bool_t            mem_process_list_is_valid(struct _mem_process_list_t* p_process_list);
-mem_size_t            mem_process_list_length  (struct _mem_process_list_t* p_process_list);
-mem_process_t*        mem_process_list_buffer  (struct _mem_process_list_t* p_process_list);
-mem_size_t            mem_process_list_size    (struct _mem_process_list_t* p_process_list);
-mem_void_t            mem_process_list_resize  (struct _mem_process_list_t* p_process_list, mem_size_t size);
-mem_void_t            mem_process_list_append  (struct _mem_process_list_t* p_process_list, mem_process_t process);
 
 
 //mem_module_t
+
+struct _mem_module_t;
+struct _mem_module_t mem_module_init();
+mem_bool_t           mem_module_is_valid(struct _mem_module_t* p_mod);
+mem_bool_t           mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t mod);
+mem_void_t           mem_module_free(struct _mem_module_t* p_mod);
 
 typedef struct _mem_module_t
 {
@@ -360,16 +417,26 @@ typedef struct _mem_module_t
     mem_voidptr_t end;
     mem_uintptr_t size;
     mem_module_handle_t handle;
+#   if defined(MEM_C)
     mem_bool_t(* is_valid)(struct _mem_module_t* p_mod);
-    mem_bool_t(* compare)(struct _mem_module_t* p_mod, struct _mem_module_t mod);
+    mem_bool_t(* compare) (struct _mem_module_t* p_mod, struct _mem_module_t mod);
+#   elif defined(MEM_CPP)
+    mem_bool_t is_valid() { return mem_module_is_valid(this); }
+    mem_bool_t compare (struct _mem_module_t mod) { return mem_module_compare(this, mod); }
+#   endif
 }mem_module_t;
 
-struct _mem_module_t mem_module_init();
-mem_bool_t           mem_module_is_valid(struct _mem_module_t* p_mod);
-mem_bool_t           mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t mod);
-mem_void_t           mem_module_free(struct _mem_module_t* p_mod);
-
 //mem_module_list_t
+
+struct _mem_module_list_t;
+struct _mem_module_list_t mem_module_list_init();
+mem_module_t              mem_module_list_at      (struct _mem_module_list_t* p_module_list, mem_size_t pos);
+mem_bool_t                mem_module_list_is_valid(struct _mem_module_list_t* p_module_list);
+mem_size_t                mem_module_list_length  (struct _mem_module_list_t* p_module_list);
+mem_module_t*             mem_module_list_buffer  (struct _mem_module_list_t* p_module_list);
+mem_size_t                mem_module_list_size    (struct _mem_module_list_t* p_module_list);
+mem_void_t                mem_module_list_resize  (struct _mem_module_list_t* p_module_list, mem_size_t size);
+mem_void_t                mem_module_list_append  (struct _mem_module_list_t* p_module_list, mem_module_t mod);
 
 typedef struct _mem_module_list_t
 {
@@ -377,6 +444,7 @@ typedef struct _mem_module_list_t
     mem_module_t* _buffer;
     mem_bool_t    is_initialized;
 
+#   if defined(MEM_C)
     mem_module_t  (* at)      (struct _mem_module_list_t* p_module_list, mem_size_t pos);
     mem_bool_t    (* is_valid)(struct _mem_module_list_t* p_module_list);
     mem_size_t    (* length)  (struct _mem_module_list_t* p_module_list);
@@ -384,32 +452,39 @@ typedef struct _mem_module_list_t
     mem_size_t    (* size)    (struct _mem_module_list_t* p_module_list);
     mem_void_t    (* resize)  (struct _mem_module_list_t* p_module_list, mem_size_t size);
     mem_void_t    (* append)  (struct _mem_module_list_t* p_module_list, mem_module_t process);
+#   elif defined(MEM_CPP)
+    mem_module_t  at      (mem_size_t pos) { return mem_module_list_at(this, pos); }
+    mem_bool_t    is_valid() { return mem_module_list_is_valid(this); }
+    mem_size_t    length  () { return mem_module_list_length(this); }
+    mem_module_t* buffer  () { return mem_module_list_buffer(this); }
+    mem_size_t    size    () { return mem_module_list_size(this); }
+    mem_void_t    resize  (mem_size_t size) { return mem_module_list_resize(this, size); }
+    mem_void_t    append  (mem_module_t process) { return mem_module_list_append(this, process); }
+#   endif
 }mem_module_list_t;
-
-mem_module_list_t     mem_module_list_init();
-mem_module_t          mem_module_list_at      (struct _mem_module_list_t* p_module_list, mem_size_t pos);
-mem_bool_t            mem_module_list_is_valid(struct _mem_module_list_t* p_module_list);
-mem_size_t            mem_module_list_length  (struct _mem_module_list_t* p_module_list);
-mem_module_t*         mem_module_list_buffer  (struct _mem_module_list_t* p_module_list);
-mem_size_t            mem_module_list_size    (struct _mem_module_list_t* p_module_list);
-mem_void_t            mem_module_list_resize  (struct _mem_module_list_t* p_module_list, mem_size_t size);
-mem_void_t            mem_module_list_append  (struct _mem_module_list_t* p_module_list, mem_module_t mod);
 
 //mem_alloc_t
 
+struct _mem_alloc_t;
+struct _mem_alloc_t mem_alloc_init();
+mem_bool_t          mem_alloc_is_valid(struct _mem_alloc_t* p_alloc);
 typedef struct _mem_alloc_t
 {
     mem_bool_t is_initialized;
     mem_prot_t protection;
     mem_alloc_type_t type;
+#   if defined(MEM_C)
     mem_bool_t(* is_valid)(struct _mem_alloc_t* p_alloc);
+#   elif defined(MEM_CPP)
+    mem_bool_t is_valid() { return mem_alloc_is_valid(this); };
+#   endif
 }mem_alloc_t;
-
-struct _mem_alloc_t mem_alloc_init();
-mem_bool_t          mem_alloc_is_valid(struct _mem_alloc_t* p_alloc);
 
 //mem_lib_t
 
+struct _mem_lib_t;
+struct _mem_lib_t  mem_lib_init();
+mem_bool_t         mem_lib_is_valid(struct _mem_lib_t* p_lib);
 typedef struct _mem_lib_t
 {
     mem_bool_t is_initialized;
@@ -418,11 +493,13 @@ typedef struct _mem_lib_t
 #   elif defined(MEM_LINUX)
     mem_int_t    mode;
 #   endif
-    mem_bool_t(* is_valid)(struct _mem_lib_t* p_lib);
-}mem_lib_t;
 
-struct _mem_lib_t  mem_lib_init();
-mem_bool_t         mem_lib_is_valid(struct _mem_lib_t* p_lib);
+#   if defined(MEM_C)
+    mem_bool_t(* is_valid)(struct _mem_lib_t* p_lib);
+#   elif defined(MEM_CPP)
+    mem_bool_t is_valid() { return mem_lib_is_valid(this); }
+#   endif
+}mem_lib_t;
 
 //mem_detour_t
 

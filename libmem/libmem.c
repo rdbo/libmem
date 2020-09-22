@@ -8,7 +8,7 @@
 //mem_string_t
 struct _mem_string_t mem_string_init()
 {
-	struct _mem_string_t _string = { 0 };
+	struct _mem_string_t _string;
 	mem_size_t _size = sizeof(mem_char_t) * 1;
 	_string.buffer = (mem_char_t*)malloc(_size);
 	_string.npos = (mem_size_t)-1;
@@ -1364,12 +1364,12 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 
 	for (mem_uintptr_t i = 0; i < scan_size; i++)
 	{
-		mem_bool_t found = mem_true;
+		mem_int_t found = mem_true;
 		mem_int8_t pbyte;
 		for (mem_uintptr_t j = 0; j < mem_string_length(&mask); j++)
 		{
 			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i + j), &pbyte, 1);
-			found &= (mem_bool_t)(mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte);
+			found &= (mem_int_t)((mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte));
 		}
 
 		if (found)
@@ -1720,12 +1720,12 @@ mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, me
 
 	for(mem_uintptr_t i = 0; i < scan_size; i++)
 	{
-		mem_bool_t found = mem_true;
+		mem_int_t found = mem_true;
 		for(mem_uintptr_t j = 0; i + j < pattern_size; j++)
 		{
 			mem_int8_t cur_byte;
 			mem_in_read((mem_voidptr_t)((mem_uintptr_t)base + i + j), &cur_byte, sizeof(cur_byte));
-			found &= (mem_bool_t)(mem_string_at(&mask, (mem_size_t)j) == MEM_UNKNOWN_BYTE || pattern[j] == cur_byte);
+			found &= (mem_int_t)((mem_string_at(&mask, (mem_size_t)j) == MEM_UNKNOWN_BYTE || pattern[j] == cur_byte));
 			if(!found) break;
 		}
 

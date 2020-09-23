@@ -12,7 +12,6 @@ struct _mem_string_t mem_string_init()
 	mem_size_t _size = sizeof(mem_char_t) * 1;
 	_string.buffer = (mem_char_t*)malloc(_size);
 	_string.npos = (mem_size_t)-1;
-#	if defined(MEM_C)
 	_string.is_valid = &mem_string_is_valid;
 	_string.clear    = &mem_string_clear;
 	_string.empty    = &mem_string_empty;
@@ -35,8 +34,6 @@ struct _mem_string_t mem_string_init()
 	_string.to_upper = &mem_string_to_upper;
 	_string.substr   = &mem_string_substr;
 	_string.compare  = &mem_string_compare;
-#	elif defined(MEM_CPP)
-#	endif
 	_string.is_initialized = (mem_bool_t)(mem_true && (_string.buffer));
 	if (!_string.is_initialized) return _string;
 	memset(_string.buffer, 0x0, _size);
@@ -210,7 +207,7 @@ mem_void_t mem_string_replace(struct _mem_string_t* p_string, const mem_char_t* 
 	mem_size_t old_length = mem_string_length(p_string);
 	mem_size_t old_str_len = (mem_size_t)MEM_STR_LEN(old_str);
 	mem_size_t new_str_len = (mem_size_t)MEM_STR_LEN(new_str);
-	for (mem_size_t i = 0; (i = mem_string_find(p_string, old_str, i)) != p_string->npos && i != MEM_BAD_RETURN && i + 1 <= old_length;)
+	for (mem_size_t i = 0; (i = mem_string_find(p_string, old_str, i)) != p_string->npos && i != (mem_size_t)MEM_BAD_RETURN && i + 1 <= old_length;)
 	{
 		mem_string_t holder = mem_string_substr(p_string, 0, i);
 		mem_string_insert(&holder, new_str);
@@ -289,11 +286,8 @@ struct _mem_process_t mem_process_init()
 	struct _mem_process_t _process;
 	_process.name     = mem_string_init();
 	_process.pid      = (mem_pid_t)MEM_BAD_RETURN;
-#	if defined(MEM_C)
 	_process.is_valid = &mem_process_is_valid;
 	_process.compare  = &mem_process_compare;
-#	elif defined(MEM_CPP)
-#	endif
 	_process.is_initialized = mem_true;
 	return _process;
 }
@@ -323,13 +317,12 @@ mem_void_t mem_process_free(struct _mem_process_t* p_process)
 
 //mem_process_list_t
 
-struct _mem_process_list_t mem_process_list_init()
+mem_process_list_t mem_process_list_init()
 {
-	struct _mem_process_list_t proc_list = {0};
+	mem_process_list_t proc_list;
 
 	proc_list._length  = 0;
 	proc_list._buffer  = NULL;
-#	if defined(MEM_C)
 	proc_list.at       = &mem_process_list_at;
 	proc_list.is_valid = &mem_process_list_is_valid;
 	proc_list.buffer   = &mem_process_list_buffer;
@@ -338,8 +331,6 @@ struct _mem_process_list_t mem_process_list_init()
 	proc_list.size     = &mem_process_list_size;
 	proc_list.append   = &mem_process_list_append;
 	proc_list.is_initialized = mem_true;
-#	elif defined(MEM_CPP)
-#	endif
 
 	return proc_list;
 }
@@ -417,11 +408,8 @@ struct _mem_module_t mem_module_init()
 	_mod.base     = (mem_voidptr_t)MEM_BAD_RETURN;
 	_mod.size     = (mem_uintptr_t)MEM_BAD_RETURN;
 	_mod.end      = (mem_voidptr_t)MEM_BAD_RETURN;
-#	if defined(MEM_C)
 	_mod.is_valid = &mem_module_is_valid;
 	_mod.compare  = &mem_module_compare;
-#	elif defined(MEM_CPP)
-#	endif
 	_mod.is_initialized = mem_true;
 	return _mod;
 }
@@ -458,12 +446,11 @@ mem_void_t mem_module_free(struct _mem_module_t* p_mod)
 
 //mem_module_list_t
 
-struct _mem_module_list_t mem_module_list_init()
+mem_module_list_t mem_module_list_init()
 {
-	struct _mem_module_list_t mod_list = {0};
+	mem_module_list_t mod_list;
 	mod_list._length  = 0;
 	mod_list._buffer  = NULL;
-#	if defined(MEM_C)
 	mod_list.at       = &mem_module_list_at;
 	mod_list.is_valid = &mem_module_list_is_valid;
 	mod_list.length   = &mem_module_list_length;
@@ -471,8 +458,6 @@ struct _mem_module_list_t mem_module_list_init()
 	mod_list.size     = &mem_module_list_size;
 	mod_list.resize   = &mem_module_list_resize;
 	mod_list.append   = &mem_module_list_append;
-#	elif defined(MEM_CPP)
-#	endif
 	mod_list.is_initialized = mem_true;
 
 	return mod_list;
@@ -555,10 +540,7 @@ struct _mem_alloc_t mem_alloc_init()
 	_alloc.type       = MAP_ANON | MAP_PRIVATE;
 #   endif
 
-#	if defined(MEM_C)
 	_alloc.is_valid   = &mem_alloc_is_valid;
-#	elif defined(MEM_CPP)
-#	endif
 	_alloc.is_initialized = mem_true;
 	return _alloc;
 }
@@ -578,16 +560,11 @@ struct _mem_lib_t mem_lib_init()
 {
 	struct _mem_lib_t _lib;
 	_lib.path     = mem_string_init();
+	_lib.is_valid = &mem_lib_is_valid;
 #   if defined(MEM_WIN)
 #   elif defined(MEM_LINUX)
 	_lib.mode = (mem_int_t)RTLD_LAZY;
 #   endif
-
-#	if defined(MEM_C)
-	_lib.is_valid = &mem_lib_is_valid;
-#	elif defined(MEM_CPP)
-#	endif
-
 	_lib.is_initialized = mem_true;
 	return _lib;
 }
@@ -787,7 +764,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 	if (!mem_process_is_valid(&process)) return modinfo;
 #   if defined(MEM_WIN)
 
-	MODULEENTRY32 module_info = { 0 };
+	MODULEENTRY32 module_info;
 	module_info.dwSize = sizeof(MODULEENTRY32);
 
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
@@ -1369,7 +1346,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 		for (mem_uintptr_t j = 0; j < mem_string_length(&mask); j++)
 		{
 			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i + j), &pbyte, 1);
-			found &= (mem_int_t)((mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte));
+			found &= (mem_int_t)(mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte);
 		}
 
 		if (found)
@@ -1392,7 +1369,7 @@ mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t 
 #	elif defined(MEM_LINUX)
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
-	if (!mem_process_is_valid(&process) || detour_size == MEM_BAD_RETURN || size < detour_size || mem_ex_protect(process, src, size, protection) == MEM_BAD_RETURN) return ret;
+	if (!mem_process_is_valid(&process) || detour_size == (mem_size_t)MEM_BAD_RETURN || size < detour_size || mem_ex_protect(process, src, size, protection) == MEM_BAD_RETURN) return ret;
 
 	mem_byte_t* detour_buffer = (mem_byte_t*)mem_in_allocate(detour_size, protection);
 	mem_in_set(detour_buffer, 0x0, detour_size);
@@ -1725,7 +1702,7 @@ mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, me
 		{
 			mem_int8_t cur_byte;
 			mem_in_read((mem_voidptr_t)((mem_uintptr_t)base + i + j), &cur_byte, sizeof(cur_byte));
-			found &= (mem_int_t)((mem_string_at(&mask, (mem_size_t)j) == MEM_UNKNOWN_BYTE || pattern[j] == cur_byte));
+			found &= (mem_int_t)(mem_string_at(&mask, (mem_size_t)j) == MEM_UNKNOWN_BYTE || pattern[j] == cur_byte);
 			if(!found) break;
 		}
 
@@ -1765,7 +1742,7 @@ mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, m
 #	elif defined(MEM_LINUX)
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
-	if (detour_size == MEM_BAD_RETURN || size < detour_size || mem_in_protect(src, size, protection) == MEM_BAD_RETURN) return ret;
+	if (detour_size == (mem_size_t)MEM_BAD_RETURN || size < detour_size || mem_in_protect(src, size, protection) == MEM_BAD_RETURN) return ret;
 
 	if (stolen_bytes != NULL)
 	{

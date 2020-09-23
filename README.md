@@ -17,7 +17,7 @@ Read 'LICENSE'
 ```
 //libmem
 
-mem_parse_mask(mem_string_t mask);
+mem_parse_mask
 
 //ex
 mem_ex_get_pid

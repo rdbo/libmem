@@ -147,7 +147,7 @@ mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* su
 	if (!p_string || p_string->is_initialized != mem_true || !substr) return ret;
 	mem_size_t str_len = mem_string_length(p_string) + 1;
 	mem_size_t substr_len = (mem_size_t)MEM_STR_LEN(substr);
-	for (; str_len > substr_len && offset >= substr_len && (offset - substr_len) * sizeof(mem_char_t) >= 0; offset--)
+	for (; str_len > substr_len && offset >= substr_len && (mem_intptr_t)((offset - substr_len) * sizeof(mem_char_t)) >= 0; offset--)
 	{
 		if (!MEM_STR_N_CMP((mem_char_t*)((mem_uintptr_t)p_string->buffer + (offset - substr_len) * sizeof(mem_char_t)), substr, substr_len))
 		{

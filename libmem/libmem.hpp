@@ -269,7 +269,8 @@ namespace mem
 
     //libmem
 
-    string_t parse_mask(string_t mask);
+    string_t parse_mask(string_t mask) { return mem_parse_mask(mask.str); }
+    uintptr_t get_page_size() { return mem_get_page_size(); }
 
     namespace ex
     {

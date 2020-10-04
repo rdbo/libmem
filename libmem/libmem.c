@@ -594,6 +594,20 @@ mem_string_t  mem_parse_mask(mem_string_t mask)
 	return new_mask;
 }
 
+mem_uintptr_t mem_get_page_size()
+{
+	mem_uintptr_t pagesize = (mem_uintptr_t)MEM_BAD_RETURN;
+#	if defined(MEM_WIN)
+	SYSTEM_INFO si;
+    GetSystemInfo(&si);
+	pagesize = (mem_uintptr_t)si.dwPageSize;
+#	elif defined(MEM_LINUX)
+	pagesize = (mem_uintptr_t)sysconf(_SC_PAGE_SIZE);
+#	endif
+
+	return pagesize;
+}
+
 //ex
 
 mem_pid_t mem_ex_get_pid(mem_string_t process_name)

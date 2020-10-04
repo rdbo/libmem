@@ -439,6 +439,7 @@ typedef enum _mem_detour_t
 //libmem
 
 mem_string_t       mem_parse_mask(mem_string_t mask);
+mem_uintptr_t      mem_get_page_size();
 
 //ex
 mem_pid_t          mem_ex_get_pid(mem_string_t process_name);

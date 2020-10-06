@@ -276,6 +276,7 @@ struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_
 
 mem_void_t mem_string_free(struct _mem_string_t* p_string)
 {
+	p_string->is_initialized = mem_false;
 	mem_string_empty(p_string);
 }
 
@@ -312,6 +313,7 @@ mem_bool_t mem_process_compare(struct _mem_process_t* p_process, struct _mem_pro
 mem_void_t mem_process_free(struct _mem_process_t* p_process)
 {
 	if(!mem_process_is_valid(p_process)) return;
+	p_process->is_initialized = mem_false;
 	free(p_process->name.buffer);
 }
 
@@ -398,6 +400,24 @@ mem_void_t mem_process_list_append(struct _mem_process_list_t* p_process_list, m
 	p_process_list->_buffer[old_length] = process;
 }
 
+mem_void_t mem_process_list_free(struct _mem_process_list_t* p_process_list)
+{
+	if(!p_process_list || !p_process_list->is_initialized) return;
+
+	p_process_list->is_initialized = mem_false;
+
+	if(p_process_list->_buffer)
+	{
+		for(mem_size_t i = 0; i < p_process_list->_length; i++)
+		{
+			mem_process_free(&p_process_list->_buffer[i]);
+		}
+
+		free(p_process_list->_buffer);
+		p_process_list->_buffer = NULL;
+	}
+}
+
 //mem_module_t
 
 struct _mem_module_t mem_module_init()
@@ -440,6 +460,7 @@ mem_bool_t mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t 
 mem_void_t mem_module_free(struct _mem_module_t* p_mod)
 {
 	if(!mem_module_is_valid(p_mod)) return;
+	p_mod->is_initialized = mem_false;
 	free(p_mod->name.buffer);
 	free(p_mod->path.buffer);
 }
@@ -527,6 +548,24 @@ mem_void_t mem_module_list_append(struct _mem_module_list_t* p_module_list, mem_
 	p_module_list->_buffer[old_length] = mod;
 }
 
+mem_void_t mem_module_list_free(struct _mem_module_list_t* p_module_list)
+{
+	if(!p_module_list || !p_module_list->is_initialized) return;
+
+	p_module_list->is_initialized = mem_false;
+
+	if(p_module_list->_buffer)
+	{
+		for(mem_size_t i = 0; i < p_module_list->_length; i++)
+		{
+			mem_module_free(&p_module_list->_buffer[i]);
+		}
+
+		free(p_module_list->_buffer);
+		p_module_list->_buffer = NULL;
+	}
+}
+
 //mem_alloc_t
 
 struct _mem_alloc_t mem_alloc_init()
@@ -572,9 +611,22 @@ struct _mem_lib_t mem_lib_init()
 mem_bool_t mem_lib_is_valid(struct _mem_lib_t* p_lib)
 {
 	return (mem_bool_t)(
+		p_lib &&
 		p_lib->is_initialized &&
 		MEM_STR_CMP(mem_string_c_str(&p_lib->path), MEM_STR(""))
 	);
+}
+
+mem_void_t mem_lib_free(struct _mem_lib_t* p_lib)
+{
+	if(!p_lib || !p_lib->is_initialized) return;
+
+	p_lib->is_initialized = mem_false;
+
+	if(mem_string_is_valid(&p_lib->path))
+	{
+		mem_string_free(&p_lib->path);
+	}
 }
 
 //libmem

@@ -347,6 +347,7 @@ mem_process_t*        mem_process_list_buffer  (struct _mem_process_list_t* p_pr
 mem_size_t            mem_process_list_size    (struct _mem_process_list_t* p_process_list);
 mem_void_t            mem_process_list_resize  (struct _mem_process_list_t* p_process_list, mem_size_t size);
 mem_void_t            mem_process_list_append  (struct _mem_process_list_t* p_process_list, mem_process_t process);
+mem_void_t            mem_process_list_free    (struct _mem_process_list_t* p_process_list);
 
 
 //mem_module_t
@@ -366,8 +367,8 @@ typedef struct _mem_module_t
 
 struct _mem_module_t mem_module_init();
 mem_bool_t           mem_module_is_valid(struct _mem_module_t* p_mod);
-mem_bool_t           mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t mod);
-mem_void_t           mem_module_free(struct _mem_module_t* p_mod);
+mem_bool_t           mem_module_compare (struct _mem_module_t* p_mod, struct _mem_module_t mod);
+mem_void_t           mem_module_free    (struct _mem_module_t* p_mod);
 
 //mem_module_list_t
 
@@ -394,6 +395,7 @@ mem_module_t*         mem_module_list_buffer  (struct _mem_module_list_t* p_modu
 mem_size_t            mem_module_list_size    (struct _mem_module_list_t* p_module_list);
 mem_void_t            mem_module_list_resize  (struct _mem_module_list_t* p_module_list, mem_size_t size);
 mem_void_t            mem_module_list_append  (struct _mem_module_list_t* p_module_list, mem_module_t mod);
+mem_void_t            mem_module_list_free    (struct _mem_module_list_t* p_module_list);
 
 //mem_alloc_t
 
@@ -423,6 +425,7 @@ typedef struct _mem_lib_t
 
 struct _mem_lib_t  mem_lib_init();
 mem_bool_t         mem_lib_is_valid(struct _mem_lib_t* p_lib);
+mem_void_t         mem_lib_free(struct _mem_lib_t* p_lib);
 
 //mem_detour_t
 
@@ -450,7 +453,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_string_t module_
 mem_module_list_t  mem_ex_get_module_list(mem_process_t process);
 mem_bool_t         mem_ex_is_process_running(mem_process_t process);
 mem_int_t          mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
-mem_int_t          mem_ex_write(mem_process_t process, mem_voidptr_t src, mem_voidptr_t data, mem_size_t size);
+mem_int_t          mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
 mem_int_t          mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size);
 mem_int_t          mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection);
 mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection);

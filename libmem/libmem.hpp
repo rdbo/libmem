@@ -151,7 +151,7 @@ namespace mem
         public:
         process_list_t() { this->proc_list = mem_process_list_init(); }
         process_list_t(struct _mem_process_list_t _proc_list) { this->proc_list = _proc_list; }
-        ~process_list_t() { }
+        ~process_list_t() { mem_process_list_free(&this->proc_list); }
 
         process_list_t operator=(struct _mem_process_list_t _proc_list)
         {
@@ -208,7 +208,7 @@ namespace mem
         public:
         module_list_t() { this->mod_list = mem_module_list_init(); }
         module_list_t(struct _mem_module_list_t _mod_list) { this->mod_list = _mod_list; }
-        ~module_list_t() {  }
+        ~module_list_t() { mem_module_list_free(&this->mod_list); }
 
         module_list_t operator=(struct _mem_module_list_t _mod_list)
         {
@@ -256,7 +256,7 @@ namespace mem
 
         lib_t() { this->lib = mem_lib_init(); }
         lib_t(struct _mem_lib_t _lib) { this->lib = _lib; }
-        ~lib_t() {  }
+        ~lib_t() { mem_lib_free(&this->lib); }
 
         lib_t operator=(struct _mem_lib_t _lib)
         {

@@ -1414,23 +1414,28 @@ mem_voidptr_t mem_ex_scan(mem_process_t process, mem_bytearray_t data, mem_voidp
 mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end)
 {
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
-	if (!mem_process_is_valid(&process)) return ret;
+	if (!mem_process_is_valid(&process) || (mem_uintptr_t)base > (mem_uintptr_t)end) return ret;
 	mask = mem_parse_mask(mask);
-	mem_uintptr_t scan_size = (mem_uintptr_t)end - (mem_uintptr_t)base;
+	mem_size_t pattern_size = mem_string_length(&mask);
 
-	for (mem_uintptr_t i = 0; i < scan_size; i++)
+	for(mem_uintptr_t i = (mem_uintptr_t)base; i + pattern_size < (mem_uintptr_t)end; i++)
 	{
 		mem_int_t found = mem_true;
-		mem_int8_t pbyte;
-		for (mem_uintptr_t j = 0; j < mem_string_length(&mask); j++)
+		for(mem_uintptr_t j = 0; j < pattern_size; j++)
 		{
-			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i + j), &pbyte, 1);
-			found &= (mem_int_t)(mem_string_c_str(&mask)[j] == MEM_UNKNOWN_BYTE || pattern[j] == pbyte);
+			mem_byte_t p_byte;
+			mem_ex_read(process, (mem_voidptr_t)(i + j), &p_byte, sizeof(p_byte));
+
+			found &= (mem_string_at(&mask, j) == MEM_UNKNOWN_BYTE || (mem_byte_t)pattern[j] == p_byte);
+
+			if(!found) break;
+
+			printf("%p\n", (void*)i);
 		}
 
-		if (found)
+		if(found)
 		{
-			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
+			ret = (mem_voidptr_t)i;
 			break;
 		}
 	}

@@ -18,6 +18,7 @@ Read 'LICENSE'
 //libmem
 
 mem_parse_mask
+mem_get_page_size
 
 //ex
 mem_ex_get_pid

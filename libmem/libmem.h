@@ -424,6 +424,7 @@ typedef struct _mem_lib_t
 }mem_lib_t;
 
 struct _mem_lib_t  mem_lib_init();
+struct _mem_lib_t  mem_lib_new(mem_string_t path, mem_int_t mode /*mode ignored on Windows*/);
 mem_bool_t         mem_lib_is_valid(struct _mem_lib_t* p_lib);
 mem_void_t         mem_lib_free(struct _mem_lib_t* p_lib);
 

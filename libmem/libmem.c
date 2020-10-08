@@ -608,6 +608,19 @@ struct _mem_lib_t mem_lib_init()
 	return _lib;
 }
 
+struct _mem_lib_t  mem_lib_new(mem_string_t path, mem_int_t mode)
+{
+	struct _mem_lib_t _lib = mem_lib_init();
+	mem_lib_free(&_lib);
+	_lib.path = path;
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+	_lib.mode = (mem_int_t)mode;
+#   endif
+	_lib.is_initialized = mem_true;
+	return _lib;
+}
+
 mem_bool_t mem_lib_is_valid(struct _mem_lib_t* p_lib)
 {
 	return (mem_bool_t)(
@@ -1757,24 +1770,14 @@ mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, me
 {
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
 	mask = mem_parse_mask(mask);
-	if((mem_uintptr_t)base < (mem_uintptr_t)end) return ret;
-	mem_uintptr_t scan_size = (mem_uintptr_t)end - (mem_uintptr_t)base;
+	if((mem_uintptr_t)base > (mem_uintptr_t)end) return ret;
 	mem_size_t pattern_size = mem_string_length(&mask);
 
-	for(mem_uintptr_t i = 0; i < scan_size; i++)
+	for(mem_uintptr_t i = (mem_uintptr_t)base; i < (mem_uintptr_t)end; i++)
 	{
-		mem_int_t found = mem_true;
-		for(mem_uintptr_t j = 0; i + j < pattern_size; j++)
+		if(mem_in_compare((mem_voidptr_t)i, (mem_voidptr_t)pattern, (mem_size_t)pattern_size))
 		{
-			mem_int8_t cur_byte;
-			mem_in_read((mem_voidptr_t)((mem_uintptr_t)base + i + j), &cur_byte, sizeof(cur_byte));
-			found &= (mem_int_t)(mem_string_at(&mask, (mem_size_t)j) == MEM_UNKNOWN_BYTE || pattern[j] == cur_byte);
-			if(!found) break;
-		}
-
-		if(found)
-		{
-			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
+			ret = (mem_voidptr_t)i;
 			break;
 		}
 	}

@@ -64,6 +64,7 @@ namespace mem
         mem_void_t              insert  (const mem_char_t* _str) { return mem_string_insert(&this->str, _str); }
         mem_void_t              value   (const mem_char_t* new_str) { return mem_string_value(&this->str, new_str); }
         mem_void_t              replace (const mem_char_t* old_str, const mem_char_t* new_str) { return mem_string_replace(&this->str, old_str, new_str); }
+        mem_void_t              reverse () { return mem_string_reverse(&this->str); }
         mem_char_t*             c_str   () { return mem_string_c_str(&this->str); }
         mem_void_t              c_set   (mem_size_t pos, mem_char_t c) { return mem_string_c_set(&this->str, pos, c); }
         mem_bool_t              compare (struct _mem_string_t _str) { return mem_string_compare(&this->str, _str); }

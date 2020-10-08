@@ -29,6 +29,7 @@ struct _mem_string_t mem_string_init()
 	_string.value    = &mem_string_value;
 	_string.insert   = &mem_string_insert;
 	_string.replace  = &mem_string_replace;
+	_string.reverse  = &mem_string_reverse;
 	_string.c_str    = &mem_string_c_str;
 	_string.to_lower = &mem_string_to_lower;
 	_string.to_upper = &mem_string_to_upper;
@@ -216,6 +217,26 @@ mem_void_t mem_string_replace(struct _mem_string_t* p_string, const mem_char_t* 
 		i += new_str_len + 1;
 		*p_string = holder;
 	}
+}
+
+mem_void_t mem_string_reverse (struct _mem_string_t* p_string)
+{
+	if(!mem_string_is_valid(p_string)) return;
+
+	mem_size_t size   = mem_string_size(p_string);
+	mem_size_t length = mem_string_length(p_string);
+
+	mem_char_t* buf = (mem_char_t*)malloc(size);
+
+	for(mem_size_t i = 0; i < length; i++)
+	{
+		buf[i] = p_string->buffer[length - i - 1];
+	}
+
+	if(p_string->buffer)
+		free(p_string->buffer);
+
+	p_string->buffer = buf;
 }
 
 mem_char_t* mem_string_c_str(struct _mem_string_t* p_string)

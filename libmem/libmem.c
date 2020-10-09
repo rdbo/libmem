@@ -1438,7 +1438,34 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 	if (!mem_process_is_valid(&process) || (mem_uintptr_t)base > (mem_uintptr_t)end) return ret;
 	mask = mem_parse_mask(mask);
 	mem_size_t pattern_size = mem_string_length(&mask);
+	mem_uintptr_t page_size = mem_get_page_size();
+	mem_byte_t* page = (mem_byte_t*)malloc(page_size);
 
+	for(mem_uintptr_t i = (mem_uintptr_t)((mem_uintptr_t)base & -page_size); i < (mem_uintptr_t)end + page_size; i += page_size)
+	{
+		mem_ex_read(process, (mem_voidptr_t)i, page, page_size);
+
+		for(mem_uintptr_t j = 0; i + j >= (mem_uintptr_t)base && i + j < (mem_uintptr_t)end && j + pattern_size < page_size; j++)
+		{
+			mem_int_t found = mem_true;
+
+			for(mem_uintptr_t k = 0; k < pattern_size; k++)
+			{
+				found &= ((mem_byte_t)pattern[k] == page[j + k] || mem_string_at(&mask, k) == MEM_UNKNOWN_BYTE);
+
+				if(!found) break;
+			}
+
+			if(found)
+			{
+				ret = (mem_voidptr_t)(i + j);
+				break;
+			}
+		}
+	}
+
+
+	/*
 	for(mem_uintptr_t i = (mem_uintptr_t)base; i + pattern_size < (mem_uintptr_t)end; i++)
 	{
 		mem_int_t found = mem_true;
@@ -1458,6 +1485,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 			break;
 		}
 	}
+	*/
 
 	return ret;
 }
@@ -1797,9 +1825,18 @@ mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, me
 	if((mem_uintptr_t)base > (mem_uintptr_t)end) return ret;
 	mem_size_t pattern_size = mem_string_length(&mask);
 
-	for(mem_uintptr_t i = (mem_uintptr_t)base; i < (mem_uintptr_t)end; i++)
+	for(mem_uintptr_t i = (mem_uintptr_t)base; i + pattern_size < (mem_uintptr_t)end; i++)
 	{
-		if(mem_in_compare((mem_voidptr_t)i, (mem_voidptr_t)pattern, (mem_size_t)pattern_size))
+		mem_int_t found = mem_true;
+
+		for(mem_uintptr_t j = 0; j < pattern_size; j++)
+		{
+			found &= ((mem_byte_t)pattern[j] == ((mem_byte_t*)i)[j] || mem_string_at(&mask, j) == MEM_UNKNOWN_BYTE);
+
+			if(!found) break;
+		}
+
+		if(found)
 		{
 			ret = (mem_voidptr_t)i;
 			break;

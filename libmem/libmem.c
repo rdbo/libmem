@@ -1111,7 +1111,7 @@ mem_int_t mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t ds
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
 	if (!mem_process_is_valid(&process)) return ret;
 #   if defined(MEM_WIN)
-	ret = (mem_int_t)ReadProcessMemory(process.handle, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL);
+	ret = (mem_int_t)(ReadProcessMemory(process.handle, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL) != 0 ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   elif defined(MEM_LINUX)
 	struct iovec iosrc;
 	struct iovec iodst;
@@ -1119,7 +1119,7 @@ mem_int_t mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t ds
 	iodst.iov_len = size;
 	iosrc.iov_base = src;
 	iosrc.iov_len = size;
-	ret = (mem_int_t)process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0);
+	ret = (mem_int_t)(process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0) == size ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   endif
 
 	return ret;
@@ -1130,7 +1130,7 @@ mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t s
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
 	if (!mem_process_is_valid(&process)) return ret;
 #   if defined(MEM_WIN)
-	ret = (mem_int_t)WriteProcessMemory(process.handle, (LPVOID)dst, (LPCVOID)src, (SIZE_T)size, NULL);
+	ret = (mem_int_t)(WriteProcessMemory(process.handle, (LPVOID)dst, (LPCVOID)src, (SIZE_T)size, NULL) != 0 ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   elif defined(MEM_LINUX)
 	struct iovec iosrc;
 	struct iovec iodst;
@@ -1138,7 +1138,7 @@ mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t s
 	iosrc.iov_len = size;
 	iodst.iov_base = dst;
 	iodst.iov_len = size;
-	ret = (mem_int_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0);
+	ret = (mem_int_t)(process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0) == size ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   endif
 
 	return ret;
@@ -1151,7 +1151,7 @@ mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, 
 	mem_byte_t* data = (mem_byte_t*)malloc(size);
 	if (data == 0) return ret;
 	memset((void*)data, (int)byte, (size_t)size);
-	ret = (mem_int_t)mem_ex_write(process, dst, data, size);
+	ret = mem_ex_write(process, dst, data, size);
 	free(data);
 	return ret;
 }
@@ -1443,7 +1443,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 
 	for(mem_uintptr_t i = (mem_uintptr_t)((mem_uintptr_t)base & -page_size); i < (mem_uintptr_t)end + page_size; i += page_size)
 	{
-		mem_ex_read(process, (mem_voidptr_t)i, page, page_size);
+		if(mem_ex_read(process, (mem_voidptr_t)i, page, page_size) == MEM_BAD_RETURN) continue;
 
 		for(mem_uintptr_t j = 0; i + j >= (mem_uintptr_t)base && i + j < (mem_uintptr_t)end && j + pattern_size < page_size; j++)
 		{

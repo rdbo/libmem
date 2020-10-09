@@ -1450,8 +1450,6 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 			found &= (mem_string_at(&mask, j) == MEM_UNKNOWN_BYTE || (mem_byte_t)pattern[j] == p_byte);
 
 			if(!found) break;
-
-			printf("%p\n", (void*)i);
 		}
 
 		if(found)

@@ -1119,7 +1119,7 @@ mem_int_t mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t ds
 	iodst.iov_len = size;
 	iosrc.iov_base = src;
 	iosrc.iov_len = size;
-	ret = (mem_int_t)(process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0) == size ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
+	ret = (mem_int_t)((mem_size_t)process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0) == size ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   endif
 
 	return ret;
@@ -1138,7 +1138,7 @@ mem_int_t mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t s
 	iosrc.iov_len = size;
 	iodst.iov_base = dst;
 	iodst.iov_len = size;
-	ret = (mem_int_t)(process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0) == size ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
+	ret = (mem_int_t)((mem_size_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0) == size ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   endif
 
 	return ret;
@@ -1441,7 +1441,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 	mem_uintptr_t page_size = mem_get_page_size();
 	mem_byte_t* page = (mem_byte_t*)malloc(page_size);
 
-	for(mem_uintptr_t i = (mem_uintptr_t)((mem_uintptr_t)base & -page_size); i < (mem_uintptr_t)end + page_size; i += page_size)
+	for(mem_uintptr_t i = (mem_uintptr_t)((mem_uintptr_t)base & -(mem_intptr_t)page_size); i < (mem_uintptr_t)end + page_size; i += page_size)
 	{
 		if(mem_ex_read(process, (mem_voidptr_t)i, page, page_size) == MEM_BAD_RETURN) continue;
 

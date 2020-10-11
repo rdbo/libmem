@@ -77,7 +77,10 @@ mem_void_t mem_string_clear(struct _mem_string_t* p_string)
 mem_void_t mem_string_empty(struct _mem_string_t* p_string)
 {
 	if (mem_string_is_valid(p_string) && p_string->buffer)
+	{
 		free(p_string->buffer);
+		p_string->buffer = (mem_char_t*)NULL;
+	}
 }
 
 mem_size_t mem_string_size(struct _mem_string_t* p_string)

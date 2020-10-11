@@ -44,7 +44,8 @@ int main()
 	print("External tests:");
 
 	//-- Get Process ID
-	mem_pid_t pid_ex = mem_ex_get_pid(mem_string_new(PROCESS_NAME));
+	mem_string_t process_name = mem_string_new(PROCESS_NAME);
+	mem_pid_t pid_ex = mem_ex_get_pid(process_name);
 	tprint("PID:                %i", pid_ex);
 
 	//-- Get Process Information
@@ -53,7 +54,7 @@ int main()
 	tprint("Process ID:         %i", process_ex.pid);
 
 	//-- Get Process Module
-	mem_module_t process_mod_ex = mem_ex_get_module(process_ex, mem_string_new(PROCESS_NAME));
+	mem_module_t process_mod_ex = mem_ex_get_module(process_ex, process_name);
 	tprint("Module Name:        %s", mem_string_c_str(&process_mod_ex.name));
 	tprint("Module Path:        %s", mem_string_c_str(&process_mod_ex.path));
 	tprint("Module Base:        %p", process_mod_ex.base);
@@ -102,7 +103,7 @@ int main()
 	tprint("Process ID:         %i", process_in.pid);
 
 	//-- Get Process Module
-	mem_module_t process_mod_in = mem_in_get_module(mem_string_new(PROCESS_NAME));
+	mem_module_t process_mod_in = mem_in_get_module(process_name);
 	tprint("Module Name:        %s", mem_string_c_str(&process_mod_in.name));
 	tprint("Module Path:        %s", mem_string_c_str(&process_mod_in.path));
 	tprint("Module Base:        %p", process_mod_in.base);
@@ -140,6 +141,15 @@ int main()
 	*/
 
 
+	//Free memory
+	mem_module_free(&process_mod_in);
+	mem_module_free(&process_mod_ex);
+	mem_process_free(&process_in);
+	mem_process_free(&process_ex);
+	mem_string_free(&mask);
+	mem_string_free(&process_name);
+
+	//Exit
 	print();
 	print("Press [ENTER] to exit...");
 	getchar();

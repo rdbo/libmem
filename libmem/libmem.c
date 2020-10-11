@@ -64,7 +64,7 @@ mem_bool_t mem_string_is_valid(struct _mem_string_t* p_string)
 		p_string &&
 		p_string->is_initialized == mem_true &&
 		MEM_STR_CMP(p_string->buffer, MEM_STR(""))
-		);
+	);
 }
 
 mem_void_t mem_string_clear(struct _mem_string_t* p_string)
@@ -297,8 +297,14 @@ struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_
 
 mem_void_t mem_string_free(struct _mem_string_t* p_string)
 {
+	if(!mem_string_is_valid(p_string)) return;
 	p_string->is_initialized = mem_false;
-	mem_string_empty(p_string);
+
+	if(p_string->buffer)
+	{
+		free(p_string->buffer);
+		p_string->buffer = (mem_char_t*)NULL;
+	}
 }
 
 //mem_process_t

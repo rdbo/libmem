@@ -743,6 +743,8 @@ mem_pid_t mem_ex_get_pid(mem_string_t process_name)
 			mem_string_t proc_name = mem_ex_get_process_name(id);
 			if (mem_string_compare(&process_name, proc_name))
 				pid = id;
+			
+			mem_string_free(&proc_name);
 		}
 	}
 	closedir(pdir);
@@ -775,7 +777,7 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 	CloseHandle(hSnap);
 #   elif defined(MEM_LINUX)
 	char path_buffer[64];
-	snprintf(path_buffer, sizeof(path_buffer) - 1, "/proc/%i/maps", pid);
+	snprintf(path_buffer, sizeof(path_buffer) - 1, "/proc/%i/cmdline", pid);
 	int fd = open(path_buffer, O_RDONLY);
 	if (fd == -1) return process_name;
 	mem_string_t file_buffer = mem_string_init();
@@ -785,14 +787,13 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 	{
 		mem_string_resize(&file_buffer, file_size);
 		mem_string_c_set(&file_buffer, file_size, c);
-		if (mem_string_at(&file_buffer, file_size) == '\n' && file_size > 0 && mem_string_rfind(&file_buffer, "/", file_size - 1) != (mem_size_t)MEM_BAD_RETURN) break;
 	}
 
-	mem_size_t process_name_end = mem_string_find(&file_buffer, "\n", mem_string_find(&file_buffer, "/", 0));
+	mem_size_t process_name_end = mem_string_length(&file_buffer);
 	mem_size_t process_name_pos = mem_string_rfind(&file_buffer, "/", process_name_end) + 1;
 	if (process_name_end == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)(MEM_BAD_RETURN + 1)) return process_name;
 	process_name = mem_string_substr(&file_buffer, process_name_pos, process_name_end);
-	mem_string_empty(&file_buffer);
+	mem_string_free(&file_buffer);
 	close(fd);
 #   endif
 	return process_name;
@@ -973,14 +974,16 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 	if (MEM_STR_CMP(mem_string_c_str(&process.name), mem_string_c_str(&module_name_str)))
 		handle = (mem_module_handle_t)dlopen(mem_string_c_str(&module_path_str), RTLD_LAZY);
 
-	modinfo.name = module_name_str;
-	modinfo.base = (mem_voidptr_t)base_address;
-	modinfo.end = (mem_voidptr_t)end_address;
-	modinfo.size = end_address - base_address;
-	modinfo.path = module_path_str;
+	modinfo.name   = module_name_str;
+	modinfo.base   = (mem_voidptr_t)base_address;
+	modinfo.end    = (mem_voidptr_t)end_address;
+	modinfo.size   = end_address - base_address;
+	modinfo.path   = module_path_str;
 	modinfo.handle = handle;
 
 	free(module_name_str_match);
+	mem_string_free(&end_address_str);
+	mem_string_free(&base_address_str);
 	mem_string_free(&file_buffer);
 	close(fd);
 
@@ -1523,7 +1526,7 @@ mem_voidptr_t mem_ex_get_symbol(mem_module_t mod, const char* symbol)
 	mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD_RETURN;
 	if (!mem_module_is_valid(&mod)) return addr;
 	mem_lib_t lib = mem_lib_init();
-	mem_string_empty(&lib.path);
+	mem_string_free(&lib.path);
 	lib.path = mod.path;
 #   if defined(MEM_WIN)
 #   elif defined(MEM_LINUX)
@@ -1538,7 +1541,7 @@ mem_voidptr_t mem_ex_get_symbol(mem_module_t mod, const char* symbol)
 	addr = (mem_voidptr_t)(
 		(mem_uintptr_t)mod.base +
 		((mem_uintptr_t)addr_in - (mem_uintptr_t)mod_in.base)
-		);
+	);
 
 	return addr;
 }

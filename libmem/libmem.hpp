@@ -286,6 +286,7 @@ namespace mem
         int_t          read(process_t process, voidptr_t src, voidptr_t dst, size_t size) { return mem_ex_read(process.process, src, dst, size); }
         int_t          write(process_t process, voidptr_t src, voidptr_t data, size_t size) { return mem_ex_write(process.process, src, data, size); }
         int_t          set(process_t process, voidptr_t dst, byte_t byte, size_t size) { return mem_ex_set(process.process, dst, byte, size); }
+        voidptr_t      syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5) { return mem_ex_syscall(process.process, syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
         int_t          protect(process_t process, voidptr_t src, size_t size, prot_t protection) { return mem_ex_protect(process.process, src, size, protection); }
         voidptr_t      allocate(process_t process, size_t size, prot_t protection) { return mem_ex_allocate(process.process, size, protection); }
         int_t          deallocate(process_t process, voidptr_t src, size_t size) { return mem_ex_deallocate(process.process, src, size); }
@@ -309,6 +310,7 @@ namespace mem
         void_t        read(voidptr_t src, voidptr_t dst, size_t size) { return mem_in_read(src, dst, size); }
         void_t        write(voidptr_t dst, voidptr_t src, size_t size) { return mem_in_write(dst, src, size); }
         void_t        set(voidptr_t src, byte_t byte, size_t size) { return mem_in_set(src, byte, size); }
+        voidptr_t     syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5) { return mem_in_syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
         int_t         protect(voidptr_t src, size_t size, prot_t protection) { return mem_in_protect(src, size, protection); }
         voidptr_t     allocate(size_t size, prot_t protection) { return mem_in_allocate(size, protection); }
         void_t        deallocate(voidptr_t src, size_t size) { return mem_in_deallocate(src, size); }

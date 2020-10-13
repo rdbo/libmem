@@ -1165,6 +1165,79 @@ mem_int_t mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, 
 	return ret;
 }
 
+mem_voidptr_t mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5)
+{
+    mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
+    if(!mem_process_is_valid(&process)) return ret;
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+
+    int status;
+    struct user_regs_struct old_regs, regs;
+    mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD_RETURN;
+    mem_byte_t injection_buffer[] =
+    {
+#       if defined(MEM_86)
+        0xcd, 0x80 //int80 (syscall)
+#       elif defined(MEM_64)
+        0x0f, 0x05 //syscall
+#       endif
+    };
+
+    mem_byte_t old_data[sizeof(injection_buffer)];
+    ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
+    wait(&status);
+
+    ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
+    regs = old_regs;
+
+#   if defined(MEM_86)
+    regs.eax = (mem_uintptr_t)syscall_n;
+    regs.ebx = (mem_uintptr_t)arg0;
+    regs.ecx = (mem_uintptr_t)arg1;
+    regs.edx = (mem_uintptr_t)arg2;
+    regs.esi = (mem_uintptr_t)arg3;
+    regs.edi = (mem_uintptr_t)arg4;
+    regs.ebp = (mem_uintptr_t)arg5;
+    injection_addr = (mem_voidptr_t)regs.eip;
+#   elif defined(MEM_64)
+    regs.rax = (mem_uintptr_t)syscall_n;
+    regs.rdi = (mem_uintptr_t)arg0;
+    regs.rsi = (mem_uintptr_t)arg1;
+    regs.rdx = (mem_uintptr_t)arg2;
+    regs.r10 = (mem_uintptr_t)arg3;
+    regs.r8  = (mem_uintptr_t)arg4;
+    regs.r9  = (mem_uintptr_t)arg5;
+    injection_addr = (mem_voidptr_t)regs.rip;
+#   endif
+
+    for(mem_size_t i = 0; i < sizeof(injection_buffer); i++)
+    {
+        ptrace(PTRACE_PEEKDATA, process.pid, (void*)((mem_uintptr_t)injection_addr + i), (void*)(&old_data[i]));
+        ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr + i), (injection_buffer[i]));
+    }
+
+    ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
+    ptrace(PTRACE_SINGLESTEP, process.pid, NULL, NULL);
+    waitpid(process.pid, &status, WSTOPPED);
+    ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
+#   if defined(MEM_86)
+    ret = (mem_voidptr_t)regs.eax;
+#   elif defined(MEM_64)
+    ret = (mem_voidptr_t)regs.rax;
+#   endif
+
+    for(mem_size_t i = 0; i < sizeof(old_data); i++)
+    {
+        ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr + i), (old_data[i]));
+    }
+
+    ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
+    ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
+#   endif
+    return ret;
+}
+
 mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection)
 {
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
@@ -1172,65 +1245,9 @@ mem_int_t mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t si
 #	if defined(MEM_WIN)
 	DWORD old_protect;
 	if (process.handle == (HANDLE)INVALID_HANDLE_VALUE || src <= (mem_voidptr_t)NULL || size == 0 || protection <= 0) return ret;
-	ret = (mem_int_t)VirtualProtectEx(process.handle, (LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect);
+	ret = (mem_int_t)(VirtualProtectEx(process.handle, (LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect) != 0 ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #	elif defined(MEM_LINUX)
-	mem_voidptr_t injection_address;
-	struct user_regs_struct old_regs, regs;
-	int status;
-
-#   if defined(MEM_86)
-	const mem_byte_t injection_buffer[] =
-	{
-		0xcd, 0x80, //int 0x80 (syscall)
-		0xcc        //int 0x3  (SIGTRAP)
-	};
-#   elif defined(MEM_64)
-	const mem_byte_t injection_buffer[] =
-	{
-		0x0f, 0x05, //syscall
-		0xcc        //int3 (SIGTRAP)
-	};
-#   endif
-
-	injection_address = mem_ex_allocate(process, sizeof(injection_buffer), PROT_EXEC | PROT_READ | PROT_WRITE);
-	if (injection_address == (mem_voidptr_t)MEM_BAD_RETURN) return ret;
-	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
-	ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
-	regs = old_regs;
-
-	mem_uintptr_t round = (mem_uintptr_t)src % sysconf(_SC_PAGE_SIZE);
-
-#   if defined(MEM_86)
-	regs.eax = __NR_mprotect;                    //syscall number
-	regs.ebx = (mem_uintptr_t)src - round;       //arg0 (void* address)
-	regs.ecx = (mem_uintptr_t)size + round;      //arg1 (size_t length)
-	regs.edx = (mem_uintptr_t)protection;        //arg2 (int protection)
-	regs.esi = 0;                                //arg3 (-)
-	regs.edi = 0;                                //arg4 (-)
-	regs.ebp = 0;                                //arg5 (-)
-	regs.eip = (mem_uintptr_t)injection_address; //next instruction
-#   elif defined(MEM_64)
-	regs.rax = __NR_mprotect;                    //syscall number
-	regs.rdi = (mem_uintptr_t)src - round;       //arg0 (void* address)
-	regs.rsi = (mem_uintptr_t)size + round;      //arg1 (size_t length)
-	regs.rdx = (mem_uintptr_t)protection;        //arg2 (int protection)
-	regs.r10 = 0;                                //arg3 (-)
-	regs.r8 = 0;                                //arg4 (-)
-	regs.r9 = 0;                                //arg5 (-)
-	regs.rip = (mem_uintptr_t)injection_address; //next instruction
-#   endif
-
-												 //Run syscall on target program
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
-	ptrace(PTRACE_CONT, process.pid, NULL, NULL);
-	waitpid(process.pid, &status, WSTOPPED);
-	ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
-
-	//Restore old execution
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
-	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
-
-	ret = !ret;
+	ret = (mem_int_t)(mem_ex_syscall(process, __NR_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0 ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #	endif
 	return ret;
 }
@@ -1242,113 +1259,8 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 #   if defined(MEM_WIN)
 	alloc_addr = (mem_voidptr_t)VirtualAllocEx(process.handle, NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
 #   elif defined(MEM_LINUX)
-	mem_voidptr_t injection_address;
-	struct user_regs_struct old_regs, regs;
-	int status;
-
-#   if defined(MEM_86)
-	const mem_byte_t injection_buffer[] =
-	{
-		0xcd, 0x80, //int 0x80 (syscall)
-		0xcc        //int 0x3  (SIGTRAP)
-	};
-#   elif defined(MEM_64)
-	const mem_byte_t injection_buffer[] =
-	{
-		0x0f, 0x05, //syscall
-		0xcc        //int3 (SIGTRAP)
-	};
-#   endif
-
-	mem_byte_t old_data[sizeof(injection_buffer)];
-
-	//Find injection address
-
-	char path_buffer[64];
-	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
-	int fd = open(path_buffer, O_RDONLY);
-	if (fd == -1) return alloc_addr;
-
-	int read_check = 0;
-	mem_size_t file_size = 0;
-	mem_string_t file_buffer = mem_string_init();
-
-	for (char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
-	{
-		mem_string_resize(&file_buffer, file_size);
-		mem_string_c_set(&file_buffer, file_size, c);
-	}
-
-	mem_size_t   injection_address_pos, injection_address_end;
-	mem_string_t injection_address_str = mem_string_init();
-	injection_address = (mem_voidptr_t)MEM_BAD_RETURN;
-
-	injection_address_pos = mem_string_find(&file_buffer, "r-xp", 0);
-	injection_address_pos = mem_string_rfind(&file_buffer, "\n", injection_address_pos);
-	if (injection_address_pos == file_buffer.npos) return alloc_addr;
-
-	injection_address_end = mem_string_find(&file_buffer, "-", injection_address_pos);
-	injection_address_str = mem_string_substr(&file_buffer, injection_address_pos, injection_address_end);
-#   if defined(MEM_86)
-	injection_address = (mem_voidptr_t)strtoul(mem_string_c_str(&injection_address_str), NULL, 16);
-#   elif defined(MEM_64)
-	injection_address = (mem_voidptr_t)strtoull(mem_string_c_str(&injection_address_str), NULL, 16);
-#   endif
-	if (injection_address == (mem_voidptr_t)MEM_BAD_RETURN || injection_address == (mem_voidptr_t)0) return alloc_addr;
-
-	//Inject
-	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
-
-	//Store data at injection_address
-	for (mem_size_t i = 0; i < sizeof(injection_buffer); i++)
-		((mem_byte_t*)old_data)[i] = (mem_byte_t)ptrace(PTRACE_PEEKDATA, process.pid, (mem_voidptr_t)((mem_uintptr_t)injection_address + i), NULL);
-
-	//Write injection buffer to injection address
-	for (mem_size_t i = 0; i < sizeof(injection_buffer); i++)
-		ptrace(PTRACE_POKEDATA, process.pid, (mem_voidptr_t)((mem_uintptr_t)injection_address + i), ((mem_byte_t*)injection_buffer)[i]);
-
-	ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
-	regs = old_regs;
-
-#   if defined(MEM_86)
-	regs.eax = __NR_mmap;                        //syscall number
-	regs.ebx = (mem_uintptr_t)0;                 //arg0 (void* address)
-	regs.ecx = (mem_uintptr_t)size;              //arg1 (size_t size)
-	regs.edx = (mem_uintptr_t)protection;        //arg2 (int protection)
-	regs.esi = MAP_PRIVATE | MAP_ANON;           //arg3 (int flags)
-	regs.edi = -1;                               //arg4 (int fd)
-	regs.ebp = 0;                                //arg5 (off_t offset)
-	regs.eip = (mem_uintptr_t)injection_address; //next instruction
-#   elif defined(MEM_64)
-	regs.rax = __NR_mmap;                        //syscall number
-	regs.rdi = (mem_uintptr_t)0;                 //arg0 (void* address)
-	regs.rsi = (mem_uintptr_t)size;              //arg1 (size_t size)
-	regs.rdx = (mem_uintptr_t)protection;        //arg2 (int protection)
-	regs.r10 = MAP_PRIVATE | MAP_ANON;           //arg3 (int flags)
-	regs.r8 = -1;                               //arg4 (int fd)
-	regs.r9 = 0;                                //arg5 (off_t offset)
-	regs.rip = (mem_uintptr_t)injection_address; //next instruction
-#   endif
-
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
-	ptrace(PTRACE_CONT, process.pid, NULL, NULL);
-	waitpid(process.pid, &status, WSTOPPED);
-	ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
-#   if defined(MEM_86)
-	alloc_addr = (mem_voidptr_t)regs.eax;
-#   elif defined(MEM_64)
-	alloc_addr = (mem_voidptr_t)regs.rax;
-#   endif
-
-	//Restore old execution
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
-
-	for (mem_size_t i = 0; i < sizeof(injection_buffer); i++)
-		ptrace(PTRACE_POKEDATA, process.pid, (mem_voidptr_t)((mem_uintptr_t)injection_address + i), ((mem_byte_t*)old_data)[i]);
-
-	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
-
-	if (alloc_addr == (mem_voidptr_t)__NR_mmap || (mem_uintptr_t)alloc_addr >(mem_uintptr_t)-4096)
+	alloc_addr = (mem_voidptr_t)(mem_ex_syscall(process, __NR_mmap, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0));
+	if((mem_intptr_t)alloc_addr >= (mem_intptr_t)-100 || alloc_addr == (mem_voidptr_t)__NR_mmap)
 		alloc_addr = (mem_voidptr_t)MEM_BAD_RETURN;
 
 #   endif
@@ -1360,63 +1272,9 @@ mem_int_t mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t
 	mem_int_t ret = MEM_BAD_RETURN;
 	if (!mem_process_is_valid(&process) || !src || src == (mem_voidptr_t)-1 || size == 0) return ret;
 #   if defined(MEM_WIN)
-	ret = (mem_int_t)VirtualFreeEx(process.handle, src, 0, MEM_RELEASE);
+	ret = (mem_int_t)(VirtualFreeEx(process.handle, src, 0, MEM_RELEASE) != 0 ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   elif defined(MEM_LINUX)
-	mem_voidptr_t injection_address;
-	struct user_regs_struct old_regs, regs;
-	int status;
-
-#   if defined(MEM_86)
-	const mem_byte_t injection_buffer[] =
-	{
-		0x80,       //int80 (syscall)
-		0xcc        //int3  (SIGTRAP)
-	};
-#   elif defined(MEM_64)
-	const mem_byte_t injection_buffer[] =
-	{
-		0x0f, 0x05, //syscall
-		0xcc        //int3 (SIGTRAP)
-	};
-#   endif
-
-	injection_address = mem_ex_allocate(process, sizeof(injection_buffer), PROT_EXEC | PROT_READ | PROT_WRITE);
-	if (injection_address == (mem_voidptr_t)MEM_BAD_RETURN) return ret;
-	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
-	ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
-	regs = old_regs;
-
-#   if defined(MEM_86)
-	regs.eax = __NR_munmap;                      //syscall number
-	regs.ebx = (mem_uintptr_t)src;               //arg0 (void* address)
-	regs.ecx = (mem_uintptr_t)size;              //arg1 (size_t length)
-	regs.edx = 0;                                //arg2 (int protection)
-	regs.esi = 0;                                //arg3 (-)
-	regs.edi = 0;                                //arg4 (-)
-	regs.ebp = 0;                                //arg5 (-)
-	regs.eip = (mem_uintptr_t)injection_address; //next instruction
-#   elif defined(MEM_64)
-	regs.rax = __NR_munmap;                      //syscall number
-	regs.rdi = (mem_uintptr_t)src;               //arg0 (void* address)
-	regs.rsi = (mem_uintptr_t)size;              //arg1 (size_t length)
-	regs.rdx = 0;                                //arg2 (-)
-	regs.r10 = 0;                                //arg3 (-)
-	regs.r8 = 0;                                 //arg4 (-)
-	regs.r9 = 0;                                 //arg5 (-)
-	regs.rip = (mem_uintptr_t)injection_address; //next instruction
-#   endif
-
-												 //Run syscall on target program
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
-	ptrace(PTRACE_CONT, process.pid, NULL, NULL);
-	waitpid(process.pid, &status, WSTOPPED);
-	ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
-
-	//Restore old execution
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
-	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
-
-	ret = !ret;
+	ret = (mem_int_t)(mem_ex_syscall(process, __NR_munmap, src, (mem_voidptr_t)size, NULL, NULL, NULL, NULL) != MAP_FAILED ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   endif
 
 	return ret;
@@ -1767,6 +1625,16 @@ mem_void_t mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
 mem_void_t mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
 {
 	memset(src, byte, size);
+}
+
+mem_voidptr_t mem_in_syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5)
+{
+    mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+    ret = (mem_voidptr_t)syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5);
+#   endif
+    return ret;
 }
 
 mem_int_t mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protection)

@@ -458,6 +458,7 @@ mem_bool_t         mem_ex_is_process_running(mem_process_t process);
 mem_int_t          mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
 mem_int_t          mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
 mem_int_t          mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size);
+mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5);
 mem_int_t          mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection);
 mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection);
 mem_int_t          mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
@@ -480,6 +481,7 @@ mem_voidptr_t     mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask
 mem_void_t        mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
 mem_void_t        mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
 mem_void_t        mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size);
+mem_voidptr_t     mem_in_syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5);
 mem_int_t         mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protection);
 mem_voidptr_t     mem_in_allocate(mem_size_t size, mem_prot_t protection);
 mem_void_t        mem_in_deallocate(mem_voidptr_t src, mem_size_t size);

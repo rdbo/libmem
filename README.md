@@ -31,6 +31,7 @@ mem_ex_is_process_running
 mem_ex_read
 mem_ex_write
 mem_ex_set
+mem_ex_syscall
 mem_ex_protect
 mem_ex_allocate
 mem_ex_deallocate
@@ -53,6 +54,7 @@ mem_in_pattern_scan
 mem_in_read
 mem_in_write
 mem_in_set
+mem_in_syscall
 mem_in_protect
 mem_in_allocate
 mem_in_deallocate

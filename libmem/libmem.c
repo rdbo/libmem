@@ -1443,84 +1443,73 @@ mem_int_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
 	VirtualFreeEx(process.handle, libpath_ex, 0, MEM_RELEASE);
 	ret = !ret;
 #   elif defined(MEM_LINUX)
-	mem_prot_t protection = PROT_EXEC | PROT_READ | PROT_WRITE;
-#   if defined(MEM_86)
-	mem_byte_t injection_buffer[] =
-	{
-		0xff, 0xd0,               //call eax
-		0xcc,                     //int3
-	};
-#   elif defined(MEM_64)
-	mem_byte_t injection_buffer[] =
-	{
-		0xff, 0xd0,                                         //call rax
-		0xcc,                                               //int3 (SIGTRAP)
-	};
-#   endif
 
-	mem_size_t path_size = (mem_string_length(&lib.path) + 1) * sizeof(mem_char_t);
-	mem_size_t injection_size = path_size + sizeof(injection_buffer) + 1;
-	mem_voidptr_t injection_address = mem_ex_allocate(process, injection_size, protection);
-	struct user_regs_struct old_regs, regs;
-	mem_voidptr_t dlopen_ex, dlopen_in;
-	int status;
-	if (!injection_address || injection_address == (mem_voidptr_t)MEM_BAD_RETURN) return ret;
-
-	//Find address of dlopen
-
-	mem_module_t libdl_ex = mem_module_init();
-	mem_module_t libdl_in = mem_module_init();
-	mem_string_t libdl_str = mem_string_new("/libdl.so");
-GET_LIBDL_MOD:
+	mem_string_t libdl_str = mem_string_new(MEM_STR("/libdl.so"));
+	mem_bool_t retry = mem_false;
+	mem_module_t libdl_ex;
+	L_GET_LIBDL_MODULE:
 	libdl_ex = mem_ex_get_module(process, libdl_str);
-	if (!mem_module_is_valid(&libdl_ex) && MEM_STR_CMP(mem_string_c_str(&libdl_str), "/libdl-"))
+	mem_string_free(&libdl_str);
+	if(!mem_module_is_valid(&libdl_ex))
 	{
-		mem_string_value(&libdl_str, "/libdl-");
-		goto GET_LIBDL_MOD;
+		if(!retry)
+		{
+			retry = mem_true;
+			libdl_str = mem_string_new(MEM_STR("/libdl-"));
+			goto L_GET_LIBDL_MODULE;
+		}
+
+		else
+		{
+			return ret;
+		}
 	}
 
-	else if (!mem_module_is_valid(&libdl_ex))
-		return ret;
+	mem_voidptr_t dlopen_ex = mem_ex_get_symbol(libdl_ex, "dlopen");
+	mem_module_free(&libdl_ex);
+	if(dlopen_ex == (mem_voidptr_t)MEM_BAD_RETURN) return ret;
 
-	mem_lib_t libdl_load = mem_lib_init();
-	libdl_load.path = libdl_ex.path;
-	libdl_load.mode = RTLD_LAZY;
-	libdl_in = mem_in_load_library(libdl_load);
-	if (!mem_module_is_valid(&libdl_in)) return ret;
+	mem_byte_t injection_buffer[] =
+	{
+#		if defined(MEM_86)
+		0xff, 0xd0  //call eax
+#		elif defined(MEM_64)
+		0xff, 0xd0, //call rax
+		0xcc        //int3 (SIGTRAP)
+#		endif
+	};
 
-	dlopen_in = mem_in_get_symbol(libdl_in, "dlopen");
-	dlopen_ex = (mem_voidptr_t)(
-		(mem_uintptr_t)libdl_ex.base +
-		((mem_uintptr_t)dlopen_in - (mem_uintptr_t)libdl_in.base) //dlopen offset
-		);
+	mem_char_t* path_str = mem_string_c_str(&lib.path);
+	mem_size_t path_size = mem_string_size(&lib.path);
+	mem_size_t injection_size = sizeof(injection_buffer) + path_size;
+	mem_prot_t protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+	mem_voidptr_t injection_addr = mem_ex_allocate(process, injection_size, protection);
+	mem_ex_write(process, injection_addr, injection_buffer, sizeof(injection_buffer));
+	mem_ex_write(process, (mem_voidptr_t)((mem_uintptr_t)injection_addr + sizeof(injection_buffer)), path_str, path_size);
 
-	if (!dlopen_ex || dlopen_ex == (mem_voidptr_t)-1) return ret;
-
-	//Allocate memory and write injection_buffer and lib.path to it
-	mem_ex_write(process, injection_address, mem_string_c_str(&lib.path), path_size);
-	mem_ex_write(process, (mem_voidptr_t)((mem_uintptr_t)injection_address + path_size), injection_buffer, sizeof(injection_buffer));
-
+	int status;
+	struct user_regs_struct old_regs, regs;
 	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
+	wait(&status);
 	ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
-
-	regs = old_regs;
-#   if defined(MEM_86)
-	regs.eax = (mem_uintptr_t)dlopen_ex;                       //dlopen (ex)
-	regs.edi = (mem_uintptr_t)injection_address;               //arg0 (lib.path.buffer)
-	regs.esi = RTLD_LAZY;                                      //arg1 (RTLD_LAZY)
-	regs.eip = (mem_uintptr_t)injection_address + path_size;   //next instruction (injection_buffer)
-#   elif defined(MEM_64)
-	regs.rax = (mem_uintptr_t)dlopen_ex;                       //dlopen (ex)
-	regs.rdi = (mem_uintptr_t)injection_address;               //arg0 (lib.path.buffer)
-	regs.rsi = RTLD_LAZY;                                      //arg1 (RTLD_LAZY)
-	regs.rip = (mem_uintptr_t)injection_address + path_size;   //next instruction (injection_buffer)
-#   endif
+#	if defined(MEM_86)
+	regs.eax = (mem_uintptr_t)dlopen_ex;
+	regs.edi = (mem_uintptr_t)injection_addr + sizeof(injection_buffer); //arg0 (address of injected path string)
+	regs.esi = (mem_uintptr_t)lib.mode;                                  //arg1
+	regs.eip = (mem_uintptr_t)injection_addr;                            //next instruction (address of the injected payload)
+#	elif defined(MEM_64)
+	regs.rax = (mem_uintptr_t)dlopen_ex;
+	regs.rdi = (mem_uintptr_t)injection_addr + sizeof(injection_buffer); //arg0 (address of injected path string)
+	regs.rsi = (mem_uintptr_t)lib.mode;                                  //arg1
+	regs.rip = (mem_uintptr_t)injection_addr;                            //next instruction (address of the injected payload)
+#	endif
 
 	ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
 	ptrace(PTRACE_CONT, process.pid, NULL, NULL);
 	waitpid(process.pid, &status, WSTOPPED);
 	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
 	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
+	mem_ex_deallocate(process, injection_addr, injection_size);
 	ret = !ret;
 
 #   endif

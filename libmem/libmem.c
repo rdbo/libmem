@@ -1265,6 +1265,10 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 	alloc_addr = (mem_voidptr_t)VirtualAllocEx(process.handle, NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
 #   elif defined(MEM_LINUX)
 	alloc_addr = (mem_voidptr_t)(mem_ex_syscall(process, __NR_mmap, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0));
+	if((mem_uintptr_t)alloc_addr >= (mem_uintptr_t)-100) //error check
+	{
+		alloc_addr = (mem_voidptr_t)MEM_BAD_RETURN;
+	}
 
 #   endif
 	return alloc_addr;

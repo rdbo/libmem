@@ -1178,16 +1178,24 @@ mem_voidptr_t mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voi
     int status;
     struct user_regs_struct old_regs, regs;
     mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD_RETURN;
-    mem_byte_t injection_buffer[] =
+    mem_byte_t injection_buf[] =
     {
 #       if defined(MEM_86)
-        0xcd, 0x80 //int80 (syscall)
+        0xcd, 0x80, //int80 (syscall)
 #       elif defined(MEM_64)
-        0x0f, 0x05 //syscall
+        0x0f, 0x05, //syscall
 #       endif
+		0x90, //nop
+		0x90, //nop
+		0x90, //nop
+		0x90, //nop
+		0x90, //nop
+		0x90  //nop
     };
 
-    mem_byte_t old_data[sizeof(injection_buffer)];
+    mem_uintptr_t old_data;
+	mem_uintptr_t injection_buffer;
+	memcpy(&injection_buffer, injection_buf, sizeof(injection_buffer));
     ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
     wait(&status);
 
@@ -1214,11 +1222,8 @@ mem_voidptr_t mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voi
     injection_addr = (mem_voidptr_t)regs.rip;
 #   endif
 
-    for(mem_size_t i = 0; i < sizeof(injection_buffer); i++)
-    {
-        ptrace(PTRACE_PEEKDATA, process.pid, (void*)((mem_uintptr_t)injection_addr + i), (void*)(&old_data[i]));
-        ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr + i), (injection_buffer[i]));
-    }
+	old_data = (mem_uintptr_t)ptrace(PTRACE_PEEKDATA, process.pid, (void*)((mem_uintptr_t)injection_addr), NULL);
+	ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr), (injection_buffer));
 
     ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
     ptrace(PTRACE_SINGLESTEP, process.pid, NULL, NULL);
@@ -1230,10 +1235,7 @@ mem_voidptr_t mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voi
     ret = (mem_voidptr_t)regs.rax;
 #   endif
 
-    for(mem_size_t i = 0; i < sizeof(old_data); i++)
-    {
-        ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr + i), (old_data[i]));
-    }
+	ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr), (old_data));
 
     ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
     ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
@@ -1271,7 +1273,7 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 mem_int_t mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size)
 {
 	mem_int_t ret = MEM_BAD_RETURN;
-	if (!mem_process_is_valid(&process) || !src || src == (mem_voidptr_t)-1 || size == 0) return ret;
+	if (!mem_process_is_valid(&process)) return ret;
 #   if defined(MEM_WIN)
 	ret = (mem_int_t)(VirtualFreeEx(process.handle, src, 0, MEM_RELEASE) != 0 ? !MEM_BAD_RETURN : MEM_BAD_RETURN);
 #   elif defined(MEM_LINUX)

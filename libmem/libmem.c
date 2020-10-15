@@ -208,17 +208,17 @@ mem_void_t mem_string_value(struct _mem_string_t* p_string, const mem_char_t* ne
 
 mem_void_t mem_string_replace(struct _mem_string_t* p_string, const mem_char_t* old_str, const mem_char_t* new_str)
 {
-	mem_size_t old_length = mem_string_length(p_string);
+	mem_size_t length = mem_string_length(p_string);
 	mem_size_t old_str_len = (mem_size_t)MEM_STR_LEN(old_str);
 	mem_size_t new_str_len = (mem_size_t)MEM_STR_LEN(new_str);
-	for (mem_size_t i = 0; (i = mem_string_find(p_string, old_str, i)) != p_string->npos && i != (mem_size_t)MEM_BAD_RETURN && i + 1 <= old_length;)
+	for (mem_size_t i = 0; (i = mem_string_find(p_string, old_str, i)) != p_string->npos && i != (mem_size_t)MEM_BAD_RETURN && i < length; i += new_str_len)
 	{
-		mem_string_t holder = mem_string_substr(p_string, 0, i);
-		mem_string_insert(&holder, new_str);
-		mem_string_insert(&holder, (const mem_char_t*)(p_string->buffer + i + old_str_len + 1));
-		mem_string_c_set(&holder, i + new_str_len - old_str_len + (mem_string_length(p_string) - i) + 1, '\0');
-		i += new_str_len + 1;
-		*p_string = holder;
+		mem_string_t holder = mem_string_substr(p_string, i + old_str_len, length);
+		mem_string_resize(p_string, i);
+		mem_string_insert(p_string, new_str);
+		mem_string_insert(p_string, mem_string_c_str(&holder));
+		length = mem_string_length(p_string);
+		mem_string_free(&holder);
 	}
 }
 

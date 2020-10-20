@@ -1136,6 +1136,13 @@ mem_page_t mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
     mem_prot_t    page_prot  = 0;
 
 #   if defined(MEM_WIN)
+	MEMORY_BASIC_INFORMATION mbi;
+	VirtualQueryEx(process.handle, src, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
+	page_base = mbi.BaseAddress;
+	page_size = mbi.RegionSize;
+	page_end = (mem_voidptr_t)((mem_uintptr_t)page_base + page_size);
+	page_prot = mbi.Protect;
+	page_flags = mbi.Type;
 #   elif defined(MEM_LINUX)
 
     mem_char_t page_base_str[64];
@@ -1719,6 +1726,13 @@ mem_page_t mem_in_get_page(mem_voidptr_t src)
 {
     mem_page_t page = mem_page_init(); 
 #   if defined(MEM_WIN)
+	MEMORY_BASIC_INFORMATION mbi;
+	VirtualQuery(src, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
+	page.base = mbi.BaseAddress;
+	page.size = mbi.RegionSize;
+	page.end = (mem_voidptr_t)((mem_uintptr_t)page.base + page.size);
+	page.protection = mbi.Protect;
+	page.flags = mbi.Type;
 #   elif defined(MEM_LINUX)
     page = mem_ex_get_page(mem_in_get_process(), src);
 #   endif

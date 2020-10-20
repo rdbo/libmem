@@ -27,6 +27,7 @@ mem_ex_get_process
 mem_ex_get_process_list
 mem_ex_get_module
 mem_ex_get_module_list
+mem_ex_get_page
 mem_ex_is_process_running
 mem_ex_read
 mem_ex_write
@@ -50,6 +51,7 @@ mem_in_get_process
 mem_in_get_process_name
 mem_in_get_module
 mem_in_get_module_list
+mem_in_get_page
 mem_in_pattern_scan
 mem_in_read
 mem_in_write

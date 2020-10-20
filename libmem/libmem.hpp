@@ -26,6 +26,7 @@ namespace mem
     typedef mem_prot_t          prot_t;
     typedef mem_module_handle_t module_handle_t;
     typedef mem_alloc_type_t    alloc_type_t;
+    typedef mem_flags_t         flags_t;
 
     typedef mem_intptr_t        intptr_t;
     typedef mem_uintptr_t       uintptr_t;
@@ -224,6 +225,20 @@ namespace mem
         
     };
 
+    class page_t
+    {
+        public:
+        struct _mem_page_t page;
+
+        public:
+        mem_bool_t is_valid() { return mem_page_is_valid(&this->page); }
+
+        public:
+        page_t()  { this->page = mem_page_init(); }
+        page_t(struct _mem_page_t _page) { this->page = _page; }
+        ~page_t() {  }
+    };
+
     class alloc_t
     {
         public:
@@ -282,6 +297,7 @@ namespace mem
         process_list_t get_process_list() { return mem_ex_get_process_list(); }
         module_t       get_module(process_t process, string_t module_name) { return mem_ex_get_module(process.process, module_name.str); }
         module_list_t  get_module_list(process_t process) { return mem_ex_get_module_list(process.process); }
+        page_t         get_page(process_t process, mem_voidptr_t src) { return page_t(mem_ex_get_page(process.process, src)); }
         bool_t         is_process_running(process_t process) { return mem_ex_is_process_running(process.process); }
         int_t          read(process_t process, voidptr_t src, voidptr_t dst, size_t size) { return mem_ex_read(process.process, src, dst, size); }
         int_t          write(process_t process, voidptr_t src, voidptr_t data, size_t size) { return mem_ex_write(process.process, src, data, size); }
@@ -306,6 +322,7 @@ namespace mem
         string_t      get_process_name() { return mem_in_get_process_name(); }
         module_t      get_module(string_t module_name) { return mem_in_get_module(module_name.str); }
         module_list_t get_module_list() { return mem_in_get_module_list(); }
+        page_t        get_page(mem_voidptr_t src) { return page_t(mem_in_get_page(src)); }
         voidptr_t     pattern_scan(bytearray_t pattern, string_t mask, voidptr_t base, voidptr_t end) { return mem_in_pattern_scan(pattern, mask.str, base, end); }
         void_t        read(voidptr_t src, voidptr_t dst, size_t size) { return mem_in_read(src, dst, size); }
         void_t        write(voidptr_t dst, voidptr_t src, size_t size) { return mem_in_write(dst, src, size); }

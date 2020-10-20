@@ -212,11 +212,13 @@ typedef DWORD                                mem_pid_t;
 typedef DWORD                                mem_prot_t;
 typedef HMODULE                              mem_module_handle_t;
 typedef DWORD                                mem_alloc_type_t;
+typedef DWORD                                mem_flags_t;
 #elif defined(MEM_LINUX)
 typedef mem_int32_t                          mem_pid_t;
 typedef mem_int32_t                          mem_prot_t;
 typedef void*                                mem_module_handle_t;
 typedef mem_int32_t                          mem_alloc_type_t;
+typedef mem_int32_t                          mem_flags_t;
 #endif
 
 #if defined(MEM_86)
@@ -399,6 +401,22 @@ mem_void_t            mem_module_list_resize  (struct _mem_module_list_t* p_modu
 mem_void_t            mem_module_list_append  (struct _mem_module_list_t* p_module_list, mem_module_t mod);
 mem_void_t            mem_module_list_free    (struct _mem_module_list_t* p_module_list);
 
+//mem_page_t
+
+typedef struct _mem_page_t
+{
+    mem_voidptr_t    base;
+    mem_uintptr_t    size;
+    mem_voidptr_t    end;
+    mem_flags_t      flags;
+    mem_prot_t       protection;
+
+    mem_bool_t(* is_valid)(struct _mem_page_t* p_page);
+}mem_page_t;
+
+struct _mem_page_t mem_page_init();
+mem_bool_t         mem_page_is_valid(struct _mem_page_t* p_page);
+
 //mem_alloc_t
 
 typedef struct _mem_alloc_t
@@ -454,6 +472,7 @@ mem_process_t      mem_ex_get_process(mem_pid_t pid);
 mem_process_list_t mem_ex_get_process_list();
 mem_module_t       mem_ex_get_module(mem_process_t process, mem_string_t module_name);
 mem_module_list_t  mem_ex_get_module_list(mem_process_t process);
+mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src);
 mem_bool_t         mem_ex_is_process_running(mem_process_t process);
 mem_int_t          mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
 mem_int_t          mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
@@ -477,6 +496,7 @@ mem_process_t     mem_in_get_process();
 mem_string_t      mem_in_get_process_name();
 mem_module_t      mem_in_get_module(mem_string_t module_name);
 mem_module_list_t mem_in_get_module_list();
+mem_page_t        mem_in_get_page(mem_voidptr_t src);
 mem_voidptr_t     mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end);
 mem_void_t        mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
 mem_void_t        mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);

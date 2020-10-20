@@ -596,6 +596,33 @@ mem_void_t mem_module_list_free(struct _mem_module_list_t* p_module_list)
 	}
 }
 
+//mem_page_t
+
+struct _mem_page_t mem_page_init()
+{
+	struct _mem_page_t page;
+    page.base = (mem_voidptr_t)MEM_BAD_RETURN;
+    page.size = (mem_uintptr_t)MEM_BAD_RETURN;
+    page.end  = (mem_voidptr_t)MEM_BAD_RETURN;
+    page.protection = (mem_prot_t)0;
+	page.flags      = (mem_flags_t)0;
+
+	page.is_valid = &mem_page_is_valid;
+    return page;
+}
+
+mem_bool_t mem_page_is_valid(struct _mem_page_t* p_page)
+{
+	return (mem_bool_t)(
+		p_page &&
+		p_page->base != (mem_voidptr_t)MEM_BAD_RETURN &&
+		p_page->size != (mem_uintptr_t)MEM_BAD_RETURN &&
+		p_page->end  != (mem_voidptr_t)MEM_BAD_RETURN &&
+		p_page->protection != (mem_prot_t)0           &&
+		p_page->flags      != (mem_flags_t)0
+	);
+}
+
 //mem_alloc_t
 
 struct _mem_alloc_t mem_alloc_init()
@@ -1097,6 +1124,86 @@ mem_module_list_t mem_ex_get_module_list(mem_process_t process)
 #	endif
 
 	return mod_list;
+}
+
+mem_page_t mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
+{
+    mem_page_t    page = mem_page_init();
+    mem_uintptr_t page_size  = mem_get_page_size();
+    mem_voidptr_t page_base  = (mem_voidptr_t)((mem_intptr_t)src & -(mem_intptr_t)page_size);
+    mem_voidptr_t page_end   = (mem_voidptr_t)((mem_uintptr_t)page_base + page_size);
+    mem_flags_t   page_flags = 0;
+    mem_prot_t    page_prot  = 0;
+
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+
+    mem_char_t page_base_str[64];
+    mem_size_t page_base_pos = (mem_size_t)MEM_BAD_RETURN;
+#   if defined(MEM_86)
+    snprintf(page_base_str, sizeof(page_base_str), "%x-", (mem_uintptr_t)page_base);
+#   elif defined(MEM_64)
+    snprintf(page_base_str, sizeof(page_base_str), "%llx-", (mem_uintptr_t)page_base);
+#   endif
+
+    char path_buffer[64];
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+	int fd = open(path_buffer, O_RDONLY);
+	if (fd == -1) return page;
+	mem_string_t file_buffer = mem_string_init();
+	mem_size_t   file_size = 0;
+	int read_check = 0;
+	for (char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
+	{
+		mem_string_resize(&file_buffer, file_size);
+		mem_string_c_set(&file_buffer, file_size, c);
+        if(c == '\n' && (page_base_pos = mem_string_find(&file_buffer, page_base_str, 0), page_base_pos != file_buffer.npos && page_base_pos != (mem_size_t)MEM_BAD_RETURN)) break;
+	}
+
+
+    if(page_base_pos == (mem_size_t)MEM_BAD_RETURN || page_base_pos == file_buffer.npos) return page;
+
+    mem_size_t start = mem_string_find(&file_buffer, " ", page_base_pos) + 1;
+    mem_size_t end   = start + 4;
+
+    for(mem_size_t i = start; i < end; i++)
+    {
+        mem_char_t c = mem_string_at(&file_buffer, i);
+
+        switch(c)
+        {
+            case 'r':
+            page_prot |= PROT_READ;
+            break;
+
+            case 'w':
+            page_prot |= PROT_WRITE;
+            break;
+
+            case 'x':
+            page_prot |= PROT_EXEC;
+            break;
+
+            case 'p':
+            page_flags = MAP_PRIVATE;
+            break;
+
+            case 's':
+            page_flags = MAP_SHARED;
+            break;
+        }
+    }
+
+
+#   endif
+
+    page.base = page_base;
+    page.size = page_size;
+    page.end  = page_end;
+    page.protection = page_prot;
+    page.flags = page_flags;
+
+    return page;
 }
 
 mem_bool_t mem_ex_is_process_running(mem_process_t process)
@@ -1606,6 +1713,16 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
 mem_module_list_t mem_in_get_module_list()
 {
 	return mem_ex_get_module_list(mem_in_get_process());
+}
+
+mem_page_t mem_in_get_page(mem_voidptr_t src)
+{
+    mem_page_t page = mem_page_init(); 
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+    page = mem_ex_get_page(mem_in_get_process(), src);
+#   endif
+    return page;
 }
 
 mem_void_t mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)

@@ -1,6 +1,5 @@
 //Made by rdbo
 //https://github.com/rdbo/libmem
-//C-compatible version of https://github.com/rdbo/Memory
 
 #pragma once
 #ifndef MEM

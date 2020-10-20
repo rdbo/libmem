@@ -1,3 +1,7 @@
+//Made by rdbo
+//https://github.com/rdbo/libmem
+//This in an *experimental* C++ wrap for libmem.h
+
 #pragma once
 #ifndef LIBMEM_HPP
 #define LIBMEM_HPP

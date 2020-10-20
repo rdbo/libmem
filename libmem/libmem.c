@@ -1,6 +1,5 @@
 //Made by rdbo
 //https://github.com/rdbo/libmem
-//C-compatible version of https://github.com/rdbo/Memory
 
 #include "libmem.h"
 #if defined(MEM_COMPATIBLE)

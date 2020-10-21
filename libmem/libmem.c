@@ -1464,29 +1464,6 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 		}
 	}
 
-
-	/*
-	for(mem_uintptr_t i = (mem_uintptr_t)base; i + pattern_size < (mem_uintptr_t)end; i++)
-	{
-		mem_int_t found = mem_true;
-		for(mem_uintptr_t j = 0; j < pattern_size; j++)
-		{
-			mem_byte_t p_byte;
-			mem_ex_read(process, (mem_voidptr_t)(i + j), &p_byte, sizeof(p_byte));
-
-			found &= (mem_string_at(&mask, j) == MEM_UNKNOWN_BYTE || (mem_byte_t)pattern[j] == p_byte);
-
-			if(!found) break;
-		}
-
-		if(found)
-		{
-			ret = (mem_voidptr_t)i;
-			break;
-		}
-	}
-	*/
-
 	return ret;
 }
 

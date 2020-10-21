@@ -404,6 +404,7 @@ mem_void_t            mem_module_list_free    (struct _mem_module_list_t* p_modu
 
 typedef struct _mem_page_t
 {
+    mem_bool_t       is_initialized;
     mem_voidptr_t    base;
     mem_uintptr_t    size;
     mem_voidptr_t    end;

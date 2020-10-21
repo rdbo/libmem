@@ -607,6 +607,9 @@ struct _mem_page_t mem_page_init()
 	page.flags      = (mem_flags_t)0;
 
 	page.is_valid = &mem_page_is_valid;
+
+	page.is_initialized = mem_true;
+
     return page;
 }
 
@@ -614,6 +617,7 @@ mem_bool_t mem_page_is_valid(struct _mem_page_t* p_page)
 {
 	return (mem_bool_t)(
 		p_page &&
+		p_page->is_initialized &&
 		p_page->base != (mem_voidptr_t)MEM_BAD_RETURN &&
 		p_page->size != (mem_uintptr_t)MEM_BAD_RETURN &&
 		p_page->end  != (mem_voidptr_t)MEM_BAD_RETURN &&

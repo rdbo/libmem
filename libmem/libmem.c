@@ -1417,16 +1417,18 @@ mem_int_t mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t
 	return ret;
 }
 
-mem_voidptr_t mem_ex_scan(mem_process_t process, mem_bytearray_t data, mem_voidptr_t base, mem_voidptr_t end, mem_size_t size)
+mem_voidptr_t mem_ex_scan(mem_process_t process, mem_byte_t* data, mem_voidptr_t begin, mem_voidptr_t end, mem_size_t size)
 {
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
 	mem_byte_t* buffer = (mem_byte_t*)malloc(size);
-	for (mem_uintptr_t i = 0; (mem_uintptr_t)base + i + size< (mem_uintptr_t)end; i++)
+	for (mem_uintptr_t i = 0; (mem_uintptr_t)begin + i + size< (mem_uintptr_t)end; i++)
 	{
-		mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)base + i), buffer, size);
-		if (mem_in_compare(data, (mem_voidptr_t)buffer, size))
+		if (
+			mem_ex_read(process, (mem_voidptr_t)((mem_uintptr_t)begin + i), buffer, size) != MEM_BAD_RETURN && 
+			mem_in_compare(data, (mem_voidptr_t)buffer, size)
+		)
 		{
-			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
+			ret = (mem_voidptr_t)((mem_uintptr_t)begin + i);
 			break;
 		}
 	}
@@ -1436,20 +1438,20 @@ mem_voidptr_t mem_ex_scan(mem_process_t process, mem_bytearray_t data, mem_voidp
 	return ret;
 }
 
-mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end)
+mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_byte_t* pattern, mem_string_t mask, mem_voidptr_t begin, mem_voidptr_t end)
 {
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
-	if (!mem_process_is_valid(&process) || (mem_uintptr_t)base > (mem_uintptr_t)end) return ret;
+	if (!mem_process_is_valid(&process) || (mem_uintptr_t)begin > (mem_uintptr_t)end) return ret;
 	mask = mem_parse_mask(mask);
 	mem_size_t pattern_size = mem_string_length(&mask);
 	mem_uintptr_t page_size = mem_get_page_size();
 	mem_byte_t* page = (mem_byte_t*)malloc(page_size);
 
-	for(mem_uintptr_t i = (mem_uintptr_t)((mem_uintptr_t)base & -(mem_intptr_t)page_size); i < (mem_uintptr_t)end + page_size; i += page_size)
+	for(mem_uintptr_t i = (mem_uintptr_t)((mem_uintptr_t)begin & -(mem_intptr_t)page_size); i < (mem_uintptr_t)end + page_size; i += page_size)
 	{
 		if(mem_ex_read(process, (mem_voidptr_t)i, page, page_size) == MEM_BAD_RETURN) continue;
 
-		for(mem_uintptr_t j = 0; i + j >= (mem_uintptr_t)base && i + j < (mem_uintptr_t)end && j + pattern_size < page_size; j++)
+		for(mem_uintptr_t j = 0; i + j >= (mem_uintptr_t)begin && i + j < (mem_uintptr_t)end && j + pattern_size < page_size; j++)
 		{
 			mem_int_t found = mem_true;
 
@@ -1471,7 +1473,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_bytearray_t pattern
 	return ret;
 }
 
-mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
+mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes)
 {
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);
@@ -1497,7 +1499,7 @@ mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t 
 	return ret;
 }
 
-mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
+mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes)
 {
 	mem_voidptr_t gateway = (mem_voidptr_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);
@@ -1520,7 +1522,7 @@ mem_voidptr_t mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src,
 	return gateway;
 }
 
-mem_void_t mem_ex_detour_restore(mem_process_t process, mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size)
+mem_void_t mem_ex_detour_restore(mem_process_t process, mem_voidptr_t src, mem_byte_t* stolen_bytes, mem_size_t size)
 {
 	mem_prot_t protection;
 #   if defined(MEM_WIN)
@@ -1800,14 +1802,14 @@ mem_bool_t mem_in_compare(mem_voidptr_t pdata1, mem_voidptr_t pdata2, mem_size_t
 	return (mem_bool_t)(memcmp(pdata1, pdata2, size) == 0);
 }
 
-mem_voidptr_t mem_in_scan(mem_voidptr_t data, mem_voidptr_t base, mem_voidptr_t end, mem_size_t size)
+mem_voidptr_t mem_in_scan(mem_voidptr_t data, mem_voidptr_t begin, mem_voidptr_t end, mem_size_t size)
 {
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
-	for (mem_uintptr_t i = 0; (mem_uintptr_t)base + i + size < (mem_uintptr_t)end; i++)
+	for (mem_uintptr_t i = 0; (mem_uintptr_t)begin + i + size < (mem_uintptr_t)end; i++)
 	{
-		if (mem_in_compare(data, (mem_voidptr_t)((mem_uintptr_t)base + i), size))
+		if (mem_in_compare(data, (mem_voidptr_t)((mem_uintptr_t)begin + i), size))
 		{
-			ret = (mem_voidptr_t)((mem_uintptr_t)base + i);
+			ret = (mem_voidptr_t)((mem_uintptr_t)begin + i);
 			break;
 		}
 	}
@@ -1815,14 +1817,14 @@ mem_voidptr_t mem_in_scan(mem_voidptr_t data, mem_voidptr_t base, mem_voidptr_t 
 	return ret;
 }
 
-mem_voidptr_t mem_in_pattern_scan(mem_bytearray_t pattern, mem_string_t mask, mem_voidptr_t base, mem_voidptr_t end)
+mem_voidptr_t mem_in_pattern_scan(mem_byte_t* pattern, mem_string_t mask, mem_voidptr_t begin, mem_voidptr_t end)
 {
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD_RETURN;
 	mask = mem_parse_mask(mask);
-	if((mem_uintptr_t)base > (mem_uintptr_t)end) return ret;
+	if((mem_uintptr_t)begin > (mem_uintptr_t)end) return ret;
 	mem_size_t pattern_size = mem_string_length(&mask);
 
-	for(mem_uintptr_t i = (mem_uintptr_t)base; i + pattern_size < (mem_uintptr_t)end; i++)
+	for(mem_uintptr_t i = (mem_uintptr_t)begin; i + pattern_size < (mem_uintptr_t)end; i++)
 	{
 		mem_int_t found = mem_true;
 
@@ -1859,7 +1861,7 @@ mem_size_t mem_in_detour_length(mem_detour_t method)
 	return ret;
 }
 
-mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
+mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes)
 {
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);
@@ -1873,7 +1875,7 @@ mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, m
 
 	if (stolen_bytes != NULL)
 	{
-		*stolen_bytes = (mem_bytearray_t)malloc(size);
+		*stolen_bytes = (mem_byte_t*)malloc(size);
 		mem_in_read(src, (mem_voidptr_t)*stolen_bytes, size);
 	}
 
@@ -1950,7 +1952,7 @@ mem_int_t mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, m
 	return ret;
 }
 
-mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_bytearray_t* stolen_bytes)
+mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes)
 {
 	mem_voidptr_t gateway = (mem_voidptr_t)MEM_BAD_RETURN;
 	mem_size_t detour_size = mem_in_detour_length(method);
@@ -1973,7 +1975,7 @@ mem_voidptr_t mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem
 	return gateway;
 }
 
-mem_void_t mem_in_detour_restore(mem_voidptr_t src, mem_bytearray_t stolen_bytes, mem_size_t size)
+mem_void_t mem_in_detour_restore(mem_voidptr_t src, mem_byte_t* stolen_bytes, mem_size_t size)
 {
 	mem_prot_t protection;
 #   if defined(MEM_WIN)

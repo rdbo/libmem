@@ -1,4 +1,4 @@
-#include "../libmem/libmem.h"
+#include "../libmem/libmem.hpp"
 
 
 #if defined(MEM_WIN)     //Windows specific
@@ -77,7 +77,7 @@ int main()
 	tprint("Read  '%i' from:    %p", read_buffer_ex, alloc_ex);
 
 	//-- Pattern Scanning
-	mem_int8_t pattern[] = { (mem_int8_t)0x10, (mem_int8_t)0x20, (mem_int8_t)0x0, (mem_int8_t)0x30, (mem_int8_t)0x40, (mem_int8_t)0x50,(mem_int8_t)0x60, (mem_int8_t)0x70, (mem_int8_t)0x80, (mem_int8_t)0x90, (mem_int8_t)0xA0, (mem_int8_t)0x00, (mem_int8_t)0xB0 };
+	mem_byte_t pattern[] = { (mem_byte_t)0x10, (mem_byte_t)0x20, (mem_byte_t)0x0, (mem_byte_t)0x30, (mem_byte_t)0x40, (mem_byte_t)0x50,(mem_byte_t)0x60, (mem_byte_t)0x70, (mem_byte_t)0x80, (mem_byte_t)0x90, (mem_byte_t)0xA0, (mem_byte_t)0x00, (mem_byte_t)0xB0 };
 	mem_string_t mask = mem_string_new(MEM_STR("xx?xxxxxxxx?x"));
 	mem_voidptr_t scan = mem_ex_pattern_scan(process_ex, pattern, mask, (mem_voidptr_t)((mem_uintptr_t)pattern - 0x10), (mem_voidptr_t)((mem_uintptr_t)pattern + 0x10));
 	tprint("Pattern Scan:       %p", scan);

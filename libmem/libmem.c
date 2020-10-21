@@ -1159,10 +1159,23 @@ mem_page_t mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	mem_string_t file_buffer = mem_string_init();
 	mem_size_t   file_size = 0;
 	int read_check = 0;
+	mem_uintptr_t virt_start = (mem_uintptr_t)MEM_BAD_RETURN;
 	for (char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
 	{
 		mem_string_resize(&file_buffer, file_size);
 		mem_string_c_set(&file_buffer, file_size, c);
+		if(c == '-' && virt_start == (mem_uintptr_t)MEM_BAD_RETURN)
+		{
+			mem_string_t virt_start_str = mem_string_substr(&file_buffer, 0, file_size);
+#			if defined(MEM_86)
+			virt_start = (mem_uintptr_t)strtoul(mem_string_c_str(&virt_start_str), NULL, 16);
+#			elif defined(MEM_64)
+			virt_start = (mem_uintptr_t)strtoull(mem_string_c_str(&virt_start_str), NULL, 16);
+#			endif
+
+			if((mem_uintptr_t)src < virt_start) return page;
+		}
+
         if(c == '\n' && (page_base_pos = mem_string_find(&file_buffer, page_base_str, 0), page_base_pos != file_buffer.npos && page_base_pos != (mem_size_t)MEM_BAD_RETURN)) break;
 	}
 

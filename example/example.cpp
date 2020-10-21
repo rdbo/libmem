@@ -83,6 +83,14 @@ int main()
 	tprint("Pattern Scan:       %p", scan);
 	tprint(" (expected result): %p", (mem_voidptr_t)pattern);
 
+	//-- Get Page Information
+	mem_page_t page_ex = mem_ex_get_page(process_ex, process_mod_ex.base);
+	tprint("Page Base:          %p", page_ex.base);
+	tprint("Page Size:          %p", (mem_voidptr_t)page_ex.size);
+	tprint("Page End:           %p", page_ex.end);
+	tprint("Page Protection:    %i", (mem_int_t)page_ex.protection);
+	tprint("Page Flags:         %i", (mem_int_t)page_ex.flags);
+
 	print();
 	print("====================");
 	print();
@@ -125,6 +133,20 @@ int main()
 	int read_buffer_in = 0;
 	mem_in_read(alloc_in, &read_buffer_in, sizeof(read_buffer_in));
 	tprint("Read  '%i' from:  %p", read_buffer_in, alloc_in);
+
+	//-- Pattern Scanning
+
+	mem_voidptr_t scan_in = mem_in_pattern_scan(pattern, mask, (mem_voidptr_t)((mem_uintptr_t)pattern - 0x10), (mem_voidptr_t)((mem_uintptr_t)pattern + 0x10));
+	tprint("Pattern Scan:       %p", scan_in);
+	tprint(" (expected result): %p", (mem_voidptr_t)pattern);
+
+	//-- Get Page Information
+	mem_page_t page_in = mem_in_get_page(process_mod_in.base);
+	tprint("Page Base:          %p", page_in.base);
+	tprint("Page Size:          %p", (mem_voidptr_t)page_in.size);
+	tprint("Page End:           %p", page_in.end);
+	tprint("Page Protection:    %i", (mem_int_t)page_in.protection);
+	tprint("Page Flags:         %i", (mem_int_t)page_in.flags);
 
 	/*-- Hook 'function' (the overwritten bytes size can vary on each compilation, so it's commented).
 	o_function = (t_function)mem_in_detour_trampoline(

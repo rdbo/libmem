@@ -8,7 +8,7 @@
 
 #include "libmem.h"
 
-#ifdef MEM_CPP
+#if defined(MEM_CPP) && defined(MEM_COMPATIBLE)
 
 namespace mem
 {
@@ -290,70 +290,70 @@ namespace mem
 
     //libmem
 
-    string_t parse_mask(string_t mask) { return mem_parse_mask(mask.str); }
-    uintptr_t get_page_size() { return mem_get_page_size(); }
+    inline string_t parse_mask(string_t mask) { return mem_parse_mask(mask.str); }
+    inline uintptr_t get_page_size() { return mem_get_page_size(); }
 
     namespace ex
     {
-        pid_t          get_pid(string_t process_name) { return mem_ex_get_pid(process_name.str); }
-        string_t       get_process_name(pid_t pid) { return mem_ex_get_process_name(pid); }
-        process_t      get_process(pid_t pid) { return mem_ex_get_process(pid); }
-        process_list_t get_process_list() { return mem_ex_get_process_list(); }
-        module_t       get_module(process_t process, string_t module_name) { return mem_ex_get_module(process.process, module_name.str); }
-        module_list_t  get_module_list(process_t process) { return mem_ex_get_module_list(process.process); }
-        page_t         get_page(process_t process, mem_voidptr_t src) { return page_t(mem_ex_get_page(process.process, src)); }
-        bool_t         is_process_running(process_t process) { return mem_ex_is_process_running(process.process); }
-        int_t          read(process_t process, voidptr_t src, voidptr_t dst, size_t size) { return mem_ex_read(process.process, src, dst, size); }
+        inline pid_t          get_pid(string_t process_name) { return mem_ex_get_pid(process_name.str); }
+        inline string_t       get_process_name(pid_t pid) { return mem_ex_get_process_name(pid); }
+        inline process_t      get_process(pid_t pid) { return mem_ex_get_process(pid); }
+        inline process_list_t get_process_list() { return mem_ex_get_process_list(); }
+        inline module_t       get_module(process_t process, string_t module_name) { return mem_ex_get_module(process.process, module_name.str); }
+        inline module_list_t  get_module_list(process_t process) { return mem_ex_get_module_list(process.process); }
+        inline page_t         get_page(process_t process, mem_voidptr_t src) { return page_t(mem_ex_get_page(process.process, src)); }
+        inline bool_t         is_process_running(process_t process) { return mem_ex_is_process_running(process.process); }
+        inline int_t          read(process_t process, voidptr_t src, voidptr_t dst, size_t size) { return mem_ex_read(process.process, src, dst, size); }
         template<typename type_t>
-        type_t         read(process_t process, voidptr_t src) { type_t data; mem_ex_read(process.process, src, &data, sizeof(data)); return data; }
-        int_t          write(process_t process, voidptr_t src, voidptr_t data, size_t size) { return mem_ex_write(process.process, src, data, size); }
+        inline type_t         read(process_t process, voidptr_t src) { type_t data; mem_ex_read(process.process, src, &data, sizeof(data)); return data; }
+        inline int_t          write(process_t process, voidptr_t src, voidptr_t data, size_t size) { return mem_ex_write(process.process, src, data, size); }
         template<typename type_t>
-        int_t          write(process_t process, voidptr_t dst, type_t src) { return mem_ex_write(process.process, dst, src, sizeof(src)); }
-        int_t          set(process_t process, voidptr_t dst, byte_t byte, size_t size) { return mem_ex_set(process.process, dst, byte, size); }
-        voidptr_t      syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5) { return mem_ex_syscall(process.process, syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
-        int_t          protect(process_t process, voidptr_t src, size_t size, prot_t protection) { return mem_ex_protect(process.process, src, size, protection); }
-        voidptr_t      allocate(process_t process, size_t size, prot_t protection) { return mem_ex_allocate(process.process, size, protection); }
-        int_t          deallocate(process_t process, voidptr_t src, size_t size) { return mem_ex_deallocate(process.process, src, size); }
-        voidptr_t      scan(process_t process, byte_t* data, voidptr_t begin, voidptr_t end, size_t size) { return mem_ex_scan(process.process, data, begin, end, size); }
-        voidptr_t      pattern_scan(process_t process, byte_t* pattern, string_t mask, voidptr_t begin, voidptr_t end) { return mem_ex_pattern_scan(process.process, pattern, mask.str, begin, end); }
-        voidptr_t      pattern_scan(process_t process, byte_t* pattern, string_t mask, module_t mod) { return mem_ex_pattern_scan(process.process, pattern, mask.str, mod.mod.base, mod.mod.end); }
-        int_t          detour(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_ex_detour(process.process, src, dst, size, method, stolen_bytes); }
-        voidptr_t      detour_trampoline(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_ex_detour_trampoline(process.process, src, dst, size, method, stolen_bytes); }
-        void_t         detour_restore(process_t process, voidptr_t src, byte_t* stolen_bytes, size_t size) { return mem_ex_detour_restore(process.process, src, stolen_bytes, size); }
-        int_t          load_library(process_t process, lib_t lib) { return mem_ex_load_library(process.process, lib.lib); }
-        voidptr_t      get_symbol(module_t mod, const char* symbol) { return mem_ex_get_symbol(mod.mod, symbol); }
+        inline int_t          write(process_t process, voidptr_t dst, type_t src) { return mem_ex_write(process.process, dst, src, sizeof(src)); }
+        inline int_t          set(process_t process, voidptr_t dst, byte_t byte, size_t size) { return mem_ex_set(process.process, dst, byte, size); }
+        inline voidptr_t      syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5) { return mem_ex_syscall(process.process, syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
+        inline int_t          protect(process_t process, voidptr_t src, size_t size, prot_t protection) { return mem_ex_protect(process.process, src, size, protection); }
+        inline voidptr_t      allocate(process_t process, size_t size, prot_t protection) { return mem_ex_allocate(process.process, size, protection); }
+        inline int_t          deallocate(process_t process, voidptr_t src, size_t size) { return mem_ex_deallocate(process.process, src, size); }
+        inline voidptr_t      scan(process_t process, byte_t* data, voidptr_t begin, voidptr_t end, size_t size) { return mem_ex_scan(process.process, data, begin, end, size); }
+        inline voidptr_t      pattern_scan(process_t process, byte_t* pattern, string_t mask, voidptr_t begin, voidptr_t end) { return mem_ex_pattern_scan(process.process, pattern, mask.str, begin, end); }
+        inline voidptr_t      pattern_scan(process_t process, byte_t* pattern, string_t mask, module_t mod) { return mem_ex_pattern_scan(process.process, pattern, mask.str, mod.mod.base, mod.mod.end); }
+        inline int_t          detour(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_ex_detour(process.process, src, dst, size, method, stolen_bytes); }
+        inline voidptr_t      detour_trampoline(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_ex_detour_trampoline(process.process, src, dst, size, method, stolen_bytes); }
+        inline void_t         detour_restore(process_t process, voidptr_t src, byte_t* stolen_bytes, size_t size) { return mem_ex_detour_restore(process.process, src, stolen_bytes, size); }
+        inline int_t          load_library(process_t process, lib_t lib) { return mem_ex_load_library(process.process, lib.lib); }
+        inline voidptr_t      get_symbol(module_t mod, const char* symbol) { return mem_ex_get_symbol(mod.mod, symbol); }
     }
 
     namespace in
     {
-        pid_t         get_pid() { return mem_in_get_pid(); }
-        process_t     get_process() { return mem_in_get_process(); }
-        string_t      get_process_name() { return mem_in_get_process_name(); }
-        module_t      get_module(string_t module_name) { return mem_in_get_module(module_name.str); }
-        module_list_t get_module_list() { return mem_in_get_module_list(); }
-        page_t        get_page(mem_voidptr_t src) { return page_t(mem_in_get_page(src)); }
-        voidptr_t     pattern_scan(byte_t* pattern, string_t mask, voidptr_t begin, voidptr_t end) { return mem_in_pattern_scan(pattern, mask.str, begin, end); }
-        voidptr_t     pattern_scan(byte_t* pattern, string_t mask, module_t  mod) { return mem_in_pattern_scan(pattern, mask.str, mod.mod.base, mod.mod.end); }
-        void_t        read(voidptr_t src, voidptr_t dst, size_t size) { return mem_in_read(src, dst, size); }
+        inline pid_t         get_pid() { return mem_in_get_pid(); }
+        inline process_t     get_process() { return mem_in_get_process(); }
+        inline string_t      get_process_name() { return mem_in_get_process_name(); }
+        inline module_t      get_module(string_t module_name) { return mem_in_get_module(module_name.str); }
+        inline module_list_t get_module_list() { return mem_in_get_module_list(); }
+        inline page_t        get_page(mem_voidptr_t src) { return page_t(mem_in_get_page(src)); }
+        inline voidptr_t     pattern_scan(byte_t* pattern, string_t mask, voidptr_t begin, voidptr_t end) { return mem_in_pattern_scan(pattern, mask.str, begin, end); }
+        inline voidptr_t     pattern_scan(byte_t* pattern, string_t mask, module_t  mod) { return mem_in_pattern_scan(pattern, mask.str, mod.mod.base, mod.mod.end); }
+        inline void_t        read(voidptr_t src, voidptr_t dst, size_t size) { return mem_in_read(src, dst, size); }
         template<typename type_t>
-        type_t        read(voidptr_t src) { type_t data; mem_in_read(src, &data, sizeof(data)); return data; }
-        void_t        write(voidptr_t dst, voidptr_t src, size_t size) { return mem_in_write(dst, src, size); }
+        inline type_t        read(voidptr_t src) { type_t data; mem_in_read(src, &data, sizeof(data)); return data; }
+        inline void_t        write(voidptr_t dst, voidptr_t src, size_t size) { return mem_in_write(dst, src, size); }
         template<typename type_t>
-        void_t        write(voidptr_t dst, type_t src) { return mem_in_write(dst, src, sizeof(src)); }
-        void_t        set(voidptr_t src, byte_t byte, size_t size) { return mem_in_set(src, byte, size); }
-        voidptr_t     syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5) { return mem_in_syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
-        int_t         protect(voidptr_t src, size_t size, prot_t protection) { return mem_in_protect(src, size, protection); }
-        voidptr_t     allocate(size_t size, prot_t protection) { return mem_in_allocate(size, protection); }
-        void_t        deallocate(voidptr_t src, size_t size) { return mem_in_deallocate(src, size); }
-        bool_t        compare(voidptr_t pdata1, voidptr_t pdata2, size_t size) { return mem_in_compare(pdata1, pdata2, size); }
-        voidptr_t     scan(voidptr_t data, voidptr_t begin, voidptr_t end, size_t size) { return mem_in_scan(data, begin, end, size); }
-        size_t        detour_length(detour_t method) { return mem_in_detour_length(method); }
-        int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
-        voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
-        void_t        detour_restore(voidptr_t src, byte_t* stolen_bytes, size_t size) { return mem_in_detour_restore(src, stolen_bytes, size); }
-        module_t      load_library(lib_t lib) { return mem_in_load_library(lib.lib); }
-        void_t        unload_library(module_t mod) { return mem_in_unload_library(mod.mod); }
-        voidptr_t     get_symbol(module_t mod, const char* symbol) { return mem_in_get_symbol(mod.mod, symbol); }
+        inline void_t        write(voidptr_t dst, type_t src) { return mem_in_write(dst, src, sizeof(src)); }
+        inline void_t        set(voidptr_t src, byte_t byte, size_t size) { return mem_in_set(src, byte, size); }
+        inline voidptr_t     syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5) { return mem_in_syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
+        inline int_t         protect(voidptr_t src, size_t size, prot_t protection) { return mem_in_protect(src, size, protection); }
+        inline voidptr_t     allocate(size_t size, prot_t protection) { return mem_in_allocate(size, protection); }
+        inline void_t        deallocate(voidptr_t src, size_t size) { return mem_in_deallocate(src, size); }
+        inline bool_t        compare(voidptr_t pdata1, voidptr_t pdata2, size_t size) { return mem_in_compare(pdata1, pdata2, size); }
+        inline voidptr_t     scan(voidptr_t data, voidptr_t begin, voidptr_t end, size_t size) { return mem_in_scan(data, begin, end, size); }
+        inline size_t        detour_length(detour_t method) { return mem_in_detour_length(method); }
+        inline int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
+        inline voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
+        inline void_t        detour_restore(voidptr_t src, byte_t* stolen_bytes, size_t size) { return mem_in_detour_restore(src, stolen_bytes, size); }
+        inline module_t      load_library(lib_t lib) { return mem_in_load_library(lib.lib); }
+        inline void_t        unload_library(module_t mod) { return mem_in_unload_library(mod.mod); }
+        inline voidptr_t     get_symbol(module_t mod, const char* symbol) { return mem_in_get_symbol(mod.mod, symbol); }
     }
 }
 #endif

@@ -10,6 +10,8 @@
 
 #if defined(MEM_CPP) && defined(MEM_COMPATIBLE)
 
+#define cval(val) cvar().val
+
 namespace mem
 {
     typedef mem_bool_t          bool_t;
@@ -305,6 +307,7 @@ namespace mem
         inline pid_t          get_pid(string_t process_name) { return mem_ex_get_pid(process_name.str); }
         inline string_t       get_process_name(pid_t pid) { return mem_ex_get_process_name(pid); }
         inline process_t      get_process(pid_t pid) { return mem_ex_get_process(pid); }
+        inline process_t      get_process(string_t process_name) { return mem_ex_get_process(mem_ex_get_pid(process_name.str)); }
         inline process_list_t get_process_list() { return mem_ex_get_process_list(); }
         inline module_t       get_module(process_t process, string_t module_name) { return mem_ex_get_module(process.process, module_name.str); }
         inline module_list_t  get_module_list(process_t process) { return mem_ex_get_module_list(process.process); }
@@ -324,8 +327,8 @@ namespace mem
         inline voidptr_t      scan(process_t process, byte_t* data, voidptr_t begin, voidptr_t end, size_t size) { return mem_ex_scan(process.process, data, begin, end, size); }
         inline voidptr_t      pattern_scan(process_t process, byte_t* pattern, string_t mask, voidptr_t begin, voidptr_t end) { return mem_ex_pattern_scan(process.process, pattern, mask.str, begin, end); }
         inline voidptr_t      pattern_scan(process_t process, byte_t* pattern, string_t mask, module_t mod) { return mem_ex_pattern_scan(process.process, pattern, mask.str, mod.mod.base, mod.mod.end); }
-        inline int_t          detour(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_ex_detour(process.process, src, dst, size, method, stolen_bytes); }
-        inline voidptr_t      detour_trampoline(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_ex_detour_trampoline(process.process, src, dst, size, method, stolen_bytes); }
+        inline int_t          detour(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes = NULL) { return mem_ex_detour(process.process, src, dst, size, method, stolen_bytes); }
+        inline voidptr_t      detour_trampoline(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes = NULL) { return mem_ex_detour_trampoline(process.process, src, dst, size, method, stolen_bytes); }
         inline void_t         detour_restore(process_t process, voidptr_t src, byte_t* stolen_bytes, size_t size) { return mem_ex_detour_restore(process.process, src, stolen_bytes, size); }
         inline int_t          load_library(process_t process, lib_t lib) { return mem_ex_load_library(process.process, lib.lib); }
         inline voidptr_t      get_symbol(module_t mod, const char* symbol) { return mem_ex_get_symbol(mod.mod, symbol); }

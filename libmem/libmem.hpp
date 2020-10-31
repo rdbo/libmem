@@ -358,8 +358,8 @@ namespace mem
         inline bool_t        compare(voidptr_t pdata1, voidptr_t pdata2, size_t size) { return mem_in_compare(pdata1, pdata2, size); }
         inline voidptr_t     scan(voidptr_t data, voidptr_t begin, voidptr_t end, size_t size) { return mem_in_scan(data, begin, end, size); }
         inline size_t        detour_length(detour_t method) { return mem_in_detour_length(method); }
-        inline int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
-        inline voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
+        inline int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes = NULL) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
+        inline voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes = NULL) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
         inline void_t        detour_restore(voidptr_t src, byte_t* stolen_bytes, size_t size) { return mem_in_detour_restore(src, stolen_bytes, size); }
         inline module_t      load_library(lib_t lib) { return mem_in_load_library(lib.lib); }
         inline void_t        unload_library(module_t mod) { return mem_in_unload_library(mod.mod); }

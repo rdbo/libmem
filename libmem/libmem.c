@@ -668,11 +668,11 @@ struct _mem_lib_t mem_lib_init()
 	return _lib;
 }
 
-struct _mem_lib_t  mem_lib_new(mem_string_t path, mem_int_t mode)
+struct _mem_lib_t  mem_lib_new(mem_char_t* path, mem_int_t mode)
 {
 	struct _mem_lib_t _lib = mem_lib_init();
 	mem_lib_free(&_lib);
-	_lib.path = path;
+	_lib.path = mem_string_new(path);
 #   if defined(MEM_WIN)
 #   elif defined(MEM_LINUX)
 	_lib.mode = (mem_int_t)mode;

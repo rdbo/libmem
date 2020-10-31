@@ -46,14 +46,15 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
 	mem_string_empty(&_str);
 	mem_size_t size = (mem_size_t)(MEM_STR_LEN(c_string) + 1) * sizeof(mem_char_t);
 	_str.buffer = (mem_char_t*)malloc(size);
-	if (_str.buffer == 0)
+	if (!_str.buffer)
 	{
+        _str = mem_string_init();
 		_str.is_initialized = mem_false;
 		return _str;
 	}
 	memset(_str.buffer, 0x0, size);
 	memcpy(_str.buffer, c_string, size);
-	_str.buffer[((size / sizeof(mem_char_t)) - 1)] = MEM_STR('\0');
+	_str.buffer[((size / sizeof(mem_char_t)) - 1 * sizeof(mem_char_t))] = MEM_STR('\0');
 	return _str;
 }
 
@@ -68,14 +69,13 @@ mem_bool_t mem_string_is_valid(struct _mem_string_t* p_string)
 
 mem_void_t mem_string_clear(struct _mem_string_t* p_string)
 {
-	if (p_string->is_initialized == mem_false) return;
-	if (p_string->buffer)
+	if (p_string->is_initialized == mem_true && p_string->buffer)
 		memset((void*)p_string->buffer, (int)0x0, (size_t)mem_string_size(p_string));
 }
 
 mem_void_t mem_string_empty(struct _mem_string_t* p_string)
 {
-	if (mem_string_is_valid(p_string) && p_string->buffer)
+	if (p_string && p_string->buffer)
 	{
 		free(p_string->buffer);
 		p_string->buffer = (mem_char_t*)NULL;
@@ -97,12 +97,12 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
 {
 	if (p_string->is_initialized != mem_true || !p_string->buffer) return;
 	size = (size + 1) * sizeof(mem_char_t);
-	mem_char_t* _buffer = (mem_char_t*)malloc(size * sizeof(mem_char_t));
+	mem_char_t* _buffer = (mem_char_t*)malloc(size);
 	if (!_buffer) return;
 	mem_size_t old_size = mem_string_size(p_string);
 	if (p_string->buffer)
 	{
-		memcpy((void*)_buffer, (void*)p_string->buffer, (size_t)(size > old_size ? old_size : size));
+		memcpy((void*)_buffer, (void*)p_string->buffer, (size_t)(size > old_size ? old_size : size - 1 * sizeof(mem_char_t)));
 		free(p_string->buffer);
 	}
 	_buffer[size / sizeof(mem_char_t) - 1] = MEM_STR('\0');

@@ -53,6 +53,7 @@ namespace mem
         struct _mem_string_t str;
 
         public:
+        struct _mem_string_t    cvar()     { return this->str; }
         mem_bool_t              is_valid() { return mem_string_is_valid(&this->str); }
         mem_void_t              clear   () { return mem_string_clear(&this->str); }
         mem_void_t              empty   () { return mem_string_empty(&this->str); }
@@ -118,6 +119,7 @@ namespace mem
         struct _mem_process_t process;
 
         public:
+        struct _mem_process_t cvar() { return this->process; }
         mem_bool_t is_valid() { return mem_process_is_valid(&this->process); }
         mem_bool_t compare (struct _mem_process_t _process) { return mem_process_compare(&this->process, _process); }
 
@@ -146,6 +148,7 @@ namespace mem
         struct _mem_process_list_t proc_list;
 
         public:
+        struct _mem_process_list_t cvar()       { return this->proc_list; }
         mem_process_t  at      (mem_size_t pos) { return mem_process_list_at(&this->proc_list, pos); }
         mem_bool_t     is_valid() { return mem_process_list_is_valid(&this->proc_list); }
         mem_size_t     length  () { return mem_process_list_length(&this->proc_list); }
@@ -177,6 +180,7 @@ namespace mem
         struct _mem_module_t mod;
 
         public:
+        struct _mem_module_t cvar() { return this->mod; }
         mem_bool_t is_valid() { return mem_module_is_valid(&this->mod); }
         mem_bool_t compare (struct _mem_module_t _mod) { return mem_module_compare(&this->mod, _mod); }
 
@@ -203,6 +207,7 @@ namespace mem
         struct _mem_module_list_t mod_list;
 
         public:
+        struct _mem_module_list_t cvar()       { return this->mod_list; }
         mem_module_t  at      (mem_size_t pos) { return mem_module_list_at(&this->mod_list, pos); }
         mem_bool_t    is_valid() { return mem_module_list_is_valid(&this->mod_list); }
         mem_size_t    length  () { return mem_module_list_length(&this->mod_list); }
@@ -235,6 +240,7 @@ namespace mem
         struct _mem_page_t page;
 
         public:
+        struct _mem_page_t cvar() { return this->page; }
         mem_bool_t is_valid() { return mem_page_is_valid(&this->page); }
 
         public:
@@ -249,6 +255,7 @@ namespace mem
         struct _mem_alloc_t alloc;
 
         public:
+        struct _mem_alloc_t cvar() { return this->alloc; }
         mem_bool_t is_valid() { return mem_alloc_is_valid(&this->alloc); }
 
         public:
@@ -270,10 +277,10 @@ namespace mem
         struct _mem_lib_t lib;
 
         public:
+        struct _mem_lib_t cvar() { return this->lib; }
         mem_bool_t is_valid() { return mem_lib_is_valid(&this->lib); }
 
         public:
-
         lib_t() { this->lib = mem_lib_init(); }
         lib_t(string_t path, int_t mode) { this->lib = mem_lib_new(path.str, mode); }
         lib_t(struct _mem_lib_t _lib) { this->lib = _lib; }

@@ -182,7 +182,7 @@
 #include <sys/syscall.h>
 #include <sys/io.h>
 #include <sys/uio.h>
-#include <dlfcn.h>
+//#include <dlfcn.h> //No longer needed (using 'dl' functions for libc)
 #include <link.h>
 #include <fcntl.h>
 #endif
@@ -240,6 +240,8 @@ typedef mem_wchar_t                          mem_char_t;
 typedef mem_uint16_t                         mem_wchar_t;
 typedef char                                 mem_char_t;
 #endif
+
+typedef mem_char_t*                          mem_cstring_t;
 
 typedef mem_byte_t*                          mem_byteptr_t;
 typedef mem_int8_t*                          mem_bytearray_t;

@@ -43,6 +43,7 @@ namespace mem
 
     //typedef mem_wchar_t       wchar_t;
     typedef mem_char_t          char_t;
+    typedef mem_char_t*         cstring_t;
 
     typedef mem_byteptr_t       byteptr_t;
     typedef mem_byte_t          byte_t;

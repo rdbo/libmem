@@ -8,7 +8,7 @@ Make sure to compile 'libmem.c' along with your project.
 
 # Dependencies
 Windows: Windows SDK  
-Linux:   libdl ( -ldl )  
+Linux:   Linux headers (generally come pre-installed)  
 
 # License
 Read 'LICENSE'  

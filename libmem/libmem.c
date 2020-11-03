@@ -2004,32 +2004,7 @@ mem_module_t mem_in_load_library(mem_lib_t lib)
 	mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, MEM_STR("\\"), mem_string_length(&lib.path)), mem_string_length(&lib.path)));
 	mod.handle = h_mod;
 #   elif defined(MEM_LINUX)
-    typedef void*(* dlopen_t)(const char*, int);
-    mem_string_t libc_str = mem_string_new("/libc.");
-    mem_module_t libc_in;
-    mem_bool_t   retry = mem_false;
-    L_GET_LIBC_MOD:
-    libc_in = mem_in_get_module(libc_str);
-    mem_string_free(&libc_str);
-    if(!mem_module_is_valid(&libc_in))
-    {
-        if(!retry)
-        {
-            retry = mem_true;
-            libc_str = mem_string_new(MEM_STR("/libc-"));
-            goto L_GET_LIBC_MOD;
-        }
-
-        else
-        {
-            mem_module_free(&libc_in);
-            return mod;
-        }
-    }
-
-    dlopen_t libc_dlopen = (dlopen_t)mem_in_get_symbol(libc_in, "__libc_dlopen_mode");
-    mem_module_free(&libc_in);
-	void* h_mod = libc_dlopen(mem_string_c_str(&lib.path), lib.mode);
+	void* h_mod = dlopen(mem_string_c_str(&lib.path), lib.mode);
 	mod = mem_in_get_module(lib.path);
 	mod.handle = h_mod;
 #   endif

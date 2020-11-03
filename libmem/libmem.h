@@ -182,7 +182,7 @@
 #include <sys/syscall.h>
 #include <sys/io.h>
 #include <sys/uio.h>
-//#include <dlfcn.h> //No longer needed (using 'dl' functions for libc)
+#include <dlfcn.h>
 #include <link.h>
 #include <fcntl.h>
 #endif

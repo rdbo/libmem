@@ -668,7 +668,20 @@ struct _mem_lib_t mem_lib_init()
 	return _lib;
 }
 
-struct _mem_lib_t  mem_lib_new(mem_char_t* path, mem_int_t mode)
+struct _mem_lib_t  mem_lib_new(mem_string_t path, mem_int_t mode)
+{
+    struct _mem_lib_t _lib = mem_lib_init();
+	mem_lib_free(&_lib);
+	_lib.path = mem_string_new(mem_string_c_str(&path));
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+	_lib.mode = (mem_int_t)mode;
+#   endif
+	_lib.is_initialized = mem_true;
+	return _lib;
+}
+
+struct _mem_lib_t  mem_lib_new2(mem_char_t* path, mem_int_t mode)
 {
 	struct _mem_lib_t _lib = mem_lib_init();
 	mem_lib_free(&_lib);
@@ -782,6 +795,14 @@ mem_pid_t mem_ex_get_pid(mem_string_t process_name)
 	return pid;
 }
 
+mem_pid_t mem_ex_get_pid2(mem_char_t* process_name)
+{
+    mem_string_t process_name_str = mem_string_new(process_name);
+    mem_pid_t    pid = mem_ex_get_pid(process_name_str);
+    mem_string_free(&process_name_str);
+    return pid;
+}
+
 mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 {
 	mem_string_t process_name = mem_string_init();
@@ -839,6 +860,20 @@ mem_process_t mem_ex_get_process(mem_pid_t pid)
 #	elif defined(MEM_LINUX)
 #	endif
 	return process;
+}
+
+mem_process_t mem_ex_get_process2(mem_string_t process_name)
+{
+    mem_pid_t pid = mem_ex_get_pid(process_name);
+    mem_process_t process = mem_ex_get_process(pid);
+    return process;
+}
+
+mem_process_t mem_ex_get_process3(mem_char_t* process_name)
+{
+    mem_pid_t pid = mem_ex_get_pid2(process_name);
+    mem_process_t process = mem_ex_get_process(pid);
+    return process;
 }
 
 mem_process_list_t mem_ex_get_process_list()
@@ -1019,6 +1054,14 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 
 #   endif
 	return modinfo;
+}
+
+mem_module_t mem_ex_get_module2(mem_process_t process, mem_char_t*  module_name)
+{
+    mem_string_t module_name_str = mem_string_new(module_name);
+    mem_module_t mod = mem_ex_get_module(process, module_name_str);
+    mem_string_free(&module_name_str);
+    return mod;
 }
 
 mem_module_list_t mem_ex_get_module_list(mem_process_t process)
@@ -1481,6 +1524,14 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_byte_t* pattern, me
 	return ret;
 }
 
+mem_voidptr_t mem_ex_pattern_scan2(mem_process_t process, mem_byte_t* pattern, mem_char_t*  mask, mem_voidptr_t begin, mem_voidptr_t end)
+{
+    mem_string_t mask_str = mem_string_new(mask);
+    mem_voidptr_t scan = mem_ex_pattern_scan(process, pattern, mask_str, begin, end);
+    mem_string_free(&mask_str);
+    return scan;
+}
+
 mem_int_t mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes)
 {
 	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
@@ -1720,6 +1771,14 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
 	return modinfo;
 }
 
+mem_module_t mem_in_get_module2(mem_char_t* module_name)
+{
+    mem_string_t module_name_str = mem_string_new(module_name);
+    mem_module_t mod = mem_in_get_module(module_name_str);
+    mem_string_free(&module_name_str);
+    return mod;
+}
+
 mem_module_list_t mem_in_get_module_list()
 {
 	return mem_ex_get_module_list(mem_in_get_process());
@@ -1851,6 +1910,14 @@ mem_voidptr_t mem_in_pattern_scan(mem_byte_t* pattern, mem_string_t mask, mem_vo
 	}
 
 	return ret;
+}
+
+mem_voidptr_t mem_in_pattern_scan2(mem_byte_t* pattern, mem_char_t* mask, mem_voidptr_t begin, mem_voidptr_t end)
+{
+    mem_string_t mask_str = mem_string_new(mask);
+    mem_voidptr_t scan = mem_in_pattern_scan(pattern, mask_str, begin, end);
+    mem_string_free(&mask_str);
+    return scan;
 }
 
 mem_size_t mem_in_detour_length(mem_detour_t method)

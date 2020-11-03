@@ -446,7 +446,8 @@ typedef struct _mem_lib_t
 }mem_lib_t;
 
 struct _mem_lib_t  mem_lib_init();
-struct _mem_lib_t  mem_lib_new(mem_char_t* path, mem_int_t mode /*mode ignored on Windows*/);
+struct _mem_lib_t  mem_lib_new(mem_string_t path, mem_int_t mode /*mode ignored on Windows*/);
+struct _mem_lib_t  mem_lib_new2(mem_char_t* path, mem_int_t mode /*mode ignored on Windows*/);
 mem_bool_t         mem_lib_is_valid(struct _mem_lib_t* p_lib);
 mem_void_t         mem_lib_free(struct _mem_lib_t* p_lib);
 
@@ -469,10 +470,14 @@ mem_uintptr_t      mem_get_page_size();
 
 //ex
 mem_pid_t          mem_ex_get_pid(mem_string_t process_name);
+mem_pid_t          mem_ex_get_pid2(mem_char_t*  process_name);
 mem_string_t       mem_ex_get_process_name(mem_pid_t pid);
 mem_process_t      mem_ex_get_process(mem_pid_t pid);
+mem_process_t      mem_ex_get_process2(mem_string_t process_name);
+mem_process_t      mem_ex_get_process3(mem_char_t*  process_name);
 mem_process_list_t mem_ex_get_process_list();
 mem_module_t       mem_ex_get_module(mem_process_t process, mem_string_t module_name);
+mem_module_t       mem_ex_get_module2(mem_process_t process, mem_char_t*  module_name);
 mem_module_list_t  mem_ex_get_module_list(mem_process_t process);
 mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src);
 mem_bool_t         mem_ex_is_process_running(mem_process_t process);
@@ -485,6 +490,7 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 mem_int_t          mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
 mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_byte_t* data, mem_voidptr_t begin, mem_voidptr_t end, mem_size_t size);
 mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_byte_t* pattern, mem_string_t mask, mem_voidptr_t begin, mem_voidptr_t end);
+mem_voidptr_t      mem_ex_pattern_scan2(mem_process_t process, mem_byte_t* pattern, mem_char_t* mask, mem_voidptr_t begin, mem_voidptr_t end);
 mem_int_t          mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes);
 mem_voidptr_t      mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes);
 mem_void_t         mem_ex_detour_restore(mem_process_t process, mem_voidptr_t src, mem_byte_t* stolen_bytes, mem_size_t size);
@@ -497,9 +503,11 @@ mem_pid_t         mem_in_get_pid();
 mem_process_t     mem_in_get_process();
 mem_string_t      mem_in_get_process_name();
 mem_module_t      mem_in_get_module(mem_string_t module_name);
+mem_module_t      mem_in_get_module2(mem_char_t* module_name);
 mem_module_list_t mem_in_get_module_list();
 mem_page_t        mem_in_get_page(mem_voidptr_t src);
 mem_voidptr_t     mem_in_pattern_scan(mem_byte_t* pattern, mem_string_t mask, mem_voidptr_t begin, mem_voidptr_t end);
+mem_voidptr_t     mem_in_pattern_scan2(mem_byte_t* pattern, mem_char_t* mask, mem_voidptr_t begin, mem_voidptr_t end);
 mem_void_t        mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
 mem_void_t        mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
 mem_void_t        mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size);

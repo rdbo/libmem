@@ -285,7 +285,7 @@ namespace mem
 
         public:
         lib_t() { this->lib = mem_lib_init(); }
-        lib_t(string_t path, int_t mode) { this->lib = mem_lib_new(path.c_str(), mode); }
+        lib_t(string_t path, int_t mode) { this->lib = mem_lib_new(path.str, mode); }
         lib_t(struct _mem_lib_t _lib) { this->lib = _lib; }
         ~lib_t() { mem_lib_free(&this->lib); }
 

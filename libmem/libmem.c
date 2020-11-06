@@ -329,7 +329,7 @@ mem_bool_t mem_process_is_valid(struct _mem_process_t* p_process)
 		p_process->is_initialized == mem_true &&
 		MEM_STR_CMP(mem_string_c_str(&p_process->name), MEM_STR("")) &&
 		p_process->pid != (mem_pid_t)MEM_BAD_RETURN
-		);
+	);
 }
 
 mem_bool_t mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process)
@@ -337,7 +337,7 @@ mem_bool_t mem_process_compare(struct _mem_process_t* p_process, struct _mem_pro
 	return (mem_bool_t)(
 		mem_string_compare(&p_process->name, process.name) == mem_true &&
 		p_process->pid == process.pid
-		);
+	);
 }
 
 mem_void_t mem_process_free(struct _mem_process_t* p_process)
@@ -473,7 +473,7 @@ mem_bool_t mem_module_is_valid(struct _mem_module_t* p_mod)
 		p_mod->base != (mem_voidptr_t)MEM_BAD_RETURN  &&
 		p_mod->size != (mem_uintptr_t)MEM_BAD_RETURN     &&
 		p_mod->end != (mem_voidptr_t)MEM_BAD_RETURN
-		);
+	);
 }
 
 mem_bool_t mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t mod)
@@ -484,7 +484,7 @@ mem_bool_t mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t 
 		p_mod->base == mod.base                    &&
 		p_mod->size == mod.size                    &&
 		p_mod->end == mod.end
-		);
+	);
 }
 
 mem_void_t mem_module_free(struct _mem_module_t* p_mod)

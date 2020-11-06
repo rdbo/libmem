@@ -48,13 +48,13 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
 	_str.buffer = (mem_char_t*)malloc(size);
 	if (!_str.buffer)
 	{
-        _str = mem_string_init();
+        //_str = mem_string_init();
 		_str.is_initialized = mem_false;
 		return _str;
 	}
 	memset(_str.buffer, 0x0, size);
 	memcpy(_str.buffer, c_string, size);
-	_str.buffer[((size / sizeof(mem_char_t)) - 1 * sizeof(mem_char_t))] = MEM_STR('\0');
+	_str.buffer[((size / sizeof(mem_char_t)) - 1)] = MEM_STR('\0');
 	return _str;
 }
 
@@ -63,6 +63,7 @@ mem_bool_t mem_string_is_valid(struct _mem_string_t* p_string)
 	return (mem_bool_t)(
 		p_string &&
 		p_string->is_initialized == mem_true &&
+        p_string->buffer &&
 		MEM_STR_CMP(p_string->buffer, MEM_STR(""))
 	);
 }
@@ -2066,6 +2067,7 @@ mem_module_t mem_in_load_library(mem_lib_t lib)
 {
 	mem_module_t mod = mem_module_init();
 	if (!mem_lib_is_valid(&lib)) return mod;
+    mem_module_free(&mod);
 #   if defined(MEM_WIN)
 	HMODULE h_mod = LoadLibrary(mem_string_c_str(&lib.path));
 	mod = mem_in_get_module(mem_string_substr(&lib.path, mem_string_rfind(&lib.path, MEM_STR("\\"), mem_string_length(&lib.path)), mem_string_length(&lib.path)));

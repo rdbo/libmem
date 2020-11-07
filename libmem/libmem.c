@@ -290,8 +290,11 @@ struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_
 		mem_char_t* _buffer = (mem_char_t*)malloc(buffer_size);
 		if (_buffer == 0) return new_str;
 		memcpy((void*)_buffer, (void*)((mem_uintptr_t)p_string->buffer + start * sizeof(mem_char_t)), (size_t)(len * sizeof(mem_char_t)));
-		_buffer[len] = MEM_STR('\0');
-		free(new_str.buffer);
+		_buffer[len - 1] = MEM_STR('\0');
+        if(new_str.buffer)
+        {
+            free(new_str.buffer);
+        }
 		new_str.buffer = _buffer;
 	}
 

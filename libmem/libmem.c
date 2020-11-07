@@ -96,7 +96,7 @@ mem_size_t mem_string_size(struct _mem_string_t* p_string)
 
 mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
 {
-	if (p_string->is_initialized != mem_true || !p_string->buffer) return;
+	if (p_string->is_initialized != mem_true || !p_string->buffer || size == 0) return;
 	size = (size + 1) * sizeof(mem_char_t);
 	mem_char_t* _buffer = (mem_char_t*)malloc(size);
 	if (!_buffer) return;

@@ -1770,7 +1770,9 @@ mem_module_t mem_in_get_module(mem_string_t module_name)
 	modinfo.end = (mem_voidptr_t)((uintptr_t)modinfo.base + modinfo.size);
 	modinfo.handle = hmod;
 #   elif defined(MEM_LINUX)
-	modinfo = mem_ex_get_module(mem_in_get_process(), module_name);
+    mem_process_t process = mem_in_get_process();
+	modinfo = mem_ex_get_module(process, module_name);
+    mem_process_free(&process);
 #   endif
 	return modinfo;
 }

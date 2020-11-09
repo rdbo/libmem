@@ -955,7 +955,7 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 		{
 			do
 			{
-				if (!MEM_STR_CMP(modEntry.szModule, mem_string_c_str(&module_name)))
+				if (!MEM_STR_CMP(modEntry.szModule, mem_string_c_str(&module_name)) || !MEM_STR_CMP(modEntry.szExePath, mem_string_c_str(&module_name)))
 				{
 					module_info = modEntry;
 					break;
@@ -1040,8 +1040,10 @@ mem_module_t mem_ex_get_module(mem_process_t process, mem_string_t module_name)
 #   endif
 
 	mem_module_handle_t handle = (mem_module_handle_t)MEM_BAD_RETURN;
+    /*
 	if (MEM_STR_CMP(mem_string_c_str(&process.name), mem_string_c_str(&module_name_str)))
 		handle = (mem_module_handle_t)dlopen(mem_string_c_str(&module_path_str), RTLD_LAZY);
+    */
 
 	modinfo.name   = module_name_str;
 	modinfo.base   = (mem_voidptr_t)base_address;
@@ -1597,95 +1599,134 @@ mem_void_t mem_ex_detour_restore(mem_process_t process, mem_voidptr_t src, mem_b
 		mem_ex_write(process, src, (mem_voidptr_t)stolen_bytes, (mem_size_t)size);
 }
 
-mem_int_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
+mem_module_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
 {
-	mem_int_t ret = (mem_int_t)MEM_BAD_RETURN;
-	if (!mem_process_is_valid(&process) || !mem_lib_is_valid(&lib)) return ret;
+	mem_module_t mod = mem_module_init();
+	if (!mem_process_is_valid(&process) || !mem_lib_is_valid(&lib)) return mod;
 #   if defined(MEM_WIN)
 	mem_size_t buffer_size = (mem_size_t)((mem_string_length(&lib.path) + 1) * sizeof(mem_char_t));
 	mem_prot_t protection = PAGE_READWRITE;
 	mem_voidptr_t libpath_ex = mem_ex_allocate(process, buffer_size, protection);
-	if (!libpath_ex || libpath_ex == (mem_voidptr_t)-1) return ret;
+	if (!libpath_ex || libpath_ex == (mem_voidptr_t)-1) return mod;
 	mem_ex_set(process, libpath_ex, 0x0, buffer_size);
 	mem_ex_write(process, libpath_ex, (mem_voidptr_t)mem_string_c_str(&lib.path), buffer_size);
 	HANDLE h_thread = (HANDLE)CreateRemoteThread(process.handle, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, libpath_ex, 0, 0);
-	if (!h_thread || h_thread == INVALID_HANDLE_VALUE) return ret;
+	if (!h_thread || h_thread == INVALID_HANDLE_VALUE) return mod;
 	WaitForSingleObject(h_thread, -1);
 	CloseHandle(h_thread);
 	VirtualFreeEx(process.handle, libpath_ex, 0, MEM_RELEASE);
-	ret = !ret;
+    mem_module_free(&ret);
+	ret = mem_ex_get_module(process, lib.path);
 #   elif defined(MEM_LINUX)
 
-	mem_string_t libdl_str = mem_string_new(MEM_STR("/libdl.so"));
-	mem_bool_t retry = mem_false;
-	mem_module_t libdl_ex;
-	L_GET_LIBDL_MODULE:
-	libdl_ex = mem_ex_get_module(process, libdl_str);
-	mem_string_free(&libdl_str);
-	if(!mem_module_is_valid(&libdl_ex))
-	{
-		if(!retry)
-		{
-			retry = mem_true;
-			libdl_str = mem_string_new(MEM_STR("/libdl-"));
-			goto L_GET_LIBDL_MODULE;
-		}
+	mem_string_t libc_str = mem_string_new("/libc.");
+    mem_module_t libc_ex;
+    mem_bool_t   retry = mem_false;
+    
+    L_GET_LIBC_MOD:
+    libc_ex = mem_ex_get_module(process, libc_str);
+    mem_string_free(&libc_str);
+    if(!mem_module_is_valid(&libc_ex))
+    {
+        if(!retry)
+        {
+            retry = mem_true;
+            libc_str = mem_string_new("/libc-");
+            goto L_GET_LIBC_MOD;
+        }
 
-		else
-		{
-			return ret;
-		}
-	}
+        else
+        {
+            mem_module_free(&libc_ex);
+            return mod;
+        }
+    }
 
-	mem_voidptr_t dlopen_ex = mem_ex_get_symbol(libdl_ex, "dlopen");
-	mem_module_free(&libdl_ex);
-	if(dlopen_ex == (mem_voidptr_t)MEM_BAD_RETURN) return ret;
+    mem_lib_t libc_load = mem_lib_new(libc_ex.path, RTLD_LAZY);
+    mem_module_t libc_in = mem_in_load_library(libc_load);
+    if(!mem_module_is_valid(&libc_in))
+    {
+        mem_module_free(&libc_in);
+        return mod;
+    }
 
-	mem_byte_t injection_buffer[] =
-	{
-#		if defined(MEM_86)
-		0xff, 0xd0  //call eax
-#		elif defined(MEM_64)
-		0xff, 0xd0, //call rax
-		0xcc        //int3 (SIGTRAP)
-#		endif
-	};
+    mem_voidptr_t dlopen_ex = (mem_voidptr_t)(
+        (mem_uintptr_t)libc_ex.base +
+        (mem_uintptr_t)mem_in_get_symbol(libc_in, "__libc_dlopen_mode") - (mem_uintptr_t)libc_in.base
+    );
 
-	mem_char_t* path_str = mem_string_c_str(&lib.path);
-	mem_size_t path_size = mem_string_size(&lib.path);
-	mem_size_t injection_size = sizeof(injection_buffer) + path_size;
-	mem_prot_t protection = PROT_EXEC | PROT_READ | PROT_WRITE;
-	mem_voidptr_t injection_addr = mem_ex_allocate(process, injection_size, protection);
-	mem_ex_write(process, injection_addr, injection_buffer, sizeof(injection_buffer));
-	mem_ex_write(process, (mem_voidptr_t)((mem_uintptr_t)injection_addr + sizeof(injection_buffer)), path_str, path_size);
+    mem_module_free(&libc_in);
+    mem_module_free(&libc_ex);
 
-	int status;
-	struct user_regs_struct old_regs, regs;
-	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
-	wait(&status);
-	ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
-#	if defined(MEM_86)
-	regs.eax = (mem_uintptr_t)dlopen_ex;
-	regs.edi = (mem_uintptr_t)injection_addr + sizeof(injection_buffer); //arg0 (address of injected path string)
-	regs.esi = (mem_uintptr_t)lib.mode;                                  //arg1
-	regs.eip = (mem_uintptr_t)injection_addr;                            //next instruction (address of the injected payload)
-#	elif defined(MEM_64)
-	regs.rax = (mem_uintptr_t)dlopen_ex;
-	regs.rdi = (mem_uintptr_t)injection_addr + sizeof(injection_buffer); //arg0 (address of injected path string)
-	regs.rsi = (mem_uintptr_t)lib.mode;                                  //arg1
-	regs.rip = (mem_uintptr_t)injection_addr;                            //next instruction (address of the injected payload)
-#	endif
+    //---
 
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
-	ptrace(PTRACE_CONT, process.pid, NULL, NULL);
-	waitpid(process.pid, &status, WSTOPPED);
-	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
-	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
-	mem_ex_deallocate(process, injection_addr, injection_size);
-	ret = !ret;
+    mem_byte_t inj_buf[] =
+    {
+#       if defined(MEM_86)
+        0x51,       //push ecx
+        0x53,       //push ebx
+        0xFF, 0xD0, //call eax
+        0xCC,       //int3 (SIGTRAP)
+#       elif defined(MEM_64)
+        0xFF, 0xD0, //call rax
+        0xCC,       //int3 (SIGTRAP)
+#       endif
+    };
+
+    mem_size_t path_size = mem_string_size(&lib.path);
+    mem_size_t inj_size  = sizeof(inj_buf) + path_size + 10;
+    mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
+    if(inj_addr == (mem_voidptr_t)MEM_BAD_RETURN) return mod;
+    mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + sizeof(inj_buf));
+    mem_ex_write(process, inj_addr, (mem_voidptr_t)inj_buf, sizeof(inj_buf));
+    mem_ex_write(process, path_addr, (mem_voidptr_t)mem_string_c_str(&lib.path), path_size);
+
+    int status;
+    struct user_regs_struct old_regs, regs;
+    mem_module_handle_t handle = (mem_voidptr_t)-1;
+
+    ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
+    wait(&status);
+    ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
+
+#   if defined(MEM_86)
+    regs.eax = (mem_uintptr_t)dlopen_ex;
+    regs.ebx = (mem_uintptr_t)path_addr;
+    regs.ecx = (mem_uintptr_t)lib.mode;
+    regs.eip = (mem_uintptr_t)inj_addr;
+#   elif defined(MEM_64)
+    regs.rax = (mem_uintptr_t)dlopen_ex;
+    regs.rdi = (mem_uintptr_t)path_addr;
+    regs.rsi = (mem_uintptr_t)lib.mode;
+    regs.rip = (mem_uintptr_t)inj_addr;
+#   endif
+
+    ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
+    ptrace(PTRACE_CONT, process.pid, NULL, NULL);
+    waitpid(process.pid, &status, WSTOPPED);
+    ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
+
+#   if defined(MEM_86)
+    handle = (mem_module_handle_t)regs.eax;
+#   elif defined(MEM_64)
+    handle = (mem_module_handle_t)regs.rax;
+#   endif
+
+    if(handle == (mem_module_handle_t)dlopen_ex || (mem_uintptr_t)handle > (mem_uintptr_t)-256)
+        handle = (mem_module_handle_t)MEM_BAD_RETURN;
+
+    ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
+    ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
+
+    //---
+
+    mem_ex_deallocate(process, inj_addr, inj_size);
+    mem_module_free(&mod);
+    mod = mem_ex_get_module(process, lib.path);
+    mod.handle = handle;
 
 #   endif
-	return ret;
+	return mod;
 }
 
 mem_voidptr_t mem_ex_get_symbol(mem_module_t mod, const char* symbol)

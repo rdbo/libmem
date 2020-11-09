@@ -494,7 +494,7 @@ mem_voidptr_t      mem_ex_pattern_scan2(mem_process_t process, mem_byte_t* patte
 mem_int_t          mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes);
 mem_voidptr_t      mem_ex_detour_trampoline(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_byte_t** stolen_bytes);
 mem_void_t         mem_ex_detour_restore(mem_process_t process, mem_voidptr_t src, mem_byte_t* stolen_bytes, mem_size_t size);
-mem_int_t          mem_ex_load_library(mem_process_t process, mem_lib_t lib);
+mem_module_t       mem_ex_load_library(mem_process_t process, mem_lib_t lib);
 mem_voidptr_t      mem_ex_get_symbol(mem_module_t mod, const char* symbol);
 
 //in

@@ -331,7 +331,7 @@ namespace mem
         inline int_t          detour(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes = NULL) { return mem_ex_detour(process.process, src, dst, size, method, stolen_bytes); }
         inline voidptr_t      detour_trampoline(process_t process, voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes = NULL) { return mem_ex_detour_trampoline(process.process, src, dst, size, method, stolen_bytes); }
         inline void_t         detour_restore(process_t process, voidptr_t src, byte_t* stolen_bytes, size_t size) { return mem_ex_detour_restore(process.process, src, stolen_bytes, size); }
-        inline int_t          load_library(process_t process, lib_t lib) { return mem_ex_load_library(process.process, lib.lib); }
+        inline module_t       load_library(process_t process, lib_t lib) { return mem_ex_load_library(process.process, lib.lib); }
         inline voidptr_t      get_symbol(module_t mod, const char* symbol) { return mem_ex_get_symbol(mod.mod, symbol); }
     }
 

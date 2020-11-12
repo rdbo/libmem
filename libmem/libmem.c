@@ -831,6 +831,7 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 	}
 	CloseHandle(hSnap);
 #   elif defined(MEM_LINUX)
+    /*
 	char path_buffer[64];
 	snprintf(path_buffer, sizeof(path_buffer) - 1, "/proc/%i/cmdline", pid);
 	int fd = open(path_buffer, O_RDONLY);
@@ -850,6 +851,29 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 	process_name = mem_string_substr(&file_buffer, process_name_pos, process_name_end);
 	mem_string_free(&file_buffer);
 	close(fd);
+    */
+
+    char path_buffer[64];
+	snprintf(path_buffer, sizeof(path_buffer) - 1, "/proc/%i/maps", pid);
+	int fd = open(path_buffer, O_RDONLY);
+	if (fd == -1) return process_name;
+	mem_string_t file_buffer = mem_string_init();
+	mem_size_t   file_size = 1;
+	int read_check = 0;
+	for (char c; (read_check = read(fd, &c, 1)) != -1 && read_check != 0; file_size++)
+	{
+		mem_string_resize(&file_buffer, file_size);
+		mem_string_c_set(&file_buffer, file_size, c);
+		if (file_size > 0 && mem_string_at(&file_buffer, file_size) == '\n' && mem_string_rfind(&file_buffer, "/", file_size - 1) != (mem_size_t)MEM_BAD_RETURN) break;
+	}
+
+	mem_size_t process_name_end = mem_string_find(&file_buffer, "\n", mem_string_find(&file_buffer, "/", 0));
+	mem_size_t process_name_pos = mem_string_rfind(&file_buffer, "/", process_name_end) + 1;
+	if (process_name_end == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)MEM_BAD_RETURN || process_name_pos == (mem_size_t)(MEM_BAD_RETURN + 1)) return process_name;
+	process_name = mem_string_substr(&file_buffer, process_name_pos, process_name_end);
+	mem_string_empty(&file_buffer);
+	close(fd);
+
 #   endif
 	return process_name;
 }

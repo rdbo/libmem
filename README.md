@@ -73,6 +73,7 @@ mem_in_get_symbol
 
 # Projects
 Made with libmem:  
+<a href="https://github.com/rdbo/x-inject">X-Inject - Library injector for Windows and Linux</a>
 <a href="https://github.com/karliky/Crazymem">Crazymem - NodeJS Memory Library</a>  
 
 # TODO

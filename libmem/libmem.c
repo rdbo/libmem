@@ -1639,8 +1639,8 @@ mem_module_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
 	WaitForSingleObject(h_thread, -1);
 	CloseHandle(h_thread);
 	VirtualFreeEx(process.handle, libpath_ex, 0, MEM_RELEASE);
-    mem_module_free(&ret);
-	ret = mem_ex_get_module(process, lib.path);
+    mem_module_free(&mod);
+	mod = mem_ex_get_module(process, lib.path);
 #   elif defined(MEM_LINUX)
 
 	mem_string_t libc_str = mem_string_new("/libc.");

@@ -1466,6 +1466,8 @@ mem_voidptr_t mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t
 	if (!mem_process_is_valid(&process) || protection == 0) return alloc_addr;
 #   if defined(MEM_WIN)
 	alloc_addr = (mem_voidptr_t)VirtualAllocEx(process.handle, NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
+    if(alloc_addr == (mem_voidptr_t)NULL)
+        alloc_addr = (mem_voidptr_t)MEM_BAD_RETURN;
 #   elif defined(MEM_LINUX)
     mem_int_t syscall_n = -1;
     
@@ -1629,7 +1631,7 @@ mem_module_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
 	if (!mem_process_is_valid(&process) || !mem_lib_is_valid(&lib)) return mod;
 #   if defined(MEM_WIN)
 	mem_size_t buffer_size = (mem_size_t)((mem_string_length(&lib.path) + 1) * sizeof(mem_char_t));
-	mem_prot_t protection = PAGE_READWRITE;
+	mem_prot_t protection = PAGE_EXECUTE_READWRITE;
 	mem_voidptr_t libpath_ex = mem_ex_allocate(process, buffer_size, protection);
 	if (!libpath_ex || libpath_ex == (mem_voidptr_t)-1) return mod;
 	mem_ex_set(process, libpath_ex, 0x0, buffer_size);

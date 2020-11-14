@@ -330,7 +330,7 @@ mem_bool_t mem_process_is_valid(struct _mem_process_t* p_process)
 {
 	return (mem_bool_t)(
 		p_process->is_initialized == mem_true &&
-		MEM_STR_CMP(mem_string_c_str(&p_process->name), MEM_STR("")) &&
+		mem_string_is_valid(&p_process->name) &&
 		p_process->pid != (mem_pid_t)MEM_BAD_RETURN
 	);
 }

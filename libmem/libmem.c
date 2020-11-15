@@ -1700,7 +1700,7 @@ mem_module_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
     };
 
     mem_size_t path_size = mem_string_size(&lib.path);
-    mem_size_t inj_size  = sizeof(inj_buf) + path_size + 10;
+    mem_size_t inj_size  = sizeof(inj_buf) + path_size;
     mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
     if(inj_addr == (mem_voidptr_t)MEM_BAD_RETURN) return mod;
     mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + sizeof(inj_buf));
@@ -1715,11 +1715,13 @@ mem_module_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
     wait(&status);
     ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
 
+    regs = old_regs;
+
 #   if defined(MEM_86)
-    regs.eax = (mem_uintptr_t)dlopen_ex;
-    regs.ebx = (mem_uintptr_t)path_addr;
-    regs.ecx = (mem_uintptr_t)lib.mode;
-    regs.eip = (mem_uintptr_t)inj_addr;
+    regs.eax = (mem_intptr_t)dlopen_ex;
+    regs.ebx = (mem_intptr_t)path_addr;
+    regs.ecx = (mem_intptr_t)lib.mode;
+    regs.eip = (mem_intptr_t)inj_addr;
 #   elif defined(MEM_64)
     regs.rax = (mem_uintptr_t)dlopen_ex;
     regs.rdi = (mem_uintptr_t)path_addr;

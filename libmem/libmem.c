@@ -11,29 +11,6 @@ struct _mem_string_t mem_string_init()
 	mem_size_t _size = sizeof(mem_char_t) * 1;
 	_string.buffer = (mem_char_t*)malloc(_size);
 	_string.npos = (mem_size_t)-1;
-	_string.is_valid = &mem_string_is_valid;
-	_string.clear    = &mem_string_clear;
-	_string.empty    = &mem_string_empty;
-	_string.size     = &mem_string_size;
-	_string.resize   = &mem_string_resize;
-	_string.length   = &mem_string_length;
-	_string.begin    = &mem_string_begin;
-	_string.end      = &mem_string_end;
-	_string.find     = &mem_string_find;
-	_string.rfind    = &mem_string_rfind;
-	_string.count    = &mem_string_count;
-	_string.rcount   = &mem_string_rcount;
-	_string.at       = &mem_string_at;
-	_string.c_set    = &mem_string_c_set;
-	_string.value    = &mem_string_value;
-	_string.insert   = &mem_string_insert;
-	_string.replace  = &mem_string_replace;
-	_string.reverse  = &mem_string_reverse;
-	_string.c_str    = &mem_string_c_str;
-	_string.to_lower = &mem_string_to_lower;
-	_string.to_upper = &mem_string_to_upper;
-	_string.substr   = &mem_string_substr;
-	_string.compare  = &mem_string_compare;
 	_string.is_initialized = (mem_bool_t)(mem_true && (_string.buffer));
 	if (!_string.is_initialized) return _string;
 	memset(_string.buffer, 0x0, _size);
@@ -320,8 +297,6 @@ struct _mem_process_t mem_process_init()
 	struct _mem_process_t _process;
 	_process.name     = mem_string_init();
 	_process.pid      = (mem_pid_t)MEM_BAD_RETURN;
-	_process.is_valid = &mem_process_is_valid;
-	_process.compare  = &mem_process_compare;
 	_process.is_initialized = mem_true;
 	return _process;
 }
@@ -358,13 +333,6 @@ mem_process_list_t mem_process_list_init()
 
 	proc_list._length  = 0;
 	proc_list._buffer  = NULL;
-	proc_list.at       = &mem_process_list_at;
-	proc_list.is_valid = &mem_process_list_is_valid;
-	proc_list.buffer   = &mem_process_list_buffer;
-	proc_list.length   = &mem_process_list_length;
-	proc_list.resize   = &mem_process_list_resize;
-	proc_list.size     = &mem_process_list_size;
-	proc_list.append   = &mem_process_list_append;
 	proc_list.is_initialized = mem_true;
 
 	return proc_list;
@@ -461,8 +429,6 @@ struct _mem_module_t mem_module_init()
 	_mod.base     = (mem_voidptr_t)MEM_BAD_RETURN;
 	_mod.size     = (mem_uintptr_t)MEM_BAD_RETURN;
 	_mod.end      = (mem_voidptr_t)MEM_BAD_RETURN;
-	_mod.is_valid = &mem_module_is_valid;
-	_mod.compare  = &mem_module_compare;
 	_mod.is_initialized = mem_true;
 	return _mod;
 }
@@ -505,13 +471,6 @@ mem_module_list_t mem_module_list_init()
 	mem_module_list_t mod_list;
 	mod_list._length  = 0;
 	mod_list._buffer  = NULL;
-	mod_list.at       = &mem_module_list_at;
-	mod_list.is_valid = &mem_module_list_is_valid;
-	mod_list.length   = &mem_module_list_length;
-	mod_list.buffer   = &mem_module_list_buffer;
-	mod_list.size     = &mem_module_list_size;
-	mod_list.resize   = &mem_module_list_resize;
-	mod_list.append   = &mem_module_list_append;
 	mod_list.is_initialized = mem_true;
 
 	return mod_list;
@@ -643,7 +602,6 @@ struct _mem_alloc_t mem_alloc_init()
 	_alloc.type       = MAP_ANON | MAP_PRIVATE;
 #   endif
 
-	_alloc.is_valid   = &mem_alloc_is_valid;
 	_alloc.is_initialized = mem_true;
 	return _alloc;
 }
@@ -663,7 +621,6 @@ struct _mem_lib_t mem_lib_init()
 {
 	struct _mem_lib_t _lib;
 	_lib.path     = mem_string_init();
-	_lib.is_valid = &mem_lib_is_valid;
 #   if defined(MEM_WIN)
 #   elif defined(MEM_LINUX)
 	_lib.mode = (mem_int_t)RTLD_LAZY;

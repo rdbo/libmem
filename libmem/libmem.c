@@ -738,6 +738,19 @@ mem_bool_t mem_vtable_restore(struct _mem_vtable_t* p_vmt, mem_size_t index)
 	return MEM_TRUE;
 }
 
+mem_void_t mem_vtable_free(struct _mem_vtable_t* p_vtable)
+{
+	if(!p_vtable) return;
+
+	if(p_vtable->orig_vtable)
+		free(p_vtable->orig_vtable);
+
+	p_vtable->is_initialized = MEM_FALSE;
+	p_vtable->vtable = (mem_voidptr_t*)MEM_NULL;
+	p_vtable->orig_vtable = (mem_voidptr_t*)MEM_NULL;
+	p_vtable->size = (mem_size_t)-1;
+}
+
 //libmem
 
 mem_string_t  mem_parse_mask(mem_string_t mask)

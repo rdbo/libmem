@@ -262,6 +262,19 @@ namespace mem
         }
     };
 
+    class vtable_t : public _mem_vtable_t
+    {
+        public:
+        bool_t     is_valid() { return mem_vtable_is_valid(this); }
+        mem_bool_t hook(mem_size_t index, mem_voidptr_t dst) { mem_vtable_hook(this, index, dst); }
+        mem_bool_t restore(mem_size_t index) { mem_vtable_restore(this, index); }
+
+        public:
+        vtable_t() { *(struct _mem_vtable_t*)this = mem_vtable_init(); }
+        vtable_t(mem_voidptr_t* p_vtable, mem_size_t size) { *(struct _mem_vtable_t*)this = mem_vtable_new(p_vtable, size); }
+        ~vtable_t() { mem_vtable_free(this); }
+    };
+
     typedef _mem_detour_t detour_t;
 
     //libmem

@@ -426,6 +426,7 @@ struct _mem_vtable_t mem_vtable_new(mem_voidptr_t* p_vtable, mem_size_t size);
 mem_bool_t           mem_vtable_is_valid(struct _mem_vtable_t* p_vmt);
 mem_bool_t           mem_vtable_hook(struct _mem_vtable_t* p_vmt, mem_size_t index, mem_voidptr_t dst);
 mem_bool_t           mem_vtable_restore(struct _mem_vtable_t* p_vmt, mem_size_t index);
+mem_void_t           mem_vtable_free(struct _mem_vtable_t* p_vtable);
 
 //mem_detour_t
 

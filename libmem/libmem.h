@@ -406,6 +406,22 @@ struct _mem_lib_t  mem_lib_new2(mem_char_t* path, mem_int_t mode /*mode ignored 
 mem_bool_t         mem_lib_is_valid(struct _mem_lib_t* p_lib);
 mem_void_t         mem_lib_free(struct _mem_lib_t* p_lib);
 
+//mem_vtable_t
+
+typedef struct _mem_vtable_t
+{
+    mem_bool_t     is_initialized;
+    mem_voidptr_t* vtable;
+    mem_voidptr_t* orig_vtable;
+    mem_size_t     size;
+}mem_vtable_t;
+
+struct _mem_vtable_t mem_vtable_init();
+struct _mem_vtable_t mem_vtable_new(mem_voidptr_t* p_vtable, mem_size_t size);
+mem_bool_t           mem_vtable_is_valid(struct _mem_vtable_t* p_vmt);
+mem_bool_t           mem_vtable_hook(struct _mem_vtable_t* p_vmt, mem_size_t index, mem_voidptr_t dst);
+mem_bool_t           mem_vtable_restore(struct _mem_vtable_t* p_vmt, mem_size_t index);
+
 //mem_detour_t
 
 typedef enum _mem_detour_t

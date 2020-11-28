@@ -676,6 +676,63 @@ mem_void_t mem_lib_free(struct _mem_lib_t* p_lib)
 	}
 }
 
+//mem_vtable_t
+
+struct _mem_vtable_t mem_vtable_init()
+{
+	struct _mem_vtable_t vmt;
+	vmt.vtable         = (mem_voidptr_t)NULL;
+	vmt.orig_vtable    = (mem_voidptr_t)NULL;
+	vmt.size           = (mem_size_t)-1;
+	vmt.is_initialized = mem_true;
+	return vmt;
+}
+
+struct _mem_vtable_t mem_vtable_new(mem_voidptr_t* p_vtable, mem_size_t size)
+{
+	struct _mem_vtable_t vmt;
+	vmt.vtable = p_vtable;
+	vmt.size   = size;
+	mem_size_t vtable_size = vmt.size * sizeof(mem_voidptr_t);
+	vmt.orig_vtable = malloc(vtable_size);
+	mem_in_read(vmt.vtable, vmt.orig_vtable, vtable_size);
+	vmt.is_initialized = mem_true;
+	return vmt;
+}
+
+mem_bool_t mem_vtable_is_valid(struct _mem_vtable_t* p_vmt)
+{
+	return (mem_bool_t)(
+		p_vmt                                    &&
+		p_vmt->is_initialized                    &&
+		p_vmt->vtable                            &&
+		p_vmt->vtable != (mem_voidptr_t*)-1      &&
+		p_vmt->orig_vtable                       &&
+		p_vmt->orig_vtable != (mem_voidptr_t*)-1 &&
+		p_vmt->size                              &&
+		p_vmt->size != (mem_size_t)-1
+	);
+}
+
+mem_bool_t mem_vtable_hook(struct _mem_vtable_t* p_vmt, mem_size_t index, mem_voidptr_t dst)
+{
+	if(!mem_vtable_is_valid(p_vmt) || index > p_vmt->size)
+		return mem_false;
+	
+	p_vmt->orig_vtable[index] = p_vmt->vtable[index];
+	p_vmt->vtable[index] = dst;
+	return mem_true;
+}
+
+mem_bool_t mem_vtable_restore(struct _mem_vtable_t* p_vmt, mem_size_t index)
+{
+	if(!mem_vtable_is_valid(p_vmt) || index > p_vmt->size)
+		return mem_false;
+	
+	p_vmt->vtable[index] = p_vmt->orig_vtable[index];
+	return mem_true;
+}
+
 //libmem
 
 mem_string_t  mem_parse_mask(mem_string_t mask)

@@ -143,6 +143,11 @@
 #endif
 #define MEM_BAD_RETURN         -1
 #define MEM_RETURN             !MEM_BAD_RETURN
+#define MEM_BAD                -1
+#define MEM_GOOD               !MEM_BAD
+#define MEM_NULL               0
+//#define mem_false              MEM_FALSE
+//#define mem_true               MEM_TRUE
 #define MEM_KNOWN_BYTE         MEM_STR('x')
 #define MEM_UNKNOWN_BYTE       MEM_STR('?')
 #if defined(MEM_WIN)
@@ -192,7 +197,7 @@ extern "C"
 {
 #endif
 
-typedef enum { mem_false = 0, mem_true = 1 } mem_bool_t;
+typedef enum { MEM_FALSE = 0, MEM_TRUE = 1 } mem_bool_t;
 typedef int                                  mem_int_t;
 typedef void                                 mem_void_t;
 

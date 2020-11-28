@@ -11,7 +11,7 @@ struct _mem_string_t mem_string_init()
 	mem_size_t _size = sizeof(mem_char_t) * 1;
 	_string.buffer = (mem_char_t*)malloc(_size);
 	_string.npos = (mem_size_t)-1;
-	_string.is_initialized = (mem_bool_t)(mem_true && (_string.buffer));
+	_string.is_initialized = (mem_bool_t)(MEM_TRUE && (_string.buffer));
 	if (!_string.is_initialized) return _string;
 	memset(_string.buffer, 0x0, _size);
 	return _string;
@@ -26,7 +26,7 @@ struct _mem_string_t mem_string_new(const mem_char_t* c_string)
 	if (!_str.buffer)
 	{
         //_str = mem_string_init();
-		_str.is_initialized = mem_false;
+		_str.is_initialized = MEM_FALSE;
 		return _str;
 	}
 	memset(_str.buffer, 0x0, size);
@@ -39,7 +39,7 @@ mem_bool_t mem_string_is_valid(struct _mem_string_t* p_string)
 {
 	return (mem_bool_t)(
 		p_string &&
-		p_string->is_initialized == mem_true &&
+		p_string->is_initialized == MEM_TRUE &&
         p_string->buffer &&
 		MEM_STR_CMP(p_string->buffer, MEM_STR(""))
 	);
@@ -47,7 +47,7 @@ mem_bool_t mem_string_is_valid(struct _mem_string_t* p_string)
 
 mem_void_t mem_string_clear(struct _mem_string_t* p_string)
 {
-	if (p_string->is_initialized == mem_true && p_string->buffer)
+	if (p_string->is_initialized == MEM_TRUE && p_string->buffer)
 		memset((void*)p_string->buffer, (int)0x0, (size_t)mem_string_size(p_string));
 }
 
@@ -73,7 +73,7 @@ mem_size_t mem_string_size(struct _mem_string_t* p_string)
 
 mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
 {
-	if (p_string->is_initialized != mem_true || !p_string->buffer || size == 0) return;
+	if (p_string->is_initialized != MEM_TRUE || !p_string->buffer || size == 0) return;
 	size = (size + 1) * sizeof(mem_char_t);
 	mem_char_t* _buffer = (mem_char_t*)malloc(size);
 	if (!_buffer) return;
@@ -89,7 +89,7 @@ mem_void_t mem_string_resize(struct _mem_string_t* p_string, mem_size_t size)
 
 mem_size_t mem_string_length(struct _mem_string_t* p_string)
 {
-	return (mem_size_t)(p_string->is_initialized == mem_true ? MEM_STR_LEN(p_string->buffer) : (mem_size_t)MEM_BAD_RETURN);
+	return (mem_size_t)(p_string->is_initialized == MEM_TRUE ? MEM_STR_LEN(p_string->buffer) : (mem_size_t)MEM_BAD_RETURN);
 }
 
 mem_char_t* mem_string_begin(struct _mem_string_t* p_string)
@@ -105,7 +105,7 @@ mem_char_t* mem_string_end(struct _mem_string_t* p_string)
 mem_size_t mem_string_find(struct _mem_string_t* p_string, const mem_char_t* substr, mem_size_t offset)
 {
 	mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
-	if (p_string->is_initialized != mem_true) return ret;
+	if (p_string->is_initialized != MEM_TRUE) return ret;
 	mem_size_t str_len = mem_string_length(p_string) + 1;
 	mem_size_t substr_len = (mem_size_t)MEM_STR_LEN(substr);
 	for (; offset + substr_len <= str_len; offset++)
@@ -125,7 +125,7 @@ mem_size_t mem_string_rfind(struct _mem_string_t* p_string, const mem_char_t* su
 	mem_size_t ret = (mem_size_t)MEM_BAD_RETURN;
 	if(!mem_string_is_valid(p_string)) return ret;
 	if (offset == (mem_size_t)-1) offset = mem_string_length(p_string) + 1;
-	if (!p_string || p_string->is_initialized != mem_true || !substr) return ret;
+	if (!p_string || p_string->is_initialized != MEM_TRUE || !substr) return ret;
 	mem_size_t str_len = mem_string_length(p_string) + 1;
 	mem_size_t substr_len = (mem_size_t)MEM_STR_LEN(substr);
 	for (; str_len > substr_len && offset >= substr_len && (mem_intptr_t)((offset - substr_len) * sizeof(mem_char_t)) >= 0; offset--)
@@ -281,7 +281,7 @@ struct _mem_string_t mem_string_substr(struct _mem_string_t* p_string, mem_size_
 mem_void_t mem_string_free(struct _mem_string_t* p_string)
 {
 	if(!mem_string_is_valid(p_string)) return;
-	p_string->is_initialized = mem_false;
+	p_string->is_initialized = MEM_FALSE;
 
 	if(p_string->buffer)
 	{
@@ -297,14 +297,14 @@ struct _mem_process_t mem_process_init()
 	struct _mem_process_t _process;
 	_process.name     = mem_string_init();
 	_process.pid      = (mem_pid_t)MEM_BAD_RETURN;
-	_process.is_initialized = mem_true;
+	_process.is_initialized = MEM_TRUE;
 	return _process;
 }
 
 mem_bool_t mem_process_is_valid(struct _mem_process_t* p_process)
 {
 	return (mem_bool_t)(
-		p_process->is_initialized == mem_true &&
+		p_process->is_initialized == MEM_TRUE &&
 		mem_string_is_valid(&p_process->name) &&
 		p_process->pid != (mem_pid_t)MEM_BAD_RETURN
 	);
@@ -313,7 +313,7 @@ mem_bool_t mem_process_is_valid(struct _mem_process_t* p_process)
 mem_bool_t mem_process_compare(struct _mem_process_t* p_process, struct _mem_process_t process)
 {
 	return (mem_bool_t)(
-		mem_string_compare(&p_process->name, process.name) == mem_true &&
+		mem_string_compare(&p_process->name, process.name) == MEM_TRUE &&
 		p_process->pid == process.pid
 	);
 }
@@ -321,7 +321,7 @@ mem_bool_t mem_process_compare(struct _mem_process_t* p_process, struct _mem_pro
 mem_void_t mem_process_free(struct _mem_process_t* p_process)
 {
 	if(!mem_process_is_valid(p_process)) return;
-	p_process->is_initialized = mem_false;
+	p_process->is_initialized = MEM_FALSE;
 	free(p_process->name.buffer);
 }
 
@@ -333,7 +333,7 @@ mem_process_list_t mem_process_list_init()
 
 	proc_list._length  = 0;
 	proc_list._buffer  = NULL;
-	proc_list.is_initialized = mem_true;
+	proc_list.is_initialized = MEM_TRUE;
 
 	return proc_list;
 }
@@ -342,7 +342,7 @@ mem_process_t mem_process_list_at(struct _mem_process_list_t* p_process_list, me
 {
 	mem_process_t ret = mem_process_init();
 	mem_size_t    length = mem_process_list_length(p_process_list);
-	ret.is_initialized = mem_false;
+	ret.is_initialized = MEM_FALSE;
 
 	if(pos < length) ret = mem_process_list_buffer(p_process_list)[pos];
 
@@ -405,7 +405,7 @@ mem_void_t mem_process_list_free(struct _mem_process_list_t* p_process_list)
 {
 	if(!p_process_list || !p_process_list->is_initialized) return;
 
-	p_process_list->is_initialized = mem_false;
+	p_process_list->is_initialized = MEM_FALSE;
 
 	if(p_process_list->_buffer)
 	{
@@ -429,7 +429,7 @@ struct _mem_module_t mem_module_init()
 	_mod.base     = (mem_voidptr_t)MEM_BAD_RETURN;
 	_mod.size     = (mem_uintptr_t)MEM_BAD_RETURN;
 	_mod.end      = (mem_voidptr_t)MEM_BAD_RETURN;
-	_mod.is_initialized = mem_true;
+	_mod.is_initialized = MEM_TRUE;
 	return _mod;
 }
 
@@ -459,7 +459,7 @@ mem_bool_t mem_module_compare(struct _mem_module_t* p_mod, struct _mem_module_t 
 mem_void_t mem_module_free(struct _mem_module_t* p_mod)
 {
 	if(!mem_module_is_valid(p_mod)) return;
-	p_mod->is_initialized = mem_false;
+	p_mod->is_initialized = MEM_FALSE;
 	free(p_mod->name.buffer);
 	free(p_mod->path.buffer);
 }
@@ -471,7 +471,7 @@ mem_module_list_t mem_module_list_init()
 	mem_module_list_t mod_list;
 	mod_list._length  = 0;
 	mod_list._buffer  = NULL;
-	mod_list.is_initialized = mem_true;
+	mod_list.is_initialized = MEM_TRUE;
 
 	return mod_list;
 }
@@ -479,7 +479,7 @@ mem_module_list_t mem_module_list_init()
 mem_module_t mem_module_list_at(struct _mem_module_list_t* p_module_list, mem_size_t pos)
 {
 	mem_module_t ret = mem_module_init();
-	ret.is_initialized = mem_false;
+	ret.is_initialized = MEM_FALSE;
 	if(!mem_module_list_is_valid(p_module_list)) return ret;
 	mem_size_t   length = mem_module_list_length(p_module_list);
 
@@ -544,7 +544,7 @@ mem_void_t mem_module_list_free(struct _mem_module_list_t* p_module_list)
 {
 	if(!p_module_list || !p_module_list->is_initialized) return;
 
-	p_module_list->is_initialized = mem_false;
+	p_module_list->is_initialized = MEM_FALSE;
 
 	if(p_module_list->_buffer)
 	{
@@ -571,7 +571,7 @@ struct _mem_page_t mem_page_init()
 
 	page.is_valid = &mem_page_is_valid;
 
-	page.is_initialized = mem_true;
+	page.is_initialized = MEM_TRUE;
 
     return page;
 }
@@ -602,14 +602,14 @@ struct _mem_alloc_t mem_alloc_init()
 	_alloc.type       = MAP_ANON | MAP_PRIVATE;
 #   endif
 
-	_alloc.is_initialized = mem_true;
+	_alloc.is_initialized = MEM_TRUE;
 	return _alloc;
 }
 
 mem_bool_t mem_alloc_is_valid(struct _mem_alloc_t* p_alloc)
 {
 	return (mem_bool_t)(
-		p_alloc->is_initialized == mem_true &&
+		p_alloc->is_initialized == MEM_TRUE &&
 		p_alloc->protection != (mem_prot_t)MEM_BAD_RETURN &&
 		p_alloc->type != (mem_prot_t)MEM_BAD_RETURN
 	);
@@ -625,7 +625,7 @@ struct _mem_lib_t mem_lib_init()
 #   elif defined(MEM_LINUX)
 	_lib.mode = (mem_int_t)RTLD_LAZY;
 #   endif
-	_lib.is_initialized = mem_true;
+	_lib.is_initialized = MEM_TRUE;
 	return _lib;
 }
 
@@ -638,7 +638,7 @@ struct _mem_lib_t  mem_lib_new(mem_string_t path, mem_int_t mode)
 #   elif defined(MEM_LINUX)
 	_lib.mode = (mem_int_t)mode;
 #   endif
-	_lib.is_initialized = mem_true;
+	_lib.is_initialized = MEM_TRUE;
 	return _lib;
 }
 
@@ -651,7 +651,7 @@ struct _mem_lib_t  mem_lib_new2(mem_char_t* path, mem_int_t mode)
 #   elif defined(MEM_LINUX)
 	_lib.mode = (mem_int_t)mode;
 #   endif
-	_lib.is_initialized = mem_true;
+	_lib.is_initialized = MEM_TRUE;
 	return _lib;
 }
 
@@ -668,7 +668,7 @@ mem_void_t mem_lib_free(struct _mem_lib_t* p_lib)
 {
 	if(!p_lib || !p_lib->is_initialized) return;
 
-	p_lib->is_initialized = mem_false;
+	p_lib->is_initialized = MEM_FALSE;
 
 	if(mem_string_is_valid(&p_lib->path))
 	{
@@ -684,7 +684,7 @@ struct _mem_vtable_t mem_vtable_init()
 	vmt.vtable         = (mem_voidptr_t)NULL;
 	vmt.orig_vtable    = (mem_voidptr_t)NULL;
 	vmt.size           = (mem_size_t)-1;
-	vmt.is_initialized = mem_true;
+	vmt.is_initialized = MEM_TRUE;
 	return vmt;
 }
 
@@ -696,7 +696,7 @@ struct _mem_vtable_t mem_vtable_new(mem_voidptr_t* p_vtable, mem_size_t size)
 	mem_size_t vtable_size = vmt.size * sizeof(mem_voidptr_t);
 	vmt.orig_vtable = malloc(vtable_size);
 	mem_in_read(vmt.vtable, vmt.orig_vtable, vtable_size);
-	vmt.is_initialized = mem_true;
+	vmt.is_initialized = MEM_TRUE;
 	return vmt;
 }
 
@@ -717,20 +717,20 @@ mem_bool_t mem_vtable_is_valid(struct _mem_vtable_t* p_vmt)
 mem_bool_t mem_vtable_hook(struct _mem_vtable_t* p_vmt, mem_size_t index, mem_voidptr_t dst)
 {
 	if(!mem_vtable_is_valid(p_vmt) || index > p_vmt->size)
-		return mem_false;
+		return MEM_FALSE;
 	
 	p_vmt->orig_vtable[index] = p_vmt->vtable[index];
 	p_vmt->vtable[index] = dst;
-	return mem_true;
+	return MEM_TRUE;
 }
 
 mem_bool_t mem_vtable_restore(struct _mem_vtable_t* p_vmt, mem_size_t index)
 {
 	if(!mem_vtable_is_valid(p_vmt) || index > p_vmt->size)
-		return mem_false;
+		return MEM_FALSE;
 	
 	p_vmt->vtable[index] = p_vmt->orig_vtable[index];
-	return mem_true;
+	return MEM_TRUE;
 }
 
 //libmem
@@ -1318,7 +1318,7 @@ mem_page_t mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 mem_bool_t mem_ex_is_process_running(mem_process_t process)
 {
-	mem_bool_t ret = mem_false;
+	mem_bool_t ret = MEM_FALSE;
 	if (!mem_process_is_valid(&process)) return ret;
 #   if defined(MEM_WIN)
 	DWORD exit_code;
@@ -1550,7 +1550,7 @@ mem_voidptr_t mem_ex_pattern_scan(mem_process_t process, mem_byte_t* pattern, me
 
 		for(mem_uintptr_t j = 0; i + j >= (mem_uintptr_t)begin && i + j < (mem_uintptr_t)end && j + pattern_size < page_size; j++)
 		{
-			mem_int_t found = mem_true;
+			mem_int_t found = MEM_TRUE;
 
 			for(mem_uintptr_t k = 0; k < pattern_size; k++)
 			{
@@ -1661,7 +1661,7 @@ mem_module_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
 
 	mem_string_t libc_str = mem_string_new("/libc.");
     mem_module_t libc_ex;
-    mem_bool_t   retry = mem_false;
+    mem_bool_t   retry = MEM_FALSE;
     
     L_GET_LIBC_MOD:
     libc_ex = mem_ex_get_module(process, libc_str);
@@ -1670,7 +1670,7 @@ mem_module_t mem_ex_load_library(mem_process_t process, mem_lib_t lib)
     {
         if(!retry)
         {
-            retry = mem_true;
+            retry = MEM_TRUE;
             libc_str = mem_string_new("/libc-");
             goto L_GET_LIBC_MOD;
         }
@@ -1982,7 +1982,7 @@ mem_voidptr_t mem_in_pattern_scan(mem_byte_t* pattern, mem_string_t mask, mem_vo
 
 	for(mem_uintptr_t i = (mem_uintptr_t)begin; i + pattern_size < (mem_uintptr_t)end; i++)
 	{
-		mem_int_t found = mem_true;
+		mem_int_t found = MEM_TRUE;
 
 		for(mem_uintptr_t j = 0; j < pattern_size; j++)
 		{
@@ -2183,7 +2183,7 @@ mem_void_t mem_in_unload_library(mem_module_t mod)
 mem_voidptr_t mem_in_get_symbol(mem_module_t mod, const char* symbol)
 {
 	mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD_RETURN;
-	if (mem_module_is_valid(&mod) == mem_false)
+	if (mem_module_is_valid(&mod) == MEM_FALSE)
 		return addr;
 
 #   if defined(MEM_WIN)

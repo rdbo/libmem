@@ -681,8 +681,8 @@ mem_void_t mem_lib_free(struct _mem_lib_t* p_lib)
 struct _mem_vtable_t mem_vtable_init()
 {
 	struct _mem_vtable_t vmt;
-	vmt.vtable         = (mem_voidptr_t)MEM_NULL;
-	vmt.orig_vtable    = (mem_voidptr_t)MEM_NULL;
+	vmt.vtable         = (mem_voidptr_t*)MEM_NULL;
+	vmt.orig_vtable    = (mem_voidptr_t*)MEM_NULL;
 	vmt.size           = (mem_size_t)-1;
 	vmt.is_initialized = MEM_TRUE;
 	return vmt;
@@ -694,7 +694,7 @@ struct _mem_vtable_t mem_vtable_new(mem_voidptr_t* p_vtable, mem_size_t size)
 	vmt.vtable = p_vtable;
 	vmt.size   = size;
 	mem_size_t vtable_size = vmt.size * sizeof(mem_voidptr_t);
-	vmt.orig_vtable = malloc(vtable_size);
+	vmt.orig_vtable = (mem_voidptr_t*)malloc(vtable_size);
 	mem_in_read(vmt.vtable, vmt.orig_vtable, vtable_size);
 	vmt.is_initialized = MEM_TRUE;
 	return vmt;

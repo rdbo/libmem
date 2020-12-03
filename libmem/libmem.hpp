@@ -80,7 +80,7 @@ namespace mem
         string_t() { *(struct _mem_string_t*)this = mem_string_init(); }
         string_t(const mem_char_t* c_string) { *(struct _mem_string_t*)this = mem_string_new(c_string); }
         string_t(struct _mem_string_t _str) { *(struct _mem_string_t*)this = _str; }
-        ~string_t() { mem_string_free((struct _mem_string_t*)this); }
+        ~string_t() { /*mem_string_free((struct _mem_string_t*)this);*/ }
 
         string_t operator=(const mem_char_t* c_string)
         {
@@ -120,7 +120,7 @@ namespace mem
 
         process_t() { *(struct _mem_process_t*)this = mem_process_init(); }
         process_t(struct _mem_process_t _process) { *(struct _mem_process_t*)this = _process; }
-        ~process_t() { mem_process_free(this); }
+        ~process_t() { /*mem_process_free(this);*/ }
 
         process_t operator=(struct _mem_process_t _process)
         {
@@ -149,7 +149,7 @@ namespace mem
         public:
         process_list_t() { *(struct _mem_process_list_t*)this = mem_process_list_init(); }
         process_list_t(struct _mem_process_list_t _proc_list) { *(struct _mem_process_list_t*)this = _proc_list; }
-        ~process_list_t() { mem_process_list_free(this); }
+        ~process_list_t() { /*mem_process_list_free(this);*/ }
 
         process_list_t operator=(struct _mem_process_list_t _proc_list)
         {
@@ -172,7 +172,7 @@ namespace mem
         public:
         module_t() { *(struct _mem_module_t*)this = mem_module_init(); }
         module_t(struct _mem_module_t _mod) { *(struct _mem_module_t*)this = _mod; }
-        ~module_t() { mem_module_free(this); }
+        ~module_t() { /*mem_module_free(this);*/ }
 
         module_t operator=(struct _mem_module_t _mod)
         {
@@ -200,7 +200,7 @@ namespace mem
         public:
         module_list_t() { *(struct _mem_module_list_t*)this = mem_module_list_init(); }
         module_list_t(struct _mem_module_list_t _mod_list) { *(struct _mem_module_list_t*)this = _mod_list; }
-        ~module_list_t() { mem_module_list_free(this); }
+        ~module_list_t() { /*mem_module_list_free(this);*/ }
 
         module_list_t operator=(struct _mem_module_list_t _mod_list)
         {
@@ -253,7 +253,7 @@ namespace mem
         lib_t() { *(struct _mem_lib_t*)this = mem_lib_init(); }
         lib_t(string_t path, int_t mode) { *(struct _mem_lib_t*)this = mem_lib_new(path, mode); }
         lib_t(struct _mem_lib_t _lib) { *(struct _mem_lib_t*)this = _lib; }
-        ~lib_t() { mem_lib_free(this); }
+        ~lib_t() { /*mem_lib_free(this);*/ }
 
         lib_t operator=(struct _mem_lib_t _lib)
         {
@@ -272,7 +272,7 @@ namespace mem
         public:
         vtable_t() { *(struct _mem_vtable_t*)this = mem_vtable_init(); }
         vtable_t(mem_voidptr_t* p_vtable, mem_size_t size) { *(struct _mem_vtable_t*)this = mem_vtable_new(p_vtable, size); }
-        ~vtable_t() { mem_vtable_free(this); }
+        ~vtable_t() { /*mem_vtable_free(this);*/ }
     };
 
     typedef _mem_detour_t detour_t;

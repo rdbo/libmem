@@ -885,6 +885,7 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 	close(fd);
     */
 
+   	/*
     char path_buffer[64];
 	snprintf(path_buffer, sizeof(path_buffer) - 1, "/proc/%i/maps", pid);
 	int fd = open(path_buffer, O_RDONLY);
@@ -905,6 +906,28 @@ mem_string_t mem_ex_get_process_name(mem_pid_t pid)
 	process_name = mem_string_substr(&file_buffer, process_name_pos, process_name_end);
 	mem_string_empty(&file_buffer);
 	close(fd);
+	*/
+
+	char path[64];
+	memset(path, 0x0, sizeof(path));
+	snprintf(path, sizeof(path), "/proc/%i/exe", pid);
+
+	char buffer[PATH_MAX];
+	memset(buffer, 0x0, sizeof(buffer));
+	readlink(path, buffer, sizeof(buffer));
+	char* temp = buffer;
+    char* proc_name;
+    while((temp = strstr(temp, "/")) && temp != (char*)-1)
+    {
+        proc_name = &temp[1];
+        temp = proc_name;
+    }
+
+	if(!proc_name || proc_name == (char*)NULL)
+		return process_name;
+
+	mem_string_free(&process_name);
+	process_name = mem_string_new(proc_name);
 
 #   endif
 	return process_name;

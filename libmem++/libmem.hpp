@@ -98,11 +98,13 @@
 #define MEM_STR_CMP(str1, str2) wcscmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) wcsncmp(str1, str2, n)
 #define MEM_STR_LEN(str) wcslen(str)
+#define MEM_STR_STR(str1, str2) wcsstrstr(str1, str2);
 #elif defined(MEM_MBCS)
 #define MEM_STR(str) str
 #define MEM_STR_CMP(str1, str2) strcmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) strncmp(str1, str2, n)
 #define MEM_STR_LEN(str) strlen(str)
+#define MEM_STR_STR(str1, str2) strstr(str1, str2);
 #endif
 
 #define VA_ARGS(...) , ##__VA_ARGS__
@@ -382,6 +384,28 @@ namespace mem
 		MEM_DT_M4 = MEM_DETOUR_INT_METHOD4,
 		MEM_DT_M5 = MEM_DETOUR_INT_METHOD5
 	}detour_t;
+
+	//libmem
+
+	string_t       parse_mask(string_t mask);
+	uintptr_t      get_page_size();
+
+	namespace ex
+	{
+		pid_t          get_pid(string_t process_name);
+		string_t       get_process_name(pid_t pid);
+		process_t      get_process(pid_t pid);
+		process_t      get_process(string_t process_name);
+		process_list_t get_process_list();
+		module_t       get_module(process_t process, string_t module_name);
+		module_list_t  get_module_list(process_t process);
+	}
+
+	namespace in
+	{
+
+	}
+
 }
 #endif //MEM_COMPATBILE
 #endif

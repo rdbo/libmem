@@ -17,7 +17,11 @@ mem::process_t::process_t()
 
 mem::process_t::~process_t()
 {
-
+#	if defined(MEM_WIN)
+	if (this->handle != INVALID_HANDLE_VALUE)
+		CloseHandle(this->handle);
+#	elif defined(MEM_LINUX)
+#	endif
 }
 
 mem::bool_t mem::process_t::operator==(mem::process_t& process)
@@ -53,7 +57,11 @@ mem::module_t::module_t()
 
 mem::module_t::~module_t()
 {
-
+#	if defined(MEM_WIN)
+	if (this->handle)
+		CloseHandle(this->handle);
+#	elif defined(MEM_LINUX)
+#	endif
 }
 
 mem::bool_t mem::module_t::operator==(module_t& mod)
@@ -225,6 +233,283 @@ mem::bool_t mem::vtable_t::restore_all()
 		this->table.get()[i->first] = i->second;
 
 	return true;
+}
+
+//libmem
+
+mem::string_t  mem::parse_mask(string_t mask)
+{
+	for (::size_t i = 0; i < mask.length(); i++)
+	{
+		if (mask[i] == MEM_STR('X'))
+		{
+			mask[i] = std::tolower(mask[i]);;
+			break;
+		}
+
+		if (mask[i] != MEM_STR('x'))
+		{
+			mask[i] = MEM_STR('?');
+			break;
+		}
+	}
+
+	return mask;
+}
+
+mem::uintptr_t mem::get_page_size()
+{
+	uintptr_t page_size = (uintptr_t)MEM_BAD;
+#	if defined(MEM_WIN)
+	SYSTEM_INFO si;
+	GetSystemInfo(&si);
+	page_size = (uintptr_t)si.dwPageSize;
+#	elif defined(MEM_LINUX)
+	page_size = (uintptr_t)sysconf(_SC_PAGE_SIZE);
+#	endif
+
+	return page_size;
+}
+
+//ex
+
+mem::pid_t mem::ex::get_pid(string_t process_name)
+{
+	pid_t pid = (pid_t)MEM_BAD;
+#	if defined(MEM_WIN)
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32 procEntry;
+		procEntry.dwSize = sizeof(PROCESSENTRY32);
+
+		if (Process32First(hSnap, &procEntry))
+		{
+			do
+			{
+				if (!MEM_STR_CMP(procEntry.szExeFile, process_name.c_str()))
+				{
+					pid = procEntry.th32ProcessID;
+					break;
+				}
+			} while (Process32Next(hSnap, &procEntry));
+
+		}
+	}
+	CloseHandle(hSnap);
+#	elif defined(MEM_LINUX)
+	DIR* pdir = opendir("/proc");
+	if (!pdir)
+		return pid;
+
+	struct dirent* pdirent = (struct dirent*)0;
+	while (pid < 0 && (pdirent = readdir(pdir)))
+	{
+		pid_t id = atoi(pdirent->d_name);
+		if (id > 0)
+		{
+			string_t proc_name = ex::get_process_name(id);
+			if (process_name == proc_name)
+			{
+				pid = id;
+				break;
+			}
+		}
+	}
+	closedir(pdir);
+#	endif
+	return pid;
+}
+
+mem::string_t mem::ex::get_process_name(pid_t pid)
+{
+	string_t process_name = "";
+#	if defined(MEM_WIN)
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32 procEntry;
+		procEntry.dwSize = sizeof(procEntry);
+
+		if (Process32First(hSnap, &procEntry))
+		{
+			do
+			{
+				if (pid == procEntry.th32ProcessID)
+				{
+					process_name = procEntry.szExeFile;
+					break;
+				}
+			} while (Process32Next(hSnap, &procEntry));
+		}
+	}
+	CloseHandle(hSnap);
+#	elif defined(MEM_LINUX)
+	char path[64];
+	memset(path, 0x0, sizeof(path));
+	snprintf(path, sizeof(path), "/proc/%i/exe", pid);
+
+	char buffer[PATH_MAX];
+	memset(buffer, 0x0, sizeof(buffer));
+	readlink(path, buffer, sizeof(buffer));
+	char* temp = buffer;
+	char* proc_name = (char*)0;
+	while ((temp = strstr(temp, "/")) && temp != (char*)-1)
+	{
+		proc_name = &temp[1];
+		temp = proc_name;
+	}
+
+	if (!proc_name || proc_name == (char*)-1)
+		return process_name;
+
+	process_name = proc_name;
+#	endif
+
+	return process_name;
+}
+
+mem::process_t mem::ex::get_process(pid_t pid)
+{
+	process_t process = process_t();
+	process.pid = pid;
+	process.name = ex::get_process_name(process.pid);
+#	if defined(MEM_WIN)
+	process.handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+#	elif defined(MEM_LINUX)
+#	endif
+
+	return process;
+}
+
+mem::process_t mem::ex::get_process(string_t process_name)
+{
+	process_t process = process_t();
+	pid_t pid = ex::get_pid(process_name);
+	if (pid != (pid_t)MEM_BAD)
+		process = ex::get_process(pid);
+
+	return process;
+}
+
+mem::process_list_t mem::ex::get_process_list()
+{
+	process_list_t proc_list = process_list_t();
+#	if defined(MEM_WIN)
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32 procEntry;
+		procEntry.dwSize = sizeof(PROCESSENTRY32);
+
+		if (Process32First(hSnap, &procEntry))
+		{
+			do
+			{
+				process_t process = ex::get_process(procEntry.th32ProcessID);
+				if(process.is_valid())
+					proc_list.push_back(process);
+			} while (Process32Next(hSnap, &procEntry));
+
+		}
+	}
+	CloseHandle(hSnap);
+#	elif defined(MEM_LINUX)
+	DIR* pdir = opendir("/proc");
+	if (!pdir)
+		return pid;
+
+	struct dirent* pdirent = (struct dirent*)0;
+	while (pid < 0 && (pdirent = readdir(pdir)))
+	{
+		pid_t id = (pid_t)atoi(pdirent->d_name);
+		if (id > 0)
+		{
+			process_t process = ex::get_process(id);
+			if(process.is_valid())
+				proc_list.push_back(process);
+		}
+	}
+	closedir(pdir);
+#	endif
+
+	return proc_list;
+}
+
+mem::module_t mem::ex::get_module(process_t process, string_t module_name)
+{
+	module_t mod = module_t();
+
+#	if defined(MEM_WIN)
+	MODULEENTRY32 module_info;
+	module_info.dwSize = sizeof(MODULEENTRY32);
+
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		MODULEENTRY32 modEntry;
+		modEntry.dwSize = sizeof(MODULEENTRY32);
+		if (Module32First(hSnap, &modEntry))
+		{
+			do
+			{
+				if (!MEM_STR_CMP(modEntry.szModule, module_name.c_str()) || !MEM_STR_CMP(modEntry.szExePath, module_name.c_str()))
+				{
+					module_info = modEntry;
+					break;
+				}
+			} while (Module32Next(hSnap, &modEntry));
+		}
+	}
+
+	CloseHandle(hSnap);
+
+	mod.base = (voidptr_t)module_info.modBaseAddr;
+	mod.size = (size_t)module_info.modBaseSize;
+	mod.end  = (voidptr_t)((uintptr_t)mod.base + mod.size);
+	mod.handle = (module_handle_t)module_info.hModule;
+	mod.path = module_info.szExePath;
+	mod.name = module_info.szModule;
+#	elif defined(MEM_LINUX)
+	//WIP
+#	endif
+
+	return mod;
+}
+
+mem::module_list_t mem::ex::get_module_list(process_t process)
+{
+	module_list_t mod_list = module_list_t();
+#	if defined(MEM_WIN)
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		MODULEENTRY32 modEntry;
+		modEntry.dwSize = sizeof(MODULEENTRY32);
+
+		if (Module32First(hSnap, &modEntry))
+		{
+			do
+			{
+				module_t mod = module_t();
+				mod.base = (voidptr_t)modEntry.modBaseAddr;
+				mod.size = (uintptr_t)modEntry.modBaseSize;
+				mod.end =  (voidptr_t)((uintptr_t)mod.base + mod.size);
+				mod.name = modEntry.szModule;
+				mod.path = modEntry.szExePath;
+				mod.handle = modEntry.hModule;
+
+				mod_list.push_back(mod);
+			} while (Module32Next(hSnap, &modEntry));
+		}
+	}
+
+	CloseHandle(hSnap);
+#	elif defined(MEM_LINUX)
+	//WIP
+#	endif
+
+	return mod_list;
 }
 
 #endif //MEM_COMPATIBLE

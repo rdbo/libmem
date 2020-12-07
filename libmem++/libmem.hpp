@@ -421,6 +421,9 @@ namespace mem
 		bool_t         protect(process_t process, voidptr_t src, size_t size, prot_t protection);
 		voidptr_t      allocate(process_t process, size_t size, prot_t protection);
 		bool_t         deallocate(process_t process, voidptr_t src, size_t size);
+		voidptr_t      scan(process_t process, std::vector<byte_t> data, voidptr_t start, voidptr_t stop);
+		voidptr_t      pattern_scan(process_t process, std::vector<byte_t> pattern, string_t mask, voidptr_t start, voidptr_t stop);
+
 	}
 
 	namespace in

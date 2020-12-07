@@ -18,8 +18,8 @@ mem::process_t::process_t()
 mem::process_t::~process_t()
 {
 #	if defined(MEM_WIN)
-	if (this->handle != INVALID_HANDLE_VALUE)
-		CloseHandle(this->handle);
+	/*if (this->is_valid() && this->handle)
+		CloseHandle(this->handle);*/
 #	elif defined(MEM_LINUX)
 #	endif
 }
@@ -58,8 +58,8 @@ mem::module_t::module_t()
 mem::module_t::~module_t()
 {
 #	if defined(MEM_WIN)
-	if (this->handle)
-		CloseHandle(this->handle);
+	/*if (this->handle)
+		CloseHandle(this->handle);*/
 #	elif defined(MEM_LINUX)
 #	endif
 }
@@ -662,6 +662,60 @@ mem::bool_t mem::ex::deallocate(process_t process, voidptr_t src, size_t size)
 #   elif defined(MEM_LINUX)
 	ret = (int_t)(mem_ex_syscall(process, __NR_munmap, src, (voidptr_t)size, NULL, NULL, NULL, NULL) != MAP_FAILED);
 #   endif
+
+	return ret;
+}
+
+mem::voidptr_t mem::ex::scan(process_t process, std::vector<byte_t> data, voidptr_t start, voidptr_t stop)
+{
+	voidptr_t ret = (voidptr_t)MEM_BAD;
+	if (!process.is_valid() || (uintptr_t)stop < (uintptr_t)start) return ret;
+
+	for (uintptr_t i = (uintptr_t)start; (uintptr_t)(i + data.size()) <= (uintptr_t)stop; i++)
+	{
+		::size_t data_size = data.size();
+		byte_t* buffer = new byte_t[data_size];
+		std::memset(buffer, 0x0, data_size);
+		ex::read(process, (voidptr_t)i, (voidptr_t)buffer, (mem::size_t)data_size);
+		if (!std::memcmp(data.data(), buffer, data_size))
+		{
+			ret = (voidptr_t)i;
+			break;
+		}
+	}
+
+	return ret;
+}
+
+mem::voidptr_t mem::ex::pattern_scan(process_t process, std::vector<byte_t> pattern, string_t mask, voidptr_t start, voidptr_t stop)
+{
+	voidptr_t ret = (voidptr_t)MEM_BAD;
+	if (!process.is_valid() || (uintptr_t)stop < (uintptr_t)start || pattern.size() != mask.length()) return ret;
+	mask = mem::parse_mask(mask);
+
+	for (uintptr_t i = (uintptr_t)start; (uintptr_t)(i + pattern.size()) <= (uintptr_t)stop; i++)
+	{
+		::size_t data_size = pattern.size();
+		byte_t* buffer = new byte_t[data_size];
+		std::memset(buffer, 0x0, data_size);
+		ex::read(process, (voidptr_t)i, (voidptr_t)buffer, (mem::size_t)data_size);
+		bool_t good = MEM_TRUE;
+		for (::size_t j = 0; j < pattern.size(); j++)
+		{
+			good &= (bool_t)(
+				mask[j] == MEM_UNKNOWN_BYTE ||
+				buffer[j] == pattern[j]
+			);
+
+			if (!good) break;
+		}
+
+		if (good)
+		{
+			ret = (voidptr_t)i;
+			break;
+		}
+	}
 
 	return ret;
 }

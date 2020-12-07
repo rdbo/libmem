@@ -401,7 +401,26 @@ namespace mem
 		module_list_t  get_module_list(process_t process);
 		page_t         get_page(process_t process, voidptr_t src);
 		bool_t         is_process_running(process_t process);
-
+		bool_t         read(process_t process, voidptr_t src, voidptr_t dst, size_t size);
+		template <typename type_t>
+		type_t         read(process_t process, voidptr_t src)
+		{
+			type_t buf;
+			memset(&buf, 0x0, sizeof(buf));
+			read(process, src, &buf, sizeof(buf));
+			return buf;
+		}
+		bool_t         write(process_t process, voidptr_t dst, voidptr_t src, size_t size);
+		template <typename type_t>
+		bool_t         write(process_t process, voidptr_t dst, type_t src)
+		{
+			return write(process, dst, &src, sizeof(src));
+		}
+		bool_t         set(process_t process, voidptr_t dst, byte_t byte, size_t size);
+		voidptr_t      syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5);
+		bool_t         protect(process_t process, voidptr_t src, size_t size, prot_t protection);
+		voidptr_t      allocate(process_t process, size_t size, prot_t protection);
+		bool_t         deallocate(process_t process, voidptr_t src, size_t size);
 	}
 
 	namespace in

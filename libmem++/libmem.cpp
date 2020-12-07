@@ -553,4 +553,114 @@ mem::bool_t mem::ex::is_process_running(process_t process)
 	return ret;
 }
 
+mem::bool_t mem::ex::read(process_t process, voidptr_t src, voidptr_t dst, size_t size)
+{
+	mem::bool_t ret = MEM_FALSE;
+	if (!process.is_valid()) return ret;
+#	if defined(MEM_WIN)
+	ret = (bool_t)(ReadProcessMemory(process.handle, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL) != 0);
+#	elif defined(MEM_LINUX)
+	struct iovec iosrc = {};
+	struct iovec iodst = {};
+	iodst.iov_base = dst;
+	iodst.iov_len = size;
+	iosrc.iov_base = src;
+	iosrc.iov_len = size;
+	ret = (bool_t)((size_t)process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0) == size);
+#	endif
+
+	return ret;
+}
+
+mem::bool_t mem::ex::write(process_t process, voidptr_t dst, voidptr_t src, size_t size)
+{
+	mem::bool_t ret = MEM_FALSE;
+	if (!process.is_valid()) return ret;
+#	if defined(MEM_WIN)
+	ret = (bool_t)(WriteProcessMemory(process.handle, (LPVOID)dst, (LPCVOID)src, (SIZE_T)size, NULL) != 0);
+#	elif defined(MEM_LINUX)
+	struct iovec iosrc = {};
+	struct iovec iodst = {};
+	iosrc.iov_base = src;
+	iosrc.iov_len  = size;
+	iodst.iov_base = dst;
+	iodst.iov_len  = size;
+	ret = (bool_t)((size_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0) == size);
+#	endif
+
+	return ret;
+}
+
+mem::bool_t mem::ex::set(process_t process, voidptr_t dst, byte_t byte, size_t size)
+{
+	byte_t* data = new byte_t[size];
+	memset(data, byte, size);
+	return ex::write(process, dst, data, size);
+}
+
+mem::voidptr_t mem::ex::syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5)
+{
+	voidptr_t ret = (voidptr_t)MEM_BAD;
+	if (!process.is_valid()) return ret;
+#	if defined(MEM_WIN)
+#	elif defined(MEM_LINUX)
+	//WIP
+#	endif
+	return ret;
+}
+
+mem::bool_t mem::ex::protect(process_t process, voidptr_t src, size_t size, prot_t protection)
+{
+	bool_t ret = MEM_FALSE;
+	if (!process.is_valid()) return ret;
+#	if defined(MEM_WIN)
+	DWORD old_protect = 0;
+	if (process.handle == (HANDLE)INVALID_HANDLE_VALUE || src <= (voidptr_t)MEM_NULL || size == 0 || protection <= 0) return ret;
+	ret = (bool_t)(VirtualProtectEx(process.handle, (LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect) != 0);
+#	elif defined(MEM_LINUX)
+	ret = (bool_t)(ex::syscall(process, __NR_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0);
+#	endif
+	return ret;
+}
+
+mem::voidptr_t mem::ex::allocate(process_t process, size_t size, prot_t protection)
+{
+	voidptr_t alloc_addr = (voidptr_t)MEM_BAD;
+	if (!process.is_valid() || protection == 0) return alloc_addr;
+#   if defined(MEM_WIN)
+	alloc_addr = (voidptr_t)VirtualAllocEx(process.handle, NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
+	if (alloc_addr == (voidptr_t)NULL)
+		alloc_addr = (voidptr_t)MEM_BAD;
+#   elif defined(MEM_LINUX)
+	int_t syscall_n = -1;
+
+#   if defined(MEM_86)
+	syscall_n = __NR_mmap2;
+#   elif defined(MEM_64)
+	syscall_n = __NR_mmap;
+#   endif
+
+	alloc_addr = (voidptr_t)(ex::syscall(process, syscall_n, (voidptr_t)0, (voidptr_t)size, (voidptr_t)(uintptr_t)protection, (voidptr_t)(MAP_PRIVATE | MAP_ANON), (voidptr_t)-1, (voidptr_t)0));
+	if ((mem_uintptr_t)alloc_addr >= (mem_uintptr_t)-100) //error check
+	{
+		alloc_addr = (mem_voidptr_t)MEM_BAD;
+	}
+
+#   endif
+	return alloc_addr;
+}
+
+mem::bool_t mem::ex::deallocate(process_t process, voidptr_t src, size_t size)
+{
+	bool_t ret = MEM_FALSE;
+	if (!process.is_valid()) return ret;
+#   if defined(MEM_WIN)
+	ret = (bool_t)(VirtualFreeEx(process.handle, src, 0, MEM_RELEASE) != 0);
+#   elif defined(MEM_LINUX)
+	ret = (int_t)(mem_ex_syscall(process, __NR_munmap, src, (voidptr_t)size, NULL, NULL, NULL, NULL) != MAP_FAILED);
+#   endif
+
+	return ret;
+}
+
 #endif //MEM_COMPATIBLE

@@ -151,8 +151,8 @@
 #define MEM_BAD                -1
 #define MEM_GOOD               !MEM_BAD
 #define MEM_NULL               0
-//#define false              MEM_FALSE
-//#define true               MEM_TRUE
+#define MEM_FALSE              false
+#define MEM_TRUE               true
 #define MEM_KNOWN_BYTE         MEM_STR('x')
 #define MEM_UNKNOWN_BYTE       MEM_STR('?')
 #if defined(MEM_WIN)
@@ -265,7 +265,7 @@ namespace mem
 	class process_t
 	{
 		public:
-		string_t name = "";
+		string_t name = MEM_STR("");
 		pid_t    pid  = (pid_t)-1;
 #		if defined(MEM_WIN)
 		HANDLE       handle = INVALID_HANDLE_VALUE;
@@ -288,8 +288,8 @@ namespace mem
 	class module_t
 	{
 		public:
-		string_t  name = "";
-		string_t  path = "";
+		string_t  name = MEM_STR("");
+		string_t  path = MEM_STR("");
 		voidptr_t base = (voidptr_t)-1;
 		voidptr_t end  = (voidptr_t)-1;
 		uintptr_t size = (uintptr_t)-1;
@@ -346,7 +346,7 @@ namespace mem
 	class lib_t
 	{
 		public:
-		string_t path = "";
+		string_t path = MEM_STR("");
 #		if defined(MEM_WIN)
 #		elif defined(MEM_LINUX)
 		int_t mode;
@@ -399,6 +399,9 @@ namespace mem
 		process_list_t get_process_list();
 		module_t       get_module(process_t process, string_t module_name);
 		module_list_t  get_module_list(process_t process);
+		page_t         get_page(process_t process, voidptr_t src);
+		bool_t         is_process_running(process_t process);
+
 	}
 
 	namespace in

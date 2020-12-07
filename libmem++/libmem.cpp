@@ -43,7 +43,7 @@ mem::bool_t mem::process_t::is_valid()
 		this->handle != INVALID_HANDLE_VALUE &&
 #		elif defined(MEM_LINUX)
 #		endif
-		this->name != "" &&
+		this->name != MEM_STR("") &&
 		this->pid  != (pid_t)-1
 	);
 }
@@ -79,8 +79,8 @@ mem::bool_t mem::module_t::operator==(module_t& mod)
 mem::bool_t mem::module_t::is_valid()
 {
 	return (bool_t)(
-		this->name != "" &&
-		this->path != "" &&
+		this->name != MEM_STR("") &&
+		this->path != MEM_STR("") &&
 		this->base != (voidptr_t)-1 &&
 		this->end  != (voidptr_t)-1 &&
 		this->size != (uintptr_t)-1 &&
@@ -323,7 +323,7 @@ mem::pid_t mem::ex::get_pid(string_t process_name)
 
 mem::string_t mem::ex::get_process_name(pid_t pid)
 {
-	string_t process_name = "";
+	string_t process_name = MEM_STR("");
 #	if defined(MEM_WIN)
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hSnap != INVALID_HANDLE_VALUE)
@@ -439,6 +439,7 @@ mem::process_list_t mem::ex::get_process_list()
 mem::module_t mem::ex::get_module(process_t process, string_t module_name)
 {
 	module_t mod = module_t();
+	if (!process.is_valid()) return mod;
 
 #	if defined(MEM_WIN)
 	MODULEENTRY32 module_info;
@@ -480,6 +481,7 @@ mem::module_t mem::ex::get_module(process_t process, string_t module_name)
 mem::module_list_t mem::ex::get_module_list(process_t process)
 {
 	module_list_t mod_list = module_list_t();
+	if (!process.is_valid()) return mod_list;
 #	if defined(MEM_WIN)
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
 	if (hSnap != INVALID_HANDLE_VALUE)
@@ -510,6 +512,45 @@ mem::module_list_t mem::ex::get_module_list(process_t process)
 #	endif
 
 	return mod_list;
+}
+
+mem::page_t mem::ex::get_page(process_t process, voidptr_t src)
+{
+	page_t page = page_t();
+	if (!process.is_valid()) return page;
+#	if defined(MEM_WIN)
+	MEMORY_BASIC_INFORMATION mbi;
+	VirtualQueryEx(process.handle, src, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
+	page.base  = mbi.BaseAddress;
+	page.size  = mbi.RegionSize;
+	page.end   = (voidptr_t)((uintptr_t)page.base + page.size);
+	page.protection = mbi.Protect;
+	page.flags = mbi.Type;
+#	elif defined(MEM_LINUX)
+	//WIP
+#	endif
+
+	return page;
+}
+
+mem::bool_t mem::ex::is_process_running(process_t process)
+{
+	bool_t ret = MEM_FALSE;
+	if (!process.is_valid()) return ret;
+#   if defined(MEM_WIN)
+	DWORD exit_code;
+	GetExitCodeProcess(process.handle, &exit_code);
+	ret = (bool_t)(exit_code == STILL_ACTIVE);
+#   elif defined(MEM_LINUX)
+	struct stat sb = {};
+	char path_buffer[64];
+	memset(path_buffer, 0x0, sizeof(path_buffer));
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i", process.pid);
+	stat(path_buffer, &sb);
+	ret = (bool_t)S_ISDIR(sb.st_mode);
+#	endif
+
+	return ret;
 }
 
 #endif //MEM_COMPATIBLE

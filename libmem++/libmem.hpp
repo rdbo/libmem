@@ -356,6 +356,9 @@ namespace mem
 		lib_t();
 		lib_t(string_t path);
 		lib_t(string_t path, int_t mode);
+
+		public:
+		bool_t is_valid();
 	};
 
 	class vtable_t
@@ -423,7 +426,8 @@ namespace mem
 		bool_t         deallocate(process_t process, voidptr_t src, size_t size);
 		voidptr_t      scan(process_t process, std::vector<byte_t> data, voidptr_t start, voidptr_t stop);
 		voidptr_t      pattern_scan(process_t process, std::vector<byte_t> pattern, string_t mask, voidptr_t start, voidptr_t stop);
-
+		module_t       load_library(process_t process, lib_t lib);
+		voidptr_t      get_symbol(module_t mod, const char* symbol);
 	}
 
 	namespace in

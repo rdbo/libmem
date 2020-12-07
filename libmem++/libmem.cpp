@@ -182,6 +182,13 @@ mem::lib_t::lib_t(string_t path, int_t mode)
 #	endif
 }
 
+mem::bool_t mem::lib_t::is_valid()
+{
+	return (bool_t)(
+		this->path != ""
+	);
+}
+
 //mem::vtable_t
 
 mem::vtable_t::vtable_t(voidptr_t* vtable)
@@ -718,6 +725,51 @@ mem::voidptr_t mem::ex::pattern_scan(process_t process, std::vector<byte_t> patt
 	}
 
 	return ret;
+}
+
+mem::module_t mem::ex::load_library(process_t process, lib_t lib)
+{
+	module_t mod = module_t();
+	if (!process.is_valid() || !lib.is_valid()) return mod;
+#   if defined(MEM_WIN)
+	size_t buffer_size = (size_t)((lib.path.length() + 1) * sizeof(char_t));
+	prot_t protection = PAGE_EXECUTE_READWRITE;
+	voidptr_t libpath_ex = ex::allocate(process, buffer_size, protection);
+	if (!libpath_ex || libpath_ex == (voidptr_t)-1) return mod;
+	ex::set(process, libpath_ex, 0x0, buffer_size);
+	ex::write(process, libpath_ex, (voidptr_t)lib.path.c_str(), buffer_size);
+	HANDLE h_thread = (HANDLE)CreateRemoteThread(process.handle, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, libpath_ex, 0, 0);
+	if (!h_thread || h_thread == INVALID_HANDLE_VALUE) return mod;
+	WaitForSingleObject(h_thread, -1);
+	CloseHandle(h_thread);
+	VirtualFreeEx(process.handle, libpath_ex, 0, MEM_RELEASE);
+	mod = ex::get_module(process, lib.path);
+#   elif defined(MEM_LINUX)
+	//WIP
+#	endif
+
+	return mod;
+}
+
+mem::voidptr_t mem::ex::get_symbol(module_t mod, const char* symbol)
+{
+	voidptr_t addr = (voidptr_t)MEM_BAD_RETURN;
+	if (!mod.is_valid()) return addr;
+	//WIP
+	/*
+	lib_t lib = lib_t(mod.path);
+
+	module_t mod_in = in::load_library(lib);
+	if (!mod_in.is_valid()) return addr;
+	voidptr_t addr_in = in::get_symbol(mod_in, symbol);
+	if (!addr_in || addr_in == (voidptr_t)MEM_BAD_RETURN) return addr;
+	addr = (voidptr_t)(
+		(uintptr_t)mod.base +
+		((uintptr_t)addr_in - (uintptr_t)mod_in.base)
+	);
+	*/
+
+	return addr;
 }
 
 #endif //MEM_COMPATIBLE

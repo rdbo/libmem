@@ -593,9 +593,12 @@ mem::bool_t mem::ex::write(process_t process, voidptr_t dst, voidptr_t src, size
 
 mem::bool_t mem::ex::set(process_t process, voidptr_t dst, byte_t byte, size_t size)
 {
+	bool_t ret = MEM_FALSE;
 	byte_t* data = new byte_t[size];
 	memset(data, byte, size);
-	return ex::write(process, dst, data, size);
+	ret = ex::write(process, dst, data, size);
+	delete[] data;
+	return ret;
 }
 
 mem::voidptr_t mem::ex::syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5)

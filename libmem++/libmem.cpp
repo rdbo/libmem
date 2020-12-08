@@ -673,7 +673,7 @@ mem::bool_t mem::ex::deallocate(process_t process, voidptr_t src, size_t size)
 	return ret;
 }
 
-mem::voidptr_t mem::ex::scan(process_t process, std::vector<byte_t> data, voidptr_t start, voidptr_t stop)
+mem::voidptr_t mem::ex::scan(process_t process, data_t data, voidptr_t start, voidptr_t stop)
 {
 	voidptr_t ret = (voidptr_t)MEM_BAD;
 	if (!process.is_valid() || (uintptr_t)stop < (uintptr_t)start) return ret;
@@ -694,7 +694,7 @@ mem::voidptr_t mem::ex::scan(process_t process, std::vector<byte_t> data, voidpt
 	return ret;
 }
 
-mem::voidptr_t mem::ex::pattern_scan(process_t process, std::vector<byte_t> pattern, string_t mask, voidptr_t start, voidptr_t stop)
+mem::voidptr_t mem::ex::pattern_scan(process_t process, data_t pattern, string_t mask, voidptr_t start, voidptr_t stop)
 {
 	voidptr_t ret = (voidptr_t)MEM_BAD;
 	if (!process.is_valid() || (uintptr_t)stop < (uintptr_t)start || pattern.size() != mask.length()) return ret;
@@ -855,6 +855,69 @@ mem::page_t mem::in::get_page(voidptr_t src)
 	page = ex::get_page(in::get_process(), src);
 #   endif
 	return page;
+}
+
+mem::bool_t mem::in::read(voidptr_t src, voidptr_t dst, size_t size)
+{
+	memcpy(dst, src, size);
+	return true;
+}
+
+mem::bool_t mem::in::write(voidptr_t dst, voidptr_t src, size_t size)
+{
+	memcpy(dst, src, size);
+	return true;
+}
+
+mem::bool_t mem::in::set(voidptr_t src, byte_t byte, size_t size)
+{
+	memset(src, byte, size);
+	return true;
+}
+
+mem::voidptr_t mem::in::scan(data_t data, voidptr_t start, voidptr_t stop)
+{
+	voidptr_t ret = (voidptr_t)MEM_BAD;
+	if ((uintptr_t)start > (uintptr_t)stop) return ret;
+
+	for (byte_t* p_cur = (byte_t*)start; (uintptr_t)(&p_cur[data.size()]) <= (uintptr_t)stop; p_cur = &p_cur[1])
+	{
+		if (!memcmp(p_cur, data.data(), data.size()))
+		{
+			ret = (voidptr_t)p_cur;
+			break;
+		}
+	}
+
+	return ret;
+}
+
+mem::voidptr_t mem::in::pattern_scan(data_t pattern, string_t mask, voidptr_t start, voidptr_t stop)
+{
+	voidptr_t ret = (voidptr_t)MEM_BAD;
+	if ((uintptr_t)start > (uintptr_t)stop || pattern.size() != mask.length()) return ret;
+
+	for (byte_t* p_cur = (byte_t*)start; (uintptr_t)(&p_cur[pattern.size()]) <= (uintptr_t)stop; p_cur = &p_cur[1])
+	{
+		bool_t good = MEM_TRUE;
+		for (::size_t i = 0; i < pattern.size(); i++)
+		{
+			good &= (bool_t)(
+				mask[i] == MEM_UNKNOWN_BYTE ||
+				p_cur[i] == pattern[i]
+			);
+
+			if (!good) break;
+		}
+
+		if (good)
+		{
+			ret = (voidptr_t)p_cur;
+			break;
+		}
+	}
+
+	return ret;
 }
 
 #endif //MEM_COMPATIBLE

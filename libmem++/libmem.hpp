@@ -261,6 +261,9 @@ namespace mem
 	//mem::string_t
 	typedef std::basic_string<char_t>            string_t;
 
+	//mem::data_t
+	typedef std::vector<byte_t>                  data_t;
+
 	//mem::process_t
 	class process_t
 	{
@@ -424,8 +427,8 @@ namespace mem
 		bool_t         protect(process_t process, voidptr_t src, size_t size, prot_t protection);
 		voidptr_t      allocate(process_t process, size_t size, prot_t protection);
 		bool_t         deallocate(process_t process, voidptr_t src, size_t size);
-		voidptr_t      scan(process_t process, std::vector<byte_t> data, voidptr_t start, voidptr_t stop);
-		voidptr_t      pattern_scan(process_t process, std::vector<byte_t> pattern, string_t mask, voidptr_t start, voidptr_t stop);
+		voidptr_t      scan(process_t process, data_t data, voidptr_t start, voidptr_t stop);
+		voidptr_t      pattern_scan(process_t process, data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
 		module_t       load_library(process_t process, lib_t lib);
 		voidptr_t      get_symbol(module_t mod, const char* symbol);
 	}
@@ -438,6 +441,23 @@ namespace mem
 		module_t      get_module(string_t module_name);
 		module_list_t get_module_list();
 		page_t        get_page(voidptr_t src);
+		bool_t        read(voidptr_t src, voidptr_t dst, size_t size);
+		template <typename type_t>
+		type_t        read(voidptr_t src)
+		{
+			type_t buf{0};
+			read(src, &buf, sizeof(buf));
+			return buf;
+		}
+		bool_t        write(voidptr_t dst, voidptr_t src, size_t size);
+		template <typename type_t>
+		bool_t        write(voidptr_t dst, type_t src)
+		{
+			return write(dst, &src, sizeof(src));
+		}
+		bool_t        set(voidptr_t src, byte_t byte, size_t size);
+		voidptr_t     scan(data_t data, voidptr_t start, voidptr_t stop);
+		voidptr_t     pattern_scan(data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
 	}
 
 }

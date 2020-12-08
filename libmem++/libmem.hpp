@@ -458,6 +458,13 @@ namespace mem
 		bool_t        set(voidptr_t src, byte_t byte, size_t size);
 		voidptr_t     scan(data_t data, voidptr_t start, voidptr_t stop);
 		voidptr_t     pattern_scan(data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
+		voidptr_t     syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5);
+		int_t         protect(voidptr_t src, size_t size, prot_t protection);
+		voidptr_t     allocate(size_t size, prot_t protection);
+		bool_t        deallocate(voidptr_t src, size_t size);
+		module_t      load_library(lib_t lib);
+		bool_t        unload_library(module_t mod);
+		voidptr_t     get_symbol(module_t mod, const char* symbol);
 	}
 
 }

@@ -920,4 +920,102 @@ mem::voidptr_t mem::in::pattern_scan(data_t pattern, string_t mask, voidptr_t st
 	return ret;
 }
 
+mem::voidptr_t mem::in::syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5)
+{
+	voidptr_t ret = (voidptr_t)MEM_BAD_RETURN;
+#   if defined(MEM_WIN)
+#   elif defined(MEM_LINUX)
+	ret = (voidptr_t)syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5);
+#   endif
+	return ret;
+}
+
+mem::int_t mem::in::protect(voidptr_t src, size_t size, prot_t protection)
+{
+	int_t ret = (int_t)MEM_BAD_RETURN;
+	if (src == (voidptr_t)MEM_BAD_RETURN || size == (size_t)MEM_BAD_RETURN || size == 0 || protection == (prot_t)MEM_BAD_RETURN) return ret;
+#   if defined(MEM_WIN)
+	prot_t old_protection = 0;
+	ret = (int_t)VirtualProtect((LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protection);
+#   elif defined(MEM_LINUX)
+	uintptr_t page_size = mem::get_page_size();
+	uintptr_t round = ((uintptr_t)src % pagesize);
+	uintptr_t src_page = (uintptr_t)src - round;
+	ret = (int_t)mprotect((void*)src_page, size + round, protection);
+#   endif
+	return ret;
+}
+
+mem::voidptr_t mem::in::allocate(size_t size, prot_t protection)
+{
+	voidptr_t addr = (voidptr_t)MEM_BAD_RETURN;
+#   if defined(MEM_WIN)
+	addr = (voidptr_t)VirtualAlloc(MEM_NULL, (SIZE_T)size, MEM_COMMIT | MEM_RESERVE, protection);
+#   elif defined(MEM_LINUX)
+	addr = (voidptr_t)mmap(MEM_NULL, size, protection, MAP_PRIVATE | MAP_ANON, -1, 0);
+#   endif
+
+	return addr;
+}
+
+mem::bool_t mem::in::deallocate(voidptr_t src, size_t size)
+{
+	bool_t ret = MEM_FALSE;
+#   if defined(MEM_WIN)
+	VirtualFree(src, 0, MEM_RELEASE);
+#   elif defined(MEM_LINUX)
+	munmap(src, size);
+#   endif
+
+	ret = MEM_TRUE;
+	return ret;
+}
+
+mem::module_t mem::in::load_library(lib_t lib)
+{
+	module_t mod = module_t();
+	if (!lib.is_valid()) return mod;
+#   if defined(MEM_WIN)
+	HMODULE h_mod = LoadLibrary(lib.path.c_str());
+	mod = in::get_module(lib.path.substr(lib.path.rfind(MEM_STR("\\"))));
+	mod.handle = h_mod;
+#   elif defined(MEM_LINUX)
+	void* h_mod = dlopen(mem_string_c_str(&lib.path), lib.mode);
+	mod = in::get_module(lib.path);
+	mod.handle = h_mod;
+#   endif
+
+	return mod;
+}
+
+mem::bool_t mem::in::unload_library(module_t mod)
+{
+	mem::bool_t ret = MEM_FALSE;
+	if (!mod.is_valid()) return ret;
+
+#   if defined(MEM_WIN)
+	FreeLibrary(mod.handle);
+#   elif defined(MEM_LINUX)
+	dlclose(mod.handle);
+#   endif
+
+	ret = MEM_TRUE;
+	return ret;
+}
+
+mem::voidptr_t mem::in::get_symbol(module_t mod, const char* symbol)
+{
+	voidptr_t addr = (voidptr_t)MEM_BAD;
+	if (!mod.is_valid())
+		return addr;
+
+#   if defined(MEM_WIN)
+	addr = (voidptr_t)GetProcAddress(mod.handle, symbol);
+#   elif defined(MEM_LINUX)
+	addr = (voidptr_t)dlsym(mod.handle, symbol);
+#   endif
+
+	return addr;
+}
+
 #endif //MEM_COMPATIBLE

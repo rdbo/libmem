@@ -772,4 +772,89 @@ mem::voidptr_t mem::ex::get_symbol(module_t mod, const char* symbol)
 	return addr;
 }
 
+//in
+
+mem::pid_t mem::in::get_pid()
+{
+	pid_t pid = (pid_t)MEM_BAD_RETURN;
+#   if defined(MEM_WIN)
+	pid = (pid_t)GetCurrentProcessId();
+#   elif defined(MEM_LINUX)
+	pid = (pid_t)getpid();
+#   endif
+	return pid;
+}
+
+mem::process_t mem::in::get_process()
+{
+	process_t process = process_t();
+	process.pid = in::get_pid();
+	process.name = in::get_process_name();
+#   if defined(MEM_WIN)
+	process.handle = GetCurrentProcess();
+#   elif defined(MEM_LINUX)
+#   endif
+	return process;
+}
+
+mem::string_t mem::in::get_process_name()
+{
+	string_t process_name = string_t();
+#   if defined(MEM_WIN)
+	char_t buffer[MAX_PATH];
+	GetModuleFileName(MEM_NULL, buffer, sizeof(buffer) / sizeof(char_t));
+	process_name = buffer;
+	process_name = process_name.substr(process_name.rfind(MEM_STR("\\")) + 1);
+#   elif defined(MEM_LINUX)
+	process_name = ex::get_process_name(in::get_pid());
+#   endif
+	return process_name;
+}
+
+mem::module_t mem::in::get_module(string_t module_name)
+{
+	module_t mod = module_t();
+#   if defined(MEM_WIN)
+	MODULEINFO module_info = {};
+	HMODULE hmod = GetModuleHandle(module_name.c_str());
+	HANDLE cur_handle = in::get_process().handle;
+	if (hmod == MEM_NULL) return mod;
+	char_t path_buffer[MAX_PATH];
+	GetModuleInformation(cur_handle, hmod, &module_info, sizeof(module_info));
+	GetModuleFileName(hmod, path_buffer, sizeof(path_buffer) / sizeof(char_t));
+	mod.path = path_buffer;
+	mod.name = mod.path.substr(mod.path.rfind(MEM_STR("\\")) + 1);
+	mod.base = (voidptr_t)module_info.lpBaseOfDll;
+	mod.size = (size_t)module_info.SizeOfImage;
+	mod.end  = (voidptr_t)((uintptr_t)mod.base + mod.size);
+	mod.handle = hmod;
+#   elif defined(MEM_LINUX)
+	process_t process = in::get_process();
+	mod = ex::get_module(process, module_name);
+#   endif
+	return mod;
+}
+
+mem::module_list_t mem::in::get_module_list()
+{
+	return ex::get_module_list(in::get_process());
+}
+
+mem::page_t mem::in::get_page(voidptr_t src)
+{
+	page_t page = page_t();
+#   if defined(MEM_WIN)
+	MEMORY_BASIC_INFORMATION mbi;
+	VirtualQuery(src, &mbi, sizeof(mbi));
+	page.base = (voidptr_t)mbi.BaseAddress;
+	page.size = (uintptr_t)mbi.RegionSize;
+	page.end  = (voidptr_t)((uintptr_t)page.base + page.size);
+	page.protection = mbi.Protect;
+	page.flags = mbi.Type;
+#   elif defined(MEM_LINUX)
+	page = ex::get_page(in::get_process(), src);
+#   endif
+	return page;
+}
+
 #endif //MEM_COMPATIBLE

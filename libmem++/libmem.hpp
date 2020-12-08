@@ -432,7 +432,12 @@ namespace mem
 
 	namespace in
 	{
-
+		pid_t         get_pid();
+		process_t     get_process();
+		string_t      get_process_name();
+		module_t      get_module(string_t module_name);
+		module_list_t get_module_list();
+		page_t        get_page(voidptr_t src);
 	}
 
 }

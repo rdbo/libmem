@@ -1159,6 +1159,7 @@ mem::voidptr_t mem::in::detour_trampoline(voidptr_t src, voidptr_t dst, size_t s
 
 mem::bool_t mem::in::detour_restore(voidptr_t src, data_t stolen_bytes)
 {
+	bool_t ret = MEM_FALSE;
 	prot_t protection = (prot_t)0;
 #   if defined(MEM_WIN)
 	protection = PAGE_EXECUTE_READWRITE;
@@ -1167,6 +1168,9 @@ mem::bool_t mem::in::detour_restore(voidptr_t src, data_t stolen_bytes)
 #   endif
 	if (in::protect(src, stolen_bytes.size(), protection) != MEM_BAD)
 		in::write(src, (voidptr_t)stolen_bytes.data(), (size_t)stolen_bytes.size());
+
+	ret = MEM_TRUE;
+	return ret;
 }
 
 #endif //MEM_COMPATIBLE

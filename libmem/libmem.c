@@ -697,7 +697,7 @@ struct _mem_vtable_t mem_vtable_new(mem_voidptr_t* p_vtable, mem_size_t size)
 	vmt.orig_vtable = (mem_voidptr_t*)malloc(vtable_size);
 	mem_in_read(vmt.vtable, vmt.orig_vtable, vtable_size);
 #	if defined(MEM_WIN)
-	mem_in_protect(vmt.vtable, PAGE_EXECUTE_READWRITE);
+	mem_in_protect(vmt.vtable, vtable_size, PAGE_EXECUTE_READWRITE);
 #	elif defined(MEM_LINUX)
 	mem_in_protect(vmt.vtable, vtable_size, PROT_EXEC | PROT_READ | PROT_WRITE);
 #	endif

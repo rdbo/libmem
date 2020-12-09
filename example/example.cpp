@@ -1,5 +1,4 @@
-#include "../libmem/libmem.hpp"
-
+#include "../libmem++/libmem.hpp"
 
 #if defined(MEM_WIN)     //Windows specific
 #define PROCESS_NAME MEM_STR("example.exe")
@@ -44,52 +43,51 @@ int main()
 	print("External tests:");
 
 	//-- Get Process ID
-	mem_string_t process_name = mem_string_new(PROCESS_NAME);
-	mem_pid_t pid_ex = mem_ex_get_pid(process_name);
+	mem::pid_t pid_ex = mem::ex::get_pid(PROCESS_NAME);
 	tprint("PID:                %i", pid_ex);
 
 	//-- Get Process Information
-	mem_process_t process_ex = mem_ex_get_process(pid_ex);
-	tprint("Process Name:       %s", mem_string_c_str(&process_ex.name));
+	mem::process_t process_ex = mem::ex::get_process(pid_ex);
+	tprint("Process Name:       %s", process_ex.name.c_str());
 	tprint("Process ID:         %i", process_ex.pid);
 
 	//-- Get Process Module
-	mem_module_t process_mod_ex = mem_ex_get_module(process_ex, process_name);
-	tprint("Module Name:        %s", mem_string_c_str(&process_mod_ex.name));
-	tprint("Module Path:        %s", mem_string_c_str(&process_mod_ex.path));
+	mem::module_t process_mod_ex = mem::ex::get_module(process_ex, PROCESS_NAME);
+	tprint("Module Name:        %s", process_mod_ex.name.c_str());
+	tprint("Module Path:        %s", process_mod_ex.path.c_str());
 	tprint("Module Base:        %p", process_mod_ex.base);
-	tprint("Module Size:        %p", (mem_voidptr_t)process_mod_ex.size);
+	tprint("Module Size:        %p", (mem::voidptr_t)process_mod_ex.size);
 	tprint("Module End:         %p", process_mod_ex.end);
 
 	//-- Allocate Memory
-	mem_voidptr_t alloc_ex = mem_ex_allocate(process_ex, sizeof(int), PROTECTION);
+	mem::voidptr_t alloc_ex = mem::ex::allocate(process_ex, sizeof(int), PROTECTION);
 	tprint("Allocated memory:   %p", alloc_ex);
 
 	//-- Writing to Memory
 
 	int write_buffer_ex = 10;
-	mem_ex_write(process_ex, alloc_ex, &write_buffer_ex, sizeof(write_buffer_ex));
+	mem::ex::write(process_ex, alloc_ex, &write_buffer_ex, sizeof(write_buffer_ex));
 	tprint("Wrote '%i' to:      %p", write_buffer_ex, alloc_ex);
 
 	//-- Reading from Memory
 	int read_buffer_ex = 0;
-	mem_ex_read(process_ex, alloc_ex, &read_buffer_ex, sizeof(read_buffer_ex));
+	mem::ex::read(process_ex, alloc_ex, &read_buffer_ex, sizeof(read_buffer_ex));
 	tprint("Read  '%i' from:    %p", read_buffer_ex, alloc_ex);
 
 	//-- Pattern Scanning
-	mem_byte_t pattern[] = { (mem_byte_t)0x10, (mem_byte_t)0x20, (mem_byte_t)0x0, (mem_byte_t)0x30, (mem_byte_t)0x40, (mem_byte_t)0x50,(mem_byte_t)0x60, (mem_byte_t)0x70, (mem_byte_t)0x80, (mem_byte_t)0x90, (mem_byte_t)0xA0, (mem_byte_t)0x00, (mem_byte_t)0xB0 };
-	mem_string_t mask = mem_string_new(MEM_STR("xx?xxxxxxxx?x"));
-	mem_voidptr_t scan = mem_ex_pattern_scan(process_ex, pattern, mask, (mem_voidptr_t)((mem_uintptr_t)pattern - 0x10), (mem_voidptr_t)((mem_uintptr_t)pattern + 0x10));
+	mem::data_t pattern = { 0x10, 0x20, 0x0, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0x00, 0xB0 };
+	mem::string_t mask = MEM_STR("xx?xxxxxxxx?x");
+	mem::voidptr_t scan = mem::ex::pattern_scan(process_ex, pattern, mask, (mem::voidptr_t)((mem::uintptr_t)pattern.data() - 0x10), (mem::voidptr_t)((mem::uintptr_t)pattern.data() + 0x10));
 	tprint("Pattern Scan:       %p", scan);
-	tprint(" (expected result): %p", (mem_voidptr_t)pattern);
+	tprint(" (expected result): %p", (mem::voidptr_t)pattern.data());
 
 	//-- Get Page Information
-	mem_page_t page_ex = mem_ex_get_page(process_ex, process_mod_ex.base);
+	mem::page_t page_ex = mem::ex::get_page(process_ex, process_mod_ex.base);
 	tprint("Page Base:          %p", page_ex.base);
-	tprint("Page Size:          %p", (mem_voidptr_t)page_ex.size);
+	tprint("Page Size:          %p", (mem::voidptr_t)page_ex.size);
 	tprint("Page End:           %p", page_ex.end);
-	tprint("Page Protection:    %i", (mem_int_t)page_ex.protection);
-	tprint("Page Flags:         %i", (mem_int_t)page_ex.flags);
+	tprint("Page Protection:    %i", (mem::int_t)page_ex.protection);
+	tprint("Page Flags:         %i", (mem::int_t)page_ex.flags);
 
 	print();
 	print("====================");
@@ -102,51 +100,51 @@ int main()
 	print("Internal tests:");
 
 	//-- Get Process ID
-	mem_pid_t pid_in = mem_in_get_pid();
+	mem::pid_t pid_in = mem::in::get_pid();
 	tprint("PID:                %i", pid_in);
 
 	//-- Get Process Information
-	mem_process_t process_in = mem_in_get_process();
-	tprint("Process Name:       %s", mem_string_c_str(&process_in.name));
+	mem::process_t process_in = mem::in::get_process();
+	tprint("Process Name:       %s", process_in.name.c_str());
 	tprint("Process ID:         %i", process_in.pid);
 
 	//-- Get Process Module
-	mem_module_t process_mod_in = mem_in_get_module(process_name);
-	tprint("Module Name:        %s", mem_string_c_str(&process_mod_in.name));
-	tprint("Module Path:        %s", mem_string_c_str(&process_mod_in.path));
+	mem::module_t process_mod_in = mem::in::get_module(PROCESS_NAME);
+	tprint("Module Name:        %s", process_mod_in.name.c_str());
+	tprint("Module Path:        %s", process_mod_in.path.c_str());
 	tprint("Module Base:        %p", process_mod_in.base);
-	tprint("Module Size:        %p", (mem_voidptr_t)process_mod_in.size);
+	tprint("Module Size:        %p", (mem::voidptr_t)process_mod_in.size);
 	tprint("Module End:         %p", process_mod_in.end);
 
 	//-- Allocate Memory
 
-	mem_voidptr_t alloc_in = mem_in_allocate(sizeof(int), PROTECTION);
+	mem::voidptr_t alloc_in = mem::in::allocate(sizeof(int), PROTECTION);
 	tprint("Allocated memory:   %p", alloc_in);
 
 	//-- Write to Memory
 	int write_buffer_in = 1337;
-	mem_in_write(alloc_in, &write_buffer_in, sizeof(write_buffer_in));
+	mem::in::write(alloc_in, &write_buffer_in, sizeof(write_buffer_in));
 	tprint("Wrote '%i' to:    %p", write_buffer_in, alloc_in);
 
 	//-- Read from Memory
 
 	int read_buffer_in = 0;
-	mem_in_read(alloc_in, &read_buffer_in, sizeof(read_buffer_in));
+	mem::in::read(alloc_in, &read_buffer_in, sizeof(read_buffer_in));
 	tprint("Read  '%i' from:  %p", read_buffer_in, alloc_in);
 
 	//-- Pattern Scanning
 
-	mem_voidptr_t scan_in = mem_in_pattern_scan(pattern, mask, (mem_voidptr_t)((mem_uintptr_t)pattern - 0x10), (mem_voidptr_t)((mem_uintptr_t)pattern + 0x10));
+	mem::voidptr_t scan_in = mem::in::pattern_scan(pattern, mask, (mem::voidptr_t)((mem::uintptr_t)pattern.data() - 0x10), (mem::voidptr_t)((mem::uintptr_t)pattern.data() + 0x10));
 	tprint("Pattern Scan:       %p", scan_in);
-	tprint(" (expected result): %p", (mem_voidptr_t)pattern);
+	tprint(" (expected result): %p", (mem::voidptr_t)pattern.data());
 
 	//-- Get Page Information
-	mem_page_t page_in = mem_in_get_page(process_mod_in.base);
+	mem::page_t page_in = mem::in::get_page(process_mod_in.base);
 	tprint("Page Base:          %p", page_in.base);
-	tprint("Page Size:          %p", (mem_voidptr_t)page_in.size);
+	tprint("Page Size:          %p", (mem::voidptr_t)page_in.size);
 	tprint("Page End:           %p", page_in.end);
-	tprint("Page Protection:    %i", (mem_int_t)page_in.protection);
-	tprint("Page Flags:         %i", (mem_int_t)page_in.flags);
+	tprint("Page Protection:    %i", (mem::int_t)page_in.protection);
+	tprint("Page Flags:         %i", (mem::int_t)page_in.flags);
 
 	/*-- Hook 'function' (the overwritten bytes size can vary on each compilation, so it's commented).
 	o_function = (t_function)mem_in_detour_trampoline(
@@ -161,15 +159,6 @@ int main()
 
 	function(false);
 	*/
-
-
-	//Free memory
-	mem_module_free(&process_mod_in);
-	mem_module_free(&process_mod_ex);
-	mem_process_free(&process_in);
-	mem_process_free(&process_ex);
-	mem_string_free(&mask);
-	mem_string_free(&process_name);
 
 	//Exit
 	print();

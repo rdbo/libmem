@@ -1,8 +1,8 @@
-#include "libmem/libmem.h"
+#include "../libmem/libmem.h"
 
 
 #if defined(MEM_WIN)     //Windows specific
-#define PROCESS_NAME MEM_STR("libmem.exe")
+#define PROCESS_NAME MEM_STR("example.exe")
 #define PROTECTION PAGE_EXECUTE_READWRITE
 #if defined(MEM_86) //32 bit only
 #define CALL __cdecl

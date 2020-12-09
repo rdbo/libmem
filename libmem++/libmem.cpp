@@ -1018,4 +1018,155 @@ mem::voidptr_t mem::in::get_symbol(module_t mod, const char* symbol)
 	return addr;
 }
 
+mem::size_t mem::in::detour_length(detour_t method)
+{
+	size_t ret = (size_t)MEM_BAD;
+	switch (method)
+	{
+		case MEM_DT_M0: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD0); break;
+		case MEM_DT_M1: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD1); break;
+		case MEM_DT_M2: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD2); break;
+		case MEM_DT_M3: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD3); break;
+		case MEM_DT_M4: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD4); break;
+		case MEM_DT_M5: ret = CALC_ASM_LENGTH(_MEM_DETOUR_METHOD5); break;
+	}
+
+	return ret;
+}
+
+mem::int_t mem::in::detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, data_t& stolen_bytes)
+{
+	int_t ret = (int_t)MEM_BAD;
+	size_t detour_size = in::detour_length(method);
+	prot_t protection = (prot_t)0;
+#	if defined(MEM_WIN)
+	protection = PAGE_EXECUTE_READWRITE;
+#	elif defined(MEM_LINUX)
+	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+#	endif
+	if (detour_size == (size_t)MEM_BAD_RETURN || size < detour_size || in::protect(src, size, protection) == MEM_BAD) return ret;
+
+	for (size_t i = 0; i < size; i++)
+		stolen_bytes[i] = ((byte_t*)src)[i];
+
+	switch (method)
+	{
+		case MEM_DT_M0:
+		{
+			byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD0);
+	#		if defined(MEM_86)
+			* (mem_uintptr_t*)((mem_uintptr_t)detour_buffer + 1) = (mem_uintptr_t)dst;
+	#		elif defined(MEM_64)
+			*(uintptr_t*)((uintptr_t)detour_buffer + 2) = (uintptr_t)dst;
+	#		endif
+			in::write(src, detour_buffer, sizeof(detour_buffer));
+			break;
+		}
+
+		case MEM_DT_M1:
+		{
+			byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD1);
+			*(dword_t*)((uintptr_t)detour_buffer + 1) = (dword_t)((uintptr_t)dst - (uintptr_t)src - detour_size);
+			in::write(src, detour_buffer, sizeof(detour_buffer));
+			break;
+		}
+
+		case MEM_DT_M2:
+		{
+			byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD2);
+	#		if defined(MEM_86)
+			* (mem_uintptr_t*)((mem_uintptr_t)detour_buffer + 1) = (mem_uintptr_t)dst;
+	#		elif defined(MEM_64)
+			*(uintptr_t*)((uintptr_t)detour_buffer + 2) = (uintptr_t)dst;
+	#		endif
+			in::write(src, detour_buffer, sizeof(detour_buffer));
+			break;
+		}
+
+		case MEM_DT_M3:
+		{
+			byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD3);
+			*(dword_t*)((uintptr_t)detour_buffer + 1) = (dword_t)((uintptr_t)dst - (uintptr_t)src - detour_size);
+			in::write(src, detour_buffer, sizeof(detour_buffer));
+			break;
+		}
+
+		case MEM_DT_M4:
+		{
+			byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD4);
+	#		if defined(MEM_86)
+			* (mem_uintptr_t*)((mem_uintptr_t)detour_buffer + 1) = (mem_uintptr_t)dst;
+	#		elif defined(MEM_64)
+			*(uintptr_t*)((uintptr_t)detour_buffer + 2) = (uintptr_t)dst;
+	#		endif
+			in::write(src, detour_buffer, sizeof(detour_buffer));
+			break;
+		}
+
+		case MEM_DT_M5:
+		{
+			byte_t detour_buffer[] = ASM_GENERATE(_MEM_DETOUR_METHOD5);
+			*(dword_t*)((uintptr_t)detour_buffer + 1) = (dword_t)((uintptr_t)dst - (uintptr_t)src - detour_size);
+			in::write(src, detour_buffer, sizeof(detour_buffer));
+			break;
+		}
+
+		default:
+		{
+			return ret;
+			break;
+		}
+	}
+
+	ret = (int_t)MEM_GOOD;
+	return ret;
+}
+
+mem::int_t mem::in::detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method)
+{
+	data_t stolen_bytes = {};
+	return in::detour(src, dst, size, method, stolen_bytes);
+}
+
+mem::voidptr_t mem::in::detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, data_t& stolen_bytes)
+{
+	voidptr_t gateway = (voidptr_t)MEM_BAD;
+	size_t detour_size = in::detour_length(method);
+	prot_t protection = (prot_t)0;
+#   if defined(MEM_WIN)
+	protection = PAGE_EXECUTE_READWRITE;
+#   elif defined(MEM_LINUX)
+	protection = PROT_EXEC | PROT_READ | PROT_WRITE;;
+#   endif
+
+	if (detour_size == (size_t)MEM_BAD_RETURN || size < detour_size || in::protect(src, size, protection) == MEM_BAD) return gateway;
+	size_t gateway_size = size + detour_size;
+	gateway = in::allocate(gateway_size, protection);
+	if (!gateway || gateway == (voidptr_t)MEM_BAD_RETURN) return (voidptr_t)MEM_BAD_RETURN;
+	in::set(gateway, 0x0, gateway_size);
+	in::write(gateway, src, size);
+	in::detour((voidptr_t)((uintptr_t)gateway + size), (voidptr_t)((uintptr_t)src + size), detour_size, method);
+	in::detour(src, dst, size, method, stolen_bytes);
+
+	return gateway;
+}
+
+mem::voidptr_t mem::in::detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method)
+{
+	data_t stolen_bytes = {};
+	return in::detour_trampoline(src, dst, size, method, stolen_bytes);
+}
+
+mem::bool_t mem::in::detour_restore(voidptr_t src, data_t stolen_bytes)
+{
+	prot_t protection = (prot_t)0;
+#   if defined(MEM_WIN)
+	protection = PAGE_EXECUTE_READWRITE;
+#   elif defined(MEM_LINUX)
+	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+#   endif
+	if (in::protect(src, stolen_bytes.size(), protection) != MEM_BAD)
+		in::write(src, (voidptr_t)stolen_bytes.data(), (size_t)stolen_bytes.size());
+}
+
 #endif //MEM_COMPATIBLE

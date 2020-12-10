@@ -177,6 +177,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <cstring>
 #if defined(MEM_WIN)
 #include <Windows.h>
 #include <TlHelp32.h>

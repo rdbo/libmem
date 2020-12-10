@@ -424,10 +424,10 @@ mem::process_list_t mem::ex::get_process_list()
 #	elif defined(MEM_LINUX)
 	DIR* pdir = opendir("/proc");
 	if (!pdir)
-		return pid;
+		return proc_list;
 
 	struct dirent* pdirent = (struct dirent*)0;
-	while (pid < 0 && (pdirent = readdir(pdir)))
+	while ((pdirent = readdir(pdir)) && pdirent)
 	{
 		pid_t id = (pid_t)atoi(pdirent->d_name);
 		if (id > 0)
@@ -628,7 +628,7 @@ mem::bool_t mem::ex::protect(process_t process, voidptr_t src, size_t size, prot
 	if (process.handle == (HANDLE)INVALID_HANDLE_VALUE || src <= (voidptr_t)MEM_NULL || size == 0 || protection <= 0) return ret;
 	ret = (bool_t)(VirtualProtectEx(process.handle, (LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protect) != 0);
 #	elif defined(MEM_LINUX)
-	ret = (bool_t)(ex::syscall(process, __NR_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0);
+	ret = (bool_t)(ex::syscall(process, __NR_mprotect, src, (voidptr_t)size, (voidptr_t)(uintptr_t)protection, NULL, NULL, NULL) == 0);
 #	endif
 	return ret;
 }
@@ -651,10 +651,8 @@ mem::voidptr_t mem::ex::allocate(process_t process, size_t size, prot_t protecti
 #   endif
 
 	alloc_addr = (voidptr_t)(ex::syscall(process, syscall_n, (voidptr_t)0, (voidptr_t)size, (voidptr_t)(uintptr_t)protection, (voidptr_t)(MAP_PRIVATE | MAP_ANON), (voidptr_t)-1, (voidptr_t)0));
-	if ((mem_uintptr_t)alloc_addr >= (mem_uintptr_t)-100) //error check
-	{
-		alloc_addr = (mem_voidptr_t)MEM_BAD;
-	}
+	if ((uintptr_t)alloc_addr >= (uintptr_t)-100) //error check
+		alloc_addr = (voidptr_t)MEM_BAD;
 
 #   endif
 	return alloc_addr;
@@ -667,7 +665,7 @@ mem::bool_t mem::ex::deallocate(process_t process, voidptr_t src, size_t size)
 #   if defined(MEM_WIN)
 	ret = (bool_t)(VirtualFreeEx(process.handle, src, 0, MEM_RELEASE) != 0);
 #   elif defined(MEM_LINUX)
-	ret = (int_t)(mem_ex_syscall(process, __NR_munmap, src, (voidptr_t)size, NULL, NULL, NULL, NULL) != MAP_FAILED);
+	ret = (int_t)(ex::syscall(process, __NR_munmap, src, (voidptr_t)size, NULL, NULL, NULL, NULL) != MAP_FAILED);
 #   endif
 
 	return ret;
@@ -939,7 +937,7 @@ mem::int_t mem::in::protect(voidptr_t src, size_t size, prot_t protection)
 	ret = (int_t)VirtualProtect((LPVOID)src, (SIZE_T)size, (DWORD)protection, &old_protection);
 #   elif defined(MEM_LINUX)
 	uintptr_t page_size = mem::get_page_size();
-	uintptr_t round = ((uintptr_t)src % pagesize);
+	uintptr_t round = ((uintptr_t)src % page_size);
 	uintptr_t src_page = (uintptr_t)src - round;
 	ret = (int_t)mprotect((void*)src_page, size + round, protection);
 #   endif
@@ -980,7 +978,7 @@ mem::module_t mem::in::load_library(lib_t lib)
 	mod = in::get_module(lib.path.substr(lib.path.rfind(MEM_STR("\\"))));
 	mod.handle = h_mod;
 #   elif defined(MEM_LINUX)
-	void* h_mod = dlopen(mem_string_c_str(&lib.path), lib.mode);
+	void* h_mod = dlopen(lib.path.c_str(), lib.mode);
 	mod = in::get_module(lib.path);
 	mod.handle = h_mod;
 #   endif

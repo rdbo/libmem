@@ -185,7 +185,7 @@ mem::lib_t::lib_t(string_t path, int_t mode)
 mem::bool_t mem::lib_t::is_valid()
 {
 	return (bool_t)(
-		this->path != ""
+		this->path != MEM_STR("")
 	);
 }
 

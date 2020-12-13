@@ -99,14 +99,12 @@
 #define MEM_STR_N_CMP(str1, str2, n) wcsncmp(str1, str2, n)
 #define MEM_STR_LEN(str) wcslen(str)
 #define MEM_STR_STR(str1, str2) wcsstrstr(str1, str2);
-#define MEM_STR_TO_HEX(str) wcstoul(str, NULL, 16)
 #elif defined(MEM_MBCS)
 #define MEM_STR(str) str
 #define MEM_STR_CMP(str1, str2) strcmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) strncmp(str1, str2, n)
 #define MEM_STR_LEN(str) strlen(str)
 #define MEM_STR_STR(str1, str2) strstr(str1, str2);
-#define MEM_STR_TO_HEX(str) strtoul(str, NULL, 16)
 #endif
 
 #define VA_ARGS(...) , ##__VA_ARGS__
@@ -180,6 +178,7 @@
 #include <unordered_map>
 #include <vector>
 #include <cstring>
+#include <cstdint>
 #if defined(MEM_WIN)
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -209,15 +208,15 @@ namespace mem
 	typedef int                                  int_t;
 	typedef void                                 void_t;
 
-	typedef char                                 int8_t;
-	typedef short                                int16_t;
-	typedef int                                  int32_t;
-	typedef long long                            int64_t;
+	typedef ::int8_t                             int8_t;
+	typedef ::int16_t                            int16_t;
+	typedef ::int32_t                            int32_t;
+	typedef ::int64_t                            int64_t;
 
-	typedef unsigned char                        uint8_t;
-	typedef unsigned short                       uint16_t;
-	typedef unsigned int                         uint32_t;
-	typedef unsigned long long                   uint64_t;
+	typedef ::uint8_t                            uint8_t;
+	typedef ::uint16_t                           uint16_t;
+	typedef ::uint32_t                           uint32_t;
+	typedef ::uint64_t                           uint64_t;
 
 #if defined(MEM_WIN)
 	typedef DWORD                                pid_t;
@@ -233,13 +232,18 @@ namespace mem
 	typedef int32_t                              flags_t;
 #endif
 
-#if defined(MEM_86)
+	/*
+#	if defined(MEM_86)
 	typedef int32_t                              intptr_t;
 	typedef uint32_t                             uintptr_t;
-#elif defined(MEM_64)
+#	elif defined(MEM_64)
 	typedef int64_t                              intptr_t;
 	typedef uint64_t                             uintptr_t;
-#endif
+#	endif
+	*/
+
+	typedef ::intptr_t                           intptr_t;
+	typedef ::uintptr_t                          uintptr_t;
 
 	typedef uint8_t                              byte_t;
 	typedef uint16_t                             word_t;
@@ -259,7 +263,7 @@ namespace mem
 	typedef byte_t*                              byteptr_t;
 	typedef int8_t*                              bytearray_t;
 	typedef void_t*                              voidptr_t;
-	typedef unsigned long                        size_t;
+	typedef ::size_t                             size_t;
 
 	//mem::string_t
 	typedef std::basic_string<char_t>            string_t;

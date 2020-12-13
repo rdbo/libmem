@@ -479,7 +479,81 @@ mem::module_t mem::ex::get_module(process_t process, string_t module_name)
 	mod.path = module_info.szExePath;
 	mod.name = module_info.szModule;
 #	elif defined(MEM_LINUX)
-	//WIP
+	std::stringstream maps_file = std::stringstream();
+	maps_file << "/proc/" << process.pid << "/maps";
+	std::ifstream     maps_fs = std::ifstream(maps_file.str());
+	maps_file.str(std::string());
+	maps_file << maps_fs.rdbuf();
+
+	//--
+
+	::size_t module_path_pos = 0;
+	::size_t module_path_end = 0;
+	std::string module_path_str = "";
+	module_path_pos = maps_file.str().find(module_name);
+	::size_t holder = module_path_pos;
+	if(holder == maps_file.str().npos) return mod;
+	module_path_pos = maps_file.str().rfind('\n', holder);
+
+	if(module_path_pos == maps_file.str().npos)
+	{
+		module_path_pos = maps_file.str().rfind("                    /", holder);
+		if(module_path_pos == maps_file.str().npos)
+			return mod;
+	}
+
+	module_path_pos = maps_file.str().find('/', module_path_pos);
+	if(module_path_pos == maps_file.str().npos) return mod;
+
+	module_path_end = maps_file.str().find('\n', module_path_pos);
+	if(module_path_end == maps_file.str().npos) return mod;
+
+	module_path_str = maps_file.str().substr(module_path_pos, module_path_end - module_path_pos);
+
+	//--
+
+	std::string module_name_str = module_path_str.substr(
+        module_path_str.rfind('/') + 1
+    );
+
+    //--
+
+    ::size_t base_address_pos = maps_file.str().rfind('\n', module_path_pos) + 1;
+    ::size_t base_address_end = maps_file.str().find('-', base_address_pos);
+    if(base_address_pos == maps_file.str().npos || base_address_end == maps_file.str().npos) return mod;
+    std::string base_address_str = maps_file.str().substr(base_address_pos, base_address_end - base_address_pos);
+    base_address_str += '\0';
+    voidptr_t base_address = (voidptr_t)MEM_STR_TO_HEX(base_address_str.c_str());
+
+    //--
+
+    ::size_t end_address_pos = maps_file.str().rfind(module_path_str);
+    end_address_pos = maps_file.str().rfind('\n', end_address_pos) + 1;
+    end_address_pos = maps_file.str().find('-', end_address_pos) + 1;
+
+    ::size_t end_address_end = maps_file.str().find(' ', end_address_pos);
+
+    if(end_address_pos == maps_file.str().npos || end_address_end == maps_file.str().npos) return mod;
+
+    std::string end_address_str = maps_file.str().substr(end_address_pos, end_address_end - end_address_pos);
+    end_address_str += '\0';
+    voidptr_t end_address = (voidptr_t)MEM_STR_TO_HEX(end_address_str.c_str());
+
+    //--
+
+    if((uintptr_t)base_address > (uintptr_t)end_address) return mod;
+    uintptr_t module_size = (uintptr_t)end_address - (uintptr_t)base_address;
+
+    //--
+    mod.name = string_t(module_name_str);
+    mod.path = string_t(module_path_str);
+    mod.base = base_address;
+    mod.size = module_size;
+    mod.end  = end_address;
+    mod.handle = (module_handle_t)0;
+
+    maps_fs.close();
+
 #	endif
 
 	return mod;

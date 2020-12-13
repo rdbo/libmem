@@ -470,11 +470,9 @@ namespace mem
 		voidptr_t     allocate(size_t size, prot_t protection);
 		bool_t        deallocate(voidptr_t src, size_t size);
 		size_t        detour_length(detour_t method);
-		int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, data_t& stolen_bytes);
-		int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method);
-		voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, data_t& stolen_bytes);
-		voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method);
-		bool_t        detour_restore(voidptr_t src, data_t stolen_bytes);
+		int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method = MEM_DT_M0, byte_t** stolen_bytes = NULL);
+		voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method = MEM_DT_M0, byte_t** stolen_bytes = NULL);
+		bool_t        detour_restore(voidptr_t src, byte_t* stolen_bytes, size_t size);
 		module_t      load_library(lib_t lib);
 		bool_t        unload_library(module_t mod);
 		voidptr_t     get_symbol(module_t mod, const char* symbol);

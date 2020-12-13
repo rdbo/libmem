@@ -705,7 +705,7 @@ mem::voidptr_t mem::ex::pattern_scan(process_t process, data_t pattern, string_t
 		std::memset(buffer, 0x0, data_size);
 		ex::read(process, (voidptr_t)i, (voidptr_t)buffer, (mem::size_t)data_size);
 		bool_t good = MEM_TRUE;
-		for (::size_t j = 0; j < pattern.size(); j++)
+		for (::size_t j = 0; j < data_size; j++)
 		{
 			good &= (bool_t)(
 				mask[j] == MEM_UNKNOWN_BYTE ||
@@ -1032,7 +1032,7 @@ mem::size_t mem::in::detour_length(detour_t method)
 	return ret;
 }
 
-mem::int_t mem::in::detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, data_t& stolen_bytes)
+mem::int_t mem::in::detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes)
 {
 	int_t ret = (int_t)MEM_BAD;
 	size_t detour_size = in::detour_length(method);
@@ -1044,8 +1044,12 @@ mem::int_t mem::in::detour(voidptr_t src, voidptr_t dst, size_t size, detour_t m
 #	endif
 	if (detour_size == (size_t)MEM_BAD_RETURN || size < detour_size || in::protect(src, size, protection) == MEM_BAD) return ret;
 
-	for (size_t i = 0; i < size; i++)
-		stolen_bytes[i] = ((byte_t*)src)[i];
+	if (stolen_bytes != (byte_t**)NULL)
+	{
+		*stolen_bytes = new byte_t[size];
+		for (size_t i = 0; i < size; i++)
+			* stolen_bytes[i] = ((byte_t*)src)[i];
+	}
 
 	switch (method)
 	{
@@ -1120,13 +1124,7 @@ mem::int_t mem::in::detour(voidptr_t src, voidptr_t dst, size_t size, detour_t m
 	return ret;
 }
 
-mem::int_t mem::in::detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method)
-{
-	data_t stolen_bytes = {};
-	return in::detour(src, dst, size, method, stolen_bytes);
-}
-
-mem::voidptr_t mem::in::detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, data_t& stolen_bytes)
+mem::voidptr_t mem::in::detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method, byte_t** stolen_bytes)
 {
 	voidptr_t gateway = (voidptr_t)MEM_BAD;
 	size_t detour_size = in::detour_length(method);
@@ -1149,13 +1147,7 @@ mem::voidptr_t mem::in::detour_trampoline(voidptr_t src, voidptr_t dst, size_t s
 	return gateway;
 }
 
-mem::voidptr_t mem::in::detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method)
-{
-	data_t stolen_bytes = {};
-	return in::detour_trampoline(src, dst, size, method, stolen_bytes);
-}
-
-mem::bool_t mem::in::detour_restore(voidptr_t src, data_t stolen_bytes)
+mem::bool_t mem::in::detour_restore(voidptr_t src, byte_t* stolen_bytes, size_t size)
 {
 	bool_t ret = MEM_FALSE;
 	prot_t protection = (prot_t)0;
@@ -1164,8 +1156,8 @@ mem::bool_t mem::in::detour_restore(voidptr_t src, data_t stolen_bytes)
 #   elif defined(MEM_LINUX)
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #   endif
-	if (in::protect(src, stolen_bytes.size(), protection) != MEM_BAD)
-		in::write(src, (voidptr_t)stolen_bytes.data(), (size_t)stolen_bytes.size());
+	if (in::protect(src, size, protection) != MEM_BAD)
+		in::write(src, (voidptr_t)stolen_bytes, (size_t)size);
 
 	ret = MEM_TRUE;
 	return ret;

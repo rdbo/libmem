@@ -98,13 +98,15 @@
 #define MEM_STR_CMP(str1, str2) wcscmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) wcsncmp(str1, str2, n)
 #define MEM_STR_LEN(str) wcslen(str)
-#define MEM_STR_STR(str1, str2) wcsstrstr(str1, str2);
+#define MEM_STR_STR(str1, str2) wcsstrstr(str1, str2)
+#define MEM_STR_TO_PTR(str) (void*)wcstoul(str, NULL, 16)
 #elif defined(MEM_MBCS)
 #define MEM_STR(str) str
 #define MEM_STR_CMP(str1, str2) strcmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) strncmp(str1, str2, n)
 #define MEM_STR_LEN(str) strlen(str)
-#define MEM_STR_STR(str1, str2) strstr(str1, str2);
+#define MEM_STR_STR(str1, str2) strstr(str1, str2)
+#define MEM_STR_TO_PTR(str) (void*)strtoul(str, NULL, 16)
 #endif
 
 #define VA_ARGS(...) , ##__VA_ARGS__

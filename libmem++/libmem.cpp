@@ -585,7 +585,57 @@ mem::module_list_t mem::ex::get_module_list(process_t process)
 
 	CloseHandle(hSnap);
 #	elif defined(MEM_LINUX)
-	//WIP
+	std::stringstream maps_file;
+	maps_file << "/proc/" << process.pid << "/maps";
+	std::ifstream maps_fs(maps_file.str());
+	if(!maps_fs.is_open()) return mod_list;
+	maps_file.str(std::string());
+	maps_file << maps_fs.rdbuf();
+
+	size_t module_path_pos = 0;
+	size_t module_path_end = 0;
+	size_t next = 0;
+
+	while((module_path_pos = maps_file.str().find('/', next)) && module_path_pos != maps_file.str().npos)
+	{
+		module_path_end = maps_file.str().find('\n', module_path_pos);
+		std::string module_path_str = maps_file.str().substr(module_path_pos, module_path_end - module_path_pos);
+
+		size_t module_name_pos = maps_file.str().rfind('/', module_path_end) + 1;
+		size_t module_name_end = module_path_end;
+		std::string module_name_str = maps_file.str().substr(module_name_pos, module_name_end - module_name_pos);
+
+		size_t base_address_pos = maps_file.str().rfind('\n', module_path_pos) + 1;
+		size_t base_address_end = maps_file.str().find('-', base_address_pos);
+		std::string base_address_str = maps_file.str().substr(base_address_pos, base_address_end - base_address_pos);
+		base_address_str += '\0';
+		voidptr_t base_address = MEM_STR_TO_PTR(base_address_str.c_str());
+
+		size_t   end_address_pos = maps_file.str().rfind('\n', maps_file.str().rfind(module_path_str));
+		end_address_pos = maps_file.str().find('-', end_address_pos) + 1;
+		size_t   end_address_end = maps_file.str().find(' ', end_address_pos);
+		std::string end_address_str = maps_file.str().substr(end_address_pos, end_address_end);
+		end_address_str += '\0';
+		voidptr_t end_address = MEM_STR_TO_PTR(end_address_str.c_str());
+
+		size_t mod_size = (uintptr_t)end_address - (uintptr_t)base_address;
+
+		module_handle_t handle = (module_handle_t)MEM_BAD;
+
+		module_t mod = module_t();
+		mod.name = string_t(module_name_str);
+		mod.path = string_t(module_path_str);
+		mod.base = base_address;
+		mod.size = mod_size;
+		mod.end  = end_address;
+		mod.handle = handle;
+
+		mod_list.push_back(mod);
+		next = maps_file.str().find('\n', end_address_end);
+		if(next == maps_file.str().npos) break;
+	}
+
+	maps_fs.close();
 #	endif
 
 	return mod_list;

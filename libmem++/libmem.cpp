@@ -654,7 +654,70 @@ mem::page_t mem::ex::get_page(process_t process, voidptr_t src)
 	page.protection = mbi.Protect;
 	page.flags = mbi.Type;
 #	elif defined(MEM_LINUX)
-	//WIP
+	std::stringstream maps_file;
+	maps_file << "/proc/" << process.pid << "/maps";
+	std::ifstream maps_fs(maps_file.str());
+	if(!maps_fs.is_open()) return page;
+	maps_file.str(std::string());
+	maps_file << maps_fs.rdbuf();
+
+	std::stringstream src_str;
+	src_str << src;
+
+	size_t to_remove = src_str.str().find("0x");
+
+	if(to_remove != src_str.str().npos)
+		src_str.str(src_str.str().erase(to_remove, strlen("0x")));
+
+	size_t page_base_pos = maps_file.str().rfind(src_str.str());
+	if(page_base_pos == maps_file.str().npos) return page;
+
+	size_t page_end_pos = maps_file.str().find('-') + 1;
+	size_t page_end_end = maps_file.str().find(' ');
+	std::string page_end_str = maps_file.str().substr(page_end_pos, page_end_end - page_end_pos);
+	voidptr_t page_end = MEM_STR_TO_PTR(page_end_str.c_str());
+
+	size_t start = maps_file.str().find(' ', page_base_pos) + 1;
+	size_t end = start + 4;
+
+	page.protection = 0;
+
+	for(size_t i = start; i < end; i++)
+	{
+		char c = maps_file.str()[i];
+		switch(c)
+		{
+			case 'r':
+			page.protection |= PROT_READ;
+			break;
+
+			case 'w':
+			page.protection |= PROT_WRITE;
+			break;
+
+			case 'x':
+			page.protection |= PROT_EXEC;
+			break;
+
+			case 'p':
+			page.flags = MAP_PRIVATE;
+			break;
+
+			case 's':
+			page.flags = MAP_SHARED;
+			break;
+
+			default:
+			break;
+		}
+	}
+
+	page.base = src;
+	page.size = (uintptr_t)page_end - (uintptr_t)src;
+	page.end  = page_end;
+
+
+	maps_fs.close();
 #	endif
 
 	return page;

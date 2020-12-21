@@ -981,6 +981,7 @@ mem_process_list_t mem_ex_get_process_list()
 					mem_process_t process = mem_process_init();
 					process.pid  = pid;
 					process.name = process_name;
+					process.handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 
 					mem_process_list_append(&proc_list, process);
 				}

@@ -376,7 +376,7 @@ namespace mem
 	class vtable_t
 	{
 		public:
-		std::shared_ptr<voidptr_t> table = std::make_shared<voidptr_t>((voidptr_t)-1);
+		voidptr_t* table = (voidptr_t*)-1;
 		std::unordered_map<size_t, voidptr_t> orig_table = {};
 
 		public:
@@ -385,6 +385,8 @@ namespace mem
 
 		public:
 		bool_t is_valid();
+        voidptr_t get_function(size_t index);
+        voidptr_t get_original(size_t index);
 		bool_t hook(size_t index, voidptr_t dst);
 		bool_t restore(size_t index);
 		bool_t restore_all();

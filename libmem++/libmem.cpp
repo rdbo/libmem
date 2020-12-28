@@ -193,7 +193,7 @@ mem::bool_t mem::lib_t::is_valid()
 
 mem::vtable_t::vtable_t(voidptr_t* vtable)
 {
-	this->table = std::make_shared<voidptr_t>(vtable);
+	this->table = vtable;
 }
 
 mem::vtable_t::~vtable_t()
@@ -204,15 +204,34 @@ mem::vtable_t::~vtable_t()
 mem::bool_t mem::vtable_t::is_valid()
 {
 	return (bool_t)(
-		this->table.get() != (voidptr_t*)-1
+		this->table != (voidptr_t*)-1
 	);
+}
+
+mem::voidptr_t mem::vtable_t::get_function(size_t index)
+{
+    return this->table[index];
+}
+
+mem::voidptr_t mem::vtable_t::get_original(size_t index)
+{
+    return this->orig_table.at(index);
 }
 
 mem::bool_t mem::vtable_t::hook(size_t index, voidptr_t dst)
 {
 	if (!this->is_valid()) return false;
-	this->orig_table.insert(std::pair<size_t, voidptr_t>(index, this->table.get()[index]));
-	this->table.get()[index] = dst;
+
+#   if defined(MEM_WIN)
+    prot_t prot = PAGE_EXECUTE_READWRITE;
+#   elif defined(MEM_LINUX)
+    prot_t prot = PROT_EXEC | PROT_READ | PROT_WRITE;
+#   endif
+
+    in::protect(&this->table[index], sizeof(voidptr_t), prot);
+
+	this->orig_table.insert(std::pair<size_t, voidptr_t>(index, this->get_function(index)));
+	this->table[index] = dst;
 	return true;
 }
 
@@ -224,7 +243,7 @@ mem::bool_t mem::vtable_t::restore(size_t index)
 	{
 		if (i->first == index)
 		{
-			this->table.get()[index] = i->second;
+			this->table[index] = i->second;
 			return true;
 		}
 	}
@@ -237,7 +256,7 @@ mem::bool_t mem::vtable_t::restore_all()
 	if (!this->is_valid()) return false;
 
 	for (auto i = this->orig_table.begin(); i != this->orig_table.end(); i++)
-		this->table.get()[i->first] = i->second;
+		this->table[i->first] = i->second;
 
 	return true;
 }

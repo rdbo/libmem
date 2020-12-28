@@ -1159,6 +1159,7 @@ mem::module_t mem::in::get_module(string_t module_name)
 #   elif defined(MEM_LINUX)
 	process_t process = in::get_process();
 	mod = ex::get_module(process, module_name);
+    mod.handle = dlopen(mod.path.c_str(), RTLD_LAZY);
 #   endif
 	return mod;
 }

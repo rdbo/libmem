@@ -271,7 +271,21 @@ namespace mem
 	typedef std::basic_string<char_t>            string_t;
 
 	//mem::data_t
-	typedef std::vector<byte_t>                  data_t;
+	class data_t : public std::vector<byte_t>
+	{
+	public:
+		inline data_t(string_t str)
+		{
+			this->clear();
+			for (auto c = str.begin(); c != str.end(); c++)
+				this->push_back((byte_t)*c);
+		}
+
+		inline data_t(const char* str)
+		{
+			data_t(string_t(str));
+		}
+	};
 
 	//mem::process_t
 	class process_t
@@ -409,77 +423,76 @@ namespace mem
 
 	namespace ex
 	{
-		pid_t          get_pid(string_t process_name);
-		string_t       get_process_name(pid_t pid);
-		process_t      get_process(pid_t pid);
-		process_t      get_process(string_t process_name);
-		process_list_t get_process_list();
-		module_t       get_module(process_t process, string_t module_name);
-		module_list_t  get_module_list(process_t process);
-		page_t         get_page(process_t process, voidptr_t src);
-		bool_t         is_process_running(process_t process);
-		bool_t         read(process_t process, voidptr_t src, voidptr_t dst, size_t size);
+		pid_t            get_pid(string_t process_name);
+		string_t         get_process_name(pid_t pid);
+		process_t        get_process(pid_t pid);
+		process_t        get_process(string_t process_name);
+		process_list_t   get_process_list();
+		module_t         get_module(process_t process, string_t module_name);
+		module_list_t    get_module_list(process_t process);
+		page_t           get_page(process_t process, voidptr_t src);
+		bool_t           is_process_running(process_t process);
+		bool_t           read(process_t process, voidptr_t src, voidptr_t dst, size_t size);
 		template <typename type_t>
-		type_t         read(process_t process, voidptr_t src)
+		type_t           read(process_t process, voidptr_t src)
 		{
 			type_t buf;
 			memset(&buf, 0x0, sizeof(buf));
 			read(process, src, &buf, sizeof(buf));
 			return buf;
 		}
-		bool_t         write(process_t process, voidptr_t dst, voidptr_t src, size_t size);
+		bool_t           write(process_t process, voidptr_t dst, voidptr_t src, size_t size);
 		template <typename type_t>
-		bool_t         write(process_t process, voidptr_t dst, type_t src)
+		bool_t           write(process_t process, voidptr_t dst, type_t src)
 		{
 			return write(process, dst, &src, sizeof(src));
 		}
-		bool_t         set(process_t process, voidptr_t dst, byte_t byte, size_t size);
-		voidptr_t      syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5);
-		bool_t         protect(process_t process, voidptr_t src, size_t size, prot_t protection);
-		voidptr_t      allocate(process_t process, size_t size, prot_t protection);
-		bool_t         deallocate(process_t process, voidptr_t src, size_t size);
-		voidptr_t      scan(process_t process, data_t data, voidptr_t start, voidptr_t stop);
-		voidptr_t      pattern_scan(process_t process, data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
-		module_t       load_library(process_t process, lib_t lib);
-		voidptr_t      get_symbol(module_t mod, const char* symbol);
+		bool_t           set(process_t process, voidptr_t dst, byte_t byte, size_t size);
+		voidptr_t        syscall(process_t process, int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5);
+		bool_t           protect(process_t process, voidptr_t src, size_t size, prot_t protection);
+		voidptr_t        allocate(process_t process, size_t size, prot_t protection);
+		bool_t           deallocate(process_t process, voidptr_t src, size_t size);
+		voidptr_t        scan(process_t process, data_t data, voidptr_t start, voidptr_t stop);
+		voidptr_t        pattern_scan(process_t process, data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
+		inline voidptr_t pattern_scan(process_t process, data_t pattern, string_t mask, module_t mod) { return ex::pattern_scan(process, pattern, mask, mod.base, mod.end); }
+		module_t         load_library(process_t process, lib_t lib);
+		voidptr_t        get_symbol(module_t mod, const char* symbol);
 	}
 
 	namespace in
 	{
-		pid_t         get_pid();
-		process_t     get_process();
-		string_t      get_process_name();
-		module_t      get_module(string_t module_name);
-		module_list_t get_module_list();
-		page_t        get_page(voidptr_t src);
-		bool_t        read(voidptr_t src, voidptr_t dst, size_t size);
+		pid_t            get_pid();
+		process_t        get_process();
+		string_t         get_process_name();
+		module_t         get_module(string_t module_name);
+		module_list_t    get_module_list();
+		page_t           get_page(voidptr_t src);
+		bool_t           read(voidptr_t src, voidptr_t dst, size_t size);
 		template <typename type_t>
-		type_t        read(voidptr_t src)
+		inline type_t    read(voidptr_t src)
 		{
 			type_t buf{0};
 			read(src, &buf, sizeof(buf));
 			return buf;
 		}
-		bool_t        write(voidptr_t dst, voidptr_t src, size_t size);
+		bool_t           write(voidptr_t dst, voidptr_t src, size_t size);
 		template <typename type_t>
-		bool_t        write(voidptr_t dst, type_t src)
-		{
-			return write(dst, &src, sizeof(src));
-		}
-		bool_t        set(voidptr_t src, byte_t byte, size_t size);
-		voidptr_t     scan(data_t data, voidptr_t start, voidptr_t stop);
-		voidptr_t     pattern_scan(data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
-		voidptr_t     syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5);
-		int_t         protect(voidptr_t src, size_t size, prot_t protection);
-		voidptr_t     allocate(size_t size, prot_t protection);
-		bool_t        deallocate(voidptr_t src, size_t size);
-		size_t        detour_length(detour_t method);
-		int_t         detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method = MEM_DT_M0, byte_t** stolen_bytes = NULL);
-		voidptr_t     detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method = MEM_DT_M0, byte_t** stolen_bytes = NULL);
-		bool_t        detour_restore(voidptr_t src, byte_t* stolen_bytes, size_t size);
-		module_t      load_library(lib_t lib);
-		bool_t        unload_library(module_t mod);
-		voidptr_t     get_symbol(module_t mod, const char* symbol);
+		inline bool_t    write(voidptr_t dst, type_t src){ return write(dst, &src, sizeof(src)); }
+		bool_t           set(voidptr_t src, byte_t byte, size_t size);
+		voidptr_t        scan(data_t data, voidptr_t start, voidptr_t stop);
+		voidptr_t        pattern_scan(data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
+		inline voidptr_t pattern_scan(data_t pattern, string_t mask, module_t mod) { return in::pattern_scan(pattern, mask, mod.base, mod.end); }
+		voidptr_t        syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5);
+		int_t            protect(voidptr_t src, size_t size, prot_t protection);
+		voidptr_t        allocate(size_t size, prot_t protection);
+		bool_t           deallocate(voidptr_t src, size_t size);
+		size_t           detour_length(detour_t method);
+		int_t            detour(voidptr_t src, voidptr_t dst, size_t size, detour_t method = MEM_DT_M0, byte_t** stolen_bytes = NULL);
+		voidptr_t        detour_trampoline(voidptr_t src, voidptr_t dst, size_t size, detour_t method = MEM_DT_M0, byte_t** stolen_bytes = NULL);
+		bool_t           detour_restore(voidptr_t src, byte_t* stolen_bytes, size_t size);
+		module_t         load_library(lib_t lib);
+		bool_t           unload_library(module_t mod);
+		voidptr_t        get_symbol(module_t mod, const char* symbol);
 	}
 
 }

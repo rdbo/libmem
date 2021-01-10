@@ -261,6 +261,25 @@ mem::bool_t mem::vtable_t::restore_all()
 	return true;
 }
 
+//mem::data_t
+mem::data_t::data_t(string_t str)
+{
+	this->clear();
+	for (auto c = str.begin(); c != str.end(); c++)
+		this->push_back((byte_t)* c);
+}
+
+mem::data_t::data_t(const char* str)
+{
+	data_t(string_t(str));
+}
+
+mem::data_t::data_t(byte_t* data, size_t size)
+{
+	for (byte_t* b = &data[0]; b != &data[size]; b = &b[1])
+		this->push_back(*b);
+}
+
 //libmem
 
 mem::string_t  mem::parse_mask(string_t mask)
@@ -990,6 +1009,11 @@ mem::voidptr_t mem::ex::pattern_scan(process_t process, data_t pattern, string_t
 	return ret;
 }
 
+mem::voidptr_t mem::ex::pattern_scan(process_t process, data_t pattern, string_t mask, module_t mod)
+{ 
+	return ex::pattern_scan(process, pattern, mask, mod.base, mod.end);
+}
+
 mem::module_t mem::ex::load_library(process_t process, lib_t lib)
 {
 	module_t mod = module_t();
@@ -1266,6 +1290,11 @@ mem::voidptr_t mem::in::pattern_scan(data_t pattern, string_t mask, voidptr_t st
 	}
 
 	return ret;
+}
+
+mem::voidptr_t mem::in::pattern_scan(data_t pattern, string_t mask, module_t mod)
+{
+	return in::pattern_scan(pattern, mask, mod.base, mod.end);
 }
 
 mem::voidptr_t mem::in::syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5)

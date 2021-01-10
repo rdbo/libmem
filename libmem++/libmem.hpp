@@ -270,23 +270,6 @@ namespace mem
 	//mem::string_t
 	typedef std::basic_string<char_t>            string_t;
 
-	//mem::data_t
-	class data_t : public std::vector<byte_t>
-	{
-	public:
-		inline data_t(string_t str)
-		{
-			this->clear();
-			for (auto c = str.begin(); c != str.end(); c++)
-				this->push_back((byte_t)*c);
-		}
-
-		inline data_t(const char* str)
-		{
-			data_t(string_t(str));
-		}
-	};
-
 	//mem::process_t
 	class process_t
 	{
@@ -369,6 +352,7 @@ namespace mem
 		bool_t is_valid();
 	};
 
+	//mem::lib_t
 	class lib_t
 	{
 		public:
@@ -387,6 +371,7 @@ namespace mem
 		bool_t is_valid();
 	};
 
+	//mem::vtable_t
 	class vtable_t
 	{
 		public:
@@ -406,6 +391,16 @@ namespace mem
 		bool_t restore_all();
 	};
 
+	//mem::data_t
+	class data_t : public std::vector<byte_t>
+	{
+	public:
+		data_t(string_t str);
+		data_t(const char* str);
+		data_t(byte_t* data, size_t size);
+	};
+
+	//mem::detour_t
 	typedef enum
 	{
 		MEM_DT_M0 = MEM_DETOUR_INT_METHOD0,
@@ -454,7 +449,7 @@ namespace mem
 		bool_t           deallocate(process_t process, voidptr_t src, size_t size);
 		voidptr_t        scan(process_t process, data_t data, voidptr_t start, voidptr_t stop);
 		voidptr_t        pattern_scan(process_t process, data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
-		inline voidptr_t pattern_scan(process_t process, data_t pattern, string_t mask, module_t mod) { return ex::pattern_scan(process, pattern, mask, mod.base, mod.end); }
+		voidptr_t        pattern_scan(process_t process, data_t pattern, string_t mask, module_t mod);
 		module_t         load_library(process_t process, lib_t lib);
 		voidptr_t        get_symbol(module_t mod, const char* symbol);
 	}
@@ -481,7 +476,7 @@ namespace mem
 		bool_t           set(voidptr_t src, byte_t byte, size_t size);
 		voidptr_t        scan(data_t data, voidptr_t start, voidptr_t stop);
 		voidptr_t        pattern_scan(data_t pattern, string_t mask, voidptr_t start, voidptr_t stop);
-		inline voidptr_t pattern_scan(data_t pattern, string_t mask, module_t mod) { return in::pattern_scan(pattern, mask, mod.base, mod.end); }
+		voidptr_t        pattern_scan(data_t pattern, string_t mask, module_t mod);
 		voidptr_t        syscall(int_t syscall_n, voidptr_t arg0, voidptr_t arg1, voidptr_t arg2, voidptr_t arg3, voidptr_t arg4, voidptr_t arg5);
 		int_t            protect(voidptr_t src, size_t size, prot_t protection);
 		voidptr_t        allocate(size_t size, prot_t protection);

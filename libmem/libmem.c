@@ -1194,6 +1194,7 @@ mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voi
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = ReadProcessMemory(hProcess, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };
@@ -1224,7 +1225,8 @@ mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_vo
 #	if   MEM_OS == MEM_WIN
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
-	ret = WriteProcessMemory(hProcess, (LPCVOID)dst, (LPVOID)src, (SIZE_T)size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
+	ret = WriteProcessMemory(hProcess, dst, (LPCVOID)src, size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };

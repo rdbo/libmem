@@ -50,8 +50,7 @@
 
 //Helpers
 #define PAD_STR __pad
-#define _CONCAT_STR(str1, str2) str1##str2
-#define CONCAT_STR (str1, str2) _CONCAT_STR(str1, str2)
+#define CONCAT_STR(str1, str2) str1##str2
 #define _MERGE_STR (str1, str2) str1 str2
 #define MERGE_STR (str1, str2) _MERGE_STR(str1, str2)
 #define _STRINGIFY(str) #str
@@ -64,11 +63,13 @@
 #define MEM_STR_CMP(str1, str2) wcscmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) wcsncmp(str1, str2, n)
 #define MEM_STR_LEN(str) wcslen(str)
+#define MEM_STR_CHR(str, c) wcschr(str, c)
 #elif MEM_CHARSET == MEM_MBCS
 #define MEM_STR(str) str
 #define MEM_STR_CMP(str1, str2) strcmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) strncmp(str1, str2, n)
 #define MEM_STR_LEN(str) strlen(str)
+#define MEM_STR_CHR(str, c) strchr(str, c)
 #endif
 
 //Other
@@ -265,6 +266,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol);
 //mem_ex
 mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref);
 mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t* pprocess_name);
+mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pprocess_path);
 mem_arch_t         mem_ex_get_arch(mem_pid_t pid);
 mem_process_t      mem_ex_get_process(mem_pid_t pid);
 mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list);

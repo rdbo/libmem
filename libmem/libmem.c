@@ -33,10 +33,10 @@ mem_pid_t          mem_in_get_pid()
 	/*
 	 * Description:
 	 *   Gets the process id of 
-	 *   the caller
+	 *   the caller process
 	 *
 	 * Return Value:
-	 *   Process ID of the caller
+	 *   Process ID of the caller process
 	 *   or 'MEM_BAD' on error
 	 */
 
@@ -54,7 +54,7 @@ mem_size_t         mem_in_get_process_name(mem_tstring_t* pprocess_name)
 	/*
 	 * Description:
 	 *   Gets the process name of
-	 *   the caller
+	 *   the caller process
 	 *
 	 * Return Value:
 	 *   Returns the count of
@@ -120,11 +120,12 @@ mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	/*
 	 * Description:
 	 *   Gets information about
+	 *   the module 'module_ref' of
 	 *   the caller process
 	 *
 	 * Return Value:
 	 *   Returns information about
-	 *   the caller process or a
+	 *   the module 'module_ref' or a
 	 *   'mem_module_t' filled with
 	 *   invalid values on error
 	 */
@@ -742,12 +743,374 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 
 //mem_ex
 
-mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref);
-mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t* pprocess_name);
-mem_process_t      mem_ex_get_process(mem_pid_t pid);
-mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list);
-mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module_ref);
-mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** pmodule_list);
+mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
+{
+	/*
+	 * Description:
+	 *   Gets the id of
+	 *   the process with name/path 'process_ref'
+	 *
+	 * Return Value:
+	 *   Process ID or 'MEM_BAD' on error
+	 */
+
+	mem_pid_t pid = (mem_pid_t)MEM_BAD;
+	mem_size_t process_ref_len = MEM_STR_LEN(process_ref);
+
+#	if   MEM_OS == MEM_WIN
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32 entry = { 0 };
+		entry.dwSize = sizeof(entry);
+
+		if (Process32First(hSnap, &entry))
+		{
+			do
+			{
+				mem_tstring_t process_path = (mem_tstring_t)NULL;
+				mem_size_t    path_len = mem_ex_get_process_path(entry.th32ProcessID, &process_path);
+				if (path_len && path_len >= process_ref_len)
+				{
+					if (!MEM_STR_CMP(&process_path[path_len - process_ref_len], process_ref))
+					{
+						pid = entry.th32ProcessID;
+						break;
+					}
+				}
+
+				if (!MEM_STR_CMP(entry.szExeFile, process_ref))
+				{
+					pid = entry.th32ProcessID;
+					break;
+				}
+			} while (Process32Next(hSnap, &entry));
+
+		}
+	}
+	CloseHandle(hSnap);
+#	elif MEM_OS == MEM_LINUX
+	DIR* pdir = opendir("/proc");
+	if (!pdir) return pid;
+	struct dirent* pdirent;
+	while (pid == (mem_pid_t)MEM_BAD && (pdirent = readdir(pdir)))
+	{
+		mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
+		if (id != (mem_pid_t)-1)
+		{
+			mem_tstring_t proc_name = mem_ex_get_process_name(id);
+			if (!MEM_STR_CMP(process_ref, proc_name))
+			{
+				pid = id;
+				break;
+			}
+		}
+	}
+	closedir(pdir);
+#	endif
+	
+	return pid;
+}
+
+mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t* pprocess_name)
+{
+	/*
+	 * Description:
+	 *   Gets the name of
+	 *   the process with pid 'pid'
+	 *
+	 * Return Value:
+	 *   Returns the count of
+	 *   read characters
+	 *
+	 * Remarks:
+	 *   The process name is saved on
+	 *   'pprocess_name' and needs to
+	 *   be free'd
+	 */
+
+	mem_size_t read_chars = 0;
+
+	mem_tstring_t process_path = (mem_tstring_t)NULL;
+	if (mem_ex_get_process_path(pid, &process_path))
+	{
+		mem_tchar_t* p_pos = process_path;
+#		if   MEM_OS == MEM_WIN
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
+#		elif MEM_OS == MEM_LINUX
+		for (mem_tchar_t* temp = p_pos; (temp = MEM_STR_CHR(temp, MEM_STR('/'))) != NULL; p_pos = temp);
+#		endif
+
+		read_chars = MEM_STR_LEN(process_path) - (((uintptr_t)p_pos - (uintptr_t)process_path) / sizeof(mem_tchar_t));
+		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		*pprocess_name = (mem_tstring_t)malloc(process_name_size);
+		if (!*pprocess_name)
+		{
+			free(process_path);
+			read_chars = 0;
+			return read_chars;
+		}
+
+		memset(*pprocess_name, 0x0, process_name_size);
+		memcpy(*pprocess_name, p_pos, read_chars * sizeof(mem_tchar_t));
+
+		free(process_path);
+	}
+
+	return read_chars;
+}
+
+mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pprocess_path)
+{
+	/*
+	 * Description:
+	 *   Gets the path of
+	 *   the process with pid 'pid'
+	 *
+	 * Return Value:
+	 *   Returns the count of
+	 *   read characters
+	 *
+	 * Remarks:
+	 *   The process path is saved on
+	 *   'pprocess_path' and needs to
+	 *   be free'd
+	 */
+
+	mem_size_t read_chars = 0;
+
+#	if   MEM_OS == MEM_WIN
+
+	*pprocess_path = malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
+	if (!*pprocess_path) return read_chars;
+	memset(*pprocess_path, 0x0, MEM_PATH_MAX);
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE)
+	{
+		free(*pprocess_path);
+		return read_chars;
+	}
+
+	read_chars = GetModuleFileNameEx(hProcess, NULL, *pprocess_path, MEM_PATH_MAX);
+	CloseHandle(hProcess);
+
+#	elif MEM_OS == MEM_LINUX
+	char path[64] = { 0 };
+	snprintf(path, sizeof(path), "/proc/%i/exe", pid);
+	*pprocess_path = malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
+	if (!*pprocess_path) return read_chars;
+	readlink(path, buffer, MEM_PATH_MAX * sizeof(mem_tchar_t));
+
+	read_chars = MEM_STR_LEN(*pprocess_path);
+#	endif
+
+	return read_chars;
+}
+
+mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
+{
+	/*
+	 * Description:
+	 *   Gets the architecture of
+	 *   the process with pid 'pid'
+	 *
+	 * Return Value:
+	 *   Returns the architecture of
+	 *   the process or 'arch_unknown'
+	 *   on error
+	 */
+
+	mem_arch_t arch = arch_unknown;
+#	if   MEM_OS == MEM_WIN
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return arch;
+}
+
+mem_process_t      mem_ex_get_process(mem_pid_t pid)
+{
+	/*
+	 * Description:
+	 *   Gets information about
+	 *   the process with pid 'pid'
+	 *
+	 * Return Value:
+	 *   Returns information about
+	 *   the process with pid 'pid' or a
+	 *   'mem_process_t' filled with
+	 *   invalid values on error
+	 */
+
+	mem_process_t process = { 0 };
+	process.pid  = pid;
+	process.arch = mem_ex_get_arch(process.pid);
+	return process;
+}
+
+mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
+{
+	/*
+	 * Description:
+	 *   Gets the process list
+	 *
+	 * Return Value:
+	 *   Returns the length of
+	 *   the process list buffer
+	 *
+	 * Remarks:
+	 *   The process list is saved on
+	 *   'pprocess_list' and needs to
+	 *   be free'd
+	 */
+
+	mem_size_t count = 0;
+	*pprocess_list = malloc(sizeof(mem_process_t));
+	if (!*pprocess_list) return count;
+#	if   MEM_OS == MEM_WIN
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32 entry = { 0 };
+		entry.dwSize = sizeof(entry);
+
+		if (Process32First(hSnap, &entry))
+		{
+			do
+			{
+				mem_process_t* holder = *pprocess_list;
+				*pprocess_list = malloc((count + 1) * sizeof(mem_process_t));
+				if (!*pprocess_list)
+				{
+					count = 0;
+					free(holder);
+					break;
+				}
+				memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
+				(*pprocess_list)[count] = mem_ex_get_process(entry.th32ProcessID);
+				free(holder);
+				++count;
+			} while (Process32Next(hSnap, &entry));
+
+		}
+	}
+	CloseHandle(hSnap);
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	if (!count && *pprocess_list) free(*pprocess_list);
+
+	return count;
+}
+
+mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module_ref)
+{
+	/*
+	 * Description:
+	 *   Gets information about
+	 *   the module 'module_ref' of
+	 *   the caller process
+	 *
+	 * Return Value:
+	 *   Returns information about
+	 *   the module 'module_ref' or a
+	 *   'mem_module_t' filled with
+	 *   invalid values on error
+	 */
+
+	mem_module_t mod = { 0 };
+#	if   MEM_OS == MEM_WIN
+	MODULEENTRY32 mod_info = { 0 };
+	mod_info.dwSize = sizeof(mod_info);
+	mem_size_t ref_len = MEM_STR_LEN(module_ref);
+
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		MODULEENTRY32 entry = { 0 };
+		entry.dwSize = sizeof(entry);
+		if (Module32First(hSnap, &entry))
+		{
+			do
+			{
+				mem_size_t path_len = MEM_STR_LEN(entry.szExePath);
+				if (!MEM_STR_CMP(entry.szModule, module_ref) || (path_len >= ref_len && !MEM_STR_CMP(&entry.szExePath[path_len - ref_len], module_ref)))
+				{
+					mod_info = entry;
+					break;
+				}
+			} while (Module32Next(hSnap, &entry));
+		}
+
+		mod.base = (mem_voidptr_t)mod_info.modBaseAddr;
+		mod.size = (mem_size_t)mod_info.modBaseSize;
+		mod.end = (mem_voidptr_t)((mem_uintptr_t)mod.base + mod.size);
+	}
+#	elif MEM_OS == MEM_LINUX
+
+#	endif
+
+	return mod;
+}
+
+mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** pmodule_list)
+{
+	/*
+	 * Description:
+	 *   Gets the module list of
+	 *   the process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the length of
+	 *   the module list buffer
+	 *
+	 * Remarks:
+	 *   The module list is saved on
+	 *   'pmodule_list' and needs to
+	 *   be free'd
+	 */
+
+	mem_size_t count = 0;
+	*pmodule_list = malloc(sizeof(mem_module_t));
+
+#	if   MEM_OS == MEM_WIN
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		MODULEENTRY32 entry = { 0 };
+		entry.dwSize = sizeof(entry);
+		if (Module32First(hSnap, &entry))
+		{
+			do
+			{
+				mem_module_t* holder = *pmodule_list;
+				*pmodule_list = malloc((count + 1) * sizeof(mem_module_t));
+				if (!*pmodule_list)
+				{
+					count = 0;
+					free(holder);
+					break;
+				}
+				memcpy(*pmodule_list, holder, count * sizeof(mem_module_t));
+				free(holder);
+
+				mem_module_t mod = { 0 };
+				mod.base = (mem_voidptr_t)entry.modBaseAddr;
+				mod.size = (mem_size_t)entry.modBaseSize;
+				mod.end = (mem_voidptr_t)((mem_uintptr_t)mod.base + mod.size);
+
+				(*pmodule_list)[count] = mod;
+				++count;
+
+			} while (Module32Next(hSnap, &entry));
+		}
+	}
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return count;
+}
+
 mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src);
 mem_bool_t         mem_ex_is_process_running(mem_process_t process);
 mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);

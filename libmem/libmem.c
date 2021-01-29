@@ -304,7 +304,7 @@ mem_voidptr_t      mem_in_syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_v
 	 *
 	 * Return Value:
 	 *   Returns the value returned by
-	 *   the syscall
+	 *   the syscall or 'MEM_BAD' on error
 	 */
 
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
@@ -448,7 +448,7 @@ mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, m
 		mem_int_t found = MEM_TRUE;
 		for (size_t j = 0; j < size; j++)
 		{
-			found &= (mask[j] == MEM_STR('x') || mask[j] == MEM_STR('X') || i[j] == pattern[j]);
+			found &= ((mask[j] != MEM_STR('x') && mask[j] != MEM_STR('X')) || i[j] == pattern[j]);
 
 			if (!found) break;
 		}
@@ -1111,16 +1111,360 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 	return count;
 }
 
-mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src);
-mem_bool_t         mem_ex_is_process_running(mem_process_t process);
-mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
-mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
-mem_bool_t         mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size);
-mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5);
-mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t* old_protection);
-mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection);
-mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
-mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop);
-mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop);
+mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
+{
+	/*
+	 * Description:
+	 *   Gets information about the
+	 *   page 'src' is in from  the
+	 *   process 'process'
+	 *
+	 * Return Value:
+	 *   Returns information about the
+	 *   page 'src' is in or a 'page_t'
+	 *   filled with invalid values
+	 */
+
+	mem_page_t page = { 0 };
+
+#	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return page;
+	MEMORY_BASIC_INFORMATION mbi = { 0 };
+	VirtualQueryEx(hProcess, src, &mbi, sizeof(mbi));
+	CloseHandle(hProcess);
+	page.base = mbi.BaseAddress;
+	page.size = mbi.RegionSize;
+	page.end = (mem_voidptr_t)((mem_uintptr_t)page.base + page.size);
+	page.protection = mbi.Protect;
+	page.flags = mbi.Type;
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return page;
+}
+
+mem_bool_t         mem_ex_is_process_running(mem_process_t process)
+{
+	/*
+	 * Description:
+	 *   Checks if the process 'process'
+	 *   is running or not
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' if the process
+	 *   is running or 'MEM_FALSE' if not
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+
+#	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
+	DWORD ExitCode = 0;
+	GetExitCodeProcess(hProcess, &ExitCode);
+	CloseHandle(hProcess);
+	ret = ExitCode == STILL_ACTIVE ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_LINUX
+	struct stat sb;
+	char path_buffer[64] = { 0 };
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i", process.pid);
+	stat(path_buffer, &sb);
+	ret = S_ISDIR(sb.st_mode) ? MEM_TRUE : MEM_FALSE;
+#	endif
+
+	return ret;
+}
+
+mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
+{
+	/*
+	 * Description:
+	 *   Reads 'size' bytes from
+	 *   'src' and saves them into
+	 *   'dst' from process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+#	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
+	ret = ReadProcessMemory(hProcess, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_LINUX
+	struct iovec iosrc = { 0 };
+	struct iovec iodst = { 0 };
+	iodst.iov_base = dst;
+	iodst.iov_len  = size;
+	iosrc.iov_base = src;
+	iosrc.iov_len  = size;
+	ret = (mem_size_t)process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0) == size ? MEM_TRUE : MEM_FALSE;
+#	endif
+
+	return ret;
+}
+
+mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
+{
+	/*
+	 * Description:
+	 *   Writes 'size' bytes from
+	 *   'src' and saves them into
+	 *   'dst' from process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+#	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
+	ret = WriteProcessMemory(hProcess, (LPCVOID)dst, (LPVOID)src, (SIZE_T)size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_LINUX
+	struct iovec iosrc = { 0 };
+	struct iovec iodst = { 0 };
+	iosrc.iov_base = src;
+	iosrc.iov_len = size;
+	iodst.iov_base = dst;
+	iodst.iov_len = size;
+	ret = (mem_size_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0) == size ? MEM_TRUE : MEM_FALSE;
+#	endif
+
+	return ret;
+}
+
+mem_bool_t         mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size)
+{
+	/*
+	 * Description:
+	 *   Writes 'size' bytes of
+	 *   value 'byte' into 'dst'
+	 *   from process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+	mem_byte_t* data = malloc(size);
+	if (!data) return ret;
+	mem_in_set(data, byte, size);
+	ret = mem_ex_write(process, dst, data, size);
+	free(data);
+	return ret;
+}
+
+mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5)
+{
+	/*
+	 * Description:
+	 *   Runs the syscall 'syscall_n' with
+	 *   up to 6 arguments (arg0 ... arg5)
+	 *   on the process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the value returned by
+	 *   the syscall or 'MEM_BAD' on error
+	 */
+
+	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
+
+#	if   MEM_OS == MEM_WIN
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return ret;
+}
+
+mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t* old_protection)
+{
+	/*
+	 * Description:
+	 *   Changes the protection flags
+	 *   from page of 'src' to 'size' bytes
+	 *   after to 'protection' on the
+	 *   process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+
+#	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
+	ret = VirtualProtectEx(hProcess, src, size, protection, old_protection) != 0 ? MEM_TRUE : MEM_FALSE;
+	CloseHandle(hProcess);
+#	elif MEM_OS == MEM_LINUX
+	ret = mem_ex_syscall(process, __NR_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0 ? MEM_TRUE : MEM_FALSE;
+#	endif
+
+	return ret;
+}
+
+mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection)
+{
+	/*
+	 * Description:
+	 *   Allocates 'size' bytes of memory
+	 *   with the protection flags 'protection'
+	 *   on the process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the address of the allocated
+	 *   memory or 'MEM_BAD' on error
+	 */
+
+	mem_voidptr_t alloc = (mem_voidptr_t)MEM_BAD;
+
+#	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return alloc;
+	alloc = (mem_voidptr_t)VirtualAllocEx(hProcess, NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
+	if (!alloc) alloc = (mem_voidptr_t)MEM_BAD;
+	CloseHandle(hProcess);
+#	elif MEM_OS == MEM_LINUX
+	mem_int_t syscall_n = -1;
+	switch (process.arch)
+	{
+	case x86_32:
+		syscall_n = __NR_mmap2;
+		break;
+	case x86_64:
+		syscall_n = __NR_mmap;
+		break;
+	default:
+		return alloc;
+	}
+
+	alloc = mem_ex_syscall(process, syscall_n, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0);
+	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= -4096)
+		alloc = (mem_voidptr_t)MEM_BAD;
+#	endif
+
+	return alloc;
+}
+
+mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size)
+{
+	/*
+	 * Description:
+	 *   Deallocates 'size' bytes of 'src'
+	 *   on the process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+#	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
+	ret = VirtualFreeEx(hProcess, src, 0, MEM_RELEASE) != 0 ? MEM_TRUE : MEM_FALSE;
+	CloseHandle(hProcess);
+#	elif MEM_OS == MEM_LINUX
+	ret = mem_ex_syscall(process, __NR_munmap, src, (mem_voidptr_t)size, NULL, NULL, NULL, NULL) != (mem_voidptr_t)MAP_FAILED ? MEM_TRUE : MEM_FALSE;
+#	endif
+
+	return ret;
+}
+
+mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop)
+{
+	/*
+	 * Description:
+	 *   Searches for 'size' bytes of 'data'
+	 *   from 'start' to 'stop' on process
+	 *   'process'
+	 *
+	 * Return Value:
+	 *   Returns the first occurrence of 'data'
+	 *   between 'start' and 'stop' or 'MEM_BAD'
+	 *   if no occurrence was found
+	 */
+
+	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
+
+	for (mem_data_t i = (mem_data_t)start; (mem_uintptr_t)&i[size] <= (mem_uintptr_t)stop; i = &i[1])
+	{
+		mem_int_t found = MEM_TRUE;
+
+		mem_data_t buffer = (mem_data_t)malloc(size);
+		if (!buffer) break;
+
+		mem_in_write(buffer, i, size);
+
+		for (size_t j = 0; j < size; j++)
+		{
+			found &= buffer[j] == data[j];
+
+			if (!found) break;
+		}
+
+		free(buffer);
+
+		if (found)
+		{
+			ret = (mem_voidptr_t)i;
+			break;
+		}
+	}
+
+	return ret;
+}
+
+mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop)
+{
+	/*
+	 * Description:
+	 *   Searches for 'size' bytes of 'data'
+	 *   from 'start' to 'stop' on process
+	 *   'process' and checks a byte mask
+	 *
+	 * Return Value:
+	 *   Returns the first occurrence of 'data'
+	 *   between 'start' and 'stop' or 'MEM_BAD'
+	 *   if no occurrence was found
+	 */
+
+	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
+	mem_size_t size = MEM_STR_LEN(mask);
+
+	for (mem_data_t i = (mem_data_t)start; (mem_uintptr_t)&i[size] <= (mem_uintptr_t)stop; i = &i[1])
+	{
+		mem_int_t found = MEM_TRUE;
+
+		mem_data_t buffer = (mem_data_t)malloc(size);
+		if (!buffer) break;
+
+		mem_in_write(buffer, i, size);
+
+		for (size_t j = 0; j < size; j++)
+		{
+			found &= ((mask[j] != MEM_STR('x') && mask[j] != MEM_STR('X')) || buffer[j] == pattern[j]);
+
+			if (!found) break;
+		}
+
+		free(buffer);
+
+		if (found)
+		{
+			ret = (mem_voidptr_t)i;
+			break;
+		}
+	}
+
+	return ret;
+}
 
 #endif //MEM_COMPATIBLE

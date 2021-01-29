@@ -79,6 +79,3 @@ Made with libmem:
 <a href="https://github.com/rdbo/DX11-BaseHook">DirectX 11 BaseHook</a>  
 <a href="https://github.com/rdbo/cstrike-basehook">Counter-Strike 1.6 BaseHook</a>  
 <a href="https://github.com/karliky/Crazymem">Crazymem - NodeJS Memory Library</a>  
-
-# TODO
-. Add support for ARM  

@@ -267,6 +267,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol);
 mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref);
 mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t* pprocess_name);
 mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pprocess_path);
+mem_arch_t         mem_ex_get_system_arch();
 mem_arch_t         mem_ex_get_arch(mem_pid_t pid);
 mem_process_t      mem_ex_get_process(mem_pid_t pid);
 mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list);

@@ -907,6 +907,42 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pproces
 	return read_chars;
 }
 
+mem_arch_t         mem_ex_get_system_arch()
+{
+	/*
+	 * Description:
+	 *   Gets the architecture of
+	 *   the system
+	 *
+	 * Return Value:
+	 *   Returns the architecture of
+	 *   the system or 'arch_unknown'
+	 *   on error
+	 */
+
+	mem_arch_t arch = arch_unknown;
+
+#	if   MEM_OS == MEM_WIN
+	SYSTEM_INFO sys_info = { 0 };
+	GetNativeSystemInfo(&sys_info);
+	switch (sys_info.wProcessorArchitecture)
+	{
+	case PROCESSOR_ARCHITECTURE_INTEL:
+		arch = x86_32;
+		break;
+	case PROCESSOR_ARCHITECTURE_AMD64:
+		arch = x86_64;
+		break;
+	default:
+		break;
+	}
+
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return arch;
+}
+
 mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 {
 	/*
@@ -922,6 +958,29 @@ mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 
 	mem_arch_t arch = arch_unknown;
 #	if   MEM_OS == MEM_WIN
+
+	BOOL IsWow64 = FALSE;
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return arch;
+	BOOL Check = IsWow64Process(hProcess, &IsWow64);
+	CloseHandle(hProcess);
+	if (!Check) return arch;
+
+	mem_arch_t sys_arch = mem_ex_get_system_arch();
+
+	switch (mem_in_get_arch())
+	{
+	case x86_32:
+		if (sys_arch == x86_32)
+			arch = x86_32;
+		else if (sys_arch == x86_64 && !IsWow64)
+			arch = x86_64;
+	case x86_64:
+		if (IsWow64) arch = x86_32;
+		else arch = x86_64;
+		break;
+	}
+
 #	elif MEM_OS == MEM_LINUX
 #	endif
 

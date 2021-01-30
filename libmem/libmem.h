@@ -64,12 +64,14 @@
 #define MEM_STR_N_CMP(str1, str2, n) wcsncmp(str1, str2, n)
 #define MEM_STR_LEN(str) wcslen(str)
 #define MEM_STR_CHR(str, c) wcschr(str, c)
+#define MEM_STR_STR(str, sstr) wcsstr(str, sstr)
 #elif MEM_CHARSET == MEM_MBCS
 #define MEM_STR(str) str
 #define MEM_STR_CMP(str1, str2) strcmp(str1, str2)
 #define MEM_STR_N_CMP(str1, str2, n) strncmp(str1, str2, n)
 #define MEM_STR_LEN(str) strlen(str)
 #define MEM_STR_CHR(str, c) strchr(str, c)
+#define MEM_STR_STR(str, sstr) strstr(str, sstr)
 #endif
 
 //Other

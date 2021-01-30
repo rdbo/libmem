@@ -700,7 +700,6 @@ mem_bool_t         mem_in_unload_module(mem_module_t mod)
 	mem_tstring_t mod_path = (mem_tstring_t)NULL;
 	if (mem_in_get_module_path(mod, &mod_path) && dlclose(dlopen(mod_path, RTLD_LAZY)))
 		ret = MEM_TRUE;
-	ret = dlclose(handle) == 0 ? MEM_TRUE : MEM_FALSE;
 #	endif
 
 	return ret;
@@ -798,8 +797,9 @@ mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 		mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
 		if (id != (mem_pid_t)-1)
 		{
-			mem_tstring_t proc_name = mem_ex_get_process_name(id);
-			if (!MEM_STR_CMP(process_ref, proc_name))
+			mem_tstring_t proc_name = NULL;
+			size_t read_chars = mem_ex_get_process_name(id, &proc_name);
+			if (read_chars && !MEM_STR_CMP(process_ref, proc_name))
 			{
 				pid = id;
 				break;
@@ -899,7 +899,7 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pproces
 	snprintf(path, sizeof(path), "/proc/%i/exe", pid);
 	*pprocess_path = malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
 	if (!*pprocess_path) return read_chars;
-	readlink(path, buffer, MEM_PATH_MAX * sizeof(mem_tchar_t));
+	readlink(path, *pprocess_path, MEM_PATH_MAX * sizeof(mem_tchar_t));
 
 	read_chars = MEM_STR_LEN(*pprocess_path);
 #	endif

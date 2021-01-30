@@ -1326,6 +1326,8 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 		case MEM_STR('s'):
 			page.flags = MAP_SHARED;
 			break;
+		default:
+			break;
 		}
 	}
 

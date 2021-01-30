@@ -1283,7 +1283,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 	maps_buffer[maps_size] = MEM_STR('\0');
 
-	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_CHR(&temp[1], page_base_str)) != NULL; page_base = &temp[1]);
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t*)NULL; page_base = &temp[1]);
 
 	if (!page_base || page_base == (mem_tchar_t*)MEM_BAD)
 	{

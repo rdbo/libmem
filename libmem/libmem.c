@@ -1307,19 +1307,25 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 		return page;
 	}
 
+	mem_tchar_t page_base_addr[64] = { 0 };
+	memcpy(page_base_addr, page_base, (uintptr_t)page_end - (uintptr_t)page_base);
+	mem_tchar_t page_end_addr[64]  = { 0 };
+	memcpy(page_end_addr, page_end, (uintptr_t)holder - (uintptr_t)page_end);
+
 	switch (process.arch)
 	{
 	case x86_32:
-		page.base = (mem_voidptr_t)strtoul(page_base, page_end, 16);
-		page.end  = (mem_voidptr_t)strtoul(page_end, holder, 16);
+		page.base = (mem_voidptr_t)strtoul(page_base_addr, NULL, 16);
+		page.end  = (mem_voidptr_t)strtoul(page_end_addr, NULL, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
 		break;
 	case x86_64:
-		page.base = (mem_voidptr_t)strtoull(page_base, page_end, 16);
-		page.end = (mem_voidptr_t)strtoull(page_end, holder, 16);
+		page.base = (mem_voidptr_t)strtoull(page_base_addr, NULL, 16);
+		page.end = (mem_voidptr_t)strtoull(page_end_addr, NULL, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
 		break;
 	default:
+		free(maps_buffer);
 		return page;
 	}
 

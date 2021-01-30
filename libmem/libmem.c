@@ -1106,6 +1106,75 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 		mod.end = (mem_voidptr_t)((mem_uintptr_t)mod.base + mod.size);
 	}
 #	elif MEM_OS == MEM_LINUX
+	mem_tchar_t module_str[MEM_PATH_MAX] = { 0 };
+	snprintf(module_str, sizeof(module_str), "%s\n", module_ref);
+	mem_tchar_t path_buffer[64] = { 0 };
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+
+	FILE* maps_file = fopen(path_buffer, "rb");
+	fseek(maps_file, 0, SEEK_END);
+	long maps_size = ftell(maps_file);
+	fseek(maps_file, 0, SEEK_SET);
+
+	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
+	if (!maps_buffer) return page;
+	fread(maps_buffer, 1, maps_size, maps_file);
+	fclose(maps_file);
+
+	maps_buffer[maps_size] = MEM_STR('\0');
+
+	mem_tchar_t* module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
+	module_base_ptr = strrchr(module_path_ptr, '\n');
+	if (!module_base_ptr) module_base_ptr = maps_buffer;
+	mem_tchar_t* module_base_endptr = strchr(module_base_ptr, '-');
+	if (!module_base_endptr)
+	{
+		free(maps_buffer);
+		return mod;
+	}
+
+	mem_tchar_t* module_end_ptr = (mem_tchar_t*)NULL;
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t*)NULL; module_end_ptr = &temp[1]);
+
+	if (!module_end_ptr)
+	{
+		free(maps_buffer);
+		return mod;
+	}
+
+	module_end_ptr = strchr(module_end_ptr, '-');
+	module_end_ptr = &module_end_ptr[1];
+	mem_tchar_t* module_end_endptr = strchr(module_end_ptr, ' ');
+	if (!module_end_endptr)
+	{
+		free(maps_buffer);
+		return mod;
+	}
+
+	mem_tchar_t module_base_str[64] = { 0 };
+	memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
+
+	mem_tchar_t module_end_str[64]  = { 0 };
+	memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
+
+	switch (process.arch)
+	{
+	case x86_32:
+		mod.base = (mem_voidptr_t)strtoul(module_base_str, NULL, 16);
+		mod.end = (mem_voidptr_t)strtoul(module_end_str, NULL, 16);
+		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+		break;
+	case x86_64:
+		mod.base = (mem_voidptr_t)strtoull(module_base_str, NULL, 16);
+		mod.end = (mem_voidptr_t)strtoull(module_end_str, NULL, 16);
+		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+		break;
+	default:
+		free(maps_buffer);
+		return mod;
+	}
+
+	free(maps_buffer);
 
 #	endif
 

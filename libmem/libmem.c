@@ -838,7 +838,7 @@ mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t* pproces
 #		if   MEM_OS == MEM_WIN
 		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
 #		elif MEM_OS == MEM_LINUX
-		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = temp);
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
 #		endif
 
 		read_chars = MEM_STR_LEN(process_path) - (((uintptr_t)p_pos - (uintptr_t)process_path) / sizeof(mem_tchar_t));

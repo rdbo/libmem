@@ -1468,7 +1468,7 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 	}
 
 	alloc = mem_ex_syscall(process, syscall_n, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0);
-	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= -4096)
+	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096)
 		alloc = (mem_voidptr_t)MEM_BAD;
 #	endif
 

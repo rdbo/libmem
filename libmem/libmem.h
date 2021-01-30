@@ -160,11 +160,11 @@ typedef mem_tchar_t*                         mem_tstring_t;
 typedef mem_byte_t*                          mem_data_t;
 typedef mem_void_t*                          mem_voidptr_t;
 
-#if defined(MEM_WIN)
+#if   MEM_OS == MEM_WIN
 typedef DWORD                                mem_pid_t;
 typedef DWORD                                mem_prot_t;
 typedef DWORD                                mem_flags_t;
-#elif defined(MEM_LINUX)
+#elif MEM_OS == MEM_LINUX
 typedef mem_int32_t                          mem_pid_t;
 typedef mem_int32_t                          mem_prot_t;
 typedef mem_int32_t                          mem_flags_t;
@@ -272,6 +272,7 @@ mem_arch_t         mem_ex_get_arch(mem_pid_t pid);
 mem_process_t      mem_ex_get_process(mem_pid_t pid);
 mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list);
 mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module_ref);
+mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mod, mem_tstring_t* pmodule_path);
 mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** pmodule_list);
 mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src);
 mem_bool_t         mem_ex_is_process_running(mem_process_t process);

@@ -1112,6 +1112,57 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	return mod;
 }
 
+mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mod, mem_tstring_t* pmodule_path)
+{
+	/*
+	 * Description:
+	 *   Gets the module path of module 'mod'
+	 *   on process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the count of
+	 *   read characters
+	 *
+	 * Remarks:
+	 *   The module path is saved on
+	 *   'pmodule_path' and needs to
+	 *   be free'd
+	 */
+
+	mem_size_t read_chars = 0;
+
+#	if   MEM_OS == MEM_WIN
+	HMODULE hModule = INVALID_HANDLE_VALUE;
+	
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+	if (hSnap != INVALID_HANDLE_VALUE)
+	{
+		MODULEENTRY32 entry = { 0 };
+		entry.dwSize = sizeof(entry);
+		if (Module32First(hSnap, &entry))
+		{
+			do
+			{
+				mem_size_t path_len = MEM_STR_LEN(entry.szExePath);
+				if (entry.modBaseAddr == mod.base)
+				{
+					read_chars = path_len;
+					*pmodule_path = (mem_tstring_t)malloc((path_len + 1) * sizeof(mem_tchar_t));
+					memset(*pmodule_path, 0x0, (path_len + 1) * sizeof(mem_tchar_t));
+					memcpy(*pmodule_path, entry.szExePath, path_len * sizeof(mem_tchar_t));
+					return read_chars;
+				}
+
+			} while (Module32Next(hSnap, &entry));
+		}
+	}
+#	elif MEM_OS == MEM_LINUX
+	read_chars = mem_ex_get_module_path(mem_in_get_process(), mod, pmodule_path);
+#	endif
+
+	return read_chars;
+}
+
 mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** pmodule_list)
 {
 	/*

@@ -77,6 +77,11 @@ mem_size_t         mem_in_get_process_name(mem_tstring_t* pprocess_name)
 	return read_chars;
 }
 
+mem_size_t         mem_in_get_process_path(mem_tstring_t* pprocess_path)
+{
+	return mem_ex_get_process_path(mem_in_get_pid(),  pprocess_path);
+}
+
 mem_arch_t         mem_in_get_arch()
 {
 	/*

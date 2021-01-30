@@ -242,6 +242,7 @@ typedef struct
 //Functions
 //mem_in
 mem_pid_t          mem_in_get_pid();
+mem_size_t         mem_in_get_process_path(mem_tstring_t* pprocess_path);
 mem_size_t         mem_in_get_process_name(mem_tstring_t* pprocess_name);
 mem_arch_t         mem_in_get_arch();
 mem_process_t      mem_in_get_process();

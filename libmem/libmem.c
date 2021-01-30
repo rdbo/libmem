@@ -1118,14 +1118,14 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	fseek(maps_file, 0, SEEK_SET);
 
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
-	if (!maps_buffer) return page;
+	if (!maps_buffer) return mod;
 	fread(maps_buffer, 1, maps_size, maps_file);
 	fclose(maps_file);
 
 	maps_buffer[maps_size] = MEM_STR('\0');
 
 	mem_tchar_t* module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
-	module_base_ptr = strrchr(module_path_ptr, '\n');
+	module_base_ptr = strrchr(module_base_ptr, '\n');
 	if (!module_base_ptr) module_base_ptr = maps_buffer;
 	mem_tchar_t* module_base_endptr = strchr(module_base_ptr, '-');
 	if (!module_base_endptr)
@@ -1328,7 +1328,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	switch (process.arch)
 	{
 	case x86_32:
-		snprintf(page_base_str, sizeof(page_base_str), "%x-", (mem_uintptr_t)src);
+		snprintf(page_base_str, sizeof(page_base_str), "%lx-", (mem_uintptr_t)src);
 		break;
 	case x86_64:
 		snprintf(page_base_str, sizeof(page_base_str), "%llx-", (mem_uintptr_t)src);

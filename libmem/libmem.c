@@ -1413,9 +1413,17 @@ mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_
 #	if   MEM_OS == MEM_WIN
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
-	ret = VirtualProtectEx(hProcess, src, size, protection, old_protection) != 0 ? MEM_TRUE : MEM_FALSE;
+	DWORD old_prot = 0;
+	ret = VirtualProtectEx(hProcess, src, size, protection, &old_prot) != 0 ? MEM_TRUE : MEM_FALSE;
+	if (old_protection) *old_protection = old_prot;
 	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
+	if (old_protection)
+	{
+		mem_page_t page = mem_ex_get_page(process, src);
+		*old_protection = page.protection;
+	}
+
 	ret = mem_ex_syscall(process, __NR_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0 ? MEM_TRUE : MEM_FALSE;
 #	endif
 
@@ -1448,10 +1456,12 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 	switch (process.arch)
 	{
 	case x86_32:
-		syscall_n = __NR_mmap2;
+		//syscall_n = __NR_mmap2;
+		syscall_n = 192;
 		break;
 	case x86_64:
-		syscall_n = __NR_mmap;
+		//syscall_n = __NR_mmap;
+		syscall_n = 9;
 		break;
 	default:
 		return alloc;
@@ -1513,7 +1523,7 @@ mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_
 		mem_data_t buffer = (mem_data_t)malloc(size);
 		if (!buffer) break;
 
-		mem_in_write(buffer, i, size);
+		mem_ex_write(process, buffer, i, size);
 
 		for (size_t j = 0; j < size; j++)
 		{
@@ -1558,7 +1568,7 @@ mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern
 		mem_data_t buffer = (mem_data_t)malloc(size);
 		if (!buffer) break;
 
-		mem_in_write(buffer, i, size);
+		mem_ex_write(process, buffer, i, size);
 
 		for (size_t j = 0; j < size; j++)
 		{

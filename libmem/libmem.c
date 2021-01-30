@@ -1273,33 +1273,33 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 	FILE* maps_file = fopen(path_buffer, "rb");
 	fseek(maps_file, 0, SEEK_END);
-	long maps_size = ftell(f);
+	long maps_size = ftell(maps_file);
 	fseek(maps_file, 0, SEEK_SET);
 
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
 	if (!maps_buffer) return page;
-	fread(maps_buffer, 1, fsize, f);
-	fclose(f);
+	fread(maps_buffer, 1, maps_size, maps_file);
+	fclose(maps_file);
 
 	maps_buffer[maps_size] = MEM_STR('\0');
 
-	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_CHR(&temp[1], page_base_str)) != NULL; page_base_pos = &temp[1]);
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_CHR(&temp[1], page_base_str)) != NULL; page_base = &temp[1]);
 
-	if (!page_base_pos || page_base_pos == (mem_tchar_t*)MEM_BAD)
+	if (!page_base || page_base == (mem_tchar_t*)MEM_BAD)
 	{
 		free(maps_buffer);
 		return page;
 	}
 
-	page_end_pos = strchr(page_base_pos, '-') + (1 * sizeof(mem_tchar_t));
+	page_end = strchr(page_base, '-') + (1 * sizeof(mem_tchar_t));
 
-	if (!page_end_pos || page_end_pos == (mem_tchar_t*)MEM_BAD)
+	if (!page_end || page_end == (mem_tchar_t*)MEM_BAD)
 	{
 		free(maps_buffer);
 		return page;
 	}
 
-	mem_tchar_t* holder = strchr(page_end_pos, ' ');
+	mem_tchar_t* holder = strchr(page_end, ' ');
 
 	if (!holder)
 	{
@@ -1310,13 +1310,13 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	switch (process.arch)
 	{
 	case x86_32:
-		page.base = (mem_voidptr_t)strtoul(page_base_pos, page_end_pos, 16);
-		page.end  = (mem_voidptr_t)strtoul(page_end_pos, holder, 16);
+		page.base = (mem_voidptr_t)strtoul(page_base, page_end, 16);
+		page.end  = (mem_voidptr_t)strtoul(page_end, holder, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
 		break;
 	case x86_64:
-		page.base = (mem_voidptr_t)strtoull(page_base_pos, page_end_pos, 16);
-		page.end = (mem_voidptr_t)strtoull(page_end_pos, holder, 16);
+		page.base = (mem_voidptr_t)strtoull(page_base, page_end, 16);
+		page.end = (mem_voidptr_t)strtoull(page_end, holder, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
 		break;
 	default:

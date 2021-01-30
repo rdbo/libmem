@@ -1307,6 +1307,28 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 		return page;
 	}
 
+	for (mem_size_t i = 0; i < 4; i++)
+	{
+		switch (holder[i])
+		{
+		case MEM_STR('r'):
+			page.protection |= PROT_READ;
+			break;
+		case MEM_STR('w'):
+			page.protection |= PROT_WRITE;
+			break;
+		case MEM_STR('x'):
+			page.protection |= PROT_EXEC;
+			break;
+		case MEM_STR('p'):
+			page.flags = MAP_PRIVATE;
+			break;
+		case MEM_STR('s'):
+			page.flags = MAP_SHARED;
+			break;
+		}
+	}
+
 	mem_tchar_t page_base_addr[64] = { 0 };
 	memcpy(page_base_addr, page_base, (uintptr_t)page_end - (uintptr_t)page_base);
 	mem_tchar_t page_end_addr[64]  = { 0 };

@@ -128,10 +128,10 @@ typedef enum { MEM_FALSE = 0, MEM_TRUE = 1 } mem_bool_t;
 typedef int                                  mem_int_t;
 typedef void                                 mem_void_t;
 
-typedef char                                 mem_uint8_t;
-typedef short                                mem_uint16_t;
-typedef long                                 mem_uint32_t;
-typedef long long                            mem_uint64_t;
+typedef char                                 mem_int8_t;
+typedef short                                mem_int16_t;
+typedef long                                 mem_int32_t;
+typedef long long                            mem_int64_t;
 
 typedef unsigned char                        mem_uint8_t;
 typedef unsigned short                       mem_uint16_t;

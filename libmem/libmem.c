@@ -1519,7 +1519,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return read_chars;
+	if (maps_file == -1) return count;
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
@@ -1532,17 +1532,20 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 		maps_buffer[maps_size] = c;
 		maps_buffer[maps_size + 1] = '\0';
 	}
-	if (!maps_buffer) return read_chars;
+	if (!maps_buffer) return count;
 	close(maps_file);
 
 	mem_tchar_t* module_path_ptr = maps_buffer;
 	mem_tchar_t* module_path_endptr = maps_buffer;
+
+	*pmodule_list = (mem_module_t*)malloc(sizeof(mem_module_t));
 
 	while ((module_path_ptr = MEM_STR_CHR(module_path_endptr, MEM_STR('/'))) != NULL)
 	{
 		module_path_endptr = MEM_STR_CHR(module_path_ptr, MEM_STR('\n'));
 		if (!module_path_endptr) break;
 
+		mem_module_t mod = { 0 };
 		mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
 		mem_tstring module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
 		memset(module_str, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
@@ -1614,6 +1617,19 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 			free(maps_buffer);
 			break;
 		}
+
+		mem_process_t* list_holder = *pmodule_list;
+		*pmodule_list = malloc((count + 1) * sizeof(mem_module_t));
+		if (!*pprocess_list)
+		{
+			count = 0;
+			free(holder);
+			break;
+		}
+		memcpy(*pprocess_list, holder, count * sizeof(mem_module_t));
+		(*pprocess_list)[count] = mod;
+		free(holder);
+		++count;
 	}
 
 	free(maps_buffer);

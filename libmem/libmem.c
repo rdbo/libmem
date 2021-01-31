@@ -154,6 +154,53 @@ mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	return mod;
 }
 
+mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t* pmodule_name)
+{
+	/*
+	 * Description:
+	 *   Gets the module name of 'mod'
+	 *
+	 * Return Value:
+	 *   Returns the count of
+	 *   read characters
+	 *
+	 * Remarks:
+	 *   The module name is saved on
+	 *   'pmodule_name' and needs to
+	 *   be free'd
+	 */
+
+	mem_size_t read_chars = 0;
+
+	mem_tstring_t module_path = (mem_tstring_t)NULL;
+	if (mem_in_get_process_path(&module_path))
+	{
+		mem_tchar_t* p_pos = module_path;
+#		if   MEM_OS == MEM_WIN
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
+#		elif MEM_OS == MEM_LINUX
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
+#		endif
+
+		read_chars = MEM_STR_LEN(module_path) - (((uintptr_t)p_pos - (uintptr_t)module_path) / sizeof(mem_tchar_t));
+		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
+		if (!*pmodule_name)
+		{
+			free(module_path);
+			read_chars = 0;
+			return read_chars;
+		}
+
+		memset(*pmodule_name, 0x0, module_name_size);
+		memcpy(*pmodule_name, p_pos, read_chars * sizeof(mem_tchar_t));
+
+		free(module_path);
+	}
+
+	return read_chars;
+}
+
 mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t* pmodule_path)
 {
 	/*
@@ -1206,6 +1253,54 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 #	endif
 
 	return mod;
+}
+
+mem_size_t         mem_ex_get_module_name(mem_process_t process, mem_module_t mod, mem_tstring_t* pmodule_name)
+{
+	/*
+	 * Description:
+	 *   Gets the module name of 'mod'
+	 *   on process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the count of
+	 *   read characters
+	 *
+	 * Remarks:
+	 *   The module name is saved on
+	 *   'pmodule_name' and needs to
+	 *   be free'd
+	 */
+
+	mem_size_t read_chars = 0;
+
+	mem_tstring_t module_path = (mem_tstring_t)NULL;
+	if (mem_ex_get_process_path(process.pid, &module_path))
+	{
+		mem_tchar_t* p_pos = module_path;
+#		if   MEM_OS == MEM_WIN
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
+#		elif MEM_OS == MEM_LINUX
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
+#		endif
+
+		read_chars = MEM_STR_LEN(module_path) - (((uintptr_t)p_pos - (uintptr_t)module_path) / sizeof(mem_tchar_t));
+		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
+		if (!*pmodule_name)
+		{
+			free(module_path);
+			read_chars = 0;
+			return read_chars;
+		}
+
+		memset(*pmodule_name, 0x0, module_name_size);
+		memcpy(*pmodule_name, p_pos, read_chars * sizeof(mem_tchar_t));
+
+		free(module_path);
+	}
+
+	return read_chars;
 }
 
 mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mod, mem_tstring_t* pmodule_path)

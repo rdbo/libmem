@@ -1130,7 +1130,11 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	maps_buffer[maps_size] = MEM_STR('\0');
 
 	mem_tchar_t* module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
-	module_base_ptr = strrchr(module_base_ptr, '\n');
+	mem_tchar_t* holder = maps_buffer;
+
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr; holder = &temp[1]);
+	module_base_ptr = holder;
+
 	if (!module_base_ptr) module_base_ptr = maps_buffer;
 	mem_tchar_t* module_base_endptr = strchr(module_base_ptr, '-');
 	if (!module_base_endptr)

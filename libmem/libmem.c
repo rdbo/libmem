@@ -1946,6 +1946,8 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 		return ret;
 	}
 
+	memcpy(&inj_data, injection_buf.payload, sizeof(inj_data));
+
 	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
 	wait(&status);
 
@@ -1967,8 +1969,8 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	regs.rsi = (mem_uintptr_t)arg1;
 	regs.rdx = (mem_uintptr_t)arg2;
 	regs.r10 = (mem_uintptr_t)arg3;
-	regs.r8 = (mem_uintptr_t)arg4;
-	regs.r9 = (mem_uintptr_t)arg5;
+	regs.r8  = (mem_uintptr_t)arg4;
+	regs.r9  = (mem_uintptr_t)arg5;
 	injection_addr = (mem_voidptr_t)regs.rip;
 #	endif
 
@@ -1979,9 +1981,9 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	ptrace(PTRACE_SINGLESTEP, process.pid, NULL, NULL);
 	waitpid(process.pid, &status, WSTOPPED);
 	ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
-#   if defined(MEM_86)
+#   if   MEM_ARCH == x86_32
 	ret = (mem_voidptr_t)regs.eax;
-#   elif defined(MEM_64)
+#   elif MEM_ARCH == x86_64
 	ret = (mem_voidptr_t)regs.rax;
 #   endif
 

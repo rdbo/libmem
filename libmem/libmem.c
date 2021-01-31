@@ -806,9 +806,9 @@ mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 	 */
 
 	mem_pid_t pid = (mem_pid_t)MEM_BAD;
-	mem_size_t process_ref_len = MEM_STR_LEN(process_ref);
 
 #	if   MEM_OS == MEM_WIN
+	mem_size_t process_ref_len = MEM_STR_LEN(process_ref);
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hSnap != INVALID_HANDLE_VALUE)
 	{

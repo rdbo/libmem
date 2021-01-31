@@ -1623,12 +1623,12 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 		if (!*pmodule_list)
 		{
 			count = 0;
-			free(holder);
+			free(list_holder);
 			break;
 		}
-		memcpy(*pmodule_list, holder, count * sizeof(mem_module_t));
+		memcpy(*pmodule_list, list_holder, count * sizeof(mem_module_t));
 		(*pmodule_list)[count] = mod;
-		free(holder);
+		free(list_holder);
 		++count;
 	}
 

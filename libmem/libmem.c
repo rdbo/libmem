@@ -1369,7 +1369,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 		maps_buffer[maps_size] = c;
 		maps_buffer[maps_size + 1] = '\0';
 	}
-	if (!maps_buffer) return mod;
+	if (!maps_buffer) return page;
 	close(maps_file);
 
 	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t*)NULL; page_base = &temp[1]);

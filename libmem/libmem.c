@@ -173,7 +173,7 @@ mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t* pmodu
 	mem_size_t read_chars = 0;
 
 	mem_tstring_t module_path = (mem_tstring_t)NULL;
-	if (mem_in_get_process_path(&module_path))
+	if (mem_in_get_module_path(mod, &module_path))
 	{
 		mem_tchar_t* p_pos = module_path;
 #		if   MEM_OS == MEM_WIN
@@ -1275,7 +1275,7 @@ mem_size_t         mem_ex_get_module_name(mem_process_t process, mem_module_t mo
 	mem_size_t read_chars = 0;
 
 	mem_tstring_t module_path = (mem_tstring_t)NULL;
-	if (mem_ex_get_process_path(process.pid, &module_path))
+	if (mem_ex_get_module_path(process, mod, &module_path))
 	{
 		mem_tchar_t* p_pos = module_path;
 #		if   MEM_OS == MEM_WIN

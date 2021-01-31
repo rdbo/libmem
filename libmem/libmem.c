@@ -1124,7 +1124,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 
 	mem_size_t maps_size = (mem_size_t)statbuf.st_size;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
-	if (!maps_buffer) return page;
+	if (!maps_buffer) return mod;
 	read(maps_file, maps_buffer, maps_size);
 	close(maps_file);
 

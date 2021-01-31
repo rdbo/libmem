@@ -1045,7 +1045,8 @@ mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	}
 
 #	elif MEM_OS == MEM_LINUX
-	arch = (mem_arch_t)MEM_ARCH;
+	if (pid != (mem_pid_t)MEM_BAD)
+		arch = (mem_arch_t)MEM_ARCH;
 #	endif
 
 	return arch;

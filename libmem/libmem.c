@@ -221,7 +221,7 @@ mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t* pmodu
 
 #	if   MEM_OS == MEM_WIN
 	HMODULE hModule = INVALID_HANDLE_VALUE;
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)mod.base, &hModule);
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPTSTR)mod.base, &hModule);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
 		mem_size_t path_size = MEM_PATH_MAX * sizeof(mem_tchar_t);
@@ -742,7 +742,7 @@ mem_bool_t         mem_in_unload_module(mem_module_t mod)
 	mem_bool_t ret = MEM_FALSE;
 #	if   MEM_OS == MEM_WIN
 	HMODULE hModule = INVALID_HANDLE_VALUE;
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)mod.base, &hModule);
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPTSTR)mod.base, &hModule);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
 		FreeLibrary(hModule);
@@ -772,7 +772,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 	mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
 	HMODULE hModule = INVALID_HANDLE_VALUE;
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)mod.base, &hModule);
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPTSTR)mod.base, &hModule);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
 		addr = (mem_voidptr_t)GetProcAddress(hModule, symbol);

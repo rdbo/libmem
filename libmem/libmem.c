@@ -1120,7 +1120,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	struct stat statbuf = { 0 };
 	int maps_file = open(path_buffer, O_RDONLY);
 	if (maps_file == -1 || stat(path_buffer, &statbuf) != 0)
-		return page;
+		return mod;
 
 	mem_size_t maps_size = (mem_size_t)statbuf.st_size;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));

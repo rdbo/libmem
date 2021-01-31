@@ -1349,7 +1349,74 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 		}
 	}
 #	elif MEM_OS == MEM_LINUX
-	read_chars = mem_ex_get_module_path(mem_in_get_process(), mod, pmodule_path);
+	mem_tchar_t page_base_str[64] = { 0 };
+	mem_tchar_t* page_base = (mem_tchar_t*)MEM_BAD;
+
+	switch (process.arch)
+	{
+	case x86_32:
+		snprintf(page_base_str, sizeof(page_base_str), "%lx-", (mem_uintptr_t)mod.base);
+		break;
+	case x86_64:
+		snprintf(page_base_str, sizeof(page_base_str), "%llx-", (mem_uintptr_t)mod.base);
+		break;
+	default:
+		return read_chars;
+	}
+
+	mem_tchar_t path_buffer[64 + 1] = { 0 };
+	memset(path_buffer, 0x0, sizeof(path_buffer));
+	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
+
+	int maps_file = open(path_buffer, O_RDONLY);
+	if (maps_file == -1) return read_chars;
+	mem_size_t maps_size = 0;
+	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
+	int read_check = 0;
+	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
+	{
+		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
+		free(maps_buffer);
+		maps_buffer = holder;
+		maps_buffer[maps_size] = c;
+		maps_buffer[maps_size + 1] = '\0';
+	}
+	if (!maps_buffer) return read_chars;
+	close(maps_file);
+
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t*)NULL; page_base = temp);
+
+	if (!page_base || page_base == (mem_tchar_t*)MEM_BAD)
+	{
+		free(maps_buffer);
+		return read_chars;
+	}
+
+	mem_tchar_t* module_path_ptr = page_base;
+	module_path_ptr = MEM_STR_CHR(module_path_ptr, MEM_STR('/'));
+	if (!module_path_ptr)
+	{
+		free(maps_buffer);
+		return read_chars;
+	}
+
+	mem_tchar_t* module_path_endptr = module_path_ptr;
+	module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
+	if (!module_path_endptr)
+	{
+		free(maps_buffer);
+		return read_chars;
+	}
+
+	mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
+	*pmodule_path = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
+	memset(*pmodule_path, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
+	memcpy(*pmodule_path, module_path_ptr, module_path_size);
+	read_chars = module_path_size / sizeof(mem_tchar_t);
+
+	free(maps_buffer);
+
 #	endif
 
 	return read_chars;

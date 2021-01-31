@@ -20,10 +20,10 @@
 #endif
 
 //Architecture
-#if (defined(_M_IX86) || defined(__i386__) || __WORDSIZE == 32)
-#define MEM_ARCH x86_32
-#elif (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || __WORDSIZE == 64)
+#if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || __WORDSIZE == 64)
 #define MEM_ARCH x86_64
+#elif (defined(_M_IX86) || defined(__i386__) || __WORDSIZE == 32)
+#define MEM_ARCH x86_32
 #else
 #define MEM_ARCH ArchUnknown
 #endif

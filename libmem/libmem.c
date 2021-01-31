@@ -1161,6 +1161,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	holder = maps_buffer;
 	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr; holder = &temp[1]);
 	module_end_ptr = holder;
+	module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
 
 	if (!module_end_ptr)
 	{

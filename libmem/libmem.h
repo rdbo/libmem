@@ -162,6 +162,7 @@ typedef mem_char_t                           mem_tchar_t;
 typedef mem_char_t*                          mem_cstring_t;
 typedef mem_wchar_t*                         mem_wstring_t;
 typedef mem_tchar_t*                         mem_tstring_t;
+typedef mem_tstring_t                        mem_string_t;
 typedef mem_byte_t*                          mem_data_t;
 typedef mem_void_t*                          mem_voidptr_t;
 
@@ -243,11 +244,6 @@ typedef struct
 	mem_flags_t   flags;
 	mem_prot_t    protection;
 } mem_page_t;
-
-typedef struct
-{
-	mem_voidptr_t* vtable;
-} mem_vtable_t;
 
 //Functions
 //mem_in

@@ -12,10 +12,13 @@
  //Data
 #if   MEM_ARCH == x86_32
 static const mem_payload_t g_mem_payloads[] = {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00", 5 },                              //x86_JMP32
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0", 7 },                      //x86_JMP64
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00", 5 },                              //x86_CALL32
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xD0", 7 },                      //x86_CALL64
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  //x86_JMP32
+	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  //x86_JMP64
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00",             5 },                  //x86_CALL32
+	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xD0",     7 },                  //x86_CALL64
+	{ (mem_data_t)NULL,                               0 },                  //DetourInvalid
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //x86 INT80 (x86_32 Syscall)
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //x86 Syscall
 };
 #elif MEM_ARCH == x86_64
 static const mem_payload_t g_mem_payloads[] = {
@@ -1923,6 +1926,70 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 
 #	if   MEM_OS == MEM_WIN
 #	elif MEM_OS == MEM_LINUX
+
+	int status;
+	struct user_regs_struct old_regs, regs;
+	mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD;
+	mem_payload_t injection_buf = { 0 };
+	mem_uintptr_t old_data = 0; //'word-sized buffer' to store reads from ptrace
+	mem_uintptr_t inj_data = 0; //'word-sized buffer' to be used on ptrace for writing
+
+	switch (process.arch)
+	{
+	case x86_32:
+		injection_buf = g_mem_payloads[DetourInvalid + 1]; //x86_32 SYSCALL
+		break;
+	case x86_64:
+		injection_buf = g_mem_payloads[DetourInvalid + 2]; //x86_64 SYSCALL
+		break;
+	default:
+		return ret;
+	}
+
+	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
+	wait(&status);
+
+	ptrace(PTRACE_GETREGS, process.pid, MEM_NULL, &old_regs);
+	regs = old_regs;
+
+#	if   MEM_ARCH == x86_32
+	regs.eax = (mem_uintptr_t)syscall_n;
+	regs.ebx = (mem_uintptr_t)arg0;
+	regs.ecx = (mem_uintptr_t)arg1;
+	regs.edx = (mem_uintptr_t)arg2;
+	regs.esi = (mem_uintptr_t)arg3;
+	regs.edi = (mem_uintptr_t)arg4;
+	regs.ebp = (mem_uintptr_t)arg5;
+	injection_addr = (mem_voidptr_t)regs.eip;
+#	elif MEM_ARCH == x86_64
+	regs.rax = (mem_uintptr_t)syscall_n;
+	regs.rdi = (mem_uintptr_t)arg0;
+	regs.rsi = (mem_uintptr_t)arg1;
+	regs.rdx = (mem_uintptr_t)arg2;
+	regs.r10 = (mem_uintptr_t)arg3;
+	regs.r8 = (mem_uintptr_t)arg4;
+	regs.r9 = (mem_uintptr_t)arg5;
+	injection_addr = (mem_voidptr_t)regs.rip;
+#	endif
+
+	old_data = (mem_uintptr_t)ptrace(PTRACE_PEEKDATA, process.pid, (void*)((mem_uintptr_t)injection_addr), NULL);
+	ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr), inj_data);
+
+	ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
+	ptrace(PTRACE_SINGLESTEP, process.pid, NULL, NULL);
+	waitpid(process.pid, &status, WSTOPPED);
+	ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
+#   if defined(MEM_86)
+	ret = (mem_voidptr_t)regs.eax;
+#   elif defined(MEM_64)
+	ret = (mem_voidptr_t)regs.rax;
+#   endif
+
+	ptrace(PTRACE_POKEDATA, process.pid, (void*)((mem_uintptr_t)injection_addr), old_data);
+
+	ptrace(PTRACE_SETREGS, process.pid, MEM_NULL, &old_regs);
+	ptrace(PTRACE_DETACH, process.pid, MEM_NULL, MEM_NULL);
+
 #	endif
 
 	return ret;

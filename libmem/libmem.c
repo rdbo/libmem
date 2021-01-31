@@ -1393,10 +1393,10 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 	switch (process.arch)
 	{
 	case x86_32:
-		snprintf(page_base_str, sizeof(page_base_str), "%lx-", (mem_uintptr_t)mod.base);
+		snprintf(page_base_str, sizeof(page_base_str), "%lx-", (mem_uint32_t)mod.base);
 		break;
 	case x86_64:
-		snprintf(page_base_str, sizeof(page_base_str), "%llx-", (mem_uintptr_t)mod.base);
+		snprintf(page_base_str, sizeof(page_base_str), "%llx-", (mem_uint64_t)mod.base);
 		break;
 	default:
 		return read_chars;
@@ -1682,10 +1682,10 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	switch (process.arch)
 	{
 	case x86_32:
-		snprintf(page_base_str, sizeof(page_base_str), "%lx-", (mem_uintptr_t)src);
+		snprintf(page_base_str, sizeof(page_base_str), "%lx-", (mem_uint32_t)src);
 		break;
 	case x86_64:
-		snprintf(page_base_str, sizeof(page_base_str), "%llx-", (mem_uintptr_t)src);
+		snprintf(page_base_str, sizeof(page_base_str), "%llx-", (mem_uint64_t)src);
 		break;
 	default:
 		return page;

@@ -1124,7 +1124,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
 	if (!maps_buffer) return mod;
-	fread(maps_buffer, 1, maps_size, maps_file);
+	fgets(maps_buffer, maps_size, maps_file);
 	fclose(maps_file);
 
 	maps_buffer[maps_size] = MEM_STR('\0');
@@ -1357,7 +1357,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
 	if (!maps_buffer) return page;
-	fread(maps_buffer, 1, maps_size, maps_file);
+	fgets(maps_buffer, maps_size, maps_file);
 	fclose(maps_file);
 
 	maps_buffer[maps_size] = MEM_STR('\0');

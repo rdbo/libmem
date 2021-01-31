@@ -611,6 +611,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 
 	mem_in_write(src, detour_buffer, detour_size);
 	free(detour_buffer);
+	ret = MEM_TRUE;
 
 	return ret;
 }

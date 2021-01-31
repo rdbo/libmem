@@ -1159,8 +1159,15 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 
 
 	holder = maps_buffer;
-	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('-'))) < (mem_uintptr_t)module_end_ptr; holder = &temp[1]);
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr; holder = &temp[1]);
 	module_end_ptr = holder;
+
+	if (!module_end_ptr)
+	{
+		free(maps_buffer);
+		return mod;
+	}
+
 	module_end_ptr = &module_end_ptr[1];
 	mem_tchar_t* module_end_endptr = strchr(module_end_ptr, ' ');
 	if (!module_end_endptr)

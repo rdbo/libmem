@@ -1547,7 +1547,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 
 		mem_module_t mod = { 0 };
 		mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
-		mem_tstring module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
+		mem_tstring_t module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
 		memset(module_str, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
 		memcpy(module_str, module_path_ptr, module_path_size);
 
@@ -1620,14 +1620,14 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 
 		mem_process_t* list_holder = *pmodule_list;
 		*pmodule_list = malloc((count + 1) * sizeof(mem_module_t));
-		if (!*pprocess_list)
+		if (!*pmodule_list)
 		{
 			count = 0;
 			free(holder);
 			break;
 		}
-		memcpy(*pprocess_list, holder, count * sizeof(mem_module_t));
-		(*pprocess_list)[count] = mod;
+		memcpy(*pmodule_list, holder, count * sizeof(mem_module_t));
+		(*pmodule_list)[count] = mod;
 		free(holder);
 		++count;
 	}

@@ -24,6 +24,8 @@
 #define MEM_ARCH x86_32
 #elif (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || __WORDSIZE == 64)
 #define MEM_ARCH x86_64
+#else
+#define MEM_ARCH ArchUnknown
 #endif
 
 //Charset
@@ -177,7 +179,7 @@ typedef enum
 {
 	x86_32 = 0,
 	x86_64,
-	arch_unknown
+	ArchUnknown
 } mem_arch_t;
 
 typedef enum
@@ -204,8 +206,15 @@ typedef enum
 	 * call eax
 	 */
 
-	detour_unknown
+	DetourInvalid
 } mem_detour_t;
+
+typedef enum
+{
+	LoadModule = 0,
+	ManualMap,
+	LoadInvalid
+} mem_load_t;
 
 typedef struct
 {
@@ -291,6 +300,9 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
 mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop);
 mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop);
+mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path);
+mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod);
+mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, mem_cstring_t symbol);
 
 #ifdef MEM_CPP
 }

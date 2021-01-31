@@ -92,7 +92,7 @@ mem_arch_t         mem_in_get_arch()
 	 * Return Value:
 	 *   Returns the architecture
 	 *   of the caller process or
-	 *   'arch_unknown' if the
+	 *   'ArchUnknown' if the
 	 *   architecture is not
 	 *   recognized
 	 */
@@ -528,7 +528,7 @@ mem_size_t         mem_in_detour_size(mem_detour_t method)
 
 	mem_size_t size = (mem_size_t)MEM_BAD;
 
-	if (method < detour_unknown)
+	if (method < DetourInvalid)
 		size = g_mem_payloads[method].size;
 
 	return size;
@@ -968,11 +968,11 @@ mem_arch_t         mem_ex_get_system_arch()
 	 *
 	 * Return Value:
 	 *   Returns the architecture of
-	 *   the system or 'arch_unknown'
+	 *   the system or 'ArchUnknown'
 	 *   on error
 	 */
 
-	mem_arch_t arch = arch_unknown;
+	mem_arch_t arch = ArchUnknown;
 
 #	if   MEM_OS == MEM_WIN
 	SYSTEM_INFO sys_info = { 0 };
@@ -996,7 +996,7 @@ mem_arch_t         mem_ex_get_system_arch()
 
 	if      (!MEM_STR_CMP(utsbuf.machine, "x86_32")) arch = x86_32;
 	else if (!MEM_STR_CMP(utsbuf.machine, "x86_64")) arch = x86_64;
-	else                                             arch = arch_unknown;
+	else                                             arch = ArchUnknown;
 
 #	endif
 
@@ -1012,11 +1012,11 @@ mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	 *
 	 * Return Value:
 	 *   Returns the architecture of
-	 *   the process or 'arch_unknown'
+	 *   the process or 'ArchUnknown'
 	 *   on error
 	 */
 
-	mem_arch_t arch = arch_unknown;
+	mem_arch_t arch = ArchUnknown;
 #	if   MEM_OS == MEM_WIN
 
 	BOOL IsWow64 = FALSE;

@@ -1618,7 +1618,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 			break;
 		}
 
-		mem_process_t* list_holder = *pmodule_list;
+		mem_module_t* list_holder = *pmodule_list;
 		*pmodule_list = malloc((count + 1) * sizeof(mem_module_t));
 		if (!*pmodule_list)
 		{

@@ -990,6 +990,14 @@ mem_arch_t         mem_ex_get_system_arch()
 	}
 
 #	elif MEM_OS == MEM_LINUX
+
+	struct utsname utsbuf = { 0 };
+	if (uname(&utsbuf) != 0) return arch;
+
+	if      (!MEM_STR_CMP(utsbuf.machine, "x86_32")) arch = x86_32;
+	else if (!MEM_STR_CMP(utsbuf.machine, "x86_64")) arch = x86_64;
+	else                                             arch = arch_unknown;
+
 #	endif
 
 	return arch;

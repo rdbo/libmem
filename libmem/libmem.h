@@ -110,6 +110,7 @@
 #include <sys/mman.h>
 #include <sys/user.h>
 #include <sys/syscall.h>
+#include <sys/utsname.h>
 #include <sys/io.h>
 #include <sys/uio.h>
 #include <dlfcn.h>

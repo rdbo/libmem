@@ -1117,18 +1117,22 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
 
-	struct stat statbuf = { 0 };
 	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1 || stat(path_buffer, &statbuf) != 0)
-		return mod;
-
-	mem_size_t maps_size = (mem_size_t)statbuf.st_size;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
+	if (maps_file == -1) return mod;
+	mem_size_t maps_size = 0;
+	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
+	int read_check = 0;
+	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
+	{
+		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
+		free(maps_buffer);
+		maps_buffer = holder;
+		maps_buffer[maps_size] = c;
+		maps_buffer[maps_size + 1] = '\0';
+	}
 	if (!maps_buffer) return mod;
-	read(maps_file, maps_buffer, maps_size);
 	close(maps_file);
-
-	maps_buffer[maps_size] = MEM_STR('\0');
 
 	mem_tchar_t* module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
 	mem_tchar_t* holder = maps_buffer;
@@ -1351,18 +1355,22 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
 
-	struct stat statbuf = { 0 };
 	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1 || stat(path_buffer, &statbuf) != 0)
-		return page;
-
-	mem_size_t maps_size = (mem_size_t)statbuf.st_size;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
-	if (!maps_buffer) return page;
-	read(maps_file, maps_buffer, maps_size);
+	if (maps_file == -1) return mod;
+	mem_size_t maps_size = 0;
+	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
+	int read_check = 0;
+	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
+	{
+		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
+		free(maps_buffer);
+		maps_buffer = holder;
+		maps_buffer[maps_size] = c;
+		maps_buffer[maps_size + 1] = '\0';
+	}
+	if (!maps_buffer) return mod;
 	close(maps_file);
-
-	maps_buffer[maps_size] = MEM_STR('\0');
 
 	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t*)NULL; page_base = &temp[1]);
 

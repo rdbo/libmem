@@ -321,7 +321,7 @@ mem_bool_t         mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t
 	 *   'src' and 'dst' addresses
 	 */
 
-	return memcpy(src, dst, size) == (void*)src ? MEM_TRUE : MEM_FALSE;
+	return memcpy(dst, src, size) == (void*)src ? MEM_TRUE : MEM_FALSE;
 }
 
 mem_bool_t         mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size)

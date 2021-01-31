@@ -1630,6 +1630,10 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 		(*pmodule_list)[count] = mod;
 		free(list_holder);
 		++count;
+
+		module_path_endptr = module_end_endptr;
+		module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
+		if (!module_path_endptr) break;
 	}
 
 	free(maps_buffer);

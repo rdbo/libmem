@@ -1117,15 +1117,16 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
 
-	FILE* maps_file = fopen(path_buffer, "rb");
-	fseek(maps_file, 0, SEEK_END);
-	long maps_size = ftell(maps_file);
-	fseek(maps_file, 0, SEEK_SET);
+	struct stat statbuf = { 0 };
+	int maps_file = open(path_buffer, O_RDONLY);
+	if (maps_file == -1 || stat(path_buffer, &statbuf) != 0)
+		return page;
 
+	mem_size_t maps_size = (mem_size_t)statbuf.st_size;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
-	if (!maps_buffer) return mod;
-	fgets(maps_buffer, maps_size, maps_file);
-	fclose(maps_file);
+	if (!maps_buffer) return page;
+	read(maps_file, maps_buffer, maps_size);
+	close(maps_file);
 
 	maps_buffer[maps_size] = MEM_STR('\0');
 
@@ -1350,15 +1351,16 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
 
-	FILE* maps_file = fopen(path_buffer, "rb");
-	fseek(maps_file, 0, SEEK_END);
-	long maps_size = ftell(maps_file);
-	fseek(maps_file, 0, SEEK_SET);
+	struct stat statbuf = { 0 };
+	int maps_file = open(path_buffer, O_RDONLY);
+	if (maps_file == -1 || stat(path_buffer, &statbuf) != 0)
+		return page;
 
+	mem_size_t maps_size = (mem_size_t)statbuf.st_size;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(maps_size + (1 * sizeof(mem_tstring_t)));
 	if (!maps_buffer) return page;
-	fgets(maps_buffer, maps_size, maps_file);
-	fclose(maps_file);
+	read(maps_file, maps_buffer, maps_size);
+	close(maps_file);
 
 	maps_buffer[maps_size] = MEM_STR('\0');
 

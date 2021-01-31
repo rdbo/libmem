@@ -1107,7 +1107,8 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 					break;
 				}
 				memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
-				(*pprocess_list)[count] = mem_ex_get_process(entry.th32ProcessID);
+				(*pprocess_list)[count].pid  = (mem_pid_t)entry.th32ProcessID;
+				(*pprocess_list)[count].arch = mem_ex_get_arch(entry.th32ProcessID);
 				free(holder);
 				++count;
 			} while (Process32Next(hSnap, &entry));
@@ -1116,6 +1117,35 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 	}
 	CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
+	DIR* pdir = opendir("/proc");
+	if (!pdir)
+	{
+		free(*pprocess_list);
+		return count;
+	}
+
+	struct dirent* pdirent;
+	while ((pdirent = readdir(pdir)))
+	{
+		mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
+		if (id != (mem_pid_t)-1)
+		{
+			mem_process_t* holder = *pprocess_list;
+			*pprocess_list = malloc((count + 1) * sizeof(mem_process_t));
+			if (!*pprocess_list)
+			{
+				count = 0;
+				free(holder);
+				break;
+}
+			memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
+			(*pprocess_list)[count].pid = id;
+			(*pprocess_list)[count].arch = mem_ex_get_arch(id);
+			free(holder);
+			++count;
+		}
+	}
+	closedir(pdir);
 #	endif
 
 	if (!count && *pprocess_list) free(*pprocess_list);

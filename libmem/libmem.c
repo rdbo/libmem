@@ -1275,13 +1275,13 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	switch (process.arch)
 	{
 	case x86_32:
-		mod.base = (mem_voidptr_t)strtoul(module_base_str, NULL, 16);
-		mod.end = (mem_voidptr_t)strtoul(module_end_str, NULL, 16);
+		mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
+		mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
 		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
 		break;
 	case x86_64:
-		mod.base = (mem_voidptr_t)strtoull(module_base_str, NULL, 16);
-		mod.end = (mem_voidptr_t)strtoull(module_end_str, NULL, 16);
+		mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
+		mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
 		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
 		break;
 	default:
@@ -1607,13 +1607,13 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 		switch (process.arch)
 		{
 		case x86_32:
-			mod.base = (mem_voidptr_t)strtoul(module_base_str, NULL, 16);
-			mod.end = (mem_voidptr_t)strtoul(module_end_str, NULL, 16);
+			mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
+			mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
 			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
 			break;
 		case x86_64:
-			mod.base = (mem_voidptr_t)strtoull(module_base_str, NULL, 16);
-			mod.end = (mem_voidptr_t)strtoull(module_end_str, NULL, 16);
+			mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
+			mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
 			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
 			break;
 		default:
@@ -1771,13 +1771,13 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	switch (process.arch)
 	{
 	case x86_32:
-		page.base = (mem_voidptr_t)strtoul(page_base_addr, NULL, 16);
-		page.end  = (mem_voidptr_t)strtoul(page_end_addr, NULL, 16);
+		page.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_base_addr, NULL, 16);
+		page.end  = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_end_addr, NULL, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
 		break;
 	case x86_64:
-		page.base = (mem_voidptr_t)strtoull(page_base_addr, NULL, 16);
-		page.end = (mem_voidptr_t)strtoull(page_end_addr, NULL, 16);
+		page.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_base_addr, NULL, 16);
+		page.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_end_addr, NULL, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
 		break;
 	default:

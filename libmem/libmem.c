@@ -70,13 +70,7 @@ mem_size_t         mem_in_get_process_name(mem_tstring_t* pprocess_name)
 	 */
 
 	mem_size_t read_chars = 0;
-#	if MEM_OS == MEM_WIN
-	*pprocess_name = (mem_tstring_t)malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
-	read_chars = (mem_size_t)GetModuleFileName(NULL, *pprocess_name, MEM_PATH_MAX);
-#	elif MEM_OS == MEM_LINUX
 	read_chars = mem_ex_get_process_name(mem_in_get_pid(), pprocess_name);
-#	endif
-
 	return read_chars;
 }
 

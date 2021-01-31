@@ -211,7 +211,7 @@ typedef enum
 
 typedef enum
 {
-	LoadModule = 0,
+	ModuleLoad = 0,
 	ManualMap,
 	LoadInvalid
 } mem_load_t;

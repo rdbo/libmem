@@ -1222,7 +1222,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	mem_tchar_t* module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
 	mem_tchar_t* holder = maps_buffer;
 
-	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr; holder = &temp[1]);
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
 	module_base_ptr = holder;
 
 	if (!module_base_ptr) module_base_ptr = maps_buffer;
@@ -1244,7 +1244,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 
 
 	holder = maps_buffer;
-	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr; holder = temp);
+	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
 	module_end_ptr = holder;
 	module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
 	module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
@@ -1513,6 +1513,111 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 		}
 	}
 #	elif MEM_OS == MEM_LINUX
+
+	mem_tchar_t path_buffer[64 + 1] = { 0 };
+	memset(path_buffer, 0x0, sizeof(path_buffer));
+	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
+
+	int maps_file = open(path_buffer, O_RDONLY);
+	if (maps_file == -1) return read_chars;
+	mem_size_t maps_size = 0;
+	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
+	int read_check = 0;
+	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
+	{
+		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
+		free(maps_buffer);
+		maps_buffer = holder;
+		maps_buffer[maps_size] = c;
+		maps_buffer[maps_size + 1] = '\0';
+	}
+	if (!maps_buffer) return read_chars;
+	close(maps_file);
+
+	mem_tchar_t* module_path_ptr = maps_buffer;
+	mem_tchar_t* module_path_endptr = maps_buffer;
+
+	while ((module_path_ptr = MEM_STR_CHR(module_path_endptr, MEM_STR('/'))) != NULL)
+	{
+		module_path_endptr = MEM_STR_CHR(module_path_ptr, MEM_STR('\n'));
+		if (!module_path_endptr) break;
+
+		mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
+		mem_tstring module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
+		memset(module_str, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
+		memcpy(module_str, module_path_ptr, module_path_size);
+
+		mem_tchar_t* module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
+		mem_tchar_t* holder = maps_buffer;
+
+		for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
+		module_base_ptr = holder;
+
+		if (!module_base_ptr) module_base_ptr = maps_buffer;
+		mem_tchar_t * module_base_endptr = strchr(module_base_ptr, '-');
+		if (!module_base_endptr)
+		{
+			free(maps_buffer);
+			break;
+		}
+
+		mem_tchar_t* module_end_ptr = (mem_tchar_t*)NULL;
+		for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t*)NULL; module_end_ptr = temp);
+
+		if (!module_end_ptr)
+		{
+			free(maps_buffer);
+			break;
+		}
+
+
+		holder = maps_buffer;
+		for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
+		module_end_ptr = holder;
+		module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
+		module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
+
+		if (!module_end_ptr)
+		{
+			free(maps_buffer);
+			break;
+		}
+
+		module_end_ptr = &module_end_ptr[1];
+		mem_tchar_t* module_end_endptr = strchr(module_end_ptr, ' ');
+		if (!module_end_endptr)
+		{
+			free(maps_buffer);
+			break;
+		}
+
+		mem_tchar_t module_base_str[64] = { 0 };
+		memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
+
+		mem_tchar_t module_end_str[64] = { 0 };
+		memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
+
+		switch (process.arch)
+		{
+		case x86_32:
+			mod.base = (mem_voidptr_t)strtoul(module_base_str, NULL, 16);
+			mod.end = (mem_voidptr_t)strtoul(module_end_str, NULL, 16);
+			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+			break;
+		case x86_64:
+			mod.base = (mem_voidptr_t)strtoull(module_base_str, NULL, 16);
+			mod.end = (mem_voidptr_t)strtoull(module_end_str, NULL, 16);
+			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+			break;
+		default:
+			free(maps_buffer);
+			break;
+		}
+	}
+
+	free(maps_buffer);
+
 #	endif
 
 	return count;

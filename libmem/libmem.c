@@ -1356,7 +1356,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return mod;
+	if (maps_file == -1) return page;
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;

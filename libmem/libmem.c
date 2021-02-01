@@ -10,7 +10,7 @@
 #ifdef MEM_COMPATIBLE
 
  //Data
-#if   MEM_ARCH == x86_32
+#if   MEM_ARCH == MEM_x86_32
 static const mem_payload_t g_mem_payloads[] = {
 	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  //x86_JMP32
 	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  //x86_JMP64
@@ -20,7 +20,7 @@ static const mem_payload_t g_mem_payloads[] = {
 	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //x86 INT80 (x86_32 Syscall)
 	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //x86 Syscall
 };
-#elif MEM_ARCH == x86_64
+#elif MEM_ARCH == MEM_x86_64
 static const mem_payload_t g_mem_payloads[] = {
 	{ (mem_data_t)"\xE9\x00\x00\x00\x00", 5 },                              //x86_JMP32
 	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, //x86_JMP64
@@ -571,7 +571,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 	if (!detour_buffer) return ret;
 	mem_in_read((mem_voidptr_t)g_mem_payloads[method].payload, detour_buffer, detour_size);
 
-#	if   MEM_ARCH == x86_32
+#	if   MEM_ARCH == MEM_x86_32
 	switch (method)
 	{
 	case x86_JMP32:
@@ -589,7 +589,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 	default:
 		break;
 	}
-#	elif MEM_ARCH == x86_64
+#	elif MEM_ARCH == MEM_x86_64
 	switch (method)
 	{
 	case x86_JMP32:
@@ -1950,7 +1950,7 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	ptrace(PTRACE_GETREGS, process.pid, MEM_NULL, &old_regs);
 	regs = old_regs;
 
-#	if   MEM_ARCH == x86_32
+#	if   MEM_ARCH == MEM_x86_32
 	regs.eax = (mem_uintptr_t)syscall_n;
 	regs.ebx = (mem_uintptr_t)arg0;
 	regs.ecx = (mem_uintptr_t)arg1;
@@ -1959,7 +1959,7 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	regs.edi = (mem_uintptr_t)arg4;
 	regs.ebp = (mem_uintptr_t)arg5;
 	injection_addr = (mem_voidptr_t)regs.eip;
-#	elif MEM_ARCH == x86_64
+#	elif MEM_ARCH == MEM_x86_64
 	regs.rax = (mem_uintptr_t)syscall_n;
 	regs.rdi = (mem_uintptr_t)arg0;
 	regs.rsi = (mem_uintptr_t)arg1;
@@ -1977,9 +1977,9 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	ptrace(PTRACE_SINGLESTEP, process.pid, NULL, NULL);
 	waitpid(process.pid, &status, WSTOPPED);
 	ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
-#   if   MEM_ARCH == x86_32
+#   if   MEM_ARCH == MEM_x86_32
 	ret = (mem_voidptr_t)regs.eax;
-#   elif MEM_ARCH == x86_64
+#   elif MEM_ARCH == MEM_x86_64
 	ret = (mem_voidptr_t)regs.rax;
 #   endif
 

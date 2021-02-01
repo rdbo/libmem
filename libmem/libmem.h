@@ -20,12 +20,16 @@
 #endif
 
 //Architecture
+#define MEM_x86_32       0
+#define MEM_x86_64       1
+#define MEM_ARCH_UNKNOWN 2
+
 #if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || __WORDSIZE == 64)
-#define MEM_ARCH x86_64
+#define MEM_ARCH MEM_x86_64
 #elif (defined(_M_IX86) || defined(__i386__) || __WORDSIZE == 32)
-#define MEM_ARCH x86_32
+#define MEM_ARCH MEM_x86_32
 #else
-#define MEM_ARCH ArchUnknown
+#define MEM_ARCH MEM_ARCH_UNKNOWN
 #endif
 
 //Charset
@@ -178,9 +182,9 @@ typedef mem_int32_t                          mem_flags_t;
 
 typedef enum
 {
-	x86_32 = 0,
-	x86_64,
-	ArchUnknown
+	x86_32 = MEM_x86_32,
+	x86_64 = MEM_x86_64,
+	ArchUnknown = MEM_ARCH_UNKNOWN
 } mem_arch_t;
 
 typedef enum

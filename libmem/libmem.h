@@ -166,7 +166,7 @@ typedef mem_char_t                           mem_tchar_t;
 typedef mem_char_t*                          mem_cstring_t;
 typedef mem_wchar_t*                         mem_wstring_t;
 typedef mem_tchar_t*                         mem_tstring_t;
-typedef mem_tstring_t                        mem_string_t;
+//typedef mem_tstring_t                      mem_string_t;
 typedef mem_byte_t*                          mem_data_t;
 typedef mem_void_t*                          mem_voidptr_t;
 
@@ -252,8 +252,8 @@ typedef struct
 //Functions
 //mem_in
 mem_pid_t          mem_in_get_pid();
-mem_size_t         mem_in_get_process_path(mem_tstring_t* pprocess_path);
 mem_size_t         mem_in_get_process_name(mem_tstring_t* pprocess_name);
+mem_size_t         mem_in_get_process_path(mem_tstring_t* pprocess_path);
 mem_arch_t         mem_in_get_arch();
 mem_process_t      mem_in_get_process();
 mem_module_t       mem_in_get_module(mem_tstring_t module_ref);

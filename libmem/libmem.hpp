@@ -179,6 +179,4 @@ namespace mem
 	}
 }
 
-#include "libmem.h"
-
 #endif //LIBMEM_HPP

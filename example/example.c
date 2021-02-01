@@ -1,197 +1,203 @@
 #include "../libmem/libmem.h"
-
-
-#if defined(MEM_WIN)     //Windows specific
-#define PROCESS_NAME MEM_STR("example.exe")
-#define PROTECTION PAGE_EXECUTE_READWRITE
-#if defined(MEM_86) //32 bit only
-#define CALL __cdecl
-#define HOOK_SIZE 12
-#elif defined(MEM_64) //64 bit only
-#define CALL __fastcall
-#define HOOK_SIZE 12
-#endif
-#elif defined(MEM_LINUX) //Linux specific
-#define PROCESS_NAME MEM_STR("example.o")
-#define PROTECTION PROT_EXEC | PROT_READ | PROT_WRITE
-#define CALL
-#if defined(MEM_86)   //32 bit only
-#define HOOK_SIZE 12
-#elif defined(MEM_64) //64 bit only
-#define HOOK_SIZE 12
-#endif
+#ifdef MEM_COMPATIBLE
+#if   MEM_CHARSET == MEM_UCS
+#define print(...) wprintf(__VA_ARGS__)
+#elif MEM_CHARSET == MEM_MBCS
+#define print(...) printf(__VA_ARGS__)
 #endif
 
-#if defined(MEM_UCS)    //Unicode character set
-#define print(...) wprintf(MEM_STR("\n") __VA_ARGS__)
-#elif defined(MEM_MBCS) //Multibyte character set
-#define print(...) printf(MEM_STR("\n") __VA_ARGS__)
+#if   MEM_OS == MEM_WIN
+#define NAKEDFN __declspec(naked) void
+#elif MEM_OS == MEM_LINUX
+#define NAKEDFN void __attribute__((naked))
 #endif
 
-#define tprint(...) print("    "  __VA_ARGS__)
-#define HOOK_METHOD MEM_DT_M0
+#if   MEM_ARCH == MEM_x86_32
+#define EXAMPLE_HOOK 1
+#elif MEM_ARCH == MEM_x86_64
+#define EXAMPLE_HOOK 0
+#endif
 
-typedef enum { false, true } bool;
+#define tprint(...)  print(MEM_STR("    ") __VA_ARGS__)
+#define separator()  print(MEM_STR("--------------------\n"))
+#define tseparator() tprint(MEM_STR("--------------------\n"))
+#define arch_to_str(arch) (arch == x86_32 ? "x86_32" : arch == x86_64 ? "x86_64" : "Unknown")
+#define print_logo() print(MEM_STR("\n\
+/*\n\
+ *  ----------------------------------\n\
+ * |         libmem - by rdbo         |\n\
+ * |  https://github.com/rdbo/libmem  |\n\
+ *  ----------------------------------\n\
+ */\n\
+\n"))
 
-bool CALL function(bool ret_value);    //Function that will be hooked on 'Internal tests'
-bool CALL hk_function(bool ret_value); //Hook of function
-typedef bool(CALL* t_function)(bool); //Template of the hooked function
-t_function o_function;                /*Gateway to run the original code of the
-									  hooked function and restore the normal execution
-									  */
+#if   EXAMPLE_HOOK
+
+mem_voidptr_t HookReturn = NULL;
+
+void success_function()
+{
+	tprint(MEM_STR("Hooked Succeeded!\n"));
+}
+
+void failure_function()
+{
+	tprint(MEM_STR("Hook Failed!\n"));
+}
+
+NAKEDFN target_function(void* fn)
+{
+#	ifdef _MSC_VER
+	__asm
+	{
+		//Bytes for the hook
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+
+		push ebp
+		mov ebp, esp
+		push eax
+		//Call function passed in 'fn'
+		mov eax, [ebp + 8]
+		call eax
+		pop eax
+
+		mov esp, ebp
+		pop ebp
+		ret
+	}
+#	else
+#	endif
+}
+
+NAKEDFN hook_function()
+{
+#	if   MEM_OS == MEM_WIN
+	__asm
+	{
+		push eax
+		mov eax, success_function
+		mov [ebp + 8], eax
+		pop eax
+		jmp HookReturn
+	}
+#	elif MEM_OS == MEM_LINUX
+#	endif
+}
+
+#endif //MEM_ARCH
 
 int main()
 {
-	//External
-	print("External tests:");
+	//Data
+	mem_pid_t     pid = 0;
+	mem_process_t process = { 0 };
+	mem_tstring_t process_name = (mem_tstring_t)NULL;
+	mem_tstring_t process_path = (mem_tstring_t)NULL;
 
-	//-- Get Process ID
-	mem_string_t process_name = mem_string_new(PROCESS_NAME);
-	mem_pid_t pid_ex = mem_ex_get_pid(process_name);
-	tprint("PID:                %i", pid_ex);
+	mem_module_t  mod = { 0 };
+	mem_tstring_t module_name = (mem_tstring_t)NULL;
+	mem_tstring_t module_path = (mem_tstring_t)NULL;
 
-	//-- Get Process Information
-	mem_process_t process_ex = mem_ex_get_process(pid_ex);
-	tprint("Process Name:       %s", mem_string_c_str(&process_ex.name));
-	tprint("Process ID:         %i", process_ex.pid);
+	mem_page_t    page = { 0 };
+	mem_byte_t    pattern[] = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+	mem_tstring_t mask = MEM_STR("xxxxxxxxx");
+	mem_voidptr_t scan = (mem_voidptr_t)MEM_BAD;
+	mem_voidptr_t pattern_scan = (mem_voidptr_t)MEM_BAD;
 
-	//-- Get Process Module
-	mem_module_t process_mod_ex = mem_ex_get_module(process_ex, process_name);
-	tprint("Module Name:        %s", mem_string_c_str(&process_mod_ex.name));
-	tprint("Module Path:        %s", mem_string_c_str(&process_mod_ex.path));
-	tprint("Module Base:        %p", process_mod_ex.base);
-	tprint("Module Size:        %p", (mem_voidptr_t)process_mod_ex.size);
-	tprint("Module End:         %p", process_mod_ex.end);
+	mem_voidptr_t alloc = (mem_voidptr_t)MEM_BAD;
+	mem_prot_t    protection = 0;
+	int read_buf  = 0;
+	int write_buf = 1337;
+#	if   MEM_OS == MEM_WIN
+	protection = PAGE_EXECUTE_READWRITE;
+#	elif MEM_OS == MEM_LINUX
+	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+#	endif
 
-	//-- Allocate Memory
-	mem_voidptr_t alloc_ex = mem_ex_allocate(process_ex, sizeof(int), PROTECTION);
-	tprint("Allocated memory:   %p", alloc_ex);
+	//Examples
+	print_logo();
+	print(MEM_STR("Press [ENTER] to start..."));
+	getchar();
 
-	//-- Writing to Memory
+	print(MEM_STR("Internal: \n"));
+	mem_in_get_process_name(&process_name);
+	mem_in_get_process_path(&process_path);
+	pid = mem_in_get_pid();
+	process = mem_in_get_process();
 
-	int write_buffer_ex = 10;
-	mem_ex_write(process_ex, alloc_ex, &write_buffer_ex, sizeof(write_buffer_ex));
-	tprint("Wrote '%i' to:      %p", write_buffer_ex, alloc_ex);
+	tprint(MEM_STR("Process Name:    %s\n"), process_name);
+	tprint(MEM_STR("Process Path:    %s\n"), process_path);
+	tprint(MEM_STR("Process ID:      %p\n"), (void*)pid);
+	tprint(MEM_STR("Process Arch:    %s\n"), arch_to_str(process.arch));
+	tseparator();
 
-	//-- Reading from Memory
-	int read_buffer_ex = 0;
-	mem_ex_read(process_ex, alloc_ex, &read_buffer_ex, sizeof(read_buffer_ex));
-	tprint("Read  '%i' from:    %p", read_buffer_ex, alloc_ex);
+	mod = mem_in_get_module(process_path);
+	mem_in_get_module_name(mod, &module_name);
+	mem_in_get_module_path(mod, &module_path);
+	tprint(MEM_STR("Module Name:     %s\n"), module_name);
+	tprint(MEM_STR("Module Path:     %s\n"), module_path);
+	tprint(MEM_STR("Module Base:     %p\n"), mod.base);
+	tprint(MEM_STR("Module Size:     %p\n"), (void*)mod.size);
+	tprint(MEM_STR("Module End:      %p\n"), mod.end);
+	tseparator();
 
-	//-- Pattern Scanning
-	mem_byte_t pattern[] = { (mem_byte_t)0x10, (mem_byte_t)0x20, (mem_byte_t)0x0, (mem_byte_t)0x30, (mem_byte_t)0x40, (mem_byte_t)0x50,(mem_byte_t)0x60, (mem_byte_t)0x70, (mem_byte_t)0x80, (mem_byte_t)0x90, (mem_byte_t)0xA0, (mem_byte_t)0x00, (mem_byte_t)0xB0 };
-	mem_string_t mask = mem_string_new(MEM_STR("xx?xxxxxxxx?x"));
-	mem_voidptr_t scan = mem_ex_pattern_scan(process_ex, pattern, mask, (mem_voidptr_t)((mem_uintptr_t)pattern - 0x10), (mem_voidptr_t)((mem_uintptr_t)pattern + 0x10));
-	tprint("Pattern Scan:       %p", scan);
-	tprint(" (expected result): %p", (mem_voidptr_t)pattern);
+	page = mem_in_get_page((mem_voidptr_t)pattern);
+	tprint(MEM_STR("Page Base:       %p\n"), page.base);
+	tprint(MEM_STR("Page Size:       %p\n"), (void*)page.size);
+	tprint(MEM_STR("Page End:        %p\n"), page.end);
+	tprint(MEM_STR("Page Protection: %p\n"), (void*)page.protection);
+	tprint(MEM_STR("Page Flags:      %p\n"), (void*)page.flags);
+	tseparator();
 
-	//-- Get Page Information
-	mem_page_t page_ex = mem_ex_get_page(process_ex, process_mod_ex.base);
-	tprint("Page Base:          %p", page_ex.base);
-	tprint("Page Size:          %p", (mem_voidptr_t)page_ex.size);
-	tprint("Page End:           %p", page_ex.end);
-	tprint("Page Protection:    %i", (mem_int_t)page_ex.protection);
-	tprint("Page Flags:         %i", (mem_int_t)page_ex.flags);
+	scan = mem_in_scan(pattern, sizeof(pattern), page.base, page.end);
+	pattern_scan = mem_in_pattern_scan(pattern, mask, page.base, page.end);
+	tprint(MEM_STR("Scan:            %p\n"), scan);
+	tprint(MEM_STR("Pattern Scan:    %p\n"), pattern_scan);
+	tprint(MEM_STR("Expected Result: %p\n"), (void*)pattern);
+	tseparator();
 
-	print();
-	print("====================");
-	print();
+	alloc = mem_in_allocate(sizeof(write_buf), protection);
+	mem_in_write(alloc, &write_buf, sizeof(write_buf));
+	mem_in_read(alloc, &read_buf, sizeof(read_buf));
+	mem_in_deallocate(alloc, sizeof(write_buf));
+	tprint(MEM_STR("Allocation:      %p\n"), alloc);
+	tprint(MEM_STR("Written:         %i\n"), write_buf);
+	tprint(MEM_STR("Read:            %i\n"), read_buf);
+	tseparator();
 
-	//====================
-
-	//Internal
-
-	print("Internal tests:");
-
-	//-- Get Process ID
-	mem_pid_t pid_in = mem_in_get_pid();
-	tprint("PID:                %i", pid_in);
-
-	//-- Get Process Information
-	mem_process_t process_in = mem_in_get_process();
-	tprint("Process Name:       %s", mem_string_c_str(&process_in.name));
-	tprint("Process ID:         %i", process_in.pid);
-
-	//-- Get Process Module
-	mem_module_t process_mod_in = mem_in_get_module(process_name);
-	tprint("Module Name:        %s", mem_string_c_str(&process_mod_in.name));
-	tprint("Module Path:        %s", mem_string_c_str(&process_mod_in.path));
-	tprint("Module Base:        %p", process_mod_in.base);
-	tprint("Module Size:        %p", (mem_voidptr_t)process_mod_in.size);
-	tprint("Module End:         %p", process_mod_in.end);
-
-	//-- Allocate Memory
-
-	mem_voidptr_t alloc_in = mem_in_allocate(sizeof(int), PROTECTION);
-	tprint("Allocated memory:   %p", alloc_in);
-
-	//-- Write to Memory
-	int write_buffer_in = 1337;
-	mem_in_write(alloc_in, &write_buffer_in, sizeof(write_buffer_in));
-	tprint("Wrote '%i' to:    %p", write_buffer_in, alloc_in);
-
-	//-- Read from Memory
-
-	int read_buffer_in = 0;
-	mem_in_read(alloc_in, &read_buffer_in, sizeof(read_buffer_in));
-	tprint("Read  '%i' from:  %p", read_buffer_in, alloc_in);
-
-	//-- Pattern Scanning
-
-	mem_voidptr_t scan_in = mem_in_pattern_scan(pattern, mask, (mem_voidptr_t)((mem_uintptr_t)pattern - 0x10), (mem_voidptr_t)((mem_uintptr_t)pattern + 0x10));
-	tprint("Pattern Scan:       %p", scan_in);
-	tprint(" (expected result): %p", (mem_voidptr_t)pattern);
-
-	//-- Get Page Information
-	mem_page_t page_in = mem_in_get_page(process_mod_in.base);
-	tprint("Page Base:          %p", page_in.base);
-	tprint("Page Size:          %p", (mem_voidptr_t)page_in.size);
-	tprint("Page End:           %p", page_in.end);
-	tprint("Page Protection:    %i", (mem_int_t)page_in.protection);
-	tprint("Page Flags:         %i", (mem_int_t)page_in.flags);
-
-	/*-- Hook 'function' (the overwritten bytes size can vary on each compilation, so it's commented).
-	o_function = (t_function)mem_in_detour_trampoline(
-	(mem_voidptr_t)function,    //target
-	(mem_voidptr_t)hk_function, //detour
-	HOOK_SIZE,                  //size of the overwritten ASM instructions
-	HOOK_METHOD,                //hooking method (check mem_detour_int_t)
-	NULL                        //  stolen bytes (to restore the original bytes in the future).
-	//  Use NULL to ignore
-
-	);
-
-	function(false);
-	*/
-
+#	if   EXAMPLE_HOOK
+	tprint(MEM_STR("Target Function: %p\n"), (void*)target_function);
+	tprint(MEM_STR("Hook   Function: %p\n"), (void*)hook_function);
+	mem_byte_t* p_target_function = (mem_byte_t*)target_function;
+	if (p_target_function[0] == 0xE9) p_target_function = &p_target_function[(*(mem_intptr_t*)(&p_target_function[1])) + 5];
+	HookReturn = mem_in_detour_trampoline((mem_voidptr_t)p_target_function, (mem_voidptr_t)hook_function, mem_in_detour_size(x86_JMP32), x86_JMP32, NULL);
+	target_function((void*)failure_function);
+	tseparator();
+#	endif
 
 	//Free memory
-	mem_module_free(&process_mod_in);
-	mem_module_free(&process_mod_ex);
-	mem_process_free(&process_in);
-	mem_process_free(&process_ex);
-	mem_string_free(&mask);
-	mem_string_free(&process_name);
+	free(module_path);
+	free(module_name);
+	free(process_path);
+	free(process_name);
 
-	//Exit
-	print();
-	print("Press [ENTER] to exit...");
+	print(MEM_STR("Press [ENTER] to exit..."));
 	getchar();
 	return 0;
 }
-
-bool CALL function(bool ret_value)
-{
-	/* This function will be hooked and will execute 'hk_function' instead;
-	After that, it will run this function and restore the original execution flow.
-	*/
-
-	return ret_value;
-}
-
-bool CALL hk_function(bool ret_value)
-{
-	tprint("Hooked successfully!");
-	ret_value = true;
-	return o_function(ret_value);
-}
+#endif

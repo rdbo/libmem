@@ -53,7 +53,7 @@ namespace mem
 		inline mem_string_t                 get_module_path(mem_module_t mod)
 		{
 			mem_tstring_t module_path = (mem_tstring_t)NULL;
-			size_t read_chars = mem_in_get_module_name(mod, &module_path);
+			size_t read_chars = mem_in_get_module_path(mod, &module_path);
 			mem_string_t  str = (read_chars ? module_path : MEM_STR(""));
 			return str;
 		}

@@ -164,8 +164,10 @@ int main()
 	tprint(MEM_STR("Page Flags:      %p\n"), (void*)page.flags);
 	tseparator();
 
-	scan = mem_in_scan(pattern, sizeof(pattern), page.base, page.end);
-	pattern_scan = mem_in_pattern_scan(pattern, mask, page.base, page.end);
+	mem_voidptr_t scan_start = (mem_voidptr_t)&pattern[-10];
+	mem_voidptr_t scan_stop = (mem_voidptr_t)&pattern[10];
+	scan = mem_in_scan(pattern, sizeof(pattern), scan_start, scan_stop);
+	pattern_scan = mem_in_pattern_scan(pattern, mask, scan_start, scan_stop);
 	tprint(MEM_STR("Scan:            %p\n"), scan);
 	tprint(MEM_STR("Pattern Scan:    %p\n"), pattern_scan);
 	tprint(MEM_STR("Expected Result: %p\n"), (void*)pattern);

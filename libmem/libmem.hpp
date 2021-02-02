@@ -69,18 +69,26 @@ namespace mem
 		}
 		inline mem_page_t                   get_page(mem_voidptr_t src) { return mem_in_get_page(src); }
 		inline mem_bool_t                   read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size) { return mem_in_read(src, dst, size); }
+		template<typename mem_type_t>
+		inline mem_type_t                   read(mem_voidptr_t src) { mem_type_t holder = (mem_type_t)MEM_BAD; mem::in::read(src, (mem_voidptr_t)&holder, sizeof(holder)); return holder; }
 		inline mem_bool_t                   write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size) { return mem_in_write(dst, src, size); }
+		template<typename mem_type_t>
+		inline mem_bool_t                   write(mem_voidptr_t dst, mem_type_t src) { return mem::in::write(dst, (mem_voidptr_t)&src, sizeof(src)); }
 		inline mem_bool_t                   set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size) { return mem_in_set(src, byte, size); }
 		inline mem_voidptr_t                syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5) { return mem_in_syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
 		inline mem_bool_t                   protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t* pold_protection) { return mem_in_protect(src, size, protection, pold_protection); }
 		inline mem_voidptr_t                allocate(mem_size_t size, mem_prot_t protection) { return mem_in_allocate(size, protection); }
 		inline mem_bool_t                   deallocate(mem_voidptr_t src, mem_size_t size) { return mem_in_deallocate(src, size); }
 		inline mem_voidptr_t                scan(mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop) { return mem_in_scan(data, size, start, stop); }
+		inline mem_voidptr_t                scan(mem_data_t data, mem_size_t size, mem_module_t mod) { return mem_in_scan(data, size, mod.base, mod.end); }
+		inline mem_voidptr_t                scan(mem_data_t data, mem_size_t size, mem_page_t page) { return mem_in_scan(data, size, page.base, page.end); }
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop) { return mem_in_pattern_scan(pattern, mask, start, stop); }
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_voidptr_t start, mem_voidptr_t stop) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), start, stop); }
+		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_module_t mod) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), mod.base, mod.end); }
+		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_page_t page) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), page.base, page.end); }
 		inline mem_size_t                   detour_size(mem_detour_t method) { return mem_in_detour_size(method); }
-		inline mem_bool_t                   detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_data_t* stolen_bytes) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
-		inline mem_voidptr_t                detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_data_t* stolen_bytes) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
+		inline mem_bool_t                   detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method = x86_JMP64, mem_data_t* stolen_bytes = (mem_data_t*)NULL) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
+		inline mem_voidptr_t                detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method = x86_JMP64, mem_data_t* stolen_bytes = (mem_data_t*)NULL) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
 		inline mem_bool_t                   detour_restore(mem_voidptr_t src, mem_data_t stolen_bytes, mem_size_t size) { return mem_in_detour_restore(src, stolen_bytes, size); }
 		inline mem_module_t                 load_module(mem_tstring_t path) { return mem_in_load_module(path); }
 		inline mem_module_t                 load_module(mem_string_t path) { return mem_in_load_module((mem_tstring_t)path.c_str()); }
@@ -163,15 +171,23 @@ namespace mem
 		inline mem_page_t                   get_page(mem_process_t process, mem_voidptr_t src) { return mem_ex_get_page(process, src); }
 		inline mem_bool_t                   is_process_running(mem_process_t process) { return mem_ex_is_process_running(process); }
 		inline mem_bool_t                   read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size) { return mem_ex_read(process, src, dst, size); }
+		template<typename mem_type_t>
+		inline mem_type_t                   read(mem_process_t process, mem_voidptr_t src) { mem_type_t holder = (mem_type_t)MEM_BAD; mem::ex::read(process, src, (mem_voidptr_t)&holder, sizeof(holder)); return holder; }
 		inline mem_bool_t                   write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size) { return mem_ex_write(process, dst, src, size); }
+		template<typename mem_type_t>
+		inline mem_bool_t                   write(mem_process_t process, mem_voidptr_t dst, mem_type_t src) { return mem::ex::write(process, dst, (mem_voidptr_t)&src, sizeof(src)); }
 		inline mem_bool_t                   set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size) { return mem_ex_set(process, dst, byte, size); }
 		inline mem_voidptr_t                syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5) { return mem_ex_syscall(process, syscall_n, arg0, arg1, arg2, arg3, arg4, arg5); }
 		inline mem_bool_t                   protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t* pold_protection) { return mem_ex_protect(process, src, size, protection, pold_protection); }
 		inline mem_voidptr_t                allocate(mem_process_t process, mem_size_t size, mem_prot_t protection) { return mem_ex_allocate(process, size, protection); }
 		inline mem_bool_t                   deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size) { return mem_ex_deallocate(process, src, size); }
 		inline mem_voidptr_t                scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop) { return mem_ex_scan(process, data, size, start, stop); }
+		inline mem_voidptr_t                scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_module_t mod) { return mem_ex_scan(process, data, size, mod.base, mod.end); }
+		inline mem_voidptr_t                scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_page_t page) { return mem_ex_scan(process, data, size, page.base, page.end); }
 		inline mem_voidptr_t                pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop) { return mem_ex_pattern_scan(process, pattern, mask, start, stop); }
 		inline mem_voidptr_t                pattern_scan(mem_process_t process, mem_data_t pattern, mem_string_t mask, mem_voidptr_t start, mem_voidptr_t stop) { return mem_ex_pattern_scan(process, pattern, (mem_tstring_t)mask.c_str(), start, stop); }
+		inline mem_voidptr_t                pattern_scan(mem_process_t process, mem_data_t pattern, mem_string_t mask, mem_module_t mod) { return mem_ex_pattern_scan(process, pattern, (mem_tstring_t)mask.c_str(), mod.base, mod.end); }
+		inline mem_voidptr_t                pattern_scan(mem_process_t process, mem_data_t pattern, mem_string_t mask, mem_page_t page) { return mem_ex_pattern_scan(process, pattern, (mem_tstring_t)mask.c_str(), page.base, page.end); }
 		inline mem_module_t                 load_module(mem_process_t process, mem_tstring_t path) { return mem_ex_load_module(process, path); }
 		inline mem_module_t                 load_module(mem_process_t process, mem_string_t path) { return mem_ex_load_module(process, (mem_tstring_t)path.c_str()); }
 		inline mem_bool_t                   unload_module(mem_process_t process, mem_module_t mod) { return mem_ex_unload_module(process, mod); }

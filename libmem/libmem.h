@@ -216,8 +216,8 @@ typedef enum
 
 typedef enum
 {
-	ModuleLoad = 0,
-	ManualMap,
+	LoadFile = 0,
+	LoadMemory,
 	LoadInvalid
 } mem_load_t;
 

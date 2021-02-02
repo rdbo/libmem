@@ -1215,8 +1215,8 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 		maps_buffer[maps_size] = c;
 		maps_buffer[maps_size + 1] = '\0';
 	}
-	if (!maps_buffer) return mod;
 	close(maps_file);
+	if (!maps_buffer) return mod;
 
 	mem_tchar_t* module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
 	mem_tchar_t* holder = maps_buffer;
@@ -1419,8 +1419,8 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 		maps_buffer[maps_size] = c;
 		maps_buffer[maps_size + 1] = '\0';
 	}
-	if (!maps_buffer) return read_chars;
 	close(maps_file);
+	if (!maps_buffer) return read_chars;
 
 	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t*)NULL; page_base = temp);
 
@@ -1531,8 +1531,8 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 		maps_buffer[maps_size] = c;
 		maps_buffer[maps_size + 1] = '\0';
 	}
-	if (!maps_buffer) return count;
 	close(maps_file);
+	if (!maps_buffer) return count;
 
 	mem_tchar_t* module_path_ptr = maps_buffer;
 	mem_tchar_t* module_path_endptr = maps_buffer;
@@ -1708,8 +1708,8 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 		maps_buffer[maps_size] = c;
 		maps_buffer[maps_size + 1] = '\0';
 	}
-	if (!maps_buffer) return page;
 	close(maps_file);
+	if (!maps_buffer) return page;
 
 	page_base = MEM_STR_STR(maps_buffer, page_base_str);
 

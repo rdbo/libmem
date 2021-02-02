@@ -1674,7 +1674,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	long page_size = sysconf(_SC_PAGE_SIZE);
 	src = (mem_voidptr_t)((mem_uintptr_t)src & -page_size);
 
-	mem_tchar_t page_base_str[64];
+	mem_tchar_t page_base_str[64] = { 0 };
 	mem_tchar_t* page_base = (mem_tchar_t*)MEM_BAD;
 	mem_tchar_t* page_end = (mem_tchar_t*)MEM_BAD;
 

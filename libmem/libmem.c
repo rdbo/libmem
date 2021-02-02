@@ -1719,7 +1719,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 		return page;
 	}
 
-	page_end = strchr(page_base, '-') + (1 * sizeof(mem_tchar_t));
+	page_end = MEM_STR_CHR(page_base, MEM_STR('-')) + (1 * sizeof(mem_tchar_t));
 
 	if (!page_end || page_end == (mem_tchar_t*)MEM_BAD)
 	{
@@ -1727,13 +1727,15 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 		return page;
 	}
 
-	mem_tchar_t* holder = strchr(page_end, ' ');
+	mem_tchar_t* holder = MEM_STR_CHR(page_end, MEM_STR(' '));
 
 	if (!holder)
 	{
 		free(maps_buffer);
 		return page;
 	}
+
+	holder = &holder[1];
 
 	for (mem_size_t i = 0; i < 4; i++)
 	{

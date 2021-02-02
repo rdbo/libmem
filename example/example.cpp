@@ -156,7 +156,7 @@ int main()
 	tprint(MEM_STR("Module End:      %p\n"), mod.end);
 	tseparator();
 
-	page = mem::in::get_page(mod.end);
+	page = mem::in::get_page(mod.base);
 	tprint(MEM_STR("Page Base:       %p\n"), page.base);
 	tprint(MEM_STR("Page Size:       %p\n"), (void*)page.size);
 	tprint(MEM_STR("Page End:        %p\n"), page.end);

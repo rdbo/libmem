@@ -135,7 +135,7 @@ mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	mem_module_t mod = { 0 };
 #	if MEM_OS == MEM_WIN
 	MODULEINFO mod_info = { 0 };
-	HMODULE hModule = INVALID_HANDLE_VALUE;
+	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
 	hModule = GetModuleHandle(module_ref);
 	if (!hModule || hModule == INVALID_HANDLE_VALUE) return mod;
 	GetModuleInformation(GetCurrentProcess(), hModule, &mod_info, sizeof(mod_info));
@@ -217,7 +217,7 @@ mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t* pmodu
 	mem_size_t read_chars = 0;
 
 #	if   MEM_OS == MEM_WIN
-	HMODULE hModule = INVALID_HANDLE_VALUE;
+	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
 	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPTSTR)mod.base, &hModule);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
@@ -559,7 +559,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 
 	if (stolen_bytes)
 	{
-		*stolen_bytes = malloc(size);
+		*stolen_bytes = (mem_data_t)malloc(size);
 		if (*stolen_bytes)
 		{
 			for (mem_size_t i = 0; i < size; ++i)
@@ -739,7 +739,7 @@ mem_bool_t         mem_in_unload_module(mem_module_t mod)
 
 	mem_bool_t ret = MEM_FALSE;
 #	if   MEM_OS == MEM_WIN
-	HMODULE hModule = INVALID_HANDLE_VALUE;
+	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
 	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPTSTR)mod.base, &hModule);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
@@ -769,7 +769,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 
 	mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
-	HMODULE hModule = INVALID_HANDLE_VALUE;
+	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
 	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPTSTR)mod.base, &hModule);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
@@ -931,7 +931,7 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pproces
 
 #	if   MEM_OS == MEM_WIN
 
-	*pprocess_path = malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
+	*pprocess_path = (mem_tstring_t)malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
 	if (!*pprocess_path) return read_chars;
 	memset(*pprocess_path, 0x0, MEM_PATH_MAX);
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
@@ -1084,7 +1084,7 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 	 */
 
 	mem_size_t count = 0;
-	*pprocess_list = malloc(sizeof(mem_process_t));
+	*pprocess_list = (mem_process_t*)malloc(sizeof(mem_process_t));
 	if (!*pprocess_list) return count;
 #	if   MEM_OS == MEM_WIN
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -1098,7 +1098,7 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 			do
 			{
 				mem_process_t* holder = *pprocess_list;
-				*pprocess_list = malloc((count + 1) * sizeof(mem_process_t));
+				*pprocess_list = (mem_process_t*)malloc((count + 1) * sizeof(mem_process_t));
 				if (!*pprocess_list)
 				{
 					count = 0;
@@ -1360,7 +1360,7 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 	mem_size_t read_chars = 0;
 
 #	if   MEM_OS == MEM_WIN
-	HMODULE hModule = INVALID_HANDLE_VALUE;
+	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
 	
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
 	if (hSnap != INVALID_HANDLE_VALUE)
@@ -1477,7 +1477,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 	 */
 
 	mem_size_t count = 0;
-	*pmodule_list = malloc(sizeof(mem_module_t));
+	*pmodule_list = (mem_module_t*)malloc(sizeof(mem_module_t));
 
 #	if   MEM_OS == MEM_WIN
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
@@ -1490,7 +1490,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 			do
 			{
 				mem_module_t* holder = *pmodule_list;
-				*pmodule_list = malloc((count + 1) * sizeof(mem_module_t));
+				*pmodule_list = (mem_module_t*)malloc((count + 1) * sizeof(mem_module_t));
 				if (!*pmodule_list)
 				{
 					count = 0;
@@ -1899,7 +1899,7 @@ mem_bool_t         mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte
 	 */
 
 	mem_bool_t ret = MEM_FALSE;
-	mem_byte_t* data = malloc(size);
+	mem_byte_t* data = (mem_byte_t*)malloc(size);
 	if (!data) return ret;
 	mem_in_set(data, byte, size);
 	ret = mem_ex_write(process, dst, data, size);

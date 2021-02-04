@@ -565,10 +565,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 	{
 		*stolen_bytes = (mem_data_t)malloc(size);
 		if (*stolen_bytes)
-		{
-			for (mem_size_t i = 0; i < size; ++i)
-				*stolen_bytes[i] = ((mem_data_t)src)[i];
-		}
+			mem_in_read(src, (mem_voidptr_t)* stolen_bytes, size);
 	}
 
 	mem_data_t detour_buffer = (mem_data_t)malloc(detour_size);

@@ -543,6 +543,10 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 	 * Return Value:
 	 *   Returns 'MEM_TRUE' on success
 	 *   or 'MEM_FALSE' on error
+	 *
+	 * Remarks:
+	 *   'stolen_bytes' (if not null)
+	 *   has to be free'd
 	 */
 
 	mem_bool_t ret = MEM_FALSE;
@@ -630,6 +634,7 @@ mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst
 	 * Return Value:
 	 *   Returns the address of the executable
 	 *   gateway or 'MEM_BAD' on error
+	 *
 	 * Remarks:
 	 *   The gateway returned has to be
 	 *   free'd

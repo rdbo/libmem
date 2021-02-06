@@ -2192,4 +2192,97 @@ mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern
 	return ret;
 }
 
+mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
+{
+	/*
+	 * Description:
+	 *   Loads the module from
+	 *   'path' into the
+	 *   process 'process'
+	 *
+	 * Return Value:
+	 *   Returns information about
+	 *   the loaded module or a
+	 *   'mem_module_t' filled with
+	 *   invalid values on error
+	 */
+
+	mem_module_t mod = { 0 };
+
+#	if   MEM_OS == MEM_WIN
+	mem_size_t path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
+	mem_voidptr_t path_buffer_ex = mem_ex_allocate(process, path_size, PAGE_EXECUTE_READWRITE);
+	if (path_buffer_ex == (mem_voidptr_t)MEM_BAD) return mod;
+	mem_ex_set(process, path_buffer_ex, 0x0, path_size);
+	mem_ex_write(process, path_buffer_ex, path, path_size);
+
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess)
+	{
+		mem_ex_deallocate(process, path_buffer_ex, path_size);
+		return mod;
+	}
+
+	HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibrary, path_buffer_ex, NULL, NULL);
+	if(!hThread)
+	{
+		mem_ex_deallocate(process, path_buffer_ex, path_size);
+		return mod;
+	}
+
+	WaitForSingleObject(hThread, -1);
+	CloseHandle(hThread);
+	CloseHandle(hProcess);
+
+	mem_ex_deallocate(process, path_buffer_ex, path_size);
+
+	mod = mem_ex_get_module(process, path);
+
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return mod;
+}
+
+mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
+{
+	/*
+	 * Description:
+	 *   Unloads the module from
+	 *   'path' into the
+	 *   process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+#	if   MEM_OS == MEM_WIN
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return ret;
+}
+
+mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, mem_cstring_t symbol)
+{
+	/*
+	 * Description:
+	 *  Gets the address of the symbol 'symbol'
+	 *  of the module 'mod' on the process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the address of the symbol
+	 *   or 'MEM_BAD' on error
+	 */
+
+	mem_voidptr_t sym = (mem_voidptr_t)MEM_BAD;
+#	if   MEM_OS == MEM_WIN
+#	elif MEM_OS == MEM_LINUX
+
+	return sym;
+#	endif
+}
+
 #endif //MEM_COMPATIBLE

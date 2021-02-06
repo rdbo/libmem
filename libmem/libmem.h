@@ -166,7 +166,9 @@ typedef mem_char_t                           mem_tchar_t;
 typedef mem_char_t*                          mem_cstring_t;
 typedef mem_wchar_t*                         mem_wstring_t;
 typedef mem_tchar_t*                         mem_tstring_t;
-//typedef mem_tstring_t                      mem_string_t;
+#ifndef MEM_CPP
+typedef mem_tstring_t                        mem_string_t;
+#endif
 typedef mem_byte_t*                          mem_data_t;
 typedef mem_void_t*                          mem_voidptr_t;
 

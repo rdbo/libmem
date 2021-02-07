@@ -12,9 +12,9 @@
 #define NAKEDFN void __attribute__((naked))
 #endif
 
-#if   MEM_ARCH == MEM_x86_32
+#if   MEM_ARCH == _MEM_ARCH_x86_32
 #define EXAMPLE_HOOK 1
-#elif MEM_ARCH == MEM_x86_64
+#elif MEM_ARCH == _MEM_ARCH_x86_64
 #define EXAMPLE_HOOK 0
 #endif
 

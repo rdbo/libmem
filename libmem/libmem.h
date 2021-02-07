@@ -25,11 +25,11 @@
 #define _MEM_ARCH_UNKNOWN 2
 
 #if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || (defined(__WORDSIZE) && __WORDSIZE == 64))
-#define MEM_ARCH MEM_ARCH_x86_64
+#define MEM_ARCH _MEM_ARCH_x86_64
 #elif (defined(_M_IX86) || defined(__i386__) || (defined(__WORDSIZE) && __WORDSIZE == 32))
-#define MEM_ARCH MEM_ARCH_x86_32
+#define MEM_ARCH _MEM_ARCH_x86_32
 #else
-#define MEM_ARCH MEM_ARCH_UNKNOWN
+#define MEM_ARCH _MEM_ARCH_UNKNOWN
 #endif
 
 //Charset

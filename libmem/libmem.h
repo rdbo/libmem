@@ -24,9 +24,9 @@
 #define MEM_x86_64       1
 #define MEM_ARCH_UNKNOWN 2
 
-#if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || __WORDSIZE == 64)
+#if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || (defined(__WORDSIZE) && __WORDSIZE == 64))
 #define MEM_ARCH MEM_x86_64
-#elif (defined(_M_IX86) || defined(__i386__) || __WORDSIZE == 32)
+#elif (defined(_M_IX86) || defined(__i386__) || (defined(__WORDSIZE) && __WORDSIZE == 32))
 #define MEM_ARCH MEM_x86_32
 #else
 #define MEM_ARCH MEM_ARCH_UNKNOWN
@@ -253,11 +253,11 @@ typedef struct
 
 //Functions
 //mem_in
-mem_pid_t          mem_in_get_pid();
+mem_pid_t          mem_in_get_pid(mem_void_t);
 mem_size_t         mem_in_get_process_name(mem_tstring_t* pprocess_name);
 mem_size_t         mem_in_get_process_path(mem_tstring_t* pprocess_path);
-mem_arch_t         mem_in_get_arch();
-mem_process_t      mem_in_get_process();
+mem_arch_t         mem_in_get_arch(mem_void_t);
+mem_process_t      mem_in_get_process(mem_void_t);
 mem_module_t       mem_in_get_module(mem_tstring_t module_ref);
 mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t* pmodule_name);
 mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t* pmodule_path);
@@ -283,7 +283,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol);
 mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref);
 mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t* pprocess_name);
 mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pprocess_path);
-mem_arch_t         mem_ex_get_system_arch();
+mem_arch_t         mem_ex_get_system_arch(mem_void_t);
 mem_arch_t         mem_ex_get_arch(mem_pid_t pid);
 mem_process_t      mem_ex_get_process(mem_pid_t pid);
 mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list);

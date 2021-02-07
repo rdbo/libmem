@@ -20,9 +20,9 @@ namespace mem
 {
 	namespace in
 	{
-		inline mem_pid_t                    get_pid() { return mem_in_get_pid(); }
+		inline mem_pid_t                    get_pid(mem_void_t) { return mem_in_get_pid(); }
 		inline mem_size_t                   get_process_name(mem_tstring_t* pprocess_name) { return mem_in_get_process_name(pprocess_name); }
-		inline mem_string_t                 get_process_name()
+		inline mem_string_t                 get_process_name(mem_void_t)
 		{
 			mem_tstring_t process_name = (mem_tstring_t)NULL;
 			size_t read_chars = mem_in_get_process_name(&process_name);
@@ -30,15 +30,15 @@ namespace mem
 			return str;
 		}
 		inline mem_size_t                   get_process_path(mem_tstring_t* pprocess_path) { return mem_in_get_process_path(pprocess_path); }
-		inline mem_string_t                 get_process_path()
+		inline mem_string_t                 get_process_path(mem_void_t)
 		{
 			mem_tstring_t process_path = (mem_tstring_t)NULL;
 			size_t read_chars = mem_in_get_process_path(&process_path);
 			mem_string_t  str = (read_chars ? process_path : MEM_STR(""));
 			return str;
 		}
-		inline mem_arch_t                   get_arch() { return mem_in_get_arch(); }
-		inline mem_process_t                get_process() { return mem_in_get_process(); }
+		inline mem_arch_t                   get_arch(mem_void_t) { return mem_in_get_arch(); }
+		inline mem_process_t                get_process(mem_void_t) { return mem_in_get_process(); }
 		inline mem_module_t                 get_module(mem_tstring_t module_ref) { return mem_in_get_module(module_ref); }
 		inline mem_module_t                 get_module(mem_string_t module_ref)  { return mem_in_get_module((mem_tstring_t)module_ref.c_str()); }
 		inline mem_size_t                   get_module_name(mem_module_t mod, mem_tstring_t* pmodule_name) { return mem_in_get_module_name(mod, pmodule_name); }
@@ -58,7 +58,7 @@ namespace mem
 			return str;
 		}
 		inline mem_size_t                   get_module_list(mem_module_t** pmodule_list) { return mem_in_get_module_list(pmodule_list); }
-		inline std::vector<mem_module_t>    get_module_list()
+		inline std::vector<mem_module_t>    get_module_list(mem_void_t)
 		{
 			mem_module_t* module_list = (mem_module_t*)NULL;
 			size_t size = mem_in_get_module_list(&module_list);
@@ -127,11 +127,11 @@ namespace mem
 			mem_pid_t pid = process.pid;
 			return mem::ex::get_process_path(pid);
 		}
-		inline mem_arch_t                   get_system_arch() { return mem_ex_get_system_arch(); }
+		inline mem_arch_t                   get_system_arch(mem_void_t) { return mem_ex_get_system_arch(); }
 		inline mem_arch_t                   get_arch(mem_pid_t pid) { return mem_ex_get_arch(pid); }
 		inline mem_process_t                get_process(mem_pid_t pid) { return mem_ex_get_process(pid); }
 		inline mem_size_t                   get_process_list(mem_process_t** pprocess_list) { return mem_ex_get_process_list(pprocess_list); }
-		inline std::vector<mem_process_t>   get_process_list()
+		inline std::vector<mem_process_t>   get_process_list(mem_void_t)
 		{
 			mem_process_t* process_list = (mem_process_t*)NULL;
 			size_t size = mem_ex_get_process_list(&process_list);

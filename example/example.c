@@ -21,7 +21,7 @@
 #define tprint(...)  print(MEM_STR("    ") __VA_ARGS__)
 #define separator()  print(MEM_STR("--------------------\n"))
 #define tseparator() tprint(MEM_STR("--------------------\n"))
-#define arch_to_str(arch) (arch == x86_32 ? "x86_32" : arch == x86_64 ? "x86_64" : "Unknown")
+#define arch_to_str(arch) (arch == MEM_ARCH_x86_32 ? "x86_32" : arch == MEM_ARCH_x86_64 ? "x86_64" : "Unknown")
 #define print_logo() print(MEM_STR("\n\
 /*\n\
  *  ----------------------------------\n\
@@ -115,7 +115,7 @@ int main()
 
 	mem_page_t    page = { 0 };
 	mem_byte_t    pattern[] = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-	mem_tstring_t mask = MEM_STR("xxxxxxxxx");
+	mem_string_t mask = MEM_STR("xxxxxxxxx");
 	mem_voidptr_t scan = (mem_voidptr_t)MEM_BAD;
 	mem_voidptr_t pattern_scan = (mem_voidptr_t)MEM_BAD;
 
@@ -187,7 +187,7 @@ int main()
 	tprint(MEM_STR("Hook   Function: %p\n"), (void*)hook_function);
 	mem_byte_t* p_target_function = (mem_byte_t*)target_function;
 	if (p_target_function[0] == 0xE9) p_target_function = &p_target_function[(*(mem_intptr_t*)(&p_target_function[1])) + 5];
-	HookReturn = mem_in_detour_trampoline((mem_voidptr_t)p_target_function, (mem_voidptr_t)hook_function, mem_in_detour_size(x86_JMP32), x86_JMP32, NULL);
+	HookReturn = mem_in_detour_trampoline((mem_voidptr_t)p_target_function, (mem_voidptr_t)hook_function, mem_in_detour_size(MEM_ASM_x86_JMP32), MEM_ASM_x86_JMP32, NULL);
 	target_function((void*)failure_function);
 	tseparator();
 #	endif

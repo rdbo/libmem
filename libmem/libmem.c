@@ -184,15 +184,16 @@ mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t* pmodu
 		read_chars = MEM_STR_LEN(module_path) - (((uintptr_t)p_pos - (uintptr_t)module_path) / sizeof(mem_tchar_t));
 		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
-		if (!*pmodule_name)
+		if (*pmodule_name)
 		{
-			free(module_path);
-			read_chars = 0;
-			return read_chars;
+			memset(*pmodule_name, 0x0, module_name_size);
+			memcpy(*pmodule_name, p_pos, read_chars * sizeof(mem_tchar_t));
 		}
 
-		memset(*pmodule_name, 0x0, module_name_size);
-		memcpy(*pmodule_name, p_pos, read_chars * sizeof(mem_tchar_t));
+		else
+		{
+			read_chars = 0;
+		}
 
 		free(module_path);
 	}
@@ -912,15 +913,16 @@ mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t* pproces
 		read_chars = MEM_STR_LEN(process_path) - (((uintptr_t)p_pos - (uintptr_t)process_path) / sizeof(mem_tchar_t));
 		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pprocess_name = (mem_tstring_t)malloc(process_name_size);
-		if (!*pprocess_name)
+		if (*pprocess_name)
 		{
-			free(process_path);
-			read_chars = 0;
-			return read_chars;
+			memset(*pprocess_name, 0x0, process_name_size);
+			memcpy(*pprocess_name, p_pos, read_chars * sizeof(mem_tchar_t));
 		}
 
-		memset(*pprocess_name, 0x0, process_name_size);
-		memcpy(*pprocess_name, p_pos, read_chars * sizeof(mem_tchar_t));
+		else
+		{
+			read_chars = 0;
+		}
 
 		free(process_path);
 	}
@@ -1117,16 +1119,21 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 			{
 				mem_process_t* holder = *pprocess_list;
 				*pprocess_list = (mem_process_t*)malloc((count + 1) * sizeof(mem_process_t));
+				if (*pprocess_list)
+				{
+					memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
+					(*pprocess_list)[count].pid  = (mem_pid_t)entry.th32ProcessID;
+					(*pprocess_list)[count].arch = mem_ex_get_arch(entry.th32ProcessID);
+				}
+
+				free(holder);
+
 				if (!*pprocess_list)
 				{
 					count = 0;
-					free(holder);
 					break;
 				}
-				memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
-				(*pprocess_list)[count].pid  = (mem_pid_t)entry.th32ProcessID;
-				(*pprocess_list)[count].arch = mem_ex_get_arch(entry.th32ProcessID);
-				free(holder);
+
 				++count;
 			} while (Process32Next(hSnap, &entry));
 
@@ -1135,37 +1142,40 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 	CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
 	DIR* pdir = opendir("/proc");
-	if (!pdir)
+	if (pdir)
 	{
-		free(*pprocess_list);
-		return count;
+		struct dirent* pdirent;
+		while ((pdirent = readdir(pdir)))
+		{
+			mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
+			if (id != (mem_pid_t)-1)
+			{
+				mem_process_t* holder = *pprocess_list;
+				*pprocess_list = (mem_process_t*)malloc((count + 1) * sizeof(mem_process_t));
+				if (*pprocess_list)
+				{
+					memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
+					(*pprocess_list)[count].pid = id;
+					(*pprocess_list)[count].arch = mem_ex_get_arch(id);
+				}
+
+				free(holder);
+
+				if (!*pprocess_list)
+				{
+					count = 0;
+					break;
+				}
+
+				++count;
+			}
+		}
+		closedir(pdir);
 	}
 
-	struct dirent* pdirent;
-	while ((pdirent = readdir(pdir)))
-	{
-		mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
-		if (id != (mem_pid_t)-1)
-		{
-			mem_process_t* holder = *pprocess_list;
-			*pprocess_list = (mem_process_t*)malloc((count + 1) * sizeof(mem_process_t));
-			if (!*pprocess_list)
-			{
-				count = 0;
-				free(holder);
-				break;
-}
-			memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
-			(*pprocess_list)[count].pid = id;
-			(*pprocess_list)[count].arch = mem_ex_get_arch(id);
-			free(holder);
-			++count;
-		}
-	}
-	closedir(pdir);
 #	endif
 
-	if (!count && *pprocess_list) free(*pprocess_list);
+	if (count == 0 && *pprocess_list) free(*pprocess_list);
 
 	return count;
 }
@@ -1244,63 +1254,49 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 
 	if (!module_base_ptr) module_base_ptr = maps_buffer;
 	mem_tchar_t* module_base_endptr = strchr(module_base_ptr, '-');
-	if (!module_base_endptr)
+	if (module_base_endptr)
 	{
-		free(maps_buffer);
-		return mod;
-	}
+		mem_tchar_t* module_end_ptr = (mem_tchar_t*)NULL;
+		for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t*)NULL; module_end_ptr = temp);
 
-	mem_tchar_t* module_end_ptr = (mem_tchar_t*)NULL;
-	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t*)NULL; module_end_ptr = temp);
+		if (module_end_ptr)
+		{
+			holder = maps_buffer;
+			for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
+			module_end_ptr = holder;
+			module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
+			module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
 
-	if (!module_end_ptr)
-	{
-		free(maps_buffer);
-		return mod;
-	}
+			if (module_end_ptr)
+			{
+				module_end_ptr = &module_end_ptr[1];
+				mem_tchar_t* module_end_endptr = strchr(module_end_ptr, ' ');
+				if (module_end_endptr)
+				{
+					mem_tchar_t module_base_str[64] = { 0 };
+					memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
 
+					mem_tchar_t module_end_str[64] = { 0 };
+					memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
 
-	holder = maps_buffer;
-	for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
-	module_end_ptr = holder;
-	module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
-	module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
-
-	if (!module_end_ptr)
-	{
-		free(maps_buffer);
-		return mod;
-	}
-
-	module_end_ptr = &module_end_ptr[1];
-	mem_tchar_t* module_end_endptr = strchr(module_end_ptr, ' ');
-	if (!module_end_endptr)
-	{
-		free(maps_buffer);
-		return mod;
-	}
-
-	mem_tchar_t module_base_str[64] = { 0 };
-	memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
-
-	mem_tchar_t module_end_str[64]  = { 0 };
-	memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
-
-	switch (process.arch)
-	{
-	case MEM_ARCH_x86_32:
-		mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
-		mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
-		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-		break;
-	case MEM_ARCH_x86_64:
-		mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
-		mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
-		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-		break;
-	default:
-		free(maps_buffer);
-		return mod;
+					switch (process.arch)
+					{
+					case MEM_ARCH_x86_32:
+						mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
+						mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
+						mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+						break;
+					case MEM_ARCH_x86_64:
+						mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
+						mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
+						mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	free(maps_buffer);
@@ -1342,15 +1338,16 @@ mem_size_t         mem_ex_get_module_name(mem_process_t process, mem_module_t mo
 		read_chars = MEM_STR_LEN(module_path) - (((uintptr_t)p_pos - (uintptr_t)module_path) / sizeof(mem_tchar_t));
 		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
-		if (!*pmodule_name)
+		if (*pmodule_name)
 		{
-			free(module_path);
-			read_chars = 0;
-			return read_chars;
+			memset(*pmodule_name, 0x0, module_name_size);
+			memcpy(*pmodule_name, p_pos, read_chars * sizeof(mem_tchar_t));
 		}
 
-		memset(*pmodule_name, 0x0, module_name_size);
-		memcpy(*pmodule_name, p_pos, read_chars * sizeof(mem_tchar_t));
+		else
+		{
+			read_chars = 0;
+		}
 
 		free(module_path);
 	}
@@ -1441,33 +1438,24 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 
 	for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t*)NULL; page_base = temp);
 
-	if (!page_base || page_base == (mem_tchar_t*)MEM_BAD)
+	if (page_base && page_base != (mem_tchar_t*)MEM_BAD)
 	{
-		free(maps_buffer);
-		return read_chars;
+		mem_tchar_t* module_path_ptr = page_base;
+		module_path_ptr = MEM_STR_CHR(module_path_ptr, MEM_STR('/'));
+		if (module_path_ptr)
+		{
+			mem_tchar_t* module_path_endptr = module_path_ptr;
+			module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
+			if (module_path_endptr)
+			{
+				mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
+				*pmodule_path = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
+				memset(*pmodule_path, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
+				memcpy(*pmodule_path, module_path_ptr, module_path_size);
+				read_chars = module_path_size / sizeof(mem_tchar_t);
+			}
+		}
 	}
-
-	mem_tchar_t* module_path_ptr = page_base;
-	module_path_ptr = MEM_STR_CHR(module_path_ptr, MEM_STR('/'));
-	if (!module_path_ptr)
-	{
-		free(maps_buffer);
-		return read_chars;
-	}
-
-	mem_tchar_t* module_path_endptr = module_path_ptr;
-	module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
-	if (!module_path_endptr)
-	{
-		free(maps_buffer);
-		return read_chars;
-	}
-
-	mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
-	*pmodule_path = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
-	memset(*pmodule_path, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
-	memcpy(*pmodule_path, module_path_ptr, module_path_size);
-	read_chars = module_path_size / sizeof(mem_tchar_t);
 
 	free(maps_buffer);
 
@@ -1508,14 +1496,16 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 			{
 				mem_module_t* holder = *pmodule_list;
 				*pmodule_list = (mem_module_t*)malloc((count + 1) * sizeof(mem_module_t));
+				if (*pmodule_list)
+					memcpy(*pmodule_list, holder, count * sizeof(mem_module_t));
+
+				free(holder);
+
 				if (!*pmodule_list)
 				{
 					count = 0;
-					free(holder);
 					break;
 				}
-				memcpy(*pmodule_list, holder, count * sizeof(mem_module_t));
-				free(holder);
 
 				mem_module_t mod = { 0 };
 				mod.base = (mem_voidptr_t)entry.modBaseAddr;
@@ -1575,87 +1565,82 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 
 		if (!module_base_ptr) module_base_ptr = maps_buffer;
 		mem_tchar_t * module_base_endptr = strchr(module_base_ptr, '-');
-		if (!module_base_endptr)
+		if (module_base_endptr)
 		{
-			free(maps_buffer);
-			break;
+			mem_tchar_t* module_end_ptr = (mem_tchar_t*)NULL;
+			for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t*)NULL; module_end_ptr = temp);
+
+			if (module_end_ptr)
+			{
+				holder = maps_buffer;
+				for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
+				module_end_ptr = holder;
+				module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
+				module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
+
+				if (module_end_ptr)
+				{
+					module_end_ptr = &module_end_ptr[1];
+					mem_tchar_t* module_end_endptr = strchr(module_end_ptr, ' ');
+					if (module_end_endptr)
+					{
+						mem_tchar_t module_base_str[64] = { 0 };
+						memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
+
+						mem_tchar_t module_end_str[64] = { 0 };
+						memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
+
+						if (process.arch >= 0 && process.arch < MEM_ARCH_UNKNOWN)
+						{
+							switch (process.arch)
+							{
+							case MEM_ARCH_x86_32:
+								mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
+								mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
+								mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+								break;
+							case MEM_ARCH_x86_64:
+								mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
+								mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
+								mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+								break;
+							default:
+								break;
+							}
+
+							mem_module_t* list_holder = *pmodule_list;
+							*pmodule_list = (mem_module_t*)malloc((count + 1) * sizeof(mem_module_t));
+							if (*pmodule_list)
+							{
+								memcpy(*pmodule_list, list_holder, count * sizeof(mem_module_t));
+								(*pmodule_list)[count] = mod;
+							}
+							
+							free(list_holder);
+
+							if (!*pmodule_list)
+							{
+								count = 0;
+								break;
+							}
+
+							++count;
+
+							module_path_endptr = module_end_endptr;
+							module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
+							if (!module_path_endptr) break;
+						}
+					}
+				}
+			}
 		}
-
-		mem_tchar_t* module_end_ptr = (mem_tchar_t*)NULL;
-		for (mem_tchar_t* temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t*)NULL; module_end_ptr = temp);
-
-		if (!module_end_ptr)
-		{
-			free(maps_buffer);
-			break;
-		}
-
-
-		holder = maps_buffer;
-		for (mem_tchar_t* temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
-		module_end_ptr = holder;
-		module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
-		module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
-
-		if (!module_end_ptr)
-		{
-			free(maps_buffer);
-			break;
-		}
-
-		module_end_ptr = &module_end_ptr[1];
-		mem_tchar_t* module_end_endptr = strchr(module_end_ptr, ' ');
-		if (!module_end_endptr)
-		{
-			free(maps_buffer);
-			break;
-		}
-
-		mem_tchar_t module_base_str[64] = { 0 };
-		memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
-
-		mem_tchar_t module_end_str[64] = { 0 };
-		memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
-
-		switch (process.arch)
-		{
-		case MEM_ARCH_x86_32:
-			mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
-			mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
-			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-			break;
-		case MEM_ARCH_x86_64:
-			mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
-			mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
-			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-			break;
-		default:
-			free(maps_buffer);
-			break;
-		}
-
-		mem_module_t* list_holder = *pmodule_list;
-		*pmodule_list = (mem_module_t*)malloc((count + 1) * sizeof(mem_module_t));
-		if (!*pmodule_list)
-		{
-			count = 0;
-			free(list_holder);
-			break;
-		}
-		memcpy(*pmodule_list, list_holder, count * sizeof(mem_module_t));
-		(*pmodule_list)[count] = mod;
-		free(list_holder);
-		++count;
-
-		module_path_endptr = module_end_endptr;
-		module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
-		if (!module_path_endptr) break;
 	}
 
 	free(maps_buffer);
 
 #	endif
 
+	if (count == 0 && *pmodule_list) free(*pmodule_list);
 	return count;
 }
 
@@ -1730,74 +1715,64 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 	page_base = MEM_STR_STR(maps_buffer, page_base_str);
 
-	if (!page_base || page_base == (mem_tchar_t*)MEM_BAD)
+	if (page_base && page_base != (mem_tchar_t*)MEM_BAD)
 	{
-		free(maps_buffer);
-		return page;
-	}
+		page_end = MEM_STR_CHR(page_base, MEM_STR('-')) + (1 * sizeof(mem_tchar_t));
 
-	page_end = MEM_STR_CHR(page_base, MEM_STR('-')) + (1 * sizeof(mem_tchar_t));
-
-	if (!page_end || page_end == (mem_tchar_t*)MEM_BAD)
-	{
-		free(maps_buffer);
-		return page;
-	}
-
-	mem_tchar_t* holder = MEM_STR_CHR(page_end, MEM_STR(' '));
-
-	if (!holder)
-	{
-		free(maps_buffer);
-		return page;
-	}
-
-	holder = &holder[1];
-
-	for (mem_size_t i = 0; i < 4; i++)
-	{
-		switch (holder[i])
+		if (page_end && page_end != (mem_tchar_t*)MEM_BAD)
 		{
-		case MEM_STR('r'):
-			page.protection |= PROT_READ;
-			break;
-		case MEM_STR('w'):
-			page.protection |= PROT_WRITE;
-			break;
-		case MEM_STR('x'):
-			page.protection |= PROT_EXEC;
-			break;
-		case MEM_STR('p'):
-			page.flags = MAP_PRIVATE;
-			break;
-		case MEM_STR('s'):
-			page.flags = MAP_SHARED;
-			break;
-		default:
-			break;
+			mem_tchar_t* holder = MEM_STR_CHR(page_end, MEM_STR(' '));
+
+			if (holder)
+			{
+				holder = &holder[1];
+
+				for (mem_size_t i = 0; i < 4; i++)
+				{
+					switch (holder[i])
+					{
+					case MEM_STR('r'):
+						page.protection |= PROT_READ;
+						break;
+					case MEM_STR('w'):
+						page.protection |= PROT_WRITE;
+						break;
+					case MEM_STR('x'):
+						page.protection |= PROT_EXEC;
+						break;
+					case MEM_STR('p'):
+						page.flags = MAP_PRIVATE;
+						break;
+					case MEM_STR('s'):
+						page.flags = MAP_SHARED;
+						break;
+					default:
+						break;
+					}
+				}
+
+				mem_tchar_t page_base_addr[64] = { 0 };
+				memcpy(page_base_addr, page_base, (uintptr_t)page_end - (uintptr_t)page_base);
+				mem_tchar_t page_end_addr[64] = { 0 };
+				memcpy(page_end_addr, page_end, (uintptr_t)holder - (uintptr_t)page_end);
+
+				switch (process.arch)
+				{
+				case MEM_ARCH_x86_32:
+					page.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_base_addr, NULL, 16);
+					page.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_end_addr, NULL, 16);
+					page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
+					break;
+				case MEM_ARCH_x86_64:
+					page.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_base_addr, NULL, 16);
+					page.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_end_addr, NULL, 16);
+					page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
+					break;
+				default:
+					break;
+				}
+			}
 		}
-	}
-
-	mem_tchar_t page_base_addr[64] = { 0 };
-	memcpy(page_base_addr, page_base, (uintptr_t)page_end - (uintptr_t)page_base);
-	mem_tchar_t page_end_addr[64]  = { 0 };
-	memcpy(page_end_addr, page_end, (uintptr_t)holder - (uintptr_t)page_end);
-
-	switch (process.arch)
-	{
-	case MEM_ARCH_x86_32:
-		page.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_base_addr, NULL, 16);
-		page.end  = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_end_addr, NULL, 16);
-		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
-		break;
-	case MEM_ARCH_x86_64:
-		page.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_base_addr, NULL, 16);
-		page.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_end_addr, NULL, 16);
-		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
-		break;
-	default:
-		free(maps_buffer);
-		return page;
 	}
 
 	free(maps_buffer);

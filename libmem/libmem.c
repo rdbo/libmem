@@ -864,7 +864,7 @@ mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 	while (pid == (mem_pid_t)MEM_BAD && (pdirent = readdir(pdir)))
 	{
 		mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
-		if (id != (mem_pid_t)-1 && (id || MEM_STR_CMP(pdirent->d_name, MEM_STR("0"))))
+		if (id != (mem_pid_t)-1 && (id || !MEM_STR_CMP(pdirent->d_name, MEM_STR("0"))))
 		{
 			mem_tstring_t proc_name = NULL;
 			size_t read_chars = mem_ex_get_process_name(id, &proc_name);
@@ -1147,7 +1147,7 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 		while ((pdirent = readdir(pdir)))
 		{
 			mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
-			if (id != (mem_pid_t)-1 && (id || MEM_STR_CMP(pdirent->d_name, MEM_STR("0"))))
+			if (id != (mem_pid_t)-1 && (id || !MEM_STR_CMP(pdirent->d_name, MEM_STR("0"))))
 			{
 				mem_process_t* holder = *pprocess_list;
 				*pprocess_list = (mem_process_t*)malloc((count + 1) * sizeof(mem_process_t));

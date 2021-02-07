@@ -20,14 +20,14 @@
 #endif
 
 //Architecture
-#define MEM_x86_32       0
-#define MEM_x86_64       1
-#define MEM_ARCH_UNKNOWN 2
+#define _MEM_ARCH_x86_32  0
+#define _MEM_ARCH_x86_64  1
+#define _MEM_ARCH_UNKNOWN 2
 
 #if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || (defined(__WORDSIZE) && __WORDSIZE == 64))
-#define MEM_ARCH MEM_x86_64
+#define MEM_ARCH MEM_ARCH_x86_64
 #elif (defined(_M_IX86) || defined(__i386__) || (defined(__WORDSIZE) && __WORDSIZE == 32))
-#define MEM_ARCH MEM_x86_32
+#define MEM_ARCH MEM_ARCH_x86_32
 #else
 #define MEM_ARCH MEM_ARCH_UNKNOWN
 #endif
@@ -184,37 +184,51 @@ typedef mem_int32_t                          mem_flags_t;
 
 typedef enum
 {
-	x86_32 = MEM_x86_32,
-	x86_64 = MEM_x86_64,
-	ArchUnknown = MEM_ARCH_UNKNOWN
+	MEM_ARCH_x86_32  = _MEM_ARCH_x86_32,
+	MEM_ARCH_x86_64  = _MEM_ARCH_x86_64,
+	MEM_ARCH_UNKNOWN = _MEM_ARCH_UNKNOWN
 } mem_arch_t;
 
 typedef enum
 {
-	x86_JMP32 = 0,
+	MEM_ASM_x86_JMP32 = 0,
 	/*
 	 * jmp REL_ADDR
 	 */
 
-	x86_JMP64,
+	MEM_ASM_x86_JMP64,
 	/*
 	 * mov eax, ABS_ADDR
 	 * jmp eax
 	 */
 
-	x86_CALL32,
+	MEM_ASM_x86_CALL32,
 	/*
 	 * call REL_ADDR
 	 */
 
-	x86_CALL64,
+	MEM_ASM_x86_CALL64,
 	/*
 	 * mov eax, ABS_ADDR
 	 * call eax
 	 */
 
-	DetourInvalid
-} mem_detour_t;
+	MEM_ASM_DETOUR_INVALID,
+
+	MEM_ASM_x86_SYSCALL32,
+
+	/*
+	 * int80
+	 */
+
+	MEM_ASM_x86_SYSCALL64,
+
+	/*
+	 * syscall
+	 */
+
+	MEM_ASM_INVALID
+} mem_asm_t;
 
 typedef enum
 {
@@ -272,9 +286,10 @@ mem_voidptr_t      mem_in_allocate(mem_size_t size, mem_prot_t protection);
 mem_bool_t         mem_in_deallocate(mem_voidptr_t src, mem_size_t size);
 mem_voidptr_t      mem_in_scan(mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop);
 mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop);
-mem_size_t         mem_in_detour_size(mem_detour_t method);
-mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_data_t* stolen_bytes);
-mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_data_t* stolen_bytes);
+mem_size_t         mem_in_detour_size(mem_asm_t method);
+mem_size_t         mem_in_payload_size(mem_asm_t method);
+mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t* stolen_bytes);
+mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t* stolen_bytes);
 mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_data_t stolen_bytes, mem_size_t size);
 mem_module_t       mem_in_load_module(mem_tstring_t path);
 mem_bool_t         mem_in_unload_module(mem_module_t mod);

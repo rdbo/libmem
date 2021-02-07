@@ -967,11 +967,10 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pproces
 #	elif MEM_OS == MEM_LINUX
 	char path[64] = { 0 };
 	snprintf(path, sizeof(path), "/proc/%i/exe", pid);
-	*pprocess_path = (mem_tstring_t)malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
+	*pprocess_path = (mem_tstring_t)malloc((MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 	if (!*pprocess_path) return read_chars;
-	readlink(path, *pprocess_path, MEM_PATH_MAX * sizeof(mem_tchar_t));
-
-	read_chars = MEM_STR_LEN(*pprocess_path);
+	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
+	read_chars = (mem_size_t)(readlink(path, *pprocess_path, MEM_PATH_MAX * sizeof(mem_tchar_t)) / sizeof(mem_tchar_t));
 #	endif
 
 	return read_chars;

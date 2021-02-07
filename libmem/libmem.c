@@ -139,7 +139,6 @@ mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	hModule = GetModuleHandle(module_ref);
 	if (!hModule || hModule == INVALID_HANDLE_VALUE) return mod;
 	GetModuleInformation(GetCurrentProcess(), hModule, &mod_info, sizeof(mod_info));
-	CloseHandle(hModule);
 
 	mod.base = (mem_voidptr_t)mod_info.lpBaseOfDll;
 	mod.size = (mem_size_t)mod_info.SizeOfImage;
@@ -226,7 +225,6 @@ mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t* pmodu
 		if (!*pmodule_path) return read_chars;
 		mem_in_set(*pmodule_path, 0x0, path_size);
 		read_chars = (mem_size_t)GetModuleFileName(hModule, *pmodule_path, MEM_PATH_MAX);
-		CloseHandle(hModule);
 	}
 #	elif MEM_OS == MEM_LINUX
 	read_chars = mem_ex_get_module_path(mem_in_get_process(), mod, pmodule_path);
@@ -714,10 +712,7 @@ mem_module_t       mem_in_load_module(mem_tstring_t path)
 #	if   MEM_OS == MEM_WIN
 	HMODULE hModule = LoadLibrary(path);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
-	{
 		mod = mem_in_get_module(path);
-		CloseHandle(hModule);
-	}
 
 #	elif MEM_OS == MEM_LINUX
 	if (dlopen(path, RTLD_LAZY))
@@ -777,7 +772,6 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 	{
 		addr = (mem_voidptr_t)GetProcAddress(hModule, symbol);
 		if (!addr) addr = (mem_voidptr_t)MEM_BAD;
-		CloseHandle(hModule);
 	}
 #	elif MEM_OS == MEM_LINUX
 	mem_tstring_t mod_path = (mem_tstring_t)NULL;

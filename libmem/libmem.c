@@ -2296,7 +2296,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
 		free(module_ref);
 
-		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopepn_offset);
+		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
 		mem_payload_t inj_buf = g_mem_payloads[MEM_ASM_INVALID];
 		switch (process.arch)
 		{

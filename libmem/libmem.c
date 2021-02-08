@@ -2296,7 +2296,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
 		free(module_ref);
 
-		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_byte_t**)(&libc_ex.base)[dlopen_offset]);
+		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopepn_offset);
 		mem_payload_t inj_buf = g_mem_payloads[MEM_ASM_INVALID];
 		switch (process.arch)
 		{
@@ -2315,7 +2315,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
 		if (inj_addr != (mem_voidptr_t)MEM_BAD)
 		{
-			mem_voidptr_t path_addr = (mem_voidptr_t)(((mem_byte_t**)(&inj_addr))[inj_buf.size]);
+			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
 			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
 			mem_ex_write(process, path_addr, path, path_size);
 

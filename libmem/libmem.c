@@ -2293,7 +2293,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		memset(module_ref, 0x0, module_ref_size + sizeof(mem_tchar_t));
 		memcpy(module_ref, p_module_path_ptr, module_ref_size);
 
-		mem_module_t libc_ex = mem_ex_get_module(module_ref);
+		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
 		free(module_ref);
 
 		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_byte_t**)(&libc_ex.base)[dlopen_offset]);

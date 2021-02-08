@@ -227,6 +227,20 @@ typedef enum
 	 * syscall
 	 */
 
+	MEM_ASM_x86_DLOPEN32,
+	/*
+	 * push ecx
+	 * push ebx
+	 * call eax //call dlopen
+	 * int3
+	 */
+
+	MEM_ASM_x86_DLOPEN64,
+	/*
+	 * call rax //call dlopen
+	 * int3
+	 */
+
 	MEM_ASM_INVALID
 } mem_asm_t;
 

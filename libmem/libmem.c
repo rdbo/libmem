@@ -2285,7 +2285,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc-"))) ||
 			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc.")))
 		) &&
-		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR('\n'))))
+		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR('\n')))
 	)
 	{
 		mem_size_t module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;

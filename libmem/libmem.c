@@ -2316,8 +2316,8 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		if (inj_addr != (mem_voidptr_t)MEM_BAD)
 		{
 			mem_voidptr_t path_addr = (mem_voidptr_t)(((mem_byte_t**)(&inj_addr))[inj_buf.size]);
-			mem_ex_write(inj_addr, inj_buf.payload, inj_buf.size);
-			mem_ex_write(path_addr, path, path_size);
+			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
+			mem_ex_write(process, path_addr, path, path_size);
 
 			int status;
 			struct user_regs_struct old_regs, regs;
@@ -2332,13 +2332,13 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 #			if   MEM_ARCH == _MEM_ARCH_x86_32
 			regs.eax = (mem_intptr_t)dlopen_ex;
 			regs.ebx = (mem_intptr_t)path_addr;
-			regs.ecx = (mem_intptr_t)lib.mode;
+			regs.ecx = (mem_intptr_t)RTLD_LAZY;
 			regs.eip = (mem_intptr_t)inj_addr;
 #			elif MEM_ARCH == _MEM_ARCH_x86_64
-			regs.rax = (mem_uintptr_t)dlopen_ex;
-			regs.rdi = (mem_uintptr_t)path_addr;
-			regs.rsi = (mem_uintptr_t)lib.mode;
-			regs.rip = (mem_uintptr_t)inj_addr;
+			regs.rax = (mem_intptr_t)dlopen_ex;
+			regs.rdi = (mem_intptr_t)path_addr;
+			regs.rsi = (mem_intptr_t)RTLD_LAZY;
+			regs.rip = (mem_intptr_t)inj_addr;
 #			endif
 
 			ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
@@ -2347,9 +2347,9 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 			ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
 
 #			if   MEM_ARCH == _MEM_ARCH_x86_32
-			handle = (mem_module_handle_t)regs.eax;
+			handle = (void*)regs.eax;
 #			elif MEM_ARCH == _MEM_ARCH_x86_64
-			handle = (mem_module_handle_t)regs.rax;
+			handle = (void*)regs.rax;
 #			endif
 
 			ptrace(PTRACE_SETREGS, process.pid, MEM_NULL, &old_regs);

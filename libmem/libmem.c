@@ -2362,7 +2362,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 
 			int status;
 			struct user_regs_struct old_regs, regs;
-			void *handle = (void *)NULL;
+			//void *handle = (void *)NULL;
 
 			ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
 			wait(&status);
@@ -2387,11 +2387,13 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 			waitpid(process.pid, &status, WSTOPPED);
 			ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
 
+			/*
 #			if   MEM_ARCH == _MEM_ARCH_x86_32
 			handle = (void *)regs.eax;
 #			elif MEM_ARCH == _MEM_ARCH_x86_64
 			handle = (void *)regs.rax;
 #			endif
+			*/
 
 			ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
 			ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
@@ -2520,7 +2522,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 		free(module_ref);
 
 		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
-		mem_voidptr_t dlclose_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
+		mem_voidptr_t dlclose_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlclose_offset);
 		mem_payload_t inj_buf = g_mem_payloads[MEM_ASM_INVALID];
 		switch (process.arch)
 		{

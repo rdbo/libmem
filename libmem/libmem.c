@@ -2269,22 +2269,17 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 	mem_ex_write(process, path_buffer_ex, path, path_size);
 
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
-	if (!hProcess)
+	if (hProcess)
 	{
-		mem_ex_deallocate(process, path_buffer_ex, path_size);
-		return mod;
-	}
+		HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, path_buffer_ex, 0, NULL);
+		if (hThread)
+		{
+			WaitForSingleObject(hThread, INFINITE);
+			CloseHandle(hThread);
+		}
 
-	HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, path_buffer_ex, 0, NULL);
-	if(!hThread)
-	{
-		mem_ex_deallocate(process, path_buffer_ex, path_size);
-		return mod;
+		CloseHandle(hProcess);
 	}
-
-	WaitForSingleObject(hThread, INFINITE);
-	CloseHandle(hThread);
-	CloseHandle(hProcess);
 
 	mem_ex_deallocate(process, path_buffer_ex, path_size);
 
@@ -2400,7 +2395,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 			ptrace(PTRACE_DETACH, process.pid, MEM_NULL, MEM_NULL);
 
 			mem_ex_deallocate(process, inj_addr, inj_size);
-			if(handle)
+			if (handle)
 				mod = mem_ex_get_module(process, path);
 		}
 	}

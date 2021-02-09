@@ -131,6 +131,7 @@ namespace mem
 		inline mem_arch_t                   get_system_arch(mem_void_t) { return mem_ex_get_system_arch(); }
 		inline mem_arch_t                   get_arch(mem_pid_t pid) { return mem_ex_get_arch(pid); }
 		inline mem_process_t                get_process(mem_pid_t pid) { return mem_ex_get_process(pid); }
+		inline mem_process_t                get_process(mem_string_t process_ref) { return mem::ex::get_process(mem::ex::get_pid(process_ref)); }
 		inline mem_size_t                   get_process_list(mem_process_t** pprocess_list) { return mem_ex_get_process_list(pprocess_list); }
 		inline std::vector<mem_process_t>   get_process_list(mem_void_t)
 		{

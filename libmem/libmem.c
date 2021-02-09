@@ -140,7 +140,7 @@ mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess_path)
 	if (!*pprocess_path) return read_chars;
 	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 
-	read_chars = (mem_size_t)GetModuleFileName(hModule, *pprocess_path, MEM_PATH_MAX * sizeof(mem_tchar_t));
+	read_chars = (mem_size_t)GetModuleFileName(hModule, *pprocess_path, MEM_PATH_MAX);
 #	elif MEM_OS == MEM_LINUX
 	read_chars = mem_ex_get_process_path(mem_in_get_pid(), pprocess_path);
 #	endif
@@ -290,9 +290,9 @@ mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t *pmodu
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
 		mem_size_t path_size = MEM_PATH_MAX * sizeof(mem_tchar_t);
-		*pmodule_path = (mem_tstring_t)malloc(path_size);
+		*pmodule_path = (mem_tstring_t)malloc(path_size + sizeof(mem_tchar_t));
 		if (!*pmodule_path) return read_chars;
-		mem_in_set(*pmodule_path, 0x0, path_size);
+		memset(*pmodule_path, 0x0, path_size + sizeof(mem_tchar_t));
 		read_chars = (mem_size_t)GetModuleFileName(hModule, *pmodule_path, MEM_PATH_MAX);
 	}
 #	elif MEM_OS == MEM_LINUX
@@ -1016,9 +1016,9 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t *pproces
 
 #	if   MEM_OS == MEM_WIN
 
-	*pprocess_path = (mem_tstring_t)malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
+	*pprocess_path = (mem_tstring_t)malloc((MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 	if (!*pprocess_path) return read_chars;
-	memset(*pprocess_path, 0x0, MEM_PATH_MAX);
+	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE)
 	{
@@ -1031,7 +1031,7 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t *pproces
 
 #	elif MEM_OS == MEM_LINUX
 	char path[64] = { 0 };
-	snprintf(path, sizeof(path), "/proc/%i/exe", pid);
+	snprintf(path, sizeof(path) - sizeof(mem_tchar_t), "/proc/%i/exe", pid);
 	*pprocess_path = (mem_tstring_t)malloc((MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 	if (!*pprocess_path) return read_chars;
 	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
@@ -1288,10 +1288,10 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 		mod.end = (mem_voidptr_t)((mem_uintptr_t)mod.base + mod.size);
 	}
 #	elif MEM_OS == MEM_LINUX
-	mem_tchar_t module_str[MEM_PATH_MAX] = { 0 };
-	snprintf(module_str, sizeof(module_str), "%s\n", module_ref);
+	mem_tchar_t module_str[MEM_PATH_MAX + 1] = { 0 };
+	snprintf(module_str, sizeof(module_str) - sizeof(mem_tchar_t), "%s\n", module_ref);
 	mem_tchar_t path_buffer[64] = { 0 };
-	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
 	if (maps_file == -1) return mod;
@@ -1470,10 +1470,10 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 	switch (process.arch)
 	{
 	case MEM_ARCH_x86_32:
-		snprintf(page_base_str, sizeof(page_base_str), "%x-", (mem_uint32_t)(mem_uintptr_t)mod.base);
+		snprintf(page_base_str, sizeof(page_base_str) - sizeof(mem_tchar_t), "%x-", (mem_uint32_t)(mem_uintptr_t)mod.base);
 		break;
 	case MEM_ARCH_x86_64:
-		snprintf(page_base_str, sizeof(page_base_str), (MEM_ARCH == MEM_ARCH_x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)mod.base);
+		snprintf(page_base_str, sizeof(page_base_str) - sizeof(mem_tchar_t), (MEM_ARCH == MEM_ARCH_x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)mod.base);
 		break;
 	default:
 		return read_chars;
@@ -1481,7 +1481,7 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 
 	mem_tchar_t path_buffer[64 + 1] = { 0 };
 	memset(path_buffer, 0x0, sizeof(path_buffer));
-	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
 	if (maps_file == -1) return read_chars;
@@ -1586,7 +1586,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **
 
 	mem_tchar_t path_buffer[64 + 1] = { 0 };
 	memset(path_buffer, 0x0, sizeof(path_buffer));
-	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
 	if (maps_file == -1) return count;
@@ -1747,10 +1747,10 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	switch (process.arch)
 	{
 	case MEM_ARCH_x86_32:
-		snprintf(page_base_str, sizeof(page_base_str), "%x-", (mem_uint32_t)(mem_uintptr_t)src);
+		snprintf(page_base_str, sizeof(page_base_str) - sizeof(mem_tchar_t), "%x-", (mem_uint32_t)(mem_uintptr_t)src);
 		break;
 	case MEM_ARCH_x86_64:
-		snprintf(page_base_str, sizeof(page_base_str), (MEM_ARCH == MEM_ARCH_x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)src);
+		snprintf(page_base_str, sizeof(page_base_str) - sizeof(mem_tchar_t), (MEM_ARCH == MEM_ARCH_x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)src);
 		break;
 	default:
 		return page;
@@ -1758,7 +1758,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 	mem_tchar_t path_buffer[64 + 1] = { 0 };
 	memset(path_buffer, 0x0, sizeof(path_buffer));
-	snprintf(path_buffer, sizeof(path_buffer) - (1 * sizeof(mem_tchar_t)), "/proc/%i/maps", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
 	if (maps_file == -1) return page;
@@ -1869,7 +1869,7 @@ mem_bool_t         mem_ex_is_process_running(mem_process_t process)
 #	elif MEM_OS == MEM_LINUX
 	struct stat sb;
 	char path_buffer[64] = { 0 };
-	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i", process.pid);
 	stat(path_buffer, &sb);
 	ret = S_ISDIR(sb.st_mode) ? MEM_TRUE : MEM_FALSE;
 #	endif
@@ -2299,7 +2299,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
 	mem_tchar_t path_buffer[64] = { 0 };
-	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
 	if (maps_file == -1) return mod;
@@ -2483,7 +2483,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 	mem_uintptr_t dlclose_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
 	mem_tchar_t path_buffer[64] = { 0 };
-	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
 	if (maps_file == -1) return ret;

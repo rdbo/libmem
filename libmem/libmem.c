@@ -2465,23 +2465,27 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
-		return mod;
+		return ret;
+
+	mem_tstring_t path = (mem_tstring_t)NULL;
+	mem_size_t path_len = mem_ex_get_module_path(process, mod, &path);
+	if (!path_len) return ret;
 
 	extern void *__libc_dlopen_mode(const char *filename, int flag);
 	extern int   __libc_dlclose(void* map);
 	Dl_info libc_info = { 0 };
-	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return mod;
+	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return ret;
 
 	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
-	if (!dladdr((void*)__libc_dlclose, &libc_info)) return mod;
+	if (!dladdr((void*)__libc_dlclose, &libc_info)) return ret;
 	mem_uintptr_t dlclose_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
 
 	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return mod;
+	if (maps_file == -1) return ret;
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
@@ -2495,7 +2499,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 		maps_buffer[maps_size + 1] = '\0';
 	}
 	close(maps_file);
-	if (!maps_buffer) return mod;
+	if (!maps_buffer) return ret;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
@@ -2531,7 +2535,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 			break;
 		}
 
-		mem_size_t path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
+		mem_size_t path_size = (path_len + 1) * sizeof(mem_tchar_t);
 		mem_size_t inj_size = inj_buf.size + path_size;
 		mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
 		if (inj_addr != (mem_voidptr_t)MEM_BAD)
@@ -2646,6 +2650,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 	}
 
 	free(maps_buffer);
+	free(path);
 #	endif
 
 	return ret;

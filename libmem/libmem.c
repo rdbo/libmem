@@ -1317,7 +1317,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	module_base_ptr = holder;
 
 	if (!module_base_ptr) module_base_ptr = maps_buffer;
-	mem_tchar_t *module_base_endptr = strchr(module_base_ptr, '-');
+	mem_tchar_t *module_base_endptr = MEM_STR_CHR(module_base_ptr, MEM_STR('-'));
 	if (module_base_endptr)
 	{
 		mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
@@ -1334,7 +1334,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 			if (module_end_ptr)
 			{
 				module_end_ptr = &module_end_ptr[1];
-				mem_tchar_t *module_end_endptr = strchr(module_end_ptr, ' ');
+				mem_tchar_t *module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
 				if (module_end_endptr)
 				{
 					mem_tchar_t module_base_str[64] = { 0 };
@@ -1628,7 +1628,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **
 		module_base_ptr = holder;
 
 		if (!module_base_ptr) module_base_ptr = maps_buffer;
-		mem_tchar_t *module_base_endptr = strchr(module_base_ptr, '-');
+		mem_tchar_t *module_base_endptr = MEM_STR_CHR(module_base_ptr, MEM_STR('-'));
 		if (module_base_endptr)
 		{
 			mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
@@ -1645,7 +1645,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **
 				if (module_end_ptr)
 				{
 					module_end_ptr = &module_end_ptr[1];
-					mem_tchar_t *module_end_endptr = strchr(module_end_ptr, ' ');
+					mem_tchar_t *module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
 					if (module_end_endptr)
 					{
 						mem_tchar_t module_base_str[64] = { 0 };
@@ -2005,7 +2005,7 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
 	wait(&status);
 
-	ptrace(PTRACE_GETREGS, process.pid, MEM_NULL, &old_regs);
+	ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
 	regs = old_regs;
 
 #	if   MEM_ARCH == _MEM_ARCH_x86_32
@@ -2043,8 +2043,8 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 
 	ptrace(PTRACE_POKEDATA, process.pid, (void *)((mem_uintptr_t)injection_addr), old_data);
 
-	ptrace(PTRACE_SETREGS, process.pid, MEM_NULL, &old_regs);
-	ptrace(PTRACE_DETACH, process.pid, MEM_NULL, MEM_NULL);
+	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
+	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
 
 #	endif
 
@@ -2393,8 +2393,8 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 			handle = (void *)regs.rax;
 #			endif
 
-			ptrace(PTRACE_SETREGS, process.pid, MEM_NULL, &old_regs);
-			ptrace(PTRACE_DETACH, process.pid, MEM_NULL, MEM_NULL);
+			ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
+			ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
 
 			mem_ex_deallocate(process, inj_addr, inj_size);
 			if (handle)
@@ -2577,8 +2577,8 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 			handle = (void *)regs.rax;
 #			endif
 
-			ptrace(PTRACE_SETREGS, process.pid, MEM_NULL, &old_regs);
-			ptrace(PTRACE_DETACH, process.pid, MEM_NULL, MEM_NULL);
+			ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
+			ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
 
 			mem_ex_deallocate(process, inj_addr, inj_size);
 			if (!handle) return ret;

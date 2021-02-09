@@ -2472,13 +2472,13 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 	if (!path_len) return ret;
 
 	extern void *__libc_dlopen_mode(const char *filename, int flag);
-	extern int   __libc_dlclose(void* map);
+	extern int   __libc_dlclose(void *map);
 	Dl_info libc_info = { 0 };
 	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return ret;
 
 	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
-	if (!dladdr((void*)__libc_dlclose, &libc_info)) return ret;
+	if (!dladdr((void *)__libc_dlclose, &libc_info)) return ret;
 	mem_uintptr_t dlclose_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
 	mem_tchar_t path_buffer[64] = { 0 };

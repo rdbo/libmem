@@ -2464,6 +2464,188 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 
 	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
+	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
+		return mod;
+
+	extern void *__libc_dlopen_mode(const char *filename, int flag);
+	extern int   __libc_dlclose(void* map);
+	Dl_info libc_info = { 0 };
+	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return mod;
+
+	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
+
+	if (!dladdr((void*)__libc_dlclose, &libc_info)) return mod;
+	mem_uintptr_t dlclose_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
+
+	mem_tchar_t path_buffer[64] = { 0 };
+	snprintf(path_buffer, sizeof(path_buffer), "/proc/%i/maps", process.pid);
+
+	int maps_file = open(path_buffer, O_RDONLY);
+	if (maps_file == -1) return mod;
+	mem_size_t maps_size = 0;
+	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
+	int read_check = 0;
+	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
+	{
+		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
+		free(maps_buffer);
+		maps_buffer = holder;
+		maps_buffer[maps_size] = c;
+		maps_buffer[maps_size + 1] = '\0';
+	}
+	close(maps_file);
+	if (!maps_buffer) return mod;
+
+	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
+	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
+
+	if (
+		(
+			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc-"))) ||
+			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc.")))
+		) &&
+		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR('\n')))
+	)
+	{
+		mem_size_t module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;
+		mem_tstring_t module_ref = (mem_tstring_t)malloc(module_ref_size + sizeof(mem_tchar_t));
+		memset(module_ref, 0x0, module_ref_size + sizeof(mem_tchar_t));
+		memcpy(module_ref, p_module_path_ptr, module_ref_size);
+
+		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
+		free(module_ref);
+
+		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
+		mem_voidptr_t dlclose_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
+		mem_payload_t inj_buf = g_mem_payloads[MEM_ASM_INVALID];
+		switch (process.arch)
+		{
+		case MEM_ARCH_x86_32:
+			inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN32];
+			break;
+		case MEM_ARCH_x86_64:
+			inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN64];
+			break;
+		default:
+			break;
+		}
+
+		mem_size_t path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
+		mem_size_t inj_size = inj_buf.size + path_size;
+		mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
+		if (inj_addr != (mem_voidptr_t)MEM_BAD)
+		{
+			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
+			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
+			mem_ex_write(process, path_addr, path, path_size);
+
+			int status;
+			struct user_regs_struct old_regs, regs;
+			void *handle = (void *)NULL;
+
+			ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
+			wait(&status);
+			ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
+
+			regs = old_regs;
+
+#			if   MEM_ARCH == _MEM_ARCH_x86_32
+			regs.eax = (mem_intptr_t)dlopen_ex;
+			regs.ebx = (mem_intptr_t)path_addr;
+			regs.ecx = (mem_intptr_t)RTLD_LAZY;
+			regs.eip = (mem_intptr_t)inj_addr;
+#			elif MEM_ARCH == _MEM_ARCH_x86_64
+			regs.rax = (mem_intptr_t)dlopen_ex;
+			regs.rdi = (mem_intptr_t)path_addr;
+			regs.rsi = (mem_intptr_t)RTLD_LAZY;
+			regs.rip = (mem_intptr_t)inj_addr;
+#			endif
+
+			ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
+			ptrace(PTRACE_CONT, process.pid, NULL, NULL);
+			waitpid(process.pid, &status, WSTOPPED);
+			ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
+
+#			if   MEM_ARCH == _MEM_ARCH_x86_32
+			handle = (void *)regs.eax;
+#			elif MEM_ARCH == _MEM_ARCH_x86_64
+			handle = (void *)regs.rax;
+#			endif
+
+			ptrace(PTRACE_SETREGS, process.pid, MEM_NULL, &old_regs);
+			ptrace(PTRACE_DETACH, process.pid, MEM_NULL, MEM_NULL);
+
+			mem_ex_deallocate(process, inj_addr, inj_size);
+			if (!handle) return ret;
+
+			switch (process.arch)
+			{
+			case MEM_ARCH_x86_32:
+				inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN32];
+				break;
+			case MEM_ARCH_x86_64:
+				inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN64];
+				break;
+			default:
+				break;
+			}
+
+			inj_size = inj_buf.size;
+
+			inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
+			if (inj_addr)
+			{
+				switch (process.arch)
+				{
+				case MEM_ARCH_x86_32:
+					inj_buf = g_mem_payloads[MEM_ASM_x86_DLCLOSE32];
+					break;
+				case MEM_ARCH_x86_64:
+					inj_buf = g_mem_payloads[MEM_ASM_x86_DLCLOSE64];
+					break;
+				default:
+					break;
+				}
+
+				ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
+				wait(&status);
+				ptrace(PTRACE_GETREGS, process.pid, NULL, &old_regs);
+
+				regs = old_regs;
+
+#				if   MEM_ARCH == _MEM_ARCH_x86_32
+				regs.eax = (mem_intptr_t)dlclose_ex;
+				regs.ebx = (mem_intptr_t)handle;
+				regs.eip = (mem_intptr_t)inj_addr;
+#				elif MEM_ARCH == _MEM_ARCH_x86_64
+				regs.rax = (mem_intptr_t)dlclose_ex;
+				regs.rdi = (mem_intptr_t)handle;
+				regs.rip = (mem_intptr_t)inj_addr;
+#				endif
+
+				ptrace(PTRACE_SETREGS, process.pid, NULL, &regs);
+				ptrace(PTRACE_CONT, process.pid, NULL, NULL);
+				waitpid(process.pid, &status, WSTOPPED);
+				ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
+
+				mem_intptr_t dlclose_ret = 0;
+#				if   MEM_ARCH == _MEM_ARCH_x86_32
+				dlclose_ret = (mem_intptr_t)regs.eax;
+#				elif MEM_ARCH == _MEM_ARCH_x86_64
+				dlclose_ret = (mem_intptr_t)regs.rax;
+#				endif
+
+				ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
+				ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
+
+				mem_ex_deallocate(process, inj_addr, inj_size);
+				if (!dlclose_ret) return ret;
+			}
+		}
+	}
+
+	free(maps_buffer);
 #	endif
 
 	return ret;

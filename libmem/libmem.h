@@ -241,6 +241,19 @@ typedef enum
 	 * int3
 	 */
 
+	MEM_ASM_x86_DLCLOSE32,
+	/*
+	 * push ebx
+	 * call eax //call dlclose
+	 * int3
+	 */
+
+	MEM_ASM_x86_DLCLOSE64,
+	/*
+	 * call rax //call dlclose
+	 * int3
+	 */
+
 	MEM_ASM_INVALID
 } mem_asm_t;
 

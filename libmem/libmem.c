@@ -2669,7 +2669,31 @@ mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, me
 
 	mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
+	mem_tstring_t module_ref = (mem_tstring_t)NULL;
+	if (!mem_ex_get_module_path(process, mod, &module_ref)) return addr;
+	HMODULE hModule = LoadLibraryEx(module_ref, NULL, DONT_RESOLVE_DLL_REFERENCES);
+	free(module_ref);
+	if (!hModule) return addr;
+
+	MODULEINFO modinfo = { 0 };
+	if (!GetModuleInformation(GetCurrentProcess(), hModule, &modinfo, sizeof(modinfo))) return addr;
+
+	mem_voidptr_t sym_in = (mem_voidptr_t)GetProcAddress(hModule, symbol);
+	if (!sym_in) return addr;
+
+	mem_uintptr_t sym_offset = (mem_uintptr_t)sym_in - (mem_uintptr_t)modinfo.lpBaseOfDll;
+
+	addr = (mem_voidptr_t)((mem_uintptr_t)mod.base + sym_offset);
+
 #	elif MEM_OS == MEM_LINUX
+	mem_tstring_t module_ref = (mem_tstring_t)NULL;
+	if (!mem_ex_get_module_path(process, mod, &module_ref)) return addr;
+	mem_module_t mod_in = mem_in_load_module(module_ref);
+	free(module_ref);
+	mem_voidptr_t sym_in = mem_in_get_symbol(mod_in, symbol);
+	if (!sym_in) return addr;
+	mem_uintptr_t sym_offset = (mem_uintptr_t)sym_in - (mem_uintptr_t)mod_in.base;
+	addr = (mem_voidptr_t)((mem_uintptr_t)mod.base + sym_offset);
 #	endif
 
 	return addr;

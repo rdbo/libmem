@@ -79,7 +79,34 @@ mem_size_t         mem_in_get_process_name(mem_tstring_t* pprocess_name)
 	 */
 
 	mem_size_t read_chars = 0;
-	read_chars = mem_ex_get_process_name(mem_in_get_pid(), pprocess_name);
+
+	mem_tstring_t process_path = (mem_tstring_t)NULL;
+	if (mem_in_get_process_path(&process_path))
+	{
+		mem_tchar_t* p_pos = process_path;
+#		if   MEM_OS == MEM_WIN
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
+#		elif MEM_OS == MEM_LINUX
+		for (mem_tchar_t* temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
+#		endif
+
+		read_chars = MEM_STR_LEN(process_path) - (((uintptr_t)p_pos - (uintptr_t)process_path) / sizeof(mem_tchar_t));
+		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		*pprocess_name = (mem_tstring_t)malloc(process_name_size);
+		if (*pprocess_name)
+		{
+			memset(*pprocess_name, 0x0, process_name_size);
+			memcpy(*pprocess_name, p_pos, read_chars * sizeof(mem_tchar_t));
+		}
+
+		else
+		{
+			read_chars = 0;
+		}
+
+		free(process_path);
+	}
+
 	return read_chars;
 }
 
@@ -100,7 +127,22 @@ mem_size_t         mem_in_get_process_path(mem_tstring_t* pprocess_path)
 	 *   be free'd
 	 */
 
-	return mem_ex_get_process_path(mem_in_get_pid(),  pprocess_path);
+	mem_size_t read_chars = 0;
+	if (!pprocess_path) return read_chars;
+#	if   MEM_OS == MEM_WIN
+	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
+	hModule = GetModuleHandle(NULL);
+	if (!hModule || hModule == INVALID_HANDLE_VALUE) return read_chars;
+
+	*pprocess_path = (mem_tstring_t)malloc((MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
+	if (!*pprocess_path) return read_chars;
+	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
+
+	read_chars = (mem_size_t)GetModuleFileName(hModule, *pprocess_path, MEM_PATH_MAX * sizeof(mem_tchar_t));
+#	elif MEM_OS == MEM_LINUX
+	read_chars = mem_ex_get_process_path(mem_in_get_pid(), pprocess_path);
+#	endif
+	return read_chars;
 }
 
 mem_arch_t         mem_in_get_arch(mem_void_t)

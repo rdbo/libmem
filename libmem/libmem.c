@@ -11,7 +11,8 @@
 
  //Data
 #if   MEM_ARCH == _MEM_ARCH_x86_32
-static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] = {
+static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] = 
+{
 	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  //MEM_ASM_x86_JMP32
 	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  //MEM_ASM_x86_JMP64
 	{ (mem_data_t)"\xE8\x00\x00\x00\x00",             5 },                  //MEM_ASM_x86_CALL32
@@ -24,7 +25,8 @@ static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] = {
 	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_INVALID
 };
 #elif MEM_ARCH == _MEM_ARCH_x86_64
-static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] = {
+static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] = 
+{
 	{ (mem_data_t)"\xE9\x00\x00\x00\x00", 5 },                              //MEM_ASM_x86_JMP32
 	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, //MEM_ASM_x86_JMP64
 	{ (mem_data_t)"\xE8\x00\x00\x00\x00", 5 },                              //MEM_ASM_x86_CALL32

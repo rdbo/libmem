@@ -2424,6 +2424,45 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 
 	mem_bool_t ret = MEM_FALSE;
 #	if   MEM_OS == MEM_WIN
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
+
+	mem_tstring_t module_ref = (mem_tstring_t)NULL;
+	mem_size_t    module_ref_len = 0;
+	if ((module_ref_len = mem_ex_get_module_name(process, mod, &module_ref)))
+	{
+		mem_size_t module_ref_size = (module_ref_len + 1) * sizeof(mem_tchar_t);
+		mem_voidptr_t module_ref_ex = mem_ex_allocate(process, module_ref_size, PAGE_READWRITE);
+		if (module_ref_ex != (mem_voidptr_t)MEM_BAD)
+		{
+			if (mem_ex_write(process, module_ref_ex, module_ref, module_ref_size) == MEM_TRUE)
+			{
+				HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)GetModuleHandle, module_ref_ex, 0, NULL);
+				if (hThread)
+				{
+					HMODULE hModuleEx = (HMODULE)INVALID_HANDLE_VALUE;
+					WaitForSingleObject(hThread, INFINITE);
+					GetExitCodeThread(hThread, (LPDWORD)&hModuleEx);
+					CloseHandle(hThread);
+
+					if (hModuleEx && hModuleEx != (HMODULE)INVALID_HANDLE_VALUE)
+					{
+						hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, hModuleEx, 0, NULL);
+						if (hThread)
+						{
+							WaitForSingleObject(hThread, INFINITE);
+							CloseHandle(hThread);
+							ret = MEM_TRUE;
+						}
+					}
+				}
+			}
+			mem_ex_deallocate(process, module_ref_ex, module_ref_size);
+		}
+		free(module_ref);
+	}
+
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 #	endif
 

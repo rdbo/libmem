@@ -45,7 +45,7 @@ void failure_function()
 	tprint(MEM_STR("Hook Failed!\n"));
 }
 
-NAKEDFN target_function(void* fn)
+NAKEDFN target_function(void *fn)
 {
 #	ifdef _MSC_VER
 	__asm
@@ -142,7 +142,7 @@ int main()
 
 	tprint(MEM_STR("Process Name:    %s\n"), process_name);
 	tprint(MEM_STR("Process Path:    %s\n"), process_path);
-	tprint(MEM_STR("Process ID:      %p\n"), (void*)pid);
+	tprint(MEM_STR("Process ID:      %p\n"), (void *)(uintptr_t)pid);
 	tprint(MEM_STR("Process Arch:    %s\n"), arch_to_str(process.arch));
 	tseparator();
 
@@ -152,16 +152,16 @@ int main()
 	tprint(MEM_STR("Module Name:     %s\n"), module_name);
 	tprint(MEM_STR("Module Path:     %s\n"), module_path);
 	tprint(MEM_STR("Module Base:     %p\n"), mod.base);
-	tprint(MEM_STR("Module Size:     %p\n"), (void*)mod.size);
+	tprint(MEM_STR("Module Size:     %p\n"), (void *)(uintptr_t)mod.size);
 	tprint(MEM_STR("Module End:      %p\n"), mod.end);
 	tseparator();
 
 	page = mem_in_get_page(mod.base);
 	tprint(MEM_STR("Page Base:       %p\n"), page.base);
-	tprint(MEM_STR("Page Size:       %p\n"), (void*)page.size);
+	tprint(MEM_STR("Page Size:       %p\n"), (void *)(uintptr_t)page.size);
 	tprint(MEM_STR("Page End:        %p\n"), page.end);
-	tprint(MEM_STR("Page Protection: %p\n"), (void*)page.protection);
-	tprint(MEM_STR("Page Flags:      %p\n"), (void*)page.flags);
+	tprint(MEM_STR("Page Protection: %p\n"), (void *)(uintptr_t)page.protection);
+	tprint(MEM_STR("Page Flags:      %p\n"), (void *)(uintptr_t)page.flags);
 	tseparator();
 
 	mem_voidptr_t scan_start = (mem_voidptr_t)&pattern[-10];
@@ -170,7 +170,7 @@ int main()
 	pattern_scan = mem_in_pattern_scan(pattern, mask, scan_start, scan_stop);
 	tprint(MEM_STR("Scan:            %p\n"), scan);
 	tprint(MEM_STR("Pattern Scan:    %p\n"), pattern_scan);
-	tprint(MEM_STR("Expected Result: %p\n"), (void*)pattern);
+	tprint(MEM_STR("Expected Result: %p\n"), (void *)(uintptr_t)pattern);
 	tseparator();
 
 	alloc = mem_in_allocate(sizeof(write_buf), protection);
@@ -183,12 +183,12 @@ int main()
 	tseparator();
 
 #	if   EXAMPLE_HOOK
-	tprint(MEM_STR("Target Function: %p\n"), (void*)target_function);
-	tprint(MEM_STR("Hook   Function: %p\n"), (void*)hook_function);
-	mem_byte_t* p_target_function = (mem_byte_t*)target_function;
-	if (p_target_function[0] == 0xE9) p_target_function = &p_target_function[(*(mem_intptr_t*)(&p_target_function[1])) + 5];
+	tprint(MEM_STR("Target Function: %p\n"), (void *)target_function);
+	tprint(MEM_STR("Hook   Function: %p\n"), (void *)hook_function);
+	mem_byte_t *p_target_function = (mem_byte_t *)target_function;
+	if (p_target_function[0] == 0xE9) p_target_function = &p_target_function[(*(mem_intptr_t *)(&p_target_function[1])) + 5];
 	HookReturn = mem_in_detour_trampoline((mem_voidptr_t)p_target_function, (mem_voidptr_t)hook_function, mem_in_detour_size(MEM_ASM_x86_JMP32), MEM_ASM_x86_JMP32, NULL);
-	target_function((void*)failure_function);
+	target_function((void *)failure_function);
 	tseparator();
 #	endif
 

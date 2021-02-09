@@ -2397,8 +2397,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 			ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
 
 			mem_ex_deallocate(process, inj_addr, inj_size);
-			if (handle)
-				mod = mem_ex_get_module(process, path);
+			mod = mem_ex_get_module(process, path);
 		}
 	}
 

@@ -3,8 +3,9 @@
 </p>  
 
 # Usage
-Copy the 'libmem' folder to your project directory.  
-Make sure to compile 'libmem.c' along with your project.  
+Copy the `libmem` folder to your project directory.  
+Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  
+Compile `libmem/libmem.c` along with your project.  
 
 # Dependencies
 Windows: Windows SDK  

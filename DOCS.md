@@ -5,7 +5,7 @@
 # Overview
   
 Functions that start with `mem_in_*` or `mem::in::*` are functions that interact with the caller program.  
-Functions that start with `mem_ex_*` or `mem::ex::*` are functions that interact with an external program. They generally require a `mem_process_t` or `mem_pid_t` to be passed as parameter, as these values can be used to identify the target process.  
+Functions that start with `mem_ex_*` or `mem::ex::*` are functions that interact with an external program. They generally require a `mem_process_t` or `mem_pid_t` to be passed as parameter, as they can be used to identify the target process.  
 
 # Description
   

@@ -227,7 +227,14 @@ typedef enum
 	 * syscall
 	 */
 
-	MEM_ASM_x86_DLOPEN32,
+	MEM_ASM_x86_LIBCALL32_1, //x86_32 Library Call with 1 parameter
+	/*
+	 * push ebx
+	 * call eax //call dlclose
+	 * int3
+	 */
+
+	MEM_ASM_x86_LIBCALL32_2, //x86_32 Library Call with 2 parameters
 	/*
 	 * push ecx
 	 * push ebx
@@ -235,22 +242,9 @@ typedef enum
 	 * int3
 	 */
 
-	MEM_ASM_x86_DLOPEN64,
+	MEM_ASM_x86_LIBCALL64, //x86_64 Library Call
 	/*
 	 * call rax //call dlopen
-	 * int3
-	 */
-
-	MEM_ASM_x86_DLCLOSE32,
-	/*
-	 * push ebx
-	 * call eax //call dlclose
-	 * int3
-	 */
-
-	MEM_ASM_x86_DLCLOSE64,
-	/*
-	 * call rax //call dlclose
 	 * int3
 	 */
 

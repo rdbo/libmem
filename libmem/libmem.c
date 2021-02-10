@@ -20,23 +20,25 @@ static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] =
 	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_DETOUR_INVALID
 	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL32
 	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL64
-	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",             5 },                  //MEM_ASM_x86_DLOPEN32
-	{ (mem_data_t)"\xFF\xD0\xCC",                     3 },                  //MEM_ASM_x86_DLOPEN64
+	{ (mem_data_t)"\x53\xFF\xD0\xCC",                 4 },                  //MEM_ASM_x86_LIBCALL32_1
+	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",             5 },                  //MEM_ASM_x86_LIBCALL32_2
+	{ (mem_data_t)"\xFF\xD0\xCC",                     3 },                  //MEM_ASM_x86_LIBCALL64
 	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_INVALID
 };
 #elif MEM_ARCH == _MEM_ARCH_x86_64
 static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00", 5 },                              //MEM_ASM_x86_JMP32
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00",                              5 }, //MEM_ASM_x86_JMP32
 	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, //MEM_ASM_x86_JMP64
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00", 5 },                              //MEM_ASM_x86_CALL32
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00",                              5 }, //MEM_ASM_x86_CALL32
 	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xD0", 12 }, //MEM_ASM_x86_CALL64
-	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_DETOUR_INVALID
-	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL32
-	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL64
-	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",             5 },                  //MEM_ASM_x86_DLOPEN32
-	{ (mem_data_t)"\xFF\xD0\xCC",                     3 },                  //MEM_ASM_x86_DLOPEN64
-	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_INVALID
+	{ (mem_data_t)NULL,                                                0 }, //MEM_ASM_DETOUR_INVALID
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90",                  8 }, //MEM_ASM_x86_SYSCALL32
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90",                  8 }, //MEM_ASM_x86_SYSCALL64
+	{ (mem_data_t)"\x53\xFF\xD0\xCC",                                  4 }, //MEM_ASM_x86_LIBCALL32_1
+	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",                              5 }, //MEM_ASM_x86_LIBCALL32_2
+	{ (mem_data_t)"\xFF\xD0\xCC",                                      3 }, //MEM_ASM_x86_LIBCALL64
+	{ (mem_data_t)NULL,                                                0 }, //MEM_ASM_INVALID
 };
 #endif
 
@@ -2342,10 +2344,10 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		switch (process.arch)
 		{
 		case MEM_ARCH_x86_32:
-			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN32];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL32_2];
 			break;
 		case MEM_ARCH_x86_64:
-			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN64];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64_2];
 			break;
 		default:
 			break;
@@ -2527,10 +2529,10 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 		switch (process.arch)
 		{
 		case MEM_ARCH_x86_32:
-			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN32];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL32_2];
 			break;
 		case MEM_ARCH_x86_64:
-			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN64];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64_2];
 			break;
 		default:
 			break;
@@ -2587,10 +2589,10 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 			switch (process.arch)
 			{
 			case MEM_ARCH_x86_32:
-				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN32];
+				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL32_2];
 				break;
 			case MEM_ARCH_x86_64:
-				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN64];
+				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64_2];
 				break;
 			default:
 				break;
@@ -2604,10 +2606,10 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 				switch (process.arch)
 				{
 				case MEM_ARCH_x86_32:
-					inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLCLOSE32];
+					inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL32_1];
 					break;
 				case MEM_ARCH_x86_64:
-					inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLCLOSE64];
+					inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64];
 					break;
 				default:
 					break;

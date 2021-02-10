@@ -12,8 +12,8 @@ Windows: Windows SDK
 Linux:   libdl (-ldl)  
 
 # License
-Read 'LICENSE'  
-
+Read `LICENSE`  
+  
 # Overview
 ```
 //mem_in

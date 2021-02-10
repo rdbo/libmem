@@ -2347,7 +2347,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL32_2];
 			break;
 		case MEM_ARCH_x86_64:
-			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64_2];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64];
 			break;
 		default:
 			break;
@@ -2532,7 +2532,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL32_2];
 			break;
 		case MEM_ARCH_x86_64:
-			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64_2];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64];
 			break;
 		default:
 			break;
@@ -2592,7 +2592,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL32_2];
 				break;
 			case MEM_ARCH_x86_64:
-				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64_2];
+				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_LIBCALL64];
 				break;
 			default:
 				break;

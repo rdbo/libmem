@@ -11,7 +11,7 @@
 
  //Data
 #if   MEM_ARCH == _MEM_ARCH_x86_32
-static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] = 
+static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
 	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  //MEM_ASM_x86_JMP32
 	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  //MEM_ASM_x86_JMP64
@@ -25,7 +25,7 @@ static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] =
 	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_INVALID
 };
 #elif MEM_ARCH == _MEM_ARCH_x86_64
-static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID + 1] = 
+static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
 	{ (mem_data_t)"\xE9\x00\x00\x00\x00", 5 },                              //MEM_ASM_x86_JMP32
 	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, //MEM_ASM_x86_JMP64
@@ -612,7 +612,7 @@ mem_size_t         mem_in_payload_size(mem_asm_t method)
 	mem_size_t size = (mem_size_t)MEM_BAD;
 
 	if (method >= 0 && method < MEM_ASM_INVALID)
-		size = g_mem_payloads[method].size;
+		size = MEM_PAYLOADS[method].size;
 
 	return size;
 }
@@ -656,7 +656,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 
 	mem_data_t detour_buffer = (mem_data_t)malloc(detour_size);
 	if (!detour_buffer) return ret;
-	mem_in_read((mem_voidptr_t)g_mem_payloads[method].payload, detour_buffer, detour_size);
+	mem_in_read((mem_voidptr_t)MEM_PAYLOADS[method].payload, detour_buffer, detour_size);
 
 #	if   MEM_ARCH == _MEM_ARCH_x86_32
 	switch (method)
@@ -1991,10 +1991,10 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	switch (process.arch)
 	{
 	case MEM_ARCH_x86_32:
-		injection_buf = g_mem_payloads[MEM_ASM_x86_SYSCALL32];
+		injection_buf = MEM_PAYLOADS[MEM_ASM_x86_SYSCALL32];
 		break;
 	case MEM_ARCH_x86_64:
-		injection_buf = g_mem_payloads[MEM_ASM_x86_SYSCALL64];
+		injection_buf = MEM_PAYLOADS[MEM_ASM_x86_SYSCALL64];
 		break;
 	default:
 		return ret;
@@ -2338,14 +2338,14 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		free(module_ref);
 
 		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
-		mem_payload_t inj_buf = g_mem_payloads[MEM_ASM_INVALID];
+		mem_payload_t inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
 		switch (process.arch)
 		{
 		case MEM_ARCH_x86_32:
-			inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN32];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN32];
 			break;
 		case MEM_ARCH_x86_64:
-			inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN64];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN64];
 			break;
 		default:
 			break;
@@ -2523,14 +2523,14 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 
 		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
 		mem_voidptr_t dlclose_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlclose_offset);
-		mem_payload_t inj_buf = g_mem_payloads[MEM_ASM_INVALID];
+		mem_payload_t inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
 		switch (process.arch)
 		{
 		case MEM_ARCH_x86_32:
-			inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN32];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN32];
 			break;
 		case MEM_ARCH_x86_64:
-			inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN64];
+			inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN64];
 			break;
 		default:
 			break;
@@ -2587,10 +2587,10 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 			switch (process.arch)
 			{
 			case MEM_ARCH_x86_32:
-				inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN32];
+				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN32];
 				break;
 			case MEM_ARCH_x86_64:
-				inj_buf = g_mem_payloads[MEM_ASM_x86_DLOPEN64];
+				inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLOPEN64];
 				break;
 			default:
 				break;
@@ -2604,10 +2604,10 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 				switch (process.arch)
 				{
 				case MEM_ARCH_x86_32:
-					inj_buf = g_mem_payloads[MEM_ASM_x86_DLCLOSE32];
+					inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLCLOSE32];
 					break;
 				case MEM_ARCH_x86_64:
-					inj_buf = g_mem_payloads[MEM_ASM_x86_DLCLOSE64];
+					inj_buf = MEM_PAYLOADS[MEM_ASM_x86_DLCLOSE64];
 					break;
 				default:
 					break;

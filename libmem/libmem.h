@@ -36,7 +36,7 @@
 #define MEM_UCS  0
 #define MEM_MBCS 1
 
-#if defined(_UNICODE) && defined(MEM_WIN)
+#if defined(_UNICODE) && MEM_OS == MEM_WIN
 #define MEM_CHARSET MEM_UCS
 #else
 #define MEM_CHARSET MEM_MBCS

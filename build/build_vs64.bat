@@ -16,4 +16,4 @@ if not exist ".\bin\Win64\obj" (
 )
 
 del /f /q /s ".\bin\Win64"
-cl.exe /Z7 /LD /MD "..\libmem\libmem.c" /Fo".\bin\Win64\obj\libmem.o" /link /DLL /OUT:".\bin\Win64\libmem.dll"
+cl.exe /Z7 /LD /MD "..\libmem\libmem.c" /Fo".\bin\Win64\obj\libmem.o" /link /DLL /IMPLIB:".\bin\Win64\libmem.lib" /OUT:".\bin\Win64\libmem.dll"

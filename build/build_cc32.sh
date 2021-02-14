@@ -14,5 +14,5 @@ fi
 
 find ./bin -type f -delete
 
-cc -g -m32 -o ./bin/x86/obj/libmem.o -c -shared -fPIC ../libmem/libmem.c
-cc -g -m32 -o ./bin/x86/libmem.so -shared -fPIC ./bin/x86/obj/libmem.o -ldl
+cc -g -m32 -o -D LIBMEM_EXPORT ./bin/x86/obj/libmem.o -c -shared -fPIC ../libmem/libmem.c
+cc -g -m32 -o -D LIBMEM_EXPORT ./bin/x86/libmem.so -shared -fPIC ./bin/x86/obj/libmem.o -ldl

@@ -9,7 +9,7 @@
 #ifndef LIBMEM_H
 #define LIBMEM_H
 
-//Operating System
+/* Operating System */
 #define MEM_WIN   0
 #define MEM_LINUX 1
 
@@ -19,7 +19,7 @@
 #define MEM_OS MEM_LINUX
 #endif
 
-//Architecture
+/* Architecture */
 #define _MEM_ARCH_x86_32  0
 #define _MEM_ARCH_x86_64  1
 #define _MEM_ARCH_UNKNOWN 2
@@ -32,7 +32,7 @@
 #define MEM_ARCH _MEM_ARCH_UNKNOWN
 #endif
 
-//Charset
+/* Charset */
 #define MEM_UCS  0
 #define MEM_MBCS 1
 
@@ -42,19 +42,19 @@
 #define MEM_CHARSET MEM_MBCS
 #endif
 
-//Language
+/* Language */
 #if defined(__cplusplus)
 #define MEM_CPP
 #else
 #define MEM_C
 #endif
 
-//Compatibility
+/* Compatibility */
 #if defined(MEM_OS) && defined(MEM_ARCH)
 #define MEM_COMPATIBLE
 #endif
 
-//Helpers
+/* Helpers */
 #define PAD_STR __pad
 #define CONCAT_STR(str1, str2) str1##str2
 #define _MERGE_STR (str1, str2) str1 str2
@@ -80,7 +80,7 @@
 #define MEM_STR_STR(str, sstr) strstr(str, sstr)
 #endif
 
-//Other
+/* Other */
 #define MEM_NULL 0
 #define MEM_BAD  -1
 #define MEM_GOOD !MEM_BAD
@@ -95,7 +95,7 @@
 
 #ifdef MEM_COMPATIBLE
 
-//Includes
+/* Includes */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -122,14 +122,14 @@
 #include <dlfcn.h>
 #include <link.h>
 #include <fcntl.h>
-#endif //MEM_OS
+#endif /* MEM_OS */
 
 #ifdef MEM_CPP
 extern "C"
 {
 #endif
 
-//Types
+/* Types */
 typedef enum { MEM_FALSE = 0, MEM_TRUE = 1 } mem_bool_t;
 typedef int                                  mem_int_t;
 typedef void                                 mem_void_t;
@@ -227,24 +227,24 @@ typedef enum
 	 * syscall
 	 */
 
-	MEM_ASM_x86_LIBCALL32_1, //x86_32 Library Call with 1 parameter
+	MEM_ASM_x86_LIBCALL32_1, /* x86_32 Library Call with 1 parameter */
 	/*
 	 * push ebx
-	 * call eax //call dlclose
+	 * call eax
 	 * int3
 	 */
 
-	MEM_ASM_x86_LIBCALL32_2, //x86_32 Library Call with 2 parameters
+	MEM_ASM_x86_LIBCALL32_2, /* x86_32 Library Call with 2 parameters */
 	/*
 	 * push ecx
 	 * push ebx
-	 * call eax //call dlopen
+	 * call eax
 	 * int3
 	 */
 
-	MEM_ASM_x86_LIBCALL64, //x86_64 Library Call
+	MEM_ASM_x86_LIBCALL64, /* x86_64 Library Call */
 	/*
-	 * call rax //call dlopen
+	 * call rax
 	 * int3
 	 */
 
@@ -286,8 +286,8 @@ typedef struct
 	mem_prot_t    protection;
 } mem_page_t;
 
-//Functions
-//mem_in
+/* Functions */
+/* mem_in */
 mem_pid_t          mem_in_get_pid(mem_void_t);
 mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess_name);
 mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess_path);
@@ -315,7 +315,7 @@ mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_data_t stolen_by
 mem_module_t       mem_in_load_module(mem_tstring_t path);
 mem_bool_t         mem_in_unload_module(mem_module_t mod);
 mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol);
-//mem_ex
+/* mem_ex */
 mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref);
 mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t *pprocess_name);
 mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t *pprocess_path);
@@ -346,5 +346,5 @@ mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, me
 }
 #endif
 
-#endif //MEM_COMPATIBLE
-#endif //LIBMEM_H
+#endif /* MEM_COMPATIBLE */
+#endif /* LIBMEM_H */

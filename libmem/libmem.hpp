@@ -251,4 +251,4 @@ namespace mem
 	}
 }
 
-#endif //LIBMEM_HPP
+#endif /* LIBMEM_HPP */

@@ -9,40 +9,40 @@
 
 #ifdef MEM_COMPATIBLE
 
- //Data
+/* Data */
 #if   MEM_ARCH == _MEM_ARCH_x86_32
 static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  //MEM_ASM_x86_JMP32
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  //MEM_ASM_x86_JMP64
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00",             5 },                  //MEM_ASM_x86_CALL32
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xD0",     7 },                  //MEM_ASM_x86_CALL64
-	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_DETOUR_INVALID
-	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL32
-	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL64
-	{ (mem_data_t)"\x53\xFF\xD0\xCC",                 4 },                  //MEM_ASM_x86_LIBCALL32_1
-	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",             5 },                  //MEM_ASM_x86_LIBCALL32_2
-	{ (mem_data_t)"\xFF\xD0\xCC",                     3 },                  //MEM_ASM_x86_LIBCALL64
-	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_INVALID
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  /* MEM_ASM_x86_JMP32 */
+	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  /* MEM_ASM_x86_JMP64 */
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00",             5 },                  /* MEM_ASM_x86_CALL32 */
+	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xD0",     7 },                  /* MEM_ASM_x86_CALL64 */
+	{ (mem_data_t)NULL,                               0 },                  /* MEM_ASM_DETOUR_INVALID */
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  /* MEM_ASM_x86_SYSCALL32 */
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  /* MEM_ASM_x86_SYSCALL64 */
+	{ (mem_data_t)"\x53\xFF\xD0\xCC",                 4 },                  /* MEM_ASM_x86_LIBCALL32_1 */
+	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",             5 },                  /* MEM_ASM_x86_LIBCALL32_2 */
+	{ (mem_data_t)"\xFF\xD0\xCC",                     3 },                  /* MEM_ASM_x86_LIBCALL64 */
+	{ (mem_data_t)NULL,                               0 },                  /* MEM_ASM_INVALID */
 };
 #elif MEM_ARCH == _MEM_ARCH_x86_64
 static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00",                              5 }, //MEM_ASM_x86_JMP32
-	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, //MEM_ASM_x86_JMP64
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00",                              5 }, //MEM_ASM_x86_CALL32
-	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xD0", 12 }, //MEM_ASM_x86_CALL64
-	{ (mem_data_t)NULL,                                                0 }, //MEM_ASM_DETOUR_INVALID
-	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90",                  8 }, //MEM_ASM_x86_SYSCALL32
-	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90",                  8 }, //MEM_ASM_x86_SYSCALL64
-	{ (mem_data_t)"\x53\xFF\xD0\xCC",                                  4 }, //MEM_ASM_x86_LIBCALL32_1
-	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",                              5 }, //MEM_ASM_x86_LIBCALL32_2
-	{ (mem_data_t)"\xFF\xD0\xCC",                                      3 }, //MEM_ASM_x86_LIBCALL64
-	{ (mem_data_t)NULL,                                                0 }, //MEM_ASM_INVALID
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00",                              5 }, /* MEM_ASM_x86_JMP32 */
+	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, /* MEM_ASM_x86_JMP64 */
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00",                              5 }, /* MEM_ASM_x86_CALL32 */
+	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xD0", 12 }, /* MEM_ASM_x86_CALL64 */
+	{ (mem_data_t)NULL,                                                0 }, /* MEM_ASM_DETOUR_INVALID */
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90",                  8 }, /* MEM_ASM_x86_SYSCALL32 */
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90",                  8 }, /* MEM_ASM_x86_SYSCALL64 */
+	{ (mem_data_t)"\x53\xFF\xD0\xCC",                                  4 }, /* MEM_ASM_x86_LIBCALL32_1 */
+	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",                              5 }, /* MEM_ASM_x86_LIBCALL32_2 */
+	{ (mem_data_t)"\xFF\xD0\xCC",                                      3 }, /* MEM_ASM_x86_LIBCALL64 */
+	{ (mem_data_t)NULL,                                                0 }, /* MEM_ASM_INVALID */
 };
 #endif
 
-//mem_in
+/* mem_in */
 
 mem_pid_t          mem_in_get_pid(mem_void_t)
 {
@@ -880,7 +880,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 	return addr;
 }
 
-//mem_ex
+/* mem_ex */
 
 mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 {
@@ -1999,8 +1999,8 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	struct user_regs_struct old_regs, regs;
 	mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD;
 	mem_payload_t injection_buf = { 0 };
-	mem_uintptr_t old_data = 0; //'word-sized buffer' to store reads from ptrace
-	mem_uintptr_t inj_data = 0; //'word-sized buffer' to be used on ptrace for writing
+	mem_uintptr_t old_data = 0; /* 'word-sized buffer' to store reads from ptrace */
+	mem_uintptr_t inj_data = 0; /* 'word-sized buffer' to be used on ptrace for writing */
 
 	switch (process.arch)
 	{
@@ -2127,11 +2127,11 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 	switch (process.arch)
 	{
 	case MEM_ARCH_x86_32:
-		//syscall_n = __NR_mmap2;
+		/* syscall_n = __NR_mmap2; */
 		syscall_n = 192;
 		break;
 	case MEM_ARCH_x86_64:
-		//syscall_n = __NR_mmap;
+		/* syscall_n = __NR_mmap; */
 		syscall_n = 9;
 		break;
 	default:
@@ -2381,7 +2381,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 
 			int status;
 			struct user_regs_struct old_regs, regs;
-			//void *handle = (void *)NULL;
+			/* void *handle = (void *)NULL; */
 
 			ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
 			wait(&status);
@@ -2721,4 +2721,4 @@ mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, me
 	return addr;
 }
 
-#endif //MEM_COMPATIBLE
+#endif /* MEM_COMPATIBLE */

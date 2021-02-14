@@ -21,7 +21,7 @@
 
 int main()
 {
-	//Data
+	/* Data */
 	mem_pid_t     pid = 0;
 	mem_process_t process = { 0 };
 	mem_tstring_t process_name = (mem_tstring_t)NULL;
@@ -47,7 +47,7 @@ int main()
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
-	//Examples
+	/* Examples */
 	print_logo();
 	print(MEM_STR("Press [ENTER] to start..."));
 	getchar();
@@ -100,7 +100,7 @@ int main()
 	tprint(MEM_STR("Read:            %i\n"), read_buf);
 	tseparator();
 
-	//Free memory
+	/* Free memory */
 	free(module_path);
 	free(module_name);
 	free(process_path);

@@ -21,7 +21,7 @@
 
 int main()
 {
-	//Data
+	/* Data */
 	mem_pid_t     pid = 0;
 	mem_process_t process = { 0 };
 	mem_string_t  process_name = MEM_STR("");
@@ -47,7 +47,7 @@ int main()
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
-	//Examples
+	/* Examples */
 	print_logo();
 	print(MEM_STR("Press [ENTER] to start..."));
 	getchar();

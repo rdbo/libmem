@@ -44,7 +44,7 @@ static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] =
 
 /* mem_in */
 
-mem_pid_t          mem_in_get_pid(mem_void_t)
+LIBMEM_EXTERN mem_pid_t          mem_in_get_pid(mem_void_t)
 {
 	/*
 	 * Description:
@@ -65,7 +65,7 @@ mem_pid_t          mem_in_get_pid(mem_void_t)
 	return pid;
 }
 
-mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess_name)
+LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess_name)
 {
 	/*
 	 * Description:
@@ -115,7 +115,7 @@ mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess_name)
 	return read_chars;
 }
 
-mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess_path)
+LIBMEM_EXTERN mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess_path)
 {
 	/*
 	 * Description:
@@ -150,7 +150,7 @@ mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess_path)
 	return read_chars;
 }
 
-mem_arch_t         mem_in_get_arch(mem_void_t)
+LIBMEM_EXTERN mem_arch_t         mem_in_get_arch(mem_void_t)
 {
 	/*
 	 * Description:
@@ -168,7 +168,7 @@ mem_arch_t         mem_in_get_arch(mem_void_t)
 	return (mem_arch_t)MEM_ARCH;
 }
 
-mem_process_t      mem_in_get_process(mem_void_t)
+LIBMEM_EXTERN mem_process_t      mem_in_get_process(mem_void_t)
 {
 	/*
 	 * Description:
@@ -188,7 +188,7 @@ mem_process_t      mem_in_get_process(mem_void_t)
 	return process;
 }
 
-mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
+LIBMEM_EXTERN mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 {
 	/*
 	 * Description:
@@ -221,7 +221,7 @@ mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	return mod;
 }
 
-mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t *pmodule_name)
+LIBMEM_EXTERN mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t *pmodule_name)
 {
 	/*
 	 * Description:
@@ -270,7 +270,7 @@ mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t *pmodu
 	return read_chars;
 }
 
-mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t *pmodule_path)
+LIBMEM_EXTERN mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t *pmodule_path)
 {
 	/*
 	 * Description:
@@ -306,7 +306,7 @@ mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t *pmodu
 	return read_chars;
 }
 
-mem_size_t         mem_in_get_module_list(mem_module_t **pmodule_list)
+LIBMEM_EXTERN mem_size_t         mem_in_get_module_list(mem_module_t **pmodule_list)
 {
 	/*
 	 * Description:
@@ -326,7 +326,7 @@ mem_size_t         mem_in_get_module_list(mem_module_t **pmodule_list)
 	return mem_ex_get_module_list(mem_in_get_process(), pmodule_list);
 }
 
-mem_page_t         mem_in_get_page(mem_voidptr_t src)
+LIBMEM_EXTERN mem_page_t         mem_in_get_page(mem_voidptr_t src)
 {
 	/*
 	 * Description:
@@ -354,7 +354,7 @@ mem_page_t         mem_in_get_page(mem_voidptr_t src)
 	return page;
 }
 
-mem_bool_t         mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -375,7 +375,7 @@ mem_bool_t         mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t 
 	return memcpy(dst, src, size) == (void *)dst ? MEM_TRUE : MEM_FALSE;
 }
 
-mem_bool_t         mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -395,7 +395,7 @@ mem_bool_t         mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t
 	return memcpy(dst, src, size) == (void *)src ? MEM_TRUE : MEM_FALSE;
 }
 
-mem_bool_t         mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -415,7 +415,7 @@ mem_bool_t         mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t siz
 	return memset(src, byte, size) == (void *)src ? MEM_TRUE : MEM_FALSE;
 }
 
-mem_voidptr_t      mem_in_syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5)
+LIBMEM_EXTERN mem_voidptr_t      mem_in_syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5)
 {
 	/*
 	 * Description:
@@ -435,7 +435,7 @@ mem_voidptr_t      mem_in_syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_v
 	return ret;
 }
 
-mem_bool_t         mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t *pold_protection)
+LIBMEM_EXTERN mem_bool_t         mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t *pold_protection)
 {
 	/*
 	 * Description:
@@ -465,7 +465,7 @@ mem_bool_t         mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t
 	return ret;
 }
 
-mem_voidptr_t      mem_in_allocate(mem_size_t size, mem_prot_t protection)
+LIBMEM_EXTERN mem_voidptr_t      mem_in_allocate(mem_size_t size, mem_prot_t protection)
 {
 	/*
 	 * Description:
@@ -490,7 +490,7 @@ mem_voidptr_t      mem_in_allocate(mem_size_t size, mem_prot_t protection)
 	return alloc;
 }
 
-mem_bool_t         mem_in_deallocate(mem_voidptr_t src, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_in_deallocate(mem_voidptr_t src, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -511,7 +511,7 @@ mem_bool_t         mem_in_deallocate(mem_voidptr_t src, mem_size_t size)
 	return ret;
 }
 
-mem_voidptr_t      mem_in_scan(mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop)
+LIBMEM_EXTERN mem_voidptr_t      mem_in_scan(mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop)
 {
 	/*
 	 * Description:
@@ -547,7 +547,7 @@ mem_voidptr_t      mem_in_scan(mem_data_t data, mem_size_t size, mem_voidptr_t s
 	return ret;
 }
 
-mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop)
+LIBMEM_EXTERN mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop)
 {
 	/*
 	 * Description:
@@ -585,7 +585,7 @@ mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, m
 	return ret;
 }
 
-mem_size_t         mem_in_detour_size(mem_asm_t method)
+LIBMEM_EXTERN mem_size_t         mem_in_detour_size(mem_asm_t method)
 {
 	/*
 	 * Description:
@@ -604,7 +604,7 @@ mem_size_t         mem_in_detour_size(mem_asm_t method)
 	return size;
 }
 
-mem_size_t         mem_in_payload_size(mem_asm_t method)
+LIBMEM_EXTERN mem_size_t         mem_in_payload_size(mem_asm_t method)
 {
 	/*
 	 * Description:
@@ -623,7 +623,7 @@ mem_size_t         mem_in_payload_size(mem_asm_t method)
 	return size;
 }
 
-mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes)
+LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes)
 {
 	/*
 	 * Description:
@@ -709,7 +709,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 	return ret;
 }
 
-mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes)
+LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes)
 {
 	/*
 	 * Description:
@@ -758,7 +758,7 @@ mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst
 	return gateway;
 }
 
-mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_data_t stolen_bytes, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_data_t stolen_bytes, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -787,7 +787,7 @@ mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_data_t stolen_by
 	return ret;
 }
 
-mem_module_t       mem_in_load_module(mem_tstring_t path)
+LIBMEM_EXTERN mem_module_t       mem_in_load_module(mem_tstring_t path)
 {
 	/*
 	 * Description:
@@ -816,7 +816,7 @@ mem_module_t       mem_in_load_module(mem_tstring_t path)
 	return mod;
 }
 
-mem_bool_t         mem_in_unload_module(mem_module_t mod)
+LIBMEM_EXTERN mem_bool_t         mem_in_unload_module(mem_module_t mod)
 {
 	/*
 	 * Description:
@@ -846,7 +846,7 @@ mem_bool_t         mem_in_unload_module(mem_module_t mod)
 	return ret;
 }
 
-mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
+LIBMEM_EXTERN mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 {
 	/*
 	 * Description:
@@ -882,7 +882,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 
 /* mem_ex */
 
-mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
+LIBMEM_EXTERN mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 {
 	/*
 	 * Description:
@@ -952,7 +952,7 @@ mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 	return pid;
 }
 
-mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t *pprocess_name)
+LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t *pprocess_name)
 {
 	/*
 	 * Description:
@@ -1002,7 +1002,7 @@ mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t *pproces
 	return read_chars;
 }
 
-mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t *pprocess_path)
+LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t *pprocess_path)
 {
 	/*
 	 * Description:
@@ -1048,7 +1048,7 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t *pproces
 	return read_chars;
 }
 
-mem_arch_t         mem_ex_get_system_arch(mem_void_t)
+LIBMEM_EXTERN mem_arch_t         mem_ex_get_system_arch(mem_void_t)
 {
 	/*
 	 * Description:
@@ -1092,7 +1092,7 @@ mem_arch_t         mem_ex_get_system_arch(mem_void_t)
 	return arch;
 }
 
-mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
+LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 {
 	/*
 	 * Description:
@@ -1138,7 +1138,7 @@ mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	return arch;
 }
 
-mem_process_t      mem_ex_get_process(mem_pid_t pid)
+LIBMEM_EXTERN mem_process_t      mem_ex_get_process(mem_pid_t pid)
 {
 	/*
 	 * Description:
@@ -1158,7 +1158,7 @@ mem_process_t      mem_ex_get_process(mem_pid_t pid)
 	return process;
 }
 
-mem_size_t         mem_ex_get_process_list(mem_process_t **pprocess_list)
+LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pprocess_list)
 {
 	/*
 	 * Description:
@@ -1251,7 +1251,7 @@ mem_size_t         mem_ex_get_process_list(mem_process_t **pprocess_list)
 	return count;
 }
 
-mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module_ref)
+LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module_ref)
 {
 	/*
 	 * Description:
@@ -1378,7 +1378,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	return mod;
 }
 
-mem_size_t         mem_ex_get_module_name(mem_process_t process, mem_module_t mod, mem_tstring_t *pmodule_name)
+LIBMEM_EXTERN mem_size_t         mem_ex_get_module_name(mem_process_t process, mem_module_t mod, mem_tstring_t *pmodule_name)
 {
 	/*
 	 * Description:
@@ -1428,7 +1428,7 @@ mem_size_t         mem_ex_get_module_name(mem_process_t process, mem_module_t mo
 	return read_chars;
 }
 
-mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mod, mem_tstring_t *pmodule_path)
+LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mod, mem_tstring_t *pmodule_path)
 {
 	/*
 	 * Description:
@@ -1539,7 +1539,7 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 	return read_chars;
 }
 
-mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **pmodule_list)
+LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **pmodule_list)
 {
 	/*
 	 * Description:
@@ -1720,7 +1720,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **
 	return count;
 }
 
-mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
+LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 {
 	/*
 	 * Description:
@@ -1859,7 +1859,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	return page;
 }
 
-mem_bool_t         mem_ex_is_process_running(mem_process_t process)
+LIBMEM_EXTERN mem_bool_t         mem_ex_is_process_running(mem_process_t process)
 {
 	/*
 	 * Description:
@@ -1891,7 +1891,7 @@ mem_bool_t         mem_ex_is_process_running(mem_process_t process)
 	return ret;
 }
 
-mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -1923,7 +1923,7 @@ mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voi
 	return ret;
 }
 
-mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -1955,7 +1955,7 @@ mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_vo
 	return ret;
 }
 
-mem_bool_t         mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -1977,7 +1977,7 @@ mem_bool_t         mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte
 	return ret;
 }
 
-mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5)
+LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5)
 {
 	/*
 	 * Description:
@@ -2065,7 +2065,7 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	return ret;
 }
 
-mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t *old_protection)
+LIBMEM_EXTERN mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t *old_protection)
 {
 	/*
 	 * Description:
@@ -2101,7 +2101,7 @@ mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_
 	return ret;
 }
 
-mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection)
+LIBMEM_EXTERN mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection)
 {
 	/*
 	 * Description:
@@ -2146,7 +2146,7 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 	return alloc;
 }
 
-mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size)
+LIBMEM_EXTERN mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size)
 {
 	/*
 	 * Description:
@@ -2171,7 +2171,7 @@ mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, m
 	return ret;
 }
 
-mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop)
+LIBMEM_EXTERN mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop)
 {
 	/*
 	 * Description:
@@ -2217,7 +2217,7 @@ mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_
 	return ret;
 }
 
-mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop)
+LIBMEM_EXTERN mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop)
 {
 	/*
 	 * Description:
@@ -2264,7 +2264,7 @@ mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern
 	return ret;
 }
 
-mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
+LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 {
 	/*
 	 * Description:
@@ -2429,7 +2429,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 	return mod;
 }
 
-mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
+LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 {
 	/*
 	 * Description:
@@ -2677,7 +2677,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 	return ret;
 }
 
-mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, mem_cstring_t symbol)
+LIBMEM_EXTERN mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, mem_cstring_t symbol)
 {
 	/*
 	 * Description:

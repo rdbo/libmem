@@ -1305,7 +1305,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)NULL;
+	mem_tchar_t c = (mem_tchar_t)0;
 	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
 		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
@@ -1497,7 +1497,7 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)NULL;
+	mem_tchar_t c = (mem_tchar_t)0;
 	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
 		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
@@ -1604,7 +1604,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)NULL;
+	mem_tchar_t c = (mem_tchar_t)0;
 	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
 		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
@@ -1777,7 +1777,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)NULL;
+	mem_tchar_t c = (mem_tchar_t)0;
 	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
 		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
@@ -2324,7 +2324,7 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)NULL;
+	mem_tchar_t c = (mem_tchar_t)0;
 	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
 		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
@@ -2509,7 +2509,7 @@ mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
 	mem_size_t maps_size = 0;
 	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
 	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)NULL;
+	mem_tchar_t c = (mem_tchar_t)0;
 	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
 		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));

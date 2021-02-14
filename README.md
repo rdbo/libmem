@@ -1,7 +1,6 @@
-<p align="center">
-  <a href="https://github.com/rdbo/libmem"><img src="https://github.com/rdbo/libmem/blob/master/img/logo.png"/></a>
-</p>  
-
+![libmem-logo](img/logo.png)  
+  
+# 
 # Usage
 Copy the `libmem` folder to your project directory.  
 Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  
@@ -75,10 +74,10 @@ mem_ex_get_symbol
 
 # Projects
 Made with libmem:  
-<a href="https://github.com/rdbo/AssaultCube-Multihack">AssaultCube Multihack</a>  
-<a href="https://github.com/rdbo/x-inject">X-Inject - GUI Library injector for Windows and Linux</a>  
-<a href="https://github.com/rdbo/DX9-BaseHook">DirectX 9 BaseHook</a>  
-<a href="https://github.com/rdbo/GL-BaseHook">OpenGL BaseHook</a>  
-<a href="https://github.com/rdbo/DX11-BaseHook">DirectX 11 BaseHook</a>  
-<a href="https://github.com/rdbo/cstrike-basehook">Counter-Strike 1.6 BaseHook</a>  
-<a href="https://github.com/karliky/Crazymem">Crazymem - NodeJS Memory Library</a>  
+- ![AssaultCube Multihack](https://github.com/rdbo/AssaultCube-Multihack)  
+- ![X-Inject - GUI Library injector for Windows and Linux](https://github.com/rdbo/x-inject)  
+- ![DirectX9 BaseHook](https://github.com/rdbo/DX9-BaseHook)
+- ![DirectX11 BaseHook](https://github.com/rdbo/DX11-BaseHook)
+- ![OpenGL BaseHook](https://github.com/rdbo/GL-BaseHook)
+- ![Counter-Strike 1.6 BaseHook](https://github.com/rdbo/cstrike-basehook)
+- ![Crazymem - NodeJS Memory Library](https://github.com/karliky/Crazymem)

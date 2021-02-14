@@ -2235,7 +2235,7 @@ mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern
 	mem_size_t size = MEM_STR_LEN(mask);
 
 	mem_data_t i = (mem_data_t)NULL;
-	for (mem_data_t i = (mem_data_t)start; (mem_uintptr_t)&i[size] <= (mem_uintptr_t)stop; i = &i[1])
+	for (i = (mem_data_t)start; (mem_uintptr_t)&i[size] <= (mem_uintptr_t)stop; i = &i[1])
 	{
 		mem_int_t found = MEM_TRUE;
 

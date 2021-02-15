@@ -914,8 +914,12 @@ LIBMEM_EXTERN mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 					if (!MEM_STR_CMP(&process_path[path_len - process_ref_len], process_ref))
 					{
 						pid = entry.th32ProcessID;
-						break;
 					}
+
+					free(process_path);
+
+					if (pid != (mem_pid_t)MEM_BAD)
+						break;
 				}
 
 				if (!MEM_STR_CMP(entry.szExeFile, process_ref))
@@ -939,10 +943,15 @@ LIBMEM_EXTERN mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 		{
 			mem_tstring_t proc_name = NULL;
 			size_t read_chars = mem_ex_get_process_name(id, &proc_name);
-			if (read_chars && !MEM_STR_CMP(process_ref, proc_name))
+			if (read_chars)
 			{
-				pid = id;
-				break;
+				if(!MEM_STR_CMP(process_ref, proc_name))
+					pid = id;
+
+				free(proc_name);
+				
+				if(pid != (mem_pid_t)MEM_BAD)
+					break;
 			}
 		}
 	}

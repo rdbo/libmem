@@ -105,6 +105,7 @@
 #define _GNU_SOURCE
 #endif
 #elif MEM_OS == MEM_BSD
+#define MEM_PATH_MAX PATH_MAX
 #endif
 
 #if defined(LIBMEM_EXPORT)

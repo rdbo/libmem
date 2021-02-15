@@ -1082,7 +1082,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstr
 	struct procstat *ps = procstat_open_sysctl();
 	if (ps)
 	{
-		int proc_count = 0;
+		unsigned int proc_count = 0;
 		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
 		if (pproc && proc_count)
 		{
@@ -1093,7 +1093,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstr
 				read_chars = MEM_STR_LEN(proc_path);
 				mem_size_t path_size = (read_chars + 1) * sizeof(mem_tchar_t);
 				*pprocess_path = (mem_tstring_t)malloc(path_size);
-				memcpy(process_path, proc_path, path_size);
+				memcpy(*pprocess_path, proc_path, path_size);
 			}
 
 			free(pproc);
@@ -1193,7 +1193,7 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	struct procstat *ps = procstat_open_sysctl();
 	if (ps)
 	{
-		int proc_count = 0;
+		unsigned int proc_count = 0;
 		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
 		if (pproc && proc_count)
 		{
@@ -1324,7 +1324,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pproces
 		{
 			for (count = 0; count < proc_count; ++count)
 			{
-				struct kinfo_proc *pproc = &procs[proc_it];
+				struct kinfo_proc *pproc = &procs[count];
 				if (pproc)
 				{
 					mem_process_t *holder = *pprocess_list;
@@ -2000,8 +2000,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_is_process_running(mem_process_t process
 	struct procstat *ps = procstat_open_sysctl();
 	if (ps)
 	{
-		int proc_count = 0;
-		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
+		unsigned int proc_count = 0;
+		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, process.pid, &proc_count);
 		if (pproc && proc_count)
 		{
 			ret = MEM_TRUE;

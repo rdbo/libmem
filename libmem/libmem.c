@@ -1088,7 +1088,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstr
 		{
 			mem_tchar_t proc_path[MEM_PATH_MAX] = { 0 };
 
-			if (procstat_getpathname(ps, pproc, proc_path, sizeof(proc_path)))
+			if (procstat_getpathname(ps, pproc, proc_path, sizeof(proc_path)) == 0)
 			{
 				read_chars = MEM_STR_LEN(proc_path);
 				mem_size_t path_size = (read_chars + 1) * sizeof(mem_tchar_t);

@@ -59,7 +59,7 @@ LIBMEM_EXTERN mem_pid_t          mem_in_get_pid(mem_void_t)
 	mem_pid_t pid = (mem_pid_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
 	pid = (mem_pid_t)GetCurrentProcessId();
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	pid = (mem_pid_t)getpid();
 #	endif
 	return pid;
@@ -85,6 +85,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess
 	mem_size_t read_chars = 0;
 
 	mem_tstring_t process_path = (mem_tstring_t)NULL;
+#	if MEM_OS == MEM_WIN || MEM_OS == MEM_LINUX
 	if (mem_in_get_process_path(&process_path))
 	{
 		mem_tchar_t *p_pos = process_path;
@@ -111,6 +112,9 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess
 
 		free(process_path);
 	}
+#	elif MEM_OS == MEM_BSD
+	read_chars = mem_ex_get_process_name(mem_in_get_pid(), pprocess_name);
+#	endif
 
 	return read_chars;
 }
@@ -144,7 +148,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess
 	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 
 	read_chars = (mem_size_t)GetModuleFileName(hModule, *pprocess_path, MEM_PATH_MAX);
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	read_chars = mem_ex_get_process_path(mem_in_get_pid(), pprocess_path);
 #	endif
 	return read_chars;
@@ -215,7 +219,7 @@ LIBMEM_EXTERN mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	mod.size = (mem_size_t)mod_info.SizeOfImage;
 	mod.end  = (mem_voidptr_t)((mem_uintptr_t)mod.base + mod.size);
 
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	mod = mem_ex_get_module(mem_in_get_process(), module_ref);
 #	endif
 	return mod;
@@ -246,7 +250,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_ts
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
 #		if   MEM_OS == MEM_WIN
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
-#		elif MEM_OS == MEM_LINUX
+#		elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
 #		endif
 
@@ -299,7 +303,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_ts
 		memset(*pmodule_path, 0x0, path_size + sizeof(mem_tchar_t));
 		read_chars = (mem_size_t)GetModuleFileName(hModule, *pmodule_path, MEM_PATH_MAX);
 	}
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	read_chars = mem_ex_get_module_path(mem_in_get_process(), mod, pmodule_path);
 #	endif
 
@@ -348,7 +352,7 @@ LIBMEM_EXTERN mem_page_t         mem_in_get_page(mem_voidptr_t src)
 	page.end = (mem_voidptr_t)((mem_uintptr_t)page.base + page.size);
 	page.protection = mbi.Protect;
 	page.flags = mbi.Type;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	page = mem_ex_get_page(mem_in_get_process(), src);
 #	endif
 	return page;
@@ -429,7 +433,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_syscall(mem_int_t syscall_n, mem_voidptr
 
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	ret = (mem_voidptr_t)syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5);
 #	endif
 	return ret;
@@ -452,7 +456,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_protect(mem_voidptr_t src, mem_size_t si
 	mem_prot_t old_protection = 0;
 #	if   MEM_OS == MEM_WIN
 	ret = VirtualProtect(src, size, protection, &old_protection) != 0 ? MEM_TRUE : MEM_FALSE;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	long page_size = sysconf(_SC_PAGE_SIZE);
 	void *src_page = (void *)((uintptr_t)src & -page_size);
 	mem_page_t page = mem_in_get_page((mem_voidptr_t)src_page);
@@ -482,7 +486,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_allocate(mem_size_t size, mem_prot_t pro
 #	if   MEM_OS == MEM_WIN
 	alloc = (mem_voidptr_t)VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
 	if (!alloc) alloc = (mem_voidptr_t)MEM_BAD;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	alloc = (mem_voidptr_t)mmap(NULL, size, protection, MAP_PRIVATE | MAP_ANON, -1, 0);
 	if (alloc == (mem_voidptr_t)MAP_FAILED) alloc = (mem_voidptr_t)MEM_BAD;
 #	endif
@@ -504,7 +508,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_deallocate(mem_voidptr_t src, mem_size_t
 	mem_bool_t ret = MEM_FALSE;
 #	if   MEM_OS == MEM_WIN
 	ret = VirtualFree(src, 0, MEM_RELEASE) != 0 ? MEM_TRUE : MEM_FALSE;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	ret = munmap(src, size) == 0 ? MEM_TRUE : MEM_FALSE;
 #	endif
 
@@ -647,7 +651,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
@@ -735,7 +739,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 	mem_prot_t protection = 0;
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
@@ -773,7 +777,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_da
 	mem_prot_t protection = 0;
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
@@ -808,7 +812,7 @@ LIBMEM_EXTERN mem_module_t       mem_in_load_module(mem_tstring_t path)
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 		mod = mem_in_get_module(path);
 
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	if (dlopen(path, RTLD_LAZY))
 		mod = mem_in_get_module(path);
 #	endif
@@ -837,7 +841,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_unload_module(mem_module_t mod)
 		FreeLibrary(hModule);
 		ret = MEM_TRUE;
 	}
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	mem_tstring_t mod_path = (mem_tstring_t)NULL;
 	if (mem_in_get_module_path(mod, &mod_path) && dlclose(dlopen(mod_path, RTLD_LAZY)))
 		ret = MEM_TRUE;
@@ -867,7 +871,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring
 		addr = (mem_voidptr_t)GetProcAddress(hModule, symbol);
 		if (!addr) addr = (mem_voidptr_t)MEM_BAD;
 	}
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	mem_tstring_t mod_path = (mem_tstring_t)NULL;
 	if (mem_in_get_module_path(mod, &mod_path))
 	{
@@ -945,17 +949,39 @@ LIBMEM_EXTERN mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 			size_t read_chars = mem_ex_get_process_name(id, &proc_name);
 			if (read_chars)
 			{
-				if(!MEM_STR_CMP(process_ref, proc_name))
+				if (!MEM_STR_CMP(process_ref, proc_name))
 					pid = id;
 
 				free(proc_name);
 				
-				if(pid != (mem_pid_t)MEM_BAD)
+				if (pid != (mem_pid_t)MEM_BAD)
 					break;
 			}
 		}
 	}
 	closedir(pdir);
+#	elif MEM_OS == MEM_BSD
+	kvm_t *kd = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	if (kd)
+	{
+		int proc_count = 0;
+		struct kinfo_proc *procs = kvm_getprocs(kd, KERN_PROC_PROC, 0, &proc_count);
+		if (procs)
+		{
+			int proc_it = 0;
+			for (proc_it = 0; proc_it < proc_count; ++proc_it)
+			{
+				struct kinfo_proc *pproc = &procs[proc_it];
+				if (pproc && !MEM_STR_CMP(pproc->ki_comm, process_ref))
+				{
+					pid = pproc->ki_pid;
+					break;
+				}
+			}
+			free(procs);
+		}
+		kvm_close(kd);
+	}
 #	endif
 	
 	return pid;
@@ -987,7 +1013,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
 #		if   MEM_OS == MEM_WIN
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
-#		elif MEM_OS == MEM_LINUX
+#		elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
 #		endif
 
@@ -1052,6 +1078,28 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstr
 	if (!*pprocess_path) return read_chars;
 	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 	read_chars = (mem_size_t)(readlink(path, *pprocess_path, MEM_PATH_MAX * sizeof(mem_tchar_t)) / sizeof(mem_tchar_t));
+#	elif MEM_OS == MEM_BSD
+	struct procstat *ps = procstat_open_sysctl();
+	if (ps)
+	{
+		int proc_count = 0;
+		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
+		if (pproc && proc_count)
+		{
+			mem_tchar_t proc_path[MEM_PATH_MAX] = { 0 };
+
+			if (procstat_getpathname(ps, pproc, proc_path, sizeof(proc_path)))
+			{
+				read_chars = MEM_STR_LEN(proc_path);
+				mem_size_t path_size = (read_chars + 1) * sizeof(mem_tchar_t);
+				*pprocess_path = (mem_tstring_t)malloc(path_size);
+				memcpy(process_path, proc_path, path_size);
+			}
+
+			free(pproc);
+		}
+		procstat_close(ps);
+	}
 #	endif
 
 	return read_chars;
@@ -1087,7 +1135,7 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_system_arch(mem_void_t)
 		break;
 	}
 
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 
 	struct utsname utsbuf = { 0 };
 	if (uname(&utsbuf) != 0) return arch;
@@ -1140,8 +1188,22 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	}
 
 #	elif MEM_OS == MEM_LINUX
-	if (pid != (mem_pid_t)MEM_BAD)
-		arch = (mem_arch_t)MEM_ARCH;
+	arch = (mem_arch_t)MEM_ARCH;
+#	elif MEM_OS == MEM_BSD
+	struct procstat *ps = procstat_open_sysctl();
+	if (ps)
+	{
+		int proc_count = 0;
+		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
+		if (pproc && proc_count)
+		{
+			if (MEM_STR_STR(pproc->ki_emul, MEM_STR("32"))) arch = MEM_ARCH_x86_32;
+			else if (MEM_STR_STR(pproc->ki_emul, MEM_STR("64"))) arch = MEM_ARCH_x86_64;
+			else arch = MEM_ARCH_UNKNOWN;
+			free(pproc);
+		}
+		procstat_close(ps);
+	}
 #	endif
 
 	return arch;
@@ -1252,7 +1314,41 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pproces
 		}
 		closedir(pdir);
 	}
+#	elif MEM_OS == MEM_BSD
+	kvm_t *kd = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	if (kd)
+	{
+		int proc_count = 0;
+		struct kinfo_proc *procs = kvm_getprocs(kd, KERN_PROC_PROC, 0, &proc_count);
+		if (procs)
+		{
+			for (count = 0; count < proc_count; ++count)
+			{
+				struct kinfo_proc *pproc = &procs[proc_it];
+				if (pproc)
+				{
+					mem_process_t *holder = *pprocess_list;
+					*pprocess_list = (mem_process_t *)malloc((count + 1) * sizeof(mem_process_t));
+					if (*pprocess_list)
+					{
+						memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
+						(*pprocess_list)[count].pid = pproc->ki_pid;
+						(*pprocess_list)[count].arch = mem_ex_get_arch(pproc->ki_pid);
+					}
 
+					free(holder);
+
+					if (!*pprocess_list)
+					{
+						count = 0;
+						break;
+					}
+				}
+			}
+			free(procs);
+		}
+		kvm_close(kd);
+	}
 #	endif
 
 	if (count == 0 && *pprocess_list) free(*pprocess_list);
@@ -1381,7 +1477,8 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	}
 
 	free(maps_buffer);
-
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return mod;
@@ -1413,7 +1510,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_name(mem_process_t process, m
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
 #		if   MEM_OS == MEM_WIN
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
-#		elif MEM_OS == MEM_LINUX
+#		elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
 #		endif
 
@@ -1542,7 +1639,8 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 	}
 
 	free(maps_buffer);
-
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return read_chars;
@@ -1722,7 +1820,8 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 	}
 
 	free(maps_buffer);
-
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	if (count == 0 && *pmodule_list) free(*pmodule_list);
@@ -1863,6 +1962,8 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 	}
 
 	free(maps_buffer);
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return page;
@@ -1895,6 +1996,19 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_is_process_running(mem_process_t process
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i", process.pid);
 	stat(path_buffer, &sb);
 	ret = S_ISDIR(sb.st_mode) ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_BSD
+	struct procstat *ps = procstat_open_sysctl();
+	if (ps)
+	{
+		int proc_count = 0;
+		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
+		if (pproc && proc_count)
+		{
+			ret = MEM_TRUE;
+			free(pproc);
+		}
+		procstat_close(ps);
+	}
 #	endif
 
 	return ret;
@@ -1927,6 +2041,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_
 	iosrc.iov_base = src;
 	iosrc.iov_len  = size;
 	ret = (mem_size_t)process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0) == size ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return ret;
@@ -1959,6 +2075,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr
 	iodst.iov_base = dst;
 	iodst.iov_len = size;
 	ret = (mem_size_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0) == size ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return ret;
@@ -2068,7 +2186,8 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t
 
 	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
 	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
-
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return ret;
@@ -2105,6 +2224,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidp
 	}
 
 	ret = mem_ex_syscall(process, __NR_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0 ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return ret;
@@ -2150,6 +2271,8 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size
 	alloc = mem_ex_syscall(process, syscall_n, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0);
 	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096)
 		alloc = (mem_voidptr_t)MEM_BAD;
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return alloc;
@@ -2175,6 +2298,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_vo
 	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	ret = mem_ex_syscall(process, __NR_munmap, src, (mem_voidptr_t)size, NULL, NULL, NULL, NULL) != (mem_voidptr_t)MAP_FAILED ? MEM_TRUE : MEM_FALSE;
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return ret;
@@ -2432,7 +2557,8 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	}
 
 	free(maps_buffer);
-
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return mod;
@@ -2681,6 +2807,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 
 	free(maps_buffer);
 	free(path);
+#	elif MEM_OS == MEM_BSD
+	/* WIP */
 #	endif
 
 	return ret;
@@ -2716,7 +2844,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_mo
 
 	addr = (mem_voidptr_t)((mem_uintptr_t)mod.base + sym_offset);
 
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	mem_tstring_t module_ref = (mem_tstring_t)NULL;
 	if (!mem_ex_get_module_path(process, mod, &module_ref)) return addr;
 	mem_module_t mod_in = mem_in_load_module(module_ref);

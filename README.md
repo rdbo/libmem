@@ -7,8 +7,16 @@ Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.
 Compile `libmem/libmem.c` along with your project.  
 
 # Dependencies
-Windows: Windows SDK  
-Linux:   libdl (-ldl)  
+Windows:  
+- Windows SDK  
+  
+Linux:  
+- libdl (-ldl)  
+  
+FreeBSD:  
+- libdl (-ldl)  
+- libkvm (-lkvm)  
+- libprocstat (-lprocstat)  
 
 # License
 Read `LICENSE`  

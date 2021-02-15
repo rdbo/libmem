@@ -102,6 +102,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#elif MEM_OS == MEM_BSD
 #endif
 
 #if defined(LIBMEM_EXPORT)
@@ -149,6 +150,26 @@
 #include <dlfcn.h>
 #include <link.h>
 #include <fcntl.h>
+#elif MEM_OS == MEM_BSD
+#include <dirent.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/param.h>
+#include <sys/ptrace.h>
+#include <sys/wait.h>
+#include <sys/mman.h>
+#include <sys/user.h>
+#include <sys/sysctl.h>
+#include <sys/syscall.h>
+#include <sys/utsname.h>
+#include <dlfcn.h>
+#include <link.h>
+#include <fcntl.h>
+#include <kvm.h>
+#include <libprocstat.h>
+#include <paths.h>
 #endif /* MEM_OS */
 
 #ifdef MEM_CPP

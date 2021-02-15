@@ -14,7 +14,7 @@
 /*\n\
  *  ----------------------------------\n\
  * |        libmem++ - by rdbo        |\n\
- * |  https://github.com/rdbo/libmem  |\n\
+ * |      Memory Hacking Library      |\n\
  *  ----------------------------------\n\
  */\n\
 \n"))

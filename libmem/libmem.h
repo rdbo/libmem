@@ -226,7 +226,7 @@ typedef mem_void_t                          *mem_voidptr_t;
 typedef DWORD                                mem_pid_t;
 typedef DWORD                                mem_prot_t;
 typedef DWORD                                mem_flags_t;
-#elif MEM_OS == MEM_LINUX
+#elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 typedef mem_int32_t                          mem_pid_t;
 typedef mem_int32_t                          mem_prot_t;
 typedef mem_int32_t                          mem_flags_t;

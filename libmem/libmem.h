@@ -1,7 +1,7 @@
 /*
  *  ----------------------------------
  * |         libmem - by rdbo         |
- * |  https://github.com/rdbo/libmem  |
+ * |      Memory Hacking Library      |
  *  ----------------------------------
  */
 
@@ -12,6 +12,7 @@
 /* Operating System */
 #define MEM_WIN   0
 #define MEM_LINUX 1
+#define MEM_BSD   2
 
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__) && !defined(linux)) || (defined(MEM_FORCE_WIN) && !defined(MEM_FORCE_LINUX))
 #define MEM_OS MEM_WIN

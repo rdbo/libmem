@@ -1,7 +1,7 @@
 /*
  *  ----------------------------------
  * |         libmem - by rdbo         |
- * |  https://github.com/rdbo/libmem  |
+ * |      Memory Hacking Library      |
  *  ----------------------------------
  */
 

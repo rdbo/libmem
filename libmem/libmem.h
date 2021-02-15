@@ -14,10 +14,12 @@
 #define MEM_LINUX 1
 #define MEM_BSD   2
 
-#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__) && !defined(linux)) || (defined(MEM_FORCE_WIN) && !defined(MEM_FORCE_LINUX))
+#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32)) && !defined(__CYGWIN__) && !defined(linux)
 #define MEM_OS MEM_WIN
-#elif (defined(linux) || defined(__linux__)) || defined(MEM_FORCE_LINUX)
+#elif defined(linux) || defined(__linux__)
 #define MEM_OS MEM_LINUX
+#elif defined(BSD) || defined(__FreeBSD__)
+#define MEM_OS MEM_BSD
 #endif
 
 /* Architecture */

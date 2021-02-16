@@ -1531,12 +1531,12 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	if (module_base_endptr)
 	{
 		mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
-		for (temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t *)NULL; module_end_ptr = temp);
+		for (temp = &map_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t *)NULL; module_end_ptr = temp);
 
 		if (module_end_ptr)
 		{
-			holder = maps_buffer;
-			for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
+			holder = map_buffer;
+			for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
 			module_end_ptr = holder;
 			module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
 			module_end_ptr = MEM_STR_STR(module_end_ptr, MEM_STR(" 0x"));

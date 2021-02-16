@@ -1572,7 +1572,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 				}
 			}
 		}
-
+	}
 	free(map_buffer);
 #	endif
 

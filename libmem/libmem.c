@@ -1536,8 +1536,9 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 		if (module_end_ptr)
 		{
 			holder = map_buffer;
-			for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], MEM_STR(" 0x"))) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
+			for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
 			module_end_ptr = holder;
+			module_end_ptr = MEM_STR_STR(module_end_ptr, MEM_STR(" 0x"));
 
 			if (module_end_ptr)
 			{

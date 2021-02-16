@@ -43,7 +43,7 @@ int main()
 	int write_buf = 1337;
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
-#	elif MEM_OS == MEM_LINUX
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 

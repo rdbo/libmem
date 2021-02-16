@@ -1037,7 +1037,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 	{
 		int proc_count = 0;
 		struct kinfo_proc *pproc = kvm_getprocs(kd, KERN_PROC_PID, pid, &proc_count);
-		if (procs && proc_count)
+		if (pproc && proc_count > 0)
 		{
 			mem_size_t path_len = MEM_STR_LEN(pproc->ki_comm);
 			mem_size_t path_size = (path_len + 1) * sizeof(mem_tchar_t);
@@ -1048,7 +1048,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 				read_chars = path_len;
 			}
 
-			free(procs);
+			free(pproc);
 		}
 		kvm_close(kd);
 	}
@@ -1104,7 +1104,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstr
 	{
 		unsigned int proc_count = 0;
 		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
-		if (pproc && proc_count)
+		if (pproc && proc_count > 0)
 		{
 			mem_tchar_t proc_path[MEM_PATH_MAX] = { 0 };
 
@@ -1215,7 +1215,7 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	{
 		unsigned int proc_count = 0;
 		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, pid, &proc_count);
-		if (pproc && proc_count)
+		if (pproc && proc_count > 0)
 		{
 			if (MEM_STR_STR(pproc->ki_emul, MEM_STR("32"))) arch = MEM_ARCH_x86_32;
 			else if (MEM_STR_STR(pproc->ki_emul, MEM_STR("64"))) arch = MEM_ARCH_x86_64;
@@ -1340,7 +1340,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pproces
 	{
 		int proc_count = 0;
 		struct kinfo_proc *procs = kvm_getprocs(kd, KERN_PROC_PROC, 0, &proc_count);
-		if (procs)
+		if (procs && proc_count > 0)
 		{
 			for (count = 0; count < proc_count; ++count)
 			{
@@ -2022,7 +2022,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_is_process_running(mem_process_t process
 	{
 		unsigned int proc_count = 0;
 		struct kinfo_proc *pproc = procstat_getprocs(ps, KERN_PROC_PID, process.pid, &proc_count);
-		if (pproc && proc_count)
+		if (pproc && proc_count > 0)
 		{
 			ret = MEM_TRUE;
 			free(pproc);

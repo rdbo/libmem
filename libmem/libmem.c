@@ -2013,7 +2013,6 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 	page.protection = mbi.Protect;
 	page.flags = mbi.Type;
 #	elif MEM_OS == MEM_LINUX
-
 	long page_size = sysconf(_SC_PAGE_SIZE);
 	src = (mem_voidptr_t)((mem_uintptr_t)src & -page_size);
 
@@ -2120,7 +2119,112 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 	free(maps_buffer);
 #	elif MEM_OS == MEM_BSD
-	/* WIP */
+	long page_size = sysconf(_SC_PAGE_SIZE);
+	src = (mem_voidptr_t)((mem_uintptr_t)src & -page_size);
+
+	mem_tchar_t page_base_str[64] = { 0 };
+	mem_tchar_t *page_base = (mem_tchar_t *)MEM_BAD;
+	mem_tchar_t *page_end = (mem_tchar_t *)MEM_BAD;
+
+	switch (process.arch)
+	{
+	case MEM_ARCH_x86_32:
+		snprintf(page_base_str, sizeof(page_base_str) - sizeof(mem_tchar_t), "0x%x ", (mem_uint32_t)(mem_uintptr_t)src);
+		break;
+	case MEM_ARCH_x86_64:
+		snprintf(page_base_str, sizeof(page_base_str) - sizeof(mem_tchar_t), (MEM_ARCH == MEM_ARCH_x86_32 ? "0x%llx " : "0x%lx "), (mem_uint64_t)(mem_uintptr_t)src);
+		break;
+	default:
+		return page;
+	}
+
+	mem_tchar_t path_buffer[64 + 1] = { 0 };
+	memset(path_buffer, 0x0, sizeof(path_buffer));
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
+
+	int map_file = open(path_buffer, O_RDONLY);
+	if (map_file == -1) return page;
+	mem_size_t maps_size = 0;
+	mem_tstring_t map_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
+	int read_check = 0;
+	mem_tchar_t c = (mem_tchar_t)0;
+	for (c = 0; (read_check = read(map_file, &c, 1)) > 0; maps_size++)
+	{
+		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		memcpy(holder, map_buffer, maps_size * sizeof(mem_tchar_t));
+		free(map_buffer);
+		map_buffer = holder;
+		map_buffer[maps_size] = c;
+		map_buffer[maps_size + 1] = '\0';
+	}
+	close(map_file);
+	if (!map_buffer) return page;
+
+	page_base = MEM_STR_STR(map_buffer, page_base_str);
+
+	if (page_base && page_base != (mem_tchar_t *)MEM_BAD)
+	{
+		page_end = MEM_STR_STR(page_base, MEM_STR(" 0x")) + (1 * sizeof(mem_tchar_t));
+
+		if (page_end && page_end != (mem_tchar_t *)MEM_BAD)
+		{
+			mem_tchar_t *holder = MEM_STR_CHR(page_end, MEM_STR(' '));
+			mem_tchar_t *page_end_endptr = holder;
+
+			int space_count = 1;
+			for (space_count = 1; space_count < 5; ++space_count)
+				holder = MEM_STR_CHR(holder, MEM_STR(' '));
+
+			if (holder)
+			{
+				holder = &holder[1];
+
+				mem_size_t i = (mem_size_t)NULL;
+				for (i = 0; i < 3; i++)
+				{
+					switch (holder[i])
+					{
+					case MEM_STR('r'):
+						page.protection |= PROT_READ;
+						break;
+					case MEM_STR('w'):
+						page.protection |= PROT_WRITE;
+						break;
+					case MEM_STR('x'):
+						page.protection |= PROT_EXEC;
+						break;
+					default:
+						break;
+					}
+				}
+
+				page_base = &page_base[2];
+				page_end = &page_end[3];
+				mem_tchar_t page_base_addr[64] = { 0 };
+				memcpy(page_base_addr, page_base, (mem_uintptr_t)page_end - (mem_uintptr_t)page_base);
+				mem_tchar_t page_end_addr[64] = { 0 };
+				memcpy(page_end_addr, page_end, (mem_uintptr_t)page_end_endptr - (mem_uintptr_t)page_end);
+
+				switch (process.arch)
+				{
+				case MEM_ARCH_x86_32:
+					page.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_base_addr, NULL, 16);
+					page.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_end_addr, NULL, 16);
+					page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
+					break;
+				case MEM_ARCH_x86_64:
+					page.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_base_addr, NULL, 16);
+					page.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_end_addr, NULL, 16);
+					page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+
+	free(map_buffer);
 #	endif
 
 	return page;

@@ -2173,7 +2173,7 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 			int space_count = 1;
 			for (space_count = 1; space_count < 5; ++space_count)
-				holder = MEM_STR_CHR(holder, MEM_STR(' '));
+				holder = MEM_STR_CHR(&holder[1], MEM_STR(' '));
 
 			if (holder)
 			{

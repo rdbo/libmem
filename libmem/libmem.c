@@ -2171,8 +2171,8 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 			mem_tchar_t *holder = MEM_STR_CHR(page_end, MEM_STR(' '));
 			mem_tchar_t *page_end_endptr = holder;
 
-			int space_count = 1;
-			for (space_count = 1; space_count < 5; ++space_count)
+			int space_count = 0;
+			for (space_count = 0; space_count < 3; ++space_count)
 				holder = MEM_STR_CHR(&holder[1], MEM_STR(' '));
 
 			if (holder)

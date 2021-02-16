@@ -1720,11 +1720,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 		if (module_path_ptr)
 		{
 			mem_tchar_t *module_path_endptr = module_path_ptr;
-			mem_tchar_t *holder = module_path_endptr;
 			module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
-			for (temp = module_path_ptr; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) < (mem_uintptr_t)module_path_endptr && temp; holder = &temp[1]);
-			module_path_endptr = holder;
-			module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR(' '));
 			if (module_path_endptr)
 			{
 				mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
@@ -1785,7 +1781,11 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 		if (module_path_ptr)
 		{
 			mem_tchar_t *module_path_endptr = module_path_ptr;
+			mem_tchar_t *holder = module_path_endptr;
 			module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
+			for (temp = module_path_ptr; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) < (mem_uintptr_t)module_path_endptr && temp; holder = &temp[1]);
+			module_path_endptr = holder;
+			module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR(' '));
 			if (module_path_endptr)
 			{
 				mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);

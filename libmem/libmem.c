@@ -2164,7 +2164,7 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 	if (page_base && page_base != (mem_tchar_t *)MEM_BAD)
 	{
-		page_end = MEM_STR_STR(page_base, MEM_STR(" 0x")) + (1 * sizeof(mem_tchar_t));
+		page_end = MEM_STR_STR(page_base, MEM_STR(" 0x"));
 
 		if (page_end && page_end != (mem_tchar_t *)MEM_BAD)
 		{

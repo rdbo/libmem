@@ -1728,7 +1728,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 				for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR(' '))) < (mem_uintptr_t)module_path_endptr && temp; holder = &temp[1]);
 				if (i != 1)
 				{
-					module_path_endptr = &holder[-1];
+					module_path_endptr = &holder[-2];
 					continue;
 				}
 				

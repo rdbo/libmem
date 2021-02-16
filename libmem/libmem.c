@@ -84,17 +84,14 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess
 
 	mem_size_t read_chars = 0;
 
+#	if MEM_OS == MEM_WIN
 	mem_tstring_t process_path = (mem_tstring_t)NULL;
-#	if MEM_OS == MEM_WIN || MEM_OS == MEM_LINUX
 	if (mem_in_get_process_path(&process_path))
 	{
 		mem_tchar_t *p_pos = process_path;
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
-#		if   MEM_OS == MEM_WIN
+
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
-#		elif MEM_OS == MEM_LINUX
-		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
-#		endif
 
 		read_chars = MEM_STR_LEN(process_path) - (((uintptr_t)p_pos - (uintptr_t)process_path) / sizeof(mem_tchar_t));
 		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
@@ -112,7 +109,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess
 
 		free(process_path);
 	}
-#	elif MEM_OS == MEM_BSD
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	read_chars = mem_ex_get_process_name(mem_in_get_pid(), pprocess_name);
 #	endif
 
@@ -1007,6 +1004,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 	mem_size_t read_chars = 0;
 
 	mem_tstring_t process_path = (mem_tstring_t)NULL;
+#	if    MEM_OS == MEM_WIN || MEM_OS == MEM_LINUX
 	if (mem_ex_get_process_path(pid, &process_path))
 	{
 		mem_tchar_t *p_pos = process_path;
@@ -1033,6 +1031,28 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 
 		free(process_path);
 	}
+#	elif MEM_OS == MEM_BSD
+	kvm_t *kd = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	if (kd)
+	{
+		int proc_count = 0;
+		struct kinfo_proc *pproc = kvm_getprocs(kd, KERN_PROC_PID, pid, &proc_count);
+		if (procs && proc_count)
+		{
+			mem_size_t path_len = MEM_STR_LEN(pproc->ki_comm);
+			mem_size_t path_size = (path_len + 1) * sizeof(mem_tchar_t);
+			*pprocess_name = (mem_tstring_t)malloc(path_size);
+			if (*pprocess_name)
+			{
+				memcpy(*pprocess_name, pproc->ki_comm, path_size);
+				read_chars = path_len;
+			}
+
+			free(procs);
+		}
+		kvm_close(kd);
+	}
+#	endif
 
 	return read_chars;
 }

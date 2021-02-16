@@ -431,7 +431,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_syscall(mem_int_t syscall_n, mem_voidptr
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
-	ret = (mem_voidptr_t)syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5);
+	ret = (mem_voidptr_t)(mem_uintptr_t)syscall(syscall_n, arg0, arg1, arg2, arg3, arg4, arg5);
 #	endif
 	return ret;
 }

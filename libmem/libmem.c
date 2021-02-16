@@ -2637,7 +2637,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_
 		mem_data_t buffer = (mem_data_t)malloc(size);
 		if (!buffer) break;
 
-		mem_ex_write(process, buffer, i, size);
+		mem_ex_read(process, i, buffer, size);
 
 		mem_size_t j = (mem_size_t)NULL;
 		for (j = 0; j < size; ++j)

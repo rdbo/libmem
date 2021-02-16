@@ -18,7 +18,7 @@
 #define MEM_OS MEM_WIN
 #elif defined(linux) || defined(__linux__)
 #define MEM_OS MEM_LINUX
-#elif defined(BSD) || defined(__FreeBSD__)
+#elif defined(BSD) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #define MEM_OS MEM_BSD
 #endif
 

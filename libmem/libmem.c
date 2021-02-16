@@ -1722,8 +1722,12 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 			mem_tchar_t *module_path_endptr = module_path_ptr;
 			mem_tchar_t *holder = module_path_endptr;
 			module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
-			for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR(' '))) < (mem_uintptr_t)module_path_endptr && temp; holder = &temp[1]);
-			module_path_endptr = holder;
+			int i = 0;
+			for (i = 0; i < 2; ++i)
+			{
+				for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR(' '))) < (mem_uintptr_t)module_path_endptr && temp; holder = &temp[1]);
+				module_path_endptr = holder;
+			}
 			if (module_path_endptr)
 			{
 				mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);

@@ -2429,7 +2429,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_
 	snprintf(path_buf, sizeof(path_buf) - sizeof(char), "/proc/%i/mem", process.pid);
 	int fd = open(path_buf, O_RDONLY);
 	if (fd == -1) return ret;
-	pread(fd, buf, size, (off_t)src);
+	pread(fd, dst, size, (off_t)src);
 	close(fd);
 #	endif
 
@@ -2468,7 +2468,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr
 	snprintf(path_buf, sizeof(path_buf) - sizeof(char), "/proc/%i/mem", process.pid);
 	int fd = open(path_buf, O_WRONLY);
 	if (fd == -1) return ret;
-	pwrite(fd, buf, size, (off_t)dst);
+	pwrite(fd, src, size, (off_t)dst);
 	close(fd);
 #	endif
 

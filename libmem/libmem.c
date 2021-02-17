@@ -2035,8 +2035,9 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 
 			if (module_end_ptr)
 			{
-				for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], " 0x")) < (mem_uintptr_t)module_end_ptr; holder = temp);
+				for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_end_ptr; holder = temp);
 				module_end_ptr = holder;
+				module_end_ptr = MEM_STR_STR(module_end_ptr, MEM_STR(" 0x"));
 
 				if (module_end_ptr)
 				{

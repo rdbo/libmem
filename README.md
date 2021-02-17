@@ -75,6 +75,7 @@ mem_ex_allocate
 mem_ex_deallocate
 mem_ex_scan
 mem_ex_pattern_scan
+mem_ex_detour
 mem_ex_load_module
 mem_ex_unload_module
 mem_ex_get_symbol

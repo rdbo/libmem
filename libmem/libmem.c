@@ -2659,6 +2659,93 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_
 	return ret;
 }
 
+LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes)
+{
+	/*
+	 * Description:
+	 *   Detours 'src' to 'dst' using the
+	 *   detour method 'method' and saves
+	 *   'size' bytes of 'src' into 'stolen_bytes'
+	 *   if 'stolen_bytes' is not null on the
+	 *   process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 *
+	 * Remarks:
+	 *   'stolen_bytes' (if not null)
+	 *   has to be free'd
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+	mem_size_t detour_size = mem_in_detour_size(method);
+	mem_prot_t protection = 0;
+
+#	if   MEM_OS == MEM_WIN
+	protection = PAGE_EXECUTE_READWRITE;
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
+	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
+#	endif
+
+	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_ex_protect(process, src, size, protection, NULL) == MEM_FALSE) return ret;
+
+	if (stolen_bytes)
+	{
+		*stolen_bytes = (mem_data_t)malloc(size);
+		if (*stolen_bytes)
+			mem_ex_read(process, src, (mem_voidptr_t)*stolen_bytes, size);
+	}
+
+	mem_data_t detour_buffer = (mem_data_t)malloc(detour_size);
+	if (!detour_buffer) return ret;
+	mem_in_read((mem_voidptr_t)MEM_PAYLOADS[method].payload, detour_buffer, detour_size);
+
+#	if   MEM_ARCH == _MEM_ARCH_x86_32
+	switch (method)
+	{
+	case MEM_ASM_x86_JMP32:
+		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
+		break;
+	case MEM_ASM_x86_JMP64:
+		*(mem_voidptr_t *)(&detour_buffer[1]) = dst;
+		break;
+	case MEM_ASM_x86_CALL32:
+		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
+		break;
+	case MEM_ASM_x86_CALL64:
+		*(mem_voidptr_t *)(&detour_buffer[1]) = dst;
+		break;
+	default:
+		break;
+	}
+#	elif MEM_ARCH == _MEM_ARCH_x86_64
+	switch (method)
+	{
+	case MEM_ASM_x86_JMP32:
+		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
+		break;
+	case MEM_ASM_x86_JMP64:
+		*(mem_voidptr_t *)(&detour_buffer[2]) = dst;
+		break;
+	case MEM_ASM_x86_CALL32:
+		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
+		break;
+	case MEM_ASM_x86_CALL64:
+		*(mem_voidptr_t *)(&detour_buffer[2]) = dst;
+		break;
+	default:
+		break;
+	}
+#	endif
+
+	mem_ex_write(process, src, detour_buffer, detour_size);
+	free(detour_buffer);
+	ret = MEM_TRUE;
+
+	return ret;
+}
+
 LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 {
 	/*

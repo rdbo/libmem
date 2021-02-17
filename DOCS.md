@@ -64,6 +64,7 @@ mem_ex_allocate                 //Allocates memory in a process
 mem_ex_deallocate               //Deallocates memory in a process
 mem_ex_scan                     //Scans for a byte pattern in a process
 mem_ex_pattern_scan             //Scans for a byte pattern and checks a byte mask in a process
+mem_in_detour                   //Detours code in a process
 mem_ex_load_module              //Loads a module in a process
 mem_ex_unload_module            //Unloads a module in a process
 mem_ex_get_symbol               //Gets a symbol from a module in a process

@@ -2425,7 +2425,12 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_
 	iosrc.iov_len  = size;
 	ret = (mem_size_t)process_vm_readv(process.pid, &iodst, 1, &iosrc, 1, 0) == size ? MEM_TRUE : MEM_FALSE;
 #	elif MEM_OS == MEM_BSD
-	/* WIP */
+	char path_buf[64] = { 0 };
+	snprintf(path_buf, sizeof(path_buf) - sizeof(char), "/proc/%i/mem", pid);
+	int fd = open(path_buf, O_RDONLY);
+	if (fd == -1) return ret;
+	pread(fd, buf, size, (off_t)src);
+	close(fd);
 #	endif
 
 	return ret;
@@ -2459,7 +2464,12 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr
 	iodst.iov_len = size;
 	ret = (mem_size_t)process_vm_writev(process.pid, &iosrc, 1, &iodst, 1, 0) == size ? MEM_TRUE : MEM_FALSE;
 #	elif MEM_OS == MEM_BSD
-	/* WIP */
+	char path_buf[64] = { 0 };
+	snprintf(path_buf, sizeof(path_buf) - sizeof(char), "/proc/%i/mem", pid);
+	int fd = open(path_buf, O_WRONLY);
+	if (fd == -1) return ret;
+	pwrite(fd, buf, size, (off_t)dst);
+	close(fd);
 #	endif
 
 	return ret;

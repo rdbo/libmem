@@ -43,8 +43,8 @@ mem_in_allocate
 mem_in_deallocate
 mem_in_scan
 mem_in_pattern_scan
-mem_in_detour_size
 mem_in_payload_size
+mem_in_detour_size
 mem_in_detour
 mem_in_detour_trampoline
 mem_in_detour_restore

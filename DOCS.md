@@ -32,8 +32,8 @@ mem_in_allocate                 //Allocates memory in the caller process
 mem_in_deallocate               //Deallocates memory in the caller process
 mem_in_scan                     //Scans for a byte pattern in the caller process
 mem_in_pattern_scan             //Scans for a byte pattern and checks a byte mask in the caller process
-mem_in_detour_size              //Gets the size of a detour method
 mem_in_payload_size             //Gets the size of a payload
+mem_in_detour_size              //Gets the size of a detour method
 mem_in_detour                   //Detours code in the caller process
 mem_in_detour_trampoline        //Detours code and saves the original code in a gateway in the caller process
 mem_in_detour_restore           //Restores detoured code in the caller process

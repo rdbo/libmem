@@ -586,25 +586,6 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tst
 	return ret;
 }
 
-LIBMEM_EXTERN mem_size_t         mem_in_detour_size(mem_asm_t method)
-{
-	/*
-	 * Description:
-	 *   Gets the size of the detour method 'method'
-	 *
-	 * Return Value:
-	 *   Returns the size of the detour method 'method'
-	 *   or 'MEM_BAD' on error
-	 */
-
-	mem_size_t size = (mem_size_t)MEM_BAD;
-
-	if (method >= 0 && method < MEM_ASM_DETOUR_INVALID)
-		size = mem_in_payload_size(method);
-
-	return size;
-}
-
 LIBMEM_EXTERN mem_size_t         mem_in_payload_size(mem_asm_t method)
 {
 	/*
@@ -620,6 +601,25 @@ LIBMEM_EXTERN mem_size_t         mem_in_payload_size(mem_asm_t method)
 
 	if (method >= 0 && method < MEM_ASM_INVALID)
 		size = MEM_PAYLOADS[method].size;
+
+	return size;
+}
+
+LIBMEM_EXTERN mem_size_t         mem_in_detour_size(mem_asm_t method)
+{
+	/*
+	 * Description:
+	 *   Gets the size of the detour method 'method'
+	 *
+	 * Return Value:
+	 *   Returns the size of the detour method 'method'
+	 *   or 'MEM_BAD' on error
+	 */
+
+	mem_size_t size = (mem_size_t)MEM_BAD;
+
+	if (method >= 0 && method < MEM_ASM_DETOUR_INVALID)
+		size = mem_in_payload_size(method);
 
 	return size;
 }

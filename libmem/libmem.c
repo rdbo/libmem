@@ -2035,10 +2035,6 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 
 			if (module_end_ptr)
 			{
-				holder = map_buffer;
-				for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
-				module_end_ptr = holder;
-				module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
 				module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
 
 				if (module_end_ptr)
@@ -2048,7 +2044,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 					if (module_end_endptr)
 					{
 						module_base_ptr = &module_base_ptr[2];
-						module_end_ptr = &module_base_ptr[2];
+						module_end_ptr  = &module_end_ptr[2];
 
 						mem_tchar_t module_base_str[64] = { 0 };
 						memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);

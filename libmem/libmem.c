@@ -2723,12 +2723,12 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size
 #	endif
 
 	alloc = mem_ex_syscall(process, syscall_n, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0);
-	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096 || alloc == (mem_voidptr_t)syscall_n)
+	if (alloc == (mem_voidptr_t)MAP_FAILED || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096 || alloc == (mem_voidptr_t)(mem_uintptr_t)syscall_n)
 		alloc = (mem_voidptr_t)MEM_BAD;
 #	elif MEM_OS == MEM_BSD
 	mem_int_t syscall_n = SYS_mmap;
 	alloc = mem_ex_syscall(process, syscall_n, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0);
-	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096 || alloc == (mem_voidptr_t)syscall_n)
+	if (alloc == (mem_voidptr_t)MAP_FAILED || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096 || alloc == (mem_voidptr_t)(mem_uintptr_t)syscall_n)
 		alloc = (mem_voidptr_t)MEM_BAD;
 #	endif
 

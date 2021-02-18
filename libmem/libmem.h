@@ -167,6 +167,7 @@
 #include <sys/sysctl.h>
 #include <sys/syscall.h>
 #include <sys/utsname.h>
+#include <machine/reg.h>
 #include <dlfcn.h>
 #include <link.h>
 #include <fcntl.h>

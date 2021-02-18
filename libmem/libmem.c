@@ -2514,7 +2514,6 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t
 
 #	if   MEM_OS == MEM_WIN
 #	elif MEM_OS == MEM_LINUX
-
 	int status;
 	struct user_regs_struct old_regs, regs;
 	mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD;
@@ -2580,7 +2579,70 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t
 	ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
 	ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
 #	elif MEM_OS == MEM_BSD
-	/* WIP */
+	int status;
+	struct reg old_regs, regs;
+	mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD;
+	mem_payload_t injection_buf = { 0 };
+	mem_uintptr_t old_data = 0; /* 'word-sized buffer' to store reads from ptrace */
+	mem_uintptr_t inj_data = 0; /* 'word-sized buffer' to be used on ptrace for writing */
+
+	switch (process.arch)
+	{
+	case MEM_ARCH_x86_32:
+		injection_buf = MEM_PAYLOADS[MEM_ASM_x86_SYSCALL32];
+		break;
+	case MEM_ARCH_x86_64:
+		injection_buf = MEM_PAYLOADS[MEM_ASM_x86_SYSCALL64];
+		break;
+	default:
+		return ret;
+	}
+
+	memcpy(&inj_data, injection_buf.payload, sizeof(inj_data));
+
+	ptrace(PT_ATTACH, process.pid, NULL, NULL);
+	wait(&status);
+
+	ptrace(PT_GETREGS, process.pid, NULL, &old_regs);
+	regs = old_regs;
+
+#	if   MEM_ARCH == _MEM_ARCH_x86_32
+	regs.r_eax = (mem_uintptr_t)syscall_n;
+	regs.r_ebx = (mem_uintptr_t)arg0;
+	regs.r_ecx = (mem_uintptr_t)arg1;
+	regs.r_edx = (mem_uintptr_t)arg2;
+	regs.r_esi = (mem_uintptr_t)arg3;
+	regs.r_edi = (mem_uintptr_t)arg4;
+	regs.r_ebp = (mem_uintptr_t)arg5;
+	injection_addr = (mem_voidptr_t)regs.r_eip;
+#	elif MEM_ARCH == _MEM_ARCH_x86_64
+	regs.r_rax = (mem_uintptr_t)syscall_n;
+	regs.r_rdi = (mem_uintptr_t)arg0;
+	regs.r_rsi = (mem_uintptr_t)arg1;
+	regs.r_rdx = (mem_uintptr_t)arg2;
+	regs.r_r10 = (mem_uintptr_t)arg3;
+	regs.r_r8  = (mem_uintptr_t)arg4;
+	regs.r_r9  = (mem_uintptr_t)arg5;
+	injection_addr = (mem_voidptr_t)regs.r_rip;
+#	endif
+
+	old_data = (mem_uintptr_t)ptrace(PT_READ_D, process.pid, (void *)((mem_uintptr_t)injection_addr), NULL);
+	ptrace(PT_WRITE_D, process.pid, (void *)((mem_uintptr_t)injection_addr), inj_data);
+
+	ptrace(PT_SETREGS, process.pid, NULL, &regs);
+	ptrace(PT_STEP, process.pid, NULL, NULL);
+	waitpid(process.pid, &status, WSTOPPED);
+	ptrace(PT_GETREGS, process.pid, NULL, &regs);
+#   if   MEM_ARCH == _MEM_ARCH_x86_32
+	ret = (mem_voidptr_t)regs.eax;
+#   elif MEM_ARCH == _MEM_ARCH_x86_64
+	ret = (mem_voidptr_t)regs.rax;
+#   endif
+
+	ptrace(PT_WRITE_D, process.pid, (void *)((mem_uintptr_t)injection_addr), old_data);
+
+	ptrace(PT_SETREGS, process.pid, NULL, &old_regs);
+	ptrace(PT_DETACH, process.pid, NULL, NULL);
 #	endif
 
 	return ret;

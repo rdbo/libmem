@@ -2634,9 +2634,9 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t
 	waitpid(process.pid, &status, WSTOPPED);
 	ptrace(PT_GETREGS, process.pid, NULL, &regs);
 #   if   MEM_ARCH == _MEM_ARCH_x86_32
-	ret = (mem_voidptr_t)regs.eax;
+	ret = (mem_voidptr_t)regs.r_eax;
 #   elif MEM_ARCH == _MEM_ARCH_x86_64
-	ret = (mem_voidptr_t)regs.rax;
+	ret = (mem_voidptr_t)regs.r_rax;
 #   endif
 
 	ptrace(PT_WRITE_D, process.pid, (void *)((mem_uintptr_t)injection_addr), old_data);

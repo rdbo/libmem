@@ -563,7 +563,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tst
 	 */
 
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
-	size_t size = MEM_STR_LEN(mask);
+	mem_size_t size = MEM_STR_LEN(mask);
 	mem_data_t i = (mem_data_t)NULL;
 	for (i = (mem_data_t)start; (mem_uintptr_t)&i[size] <= (mem_uintptr_t)stop; i = &i[1])
 	{
@@ -742,7 +742,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 
 	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_in_protect(src, size, protection, NULL) == MEM_FALSE) return gateway;
 
-	size_t gateway_size = size + detour_size;
+	mem_size_t gateway_size = size + detour_size;
 	gateway = (mem_voidptr_t)malloc(gateway_size);
 	if (!gateway || mem_in_protect(gateway, gateway_size, protection, NULL) == MEM_FALSE) return (mem_voidptr_t)MEM_BAD;
 
@@ -943,7 +943,7 @@ LIBMEM_EXTERN mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 		if (id != (mem_pid_t)-1 && (id || !MEM_STR_CMP(pdirent->d_name, MEM_STR("0"))))
 		{
 			mem_tstring_t proc_name = NULL;
-			size_t read_chars = mem_ex_get_process_name(id, &proc_name);
+			mem_size_t read_chars = mem_ex_get_process_name(id, &proc_name);
 			if (read_chars)
 			{
 				if (!MEM_STR_CMP(process_ref, proc_name))

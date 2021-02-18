@@ -13,7 +13,7 @@ Windows:
 Linux:  
 - libdl (-ldl)  
   
-FreeBSD:  
+BSD:  
 - libdl (-ldl)  
 - libkvm (-lkvm)  
 - libprocstat (-lprocstat)  

@@ -2680,7 +2680,13 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidp
 
 	ret = mem_ex_syscall(process, __NR_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0 ? MEM_TRUE : MEM_FALSE;
 #	elif MEM_OS == MEM_BSD
-	/* WIP */
+	if (old_protection)
+	{
+		mem_page_t page = mem_ex_get_page(process, src);
+		*old_protection = page.protection;
+	}
+
+	ret = mem_ex_syscall(process, SYS_mprotect, src, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, NULL, NULL, NULL) == 0 ? MEM_TRUE : MEM_FALSE;
 #	endif
 
 	return ret;
@@ -2709,25 +2715,21 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size
 	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	mem_int_t syscall_n = -1;
-	switch (process.arch)
-	{
-	case MEM_ARCH_x86_32:
-		/* syscall_n = __NR_mmap2; */
-		syscall_n = 192;
-		break;
-	case MEM_ARCH_x86_64:
-		/* syscall_n = __NR_mmap; */
-		syscall_n = 9;
-		break;
-	default:
-		return alloc;
-	}
+
+#	if MEM_ARCH == _MEM_ARCH_x86_32
+	syscall_n = __NR_mmap2;
+#	elif MEM_ARCH == _MEM_ARCH_x86_64
+	syscall_n = __NR_mmap;
+#	endif
 
 	alloc = mem_ex_syscall(process, syscall_n, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0);
-	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096)
+	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096 || alloc == (mem_voidptr_t)syscall_n)
 		alloc = (mem_voidptr_t)MEM_BAD;
 #	elif MEM_OS == MEM_BSD
-	/* WIP */
+	mem_int_t syscall_n = SYS_mmap;
+	alloc = mem_ex_syscall(process, syscall_n, (mem_voidptr_t)0, (mem_voidptr_t)size, (mem_voidptr_t)(mem_uintptr_t)protection, (mem_voidptr_t)(MAP_PRIVATE | MAP_ANON), (mem_voidptr_t)-1, (mem_voidptr_t)0);
+	if (alloc == (mem_voidptr_t)-1 || (mem_uintptr_t)alloc >= (mem_uintptr_t)-4096 || alloc == (mem_voidptr_t)syscall_n)
+		alloc = (mem_voidptr_t)MEM_BAD;
 #	endif
 
 	return alloc;
@@ -2754,7 +2756,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_vo
 #	elif MEM_OS == MEM_LINUX
 	ret = mem_ex_syscall(process, __NR_munmap, src, (mem_voidptr_t)size, NULL, NULL, NULL, NULL) != (mem_voidptr_t)MAP_FAILED ? MEM_TRUE : MEM_FALSE;
 #	elif MEM_OS == MEM_BSD
-	/* WIP */
+	ret = mem_ex_syscall(process, SYS_munmap, src, (mem_voidptr_t)size, NULL, NULL, NULL, NULL) != (mem_voidptr_t)MAP_FAILED ? MEM_TRUE : MEM_FALSE;
 #	endif
 
 	return ret;

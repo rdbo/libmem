@@ -3175,7 +3175,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			mem_ex_write(process, path_addr, path, path_size);
 
 			int status;
-			struct user_regs_struct old_regs, regs;
+			struct regs old_regs, regs;
 			/* void *handle = (void *)NULL; */
 
 			ptrace(PT_ATTACH, process.pid, NULL, 0);
@@ -3197,7 +3197,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 #			endif
 
 			ptrace(PT_SETREGS, process.pid, &regs, 0);
-			ptrace(PT_CONT, process.pid, NULL, 0);
+			ptrace(PT_CONTINUE, process.pid, NULL, 0);
 			waitpid(process.pid, &status, WSTOPPED);
 			ptrace(PT_GETREGS, process.pid, &regs, 0);
 

@@ -3175,7 +3175,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			mem_ex_write(process, path_addr, path, path_size);
 
 			int status;
-			struct regs old_regs, regs;
+			struct reg old_regs, regs;
 			/* void *handle = (void *)NULL; */
 
 			ptrace(PT_ATTACH, process.pid, NULL, 0);

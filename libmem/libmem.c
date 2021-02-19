@@ -3105,11 +3105,10 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
 		return mod;
 
-	extern void *__libc_dlopen_mode(const char *filename, int flag);
-	Dl_info libc_info = { 0 };
-	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return mod;
+	Dl_info libdl_info = { 0 };
+	if (!dladdr((void *)dlopen, &libdl_info)) return mod;
 
-	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
+	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libdl_info.dli_saddr - (mem_uintptr_t)libdl_info.dli_fbase;
 
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
@@ -3137,8 +3136,8 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 	if (
 		(
-			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc-"))) ||
-			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc.")))
+			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libdl-"))) ||
+			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libdl.")))
 		) &&
 		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR(' ')))
 	)

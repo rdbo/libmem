@@ -3180,7 +3180,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 			ptrace(PT_ATTACH, process.pid, NULL, 0);
 			wait(&status);
-			ptrace(PT_GETREGS, process.pid, &old_regs, 0);
+			ptrace(PT_GETREGS, process.pid, (caddr_t)&old_regs, 0);
 
 			regs = old_regs;
 
@@ -3196,10 +3196,10 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			regs.r_rip = (mem_intptr_t)inj_addr;
 #			endif
 
-			ptrace(PT_SETREGS, process.pid, &regs, 0);
+			ptrace(PT_SETREGS, process.pid, (caddr_t)&regs, 0);
 			ptrace(PT_CONTINUE, process.pid, NULL, 0);
 			waitpid(process.pid, &status, WSTOPPED);
-			ptrace(PT_GETREGS, process.pid, &regs, 0);
+			ptrace(PT_GETREGS, process.pid, (caddr_t)&regs, 0);
 
 			/*
 #			if   MEM_ARCH == _MEM_ARCH_x86_32
@@ -3209,7 +3209,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 #			endif
 			*/
 
-			ptrace(PT_SETREGS, process.pid, &old_regs, 0);
+			ptrace(PT_SETREGS, process.pid, (caddr_t)&old_regs, 0);
 			ptrace(PT_DETACH, process.pid, NULL, 0);
 
 			mem_ex_deallocate(process, inj_addr, inj_size);

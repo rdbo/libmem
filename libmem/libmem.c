@@ -2518,8 +2518,8 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t
 	struct user_regs_struct old_regs, regs;
 	mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD;
 	mem_payload_t injection_buf = { 0 };
-	mem_uintptr_t old_data = 0; /* 'word-sized buffer' to store reads from ptrace */
-	mem_uintptr_t inj_data = 0; /* 'word-sized buffer' to be used on ptrace for writing */
+	mem_uintptr_t old_data = 0;
+	mem_uintptr_t inj_data = 0;
 
 	switch (process.arch)
 	{
@@ -2583,8 +2583,8 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t
 	struct reg old_regs, regs;
 	mem_voidptr_t injection_addr = (mem_voidptr_t)MEM_BAD;
 	mem_payload_t injection_buf = { 0 };
-	mem_uintptr_t old_data = 0; /* 'word-sized buffer' to store reads from ptrace */
-	mem_uintptr_t inj_data = 0; /* 'word-sized buffer' to be used on ptrace for writing */
+	mem_uintptr_t old_data = 0;
+	mem_uintptr_t inj_data = 0;
 
 	switch (process.arch)
 	{
@@ -3059,7 +3059,6 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 			int status;
 			struct user_regs_struct old_regs, regs;
-			/* void *handle = (void *)NULL; */
 
 			ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
 			wait(&status);
@@ -3083,14 +3082,6 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			ptrace(PTRACE_CONT, process.pid, NULL, NULL);
 			waitpid(process.pid, &status, WSTOPPED);
 			ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
-
-			/*
-#			if   MEM_ARCH == _MEM_ARCH_x86_32
-			handle = (void *)regs.eax;
-#			elif MEM_ARCH == _MEM_ARCH_x86_64
-			handle = (void *)regs.rax;
-#			endif
-			*/
 
 			ptrace(PTRACE_SETREGS, process.pid, NULL, &old_regs);
 			ptrace(PTRACE_DETACH, process.pid, NULL, NULL);
@@ -3175,7 +3166,6 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 			int status;
 			struct reg old_regs, regs;
-			/* void *handle = (void *)NULL; */
 
 			ptrace(PT_ATTACH, process.pid, NULL, 0);
 			wait(&status);
@@ -3199,14 +3189,6 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			ptrace(PT_CONTINUE, process.pid, NULL, 0);
 			waitpid(process.pid, &status, WSTOPPED);
 			ptrace(PT_GETREGS, process.pid, (caddr_t)&regs, 0);
-
-			/*
-#			if   MEM_ARCH == _MEM_ARCH_x86_32
-			handle = (void *)regs.eax;
-#			elif MEM_ARCH == _MEM_ARCH_x86_64
-			handle = (void *)regs.rax;
-#			endif
-			*/
 
 			ptrace(PT_SETREGS, process.pid, (caddr_t)&old_regs, 0);
 			ptrace(PT_DETACH, process.pid, NULL, 0);

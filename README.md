@@ -24,6 +24,7 @@ Read `LICENSE`
 # Overview
 ```
 //mem_in
+mem_in_read_file
 mem_in_get_pid
 mem_in_get_process_name
 mem_in_get_process_path

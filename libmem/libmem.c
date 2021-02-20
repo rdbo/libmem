@@ -135,7 +135,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess
 
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
 
-		read_chars = MEM_STR_LEN(process_path) - (((uintptr_t)p_pos - (uintptr_t)process_path) / sizeof(mem_tchar_t));
+		read_chars = MEM_STR_LEN(process_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)process_path) / sizeof(mem_tchar_t));
 		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pprocess_name = (mem_tstring_t)malloc(process_name_size);
 		if (*pprocess_name)
@@ -293,7 +293,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_ts
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
 #		endif
 
-		read_chars = MEM_STR_LEN(module_path) - (((uintptr_t)p_pos - (uintptr_t)module_path) / sizeof(mem_tchar_t));
+		read_chars = MEM_STR_LEN(module_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)module_path) / sizeof(mem_tchar_t));
 		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
 		if (*pmodule_name)
@@ -497,7 +497,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_protect(mem_voidptr_t src, mem_size_t si
 	ret = VirtualProtect(src, size, protection, &old_protection) != 0 ? MEM_TRUE : MEM_FALSE;
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	long page_size = sysconf(_SC_PAGE_SIZE);
-	void *src_page = (void *)((uintptr_t)src & -page_size);
+	void *src_page = (void *)((mem_uintptr_t)src & -page_size);
 	mem_page_t page = mem_in_get_page((mem_voidptr_t)src_page);
 	old_protection = page.protection;
 	ret = mprotect(src_page, size, protection) == 0 ? MEM_TRUE : MEM_FALSE;
@@ -1066,7 +1066,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
 #		endif
 
-		read_chars = MEM_STR_LEN(process_path) - (((uintptr_t)p_pos - (uintptr_t)process_path) / sizeof(mem_tchar_t));
+		read_chars = MEM_STR_LEN(process_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)process_path) / sizeof(mem_tchar_t));
 		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pprocess_name = (mem_tstring_t)malloc(process_name_size);
 		if (*pprocess_name)
@@ -1631,7 +1631,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_name(mem_process_t process, m
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) != NULL; p_pos = &temp[1]);
 #		endif
 
-		read_chars = MEM_STR_LEN(module_path) - (((uintptr_t)p_pos - (uintptr_t)module_path) / sizeof(mem_tchar_t));
+		read_chars = MEM_STR_LEN(module_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)module_path) / sizeof(mem_tchar_t));
 		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
 		if (*pmodule_name)
@@ -2169,9 +2169,9 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 				}
 
 				mem_tchar_t page_base_addr[64] = { 0 };
-				memcpy(page_base_addr, page_base, (uintptr_t)page_end - (uintptr_t)page_base);
+				memcpy(page_base_addr, page_base, (mem_uintptr_t)page_end - (mem_uintptr_t)page_base);
 				mem_tchar_t page_end_addr[64] = { 0 };
-				memcpy(page_end_addr, page_end, (uintptr_t)holder - (uintptr_t)page_end);
+				memcpy(page_end_addr, page_end, (mem_uintptr_t)holder - (mem_uintptr_t)page_end);
 
 				switch (process.arch)
 				{

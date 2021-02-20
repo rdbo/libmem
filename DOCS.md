@@ -13,6 +13,7 @@ Summary of each function in libmem. See `libmem/libmem.c` comments for more deta
   
 ```
 //mem_in
+mem_in_read_file                //Reads the data of a file
 mem_in_get_pid                  //Gets the PID of the caller process
 mem_in_get_process_name         //Gets the name of the caller process
 mem_in_get_process_path         //Gets the path of the caller process

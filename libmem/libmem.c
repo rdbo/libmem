@@ -1476,22 +1476,9 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return mod;
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
-		free(maps_buffer);
-		maps_buffer = holder;
-		maps_buffer[maps_size] = c;
-		maps_buffer[maps_size + 1] = '\0';
-	}
-	close(maps_file);
+	mem_in_read_file(path_buf, (mem_byte_t **)&maps_buffer);
 	if (!maps_buffer) return mod;
 
 	mem_tchar_t *module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
@@ -1554,22 +1541,9 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	int map_file = open(path_buffer, O_RDONLY);
-	if (map_file == -1) return mod;
-	mem_size_t maps_size = 0;
-	mem_tstring_t map_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(map_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, map_buffer, maps_size * sizeof(mem_tchar_t));
-		free(map_buffer);
-		map_buffer = holder;
-		map_buffer[maps_size] = c;
-		map_buffer[maps_size + 1] = '\0';
-	}
-	close(map_file);
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = 0;
+	mem_in_read_file(path_buf, (mem_byte_t **)&map_buffer);
 	if (!map_buffer) return mod;
 
 	mem_tchar_t *module_base_ptr = MEM_STR_STR(map_buffer, module_str);
@@ -1743,22 +1717,9 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return read_chars;
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
-		free(maps_buffer);
-		maps_buffer = holder;
-		maps_buffer[maps_size] = c;
-		maps_buffer[maps_size + 1] = '\0';
-	}
-	close(maps_file);
+	mem_in_read_file(path_buf, (mem_byte_t **)&maps_buffer);
 	if (!maps_buffer) return read_chars;
 
 	mem_tchar_t *temp = (mem_tchar_t *)NULL;
@@ -1804,22 +1765,9 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	int map_file = open(path_buffer, O_RDONLY);
-	if (map_file == -1) return read_chars;
-	mem_size_t maps_size = 0;
-	mem_tstring_t map_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(map_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, map_buffer, maps_size * sizeof(mem_tchar_t));
-		free(map_buffer);
-		map_buffer = holder;
-		map_buffer[maps_size] = c;
-		map_buffer[maps_size + 1] = '\0';
-	}
-	close(map_file);
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = 0;
+	mem_in_read_file(path_buf, (mem_byte_t **)&map_buffer);
 	if (!map_buffer) return read_chars;
 
 	mem_tchar_t *temp = (mem_tchar_t *)NULL;
@@ -1913,22 +1861,9 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return count;
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
-		free(maps_buffer);
-		maps_buffer = holder;
-		maps_buffer[maps_size] = c;
-		maps_buffer[maps_size + 1] = '\0';
-	}
-	close(maps_file);
+	mem_in_read_file(path_buf, (mem_byte_t **)&maps_buffer);
 	if (!maps_buffer) return count;
 
 	mem_tchar_t *module_path_ptr = maps_buffer;
@@ -2032,22 +1967,9 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	int map_file = open(path_buffer, O_RDONLY);
-	if (map_file == -1) return count;
-	mem_size_t maps_size = 0;
-	mem_tstring_t map_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(map_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, map_buffer, maps_size * sizeof(mem_tchar_t));
-		free(map_buffer);
-		map_buffer = holder;
-		map_buffer[maps_size] = c;
-		map_buffer[maps_size + 1] = '\0';
-	}
-	close(map_file);
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = 0;
+	mem_in_read_file(path_buf, (mem_byte_t **)&map_buffer);
 	if (!map_buffer) return count;
 
 	mem_tchar_t *module_path_ptr = map_buffer;
@@ -2209,22 +2131,9 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return page;
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
-		free(maps_buffer);
-		maps_buffer = holder;
-		maps_buffer[maps_size] = c;
-		maps_buffer[maps_size + 1] = '\0';
-	}
-	close(maps_file);
+	mem_in_read_file(path_buf, (mem_byte_t **)&maps_buffer);
 	if (!maps_buffer) return page;
 
 	page_base = MEM_STR_STR(maps_buffer, page_base_str);
@@ -2315,22 +2224,9 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	int map_file = open(path_buffer, O_RDONLY);
-	if (map_file == -1) return page;
-	mem_size_t maps_size = 0;
-	mem_tstring_t map_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(map_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, map_buffer, maps_size * sizeof(mem_tchar_t));
-		free(map_buffer);
-		map_buffer = holder;
-		map_buffer[maps_size] = c;
-		map_buffer[maps_size + 1] = '\0';
-	}
-	close(map_file);
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = 0;
+	mem_in_read_file(path_buf, (mem_byte_t **)&map_buffer);
 	if (!map_buffer) return page;
 
 	page_base = MEM_STR_STR(map_buffer, page_base_str);
@@ -3050,22 +2946,9 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return mod;
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
-		free(maps_buffer);
-		maps_buffer = holder;
-		maps_buffer[maps_size] = c;
-		maps_buffer[maps_size + 1] = '\0';
-	}
-	close(maps_file);
+	mem_in_read_file(path_buf, (mem_byte_t **)&maps_buffer);
 	if (!maps_buffer) return mod;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
@@ -3157,22 +3040,9 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return mod;
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
-		free(maps_buffer);
-		maps_buffer = holder;
-		maps_buffer[maps_size] = c;
-		maps_buffer[maps_size + 1] = '\0';
-	}
-	close(maps_file);
+	mem_in_read_file(path_buf, (mem_byte_t **)&maps_buffer);
 	if (!maps_buffer) return mod;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
@@ -3330,22 +3200,9 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	int maps_file = open(path_buffer, O_RDONLY);
-	if (maps_file == -1) return ret;
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
-	mem_tstring_t maps_buffer = (mem_tstring_t)malloc(sizeof(mem_tchar_t));
-	int read_check = 0;
-	mem_tchar_t c = (mem_tchar_t)0;
-	for (c = 0; (read_check = read(maps_file, &c, 1)) > 0; ++maps_size)
-	{
-		mem_tchar_t *holder = (mem_tchar_t *)malloc((maps_size + 2) * sizeof(mem_tchar_t));
-		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
-		free(maps_buffer);
-		maps_buffer = holder;
-		maps_buffer[maps_size] = c;
-		maps_buffer[maps_size + 1] = '\0';
-	}
-	close(maps_file);
+	mem_in_read_file(path_buf, (mem_byte_t **)&maps_buffer);
 	if (!maps_buffer) return ret;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;

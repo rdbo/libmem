@@ -645,6 +645,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 	mem_bool_t ret = MEM_FALSE;
 	mem_size_t detour_size = mem_in_detour_size(method);
 	mem_prot_t protection = 0;
+	mem_prot_t old_protection = 0;
 
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
@@ -652,7 +653,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
-	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_in_protect(src, size, protection, NULL) == MEM_FALSE) return ret;
+	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_in_protect(src, size, protection, &old_protection) == MEM_FALSE) return ret;
 
 	if (stolen_bytes)
 	{
@@ -705,6 +706,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 
 	mem_in_write(src, detour_buffer, detour_size);
 	free(detour_buffer);
+	mem_in_protect(src, size, old_protection, NULL);
 	ret = MEM_TRUE;
 
 	return ret;
@@ -734,13 +736,15 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 
 	mem_size_t detour_size = mem_in_detour_size(method);
 	mem_prot_t protection = 0;
+	mem_prot_t old_protection = 0;
+
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
-	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_in_protect(src, size, protection, NULL) == MEM_FALSE) return gateway;
+	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_in_protect(src, size, protection, &old_protection) == MEM_FALSE) return gateway;
 
 	mem_size_t gateway_size = size + detour_size;
 	gateway = (mem_voidptr_t)malloc(gateway_size);
@@ -750,6 +754,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 	mem_data_t p_src = (mem_data_t)src;
 	mem_in_write((mem_voidptr_t)p_gateway, src, size);
 	mem_in_detour((mem_voidptr_t)& p_gateway[size], &p_src[size], detour_size, method, NULL);
+	mem_in_protect(src, size, old_protection, NULL);
 	if (mem_in_detour(src, dst, size, method, stolen_bytes) == MEM_FALSE)
 	{
 		free(gateway);
@@ -771,19 +776,23 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_da
 	 *   or 'MEM_FALSE' on error
 	 */
 
+	mem_bool_t ret = MEM_FALSE;
 	mem_prot_t protection = 0;
+	mem_prot_t old_protection = 0;
+
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
-	mem_bool_t ret = MEM_TRUE;
-
-	if (
-		mem_in_protect(src, size, protection, NULL)          == MEM_FALSE ||
-		mem_in_write(src, (mem_voidptr_t)stolen_bytes, size) == MEM_FALSE
-	) ret = MEM_FALSE;
+	if (mem_in_protect(src, size, protection, &old_protection) == MEM_TRUE)
+	{
+		if (mem_in_write(src, (mem_voidptr_t)stolen_bytes, size) == MEM_TRUE)
+			ret = MEM_TRUE;
+		
+		mem_in_protect(src, size, old_protection, NULL);
+	}
 
 	return ret;
 }
@@ -2877,6 +2886,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 	mem_bool_t ret = MEM_FALSE;
 	mem_size_t detour_size = mem_in_detour_size(method);
 	mem_prot_t protection = 0;
+	mem_prot_t old_protection = 0;
 
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
@@ -2884,7 +2894,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 	protection = PROT_EXEC | PROT_READ | PROT_WRITE;
 #	endif
 
-	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_ex_protect(process, src, size, protection, NULL) == MEM_FALSE) return ret;
+	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_ex_protect(process, src, size, protection, &old_protection) == MEM_FALSE) return ret;
 
 	if (stolen_bytes)
 	{
@@ -2937,6 +2947,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 
 	mem_ex_write(process, src, detour_buffer, detour_size);
 	free(detour_buffer);
+	mem_ex_protect(process, src, size, old_protection, NULL);
 	ret = MEM_TRUE;
 
 	return ret;

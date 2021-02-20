@@ -44,6 +44,46 @@ static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] =
 
 /* mem_in */
 
+LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t **filebuf)
+{
+	/*
+	 * Description:
+	 *   Reads the data of the file
+	 *   at 'path' into 'filebuf'
+	 *
+	 * Return Value:
+	 *   Returns the size of the
+	 *   file in bytes
+	 *
+	 * Remarks:
+	 *   The data of the file is
+	 *   saved in 'filebuf' and needs
+	 *   to be free'd
+	 */
+
+	mem_size_t filesize = 0;
+#	if MEM_OS == MEM_WIN
+#	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
+	int fd = open(path, O_RDONLY);
+	if (fd == -1) return filesize;
+	*filebuf = malloc(sizeof(byte_t));
+
+	mem_byte_t cur = 0;
+	while(read(fd, &cur, 1) > 0)
+	{
+		++filesize;
+		mem_byte_t *holder = *filebuf;
+		*filebuf = (mem_byte_t *)malloc(filesize + 1);
+		memcpy(filesize, holder, filesize - 1);
+		free(holder);
+		filebuf[filesize - 1] = cur;
+		filebuf[filesize] = 0;
+	}
+#	endif
+
+	return filesize;
+}
+
 LIBMEM_EXTERN mem_pid_t          mem_in_get_pid(mem_void_t)
 {
 	/*

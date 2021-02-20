@@ -305,9 +305,9 @@ typedef enum
 
 typedef enum
 {
-	LoadFile = 0,
-	LoadMemory,
-	LoadInvalid
+	MEM_LOAD_FILE = 0,
+	MEM_LOAD_MEMORY,
+	MEM_LOAD_INVALID
 } mem_load_t;
 
 typedef struct
@@ -340,6 +340,7 @@ typedef struct
 
 /* Functions */
 /* mem_in */
+LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t **filebuf);
 LIBMEM_EXTERN mem_pid_t          mem_in_get_pid(mem_void_t);
 LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess_name);
 LIBMEM_EXTERN mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess_path);

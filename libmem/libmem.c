@@ -79,6 +79,8 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 		filebuf[filesize - 1] = cur;
 		filebuf[filesize] = 0;
 	}
+
+	close(fd);
 #	endif
 
 	return filesize;

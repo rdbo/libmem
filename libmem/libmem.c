@@ -1479,7 +1479,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_buffer) return mod;
+	if (!maps_size) return mod;
 
 	mem_tchar_t *module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
 	mem_tchar_t *holder = maps_buffer;
@@ -1544,7 +1544,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
 	mem_size_t map_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
-	if (!map_buffer) return mod;
+	if (!map_size) return mod;
 
 	mem_tchar_t *module_base_ptr = MEM_STR_STR(map_buffer, module_str);
 	mem_tchar_t *holder = map_buffer;
@@ -1720,7 +1720,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_buffer) return read_chars;
+	if (!maps_size) return read_chars;
 
 	mem_tchar_t *temp = (mem_tchar_t *)NULL;
 	for (temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t *)NULL; page_base = temp);
@@ -1768,7 +1768,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
 	mem_size_t map_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
-	if (!map_buffer) return read_chars;
+	if (!map_size) return read_chars;
 
 	mem_tchar_t *temp = (mem_tchar_t *)NULL;
 	for (temp = &map_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t *)NULL; page_base = temp);
@@ -1864,7 +1864,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_buffer) return count;
+	if (!maps_size) return count;
 
 	mem_tchar_t *module_path_ptr = maps_buffer;
 	mem_tchar_t *module_path_endptr = maps_buffer;
@@ -1970,7 +1970,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
 	mem_size_t map_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
-	if (!map_buffer) return count;
+	if (!map_size) return count;
 
 	mem_tchar_t *module_path_ptr = map_buffer;
 	mem_tchar_t *module_path_endptr = map_buffer;
@@ -2134,7 +2134,7 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_buffer) return page;
+	if (!maps_size) return page;
 
 	page_base = MEM_STR_STR(maps_buffer, page_base_str);
 
@@ -2227,7 +2227,7 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
 	mem_size_t map_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
-	if (!map_buffer) return page;
+	if (!map_size) return page;
 
 	page_base = MEM_STR_STR(map_buffer, page_base_str);
 
@@ -2949,7 +2949,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_buffer) return mod;
+	if (!maps_size) return mod;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
@@ -3043,7 +3043,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_buffer) return mod;
+	if (!maps_size) return mod;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
@@ -3203,7 +3203,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = 0;
 	mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_buffer) return ret;
+	if (!maps_size) return ret;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;

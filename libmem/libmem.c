@@ -66,7 +66,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	int fd = open(path, O_RDONLY);
 	if (fd == -1) return filesize;
-	*filebuf = malloc(sizeof(byte_t));
+	*filebuf = malloc(sizeof(mem_byte_t));
 
 	mem_byte_t cur = 0;
 	while(read(fd, &cur, 1) > 0)

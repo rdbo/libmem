@@ -73,11 +73,11 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 	{
 		++filesize;
 		mem_byte_t *holder = *filebuf;
-		*filebuf = (mem_byte_t *)malloc(filesize + 2);
-		memcpy(*filebuf, holder, filesize - 1);
+		*filebuf = (mem_byte_t *)malloc((filesize + 1) * sizeof(mem_byte_t));
+		memcpy(*filebuf, holder, (filesize - 1) * sizeof(mem_byte_t));
 		free(holder);
-		*filebuf[filesize - 1] = cur;
-		*filebuf[filesize] = 0;
+		(*filebuf)[filesize - 1] = cur;
+		(*filebuf)[filesize] = 0;
 	}
 
 	close(fd);

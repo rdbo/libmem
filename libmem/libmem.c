@@ -63,6 +63,24 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 
 	mem_size_t filesize = 0;
 #	if MEM_OS == MEM_WIN
+	OFSTRUCT ofs = { 0 };
+	HFILE hFile = OpenFile(path, &ofs, OF_READ);
+	if (!hFile || hFile == (HFILE)INVALID_HANDLE_VALUE) return filesize;
+	LARGE_INTEGER file_size = { 0 };
+	GetFileSizeEx((HANDLE)hFile, &file_size);
+	filesize = (mem_size_t)(file_size.LowPart | (file_size.HighPart >> 0));
+	*filebuf = (mem_byte_t *)malloc(filesize);
+	if (*filebuf)
+	{
+		ReadFile((HANDLE)hFile, *filebuf, filesize, (LPDWORD)NULL, (LPOVERLAPPED)NULL);
+	}
+
+	else
+	{
+		filesize = 0;
+	}
+
+	CloseHandle((HANDLE)hFile);
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	int fd = open(path, O_RDONLY);
 	if (fd == -1) return filesize;

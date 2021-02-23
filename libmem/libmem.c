@@ -1995,6 +1995,8 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 				module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
 				module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
 
+				free(module_str);
+
 				if (module_end_ptr)
 				{
 					module_end_ptr = &module_end_ptr[1];
@@ -2046,11 +2048,15 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 							module_path_endptr = module_end_endptr;
 							module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
 							if (!module_path_endptr) break;
+							
+							continue;
 						}
 					}
 				}
 			}
 		}
+
+		free(module_str);
 	}
 
 	free(maps_buffer);
@@ -2096,6 +2102,8 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 		{
 			mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
 			for (temp = &map_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t *)NULL; module_end_ptr = temp);
+
+			free(module_str);
 
 			if (module_end_ptr)
 			{
@@ -2157,11 +2165,15 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 							module_path_endptr = module_end_endptr;
 							module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
 							if (!module_path_endptr) break;
+
+							continue;
 						}
 					}
 				}
 			}
 		}
+
+		free(module_str);
 	}
 
 	free(map_buffer);

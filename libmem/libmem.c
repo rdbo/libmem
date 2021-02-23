@@ -3212,19 +3212,19 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 		return mod;
 
 	mem_tchar_t path_buffer[64] = { 0 };
-	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
-	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_size) return mod;
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
+	if (!map_size) return mod;
 
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
 
 	if (
 		(
-			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc-"))) ||
-			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc.")))
+			(p_module_path_ptr = MEM_STR_STR(map_buffer, MEM_STR("/libc-"))) ||
+			(p_module_path_ptr = MEM_STR_STR(map_buffer, MEM_STR("/libc.")))
 		) &&
 		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR('\n')))
 	)
@@ -3294,7 +3294,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 		}
 	}
 
-	free(maps_buffer);
+	free(map_buffer);
 #	endif
 
 	return mod;

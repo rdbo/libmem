@@ -670,6 +670,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, 
 	for (p_str = &signature[-1]; p_str != &signature[signature_len] && p_str != NULL; p_str = MEM_STR_CHR(p_str, MEM_STR(' ')))
 	{
 		p_str = &p_str[1];
+		if (p_str[0] == MEM_STR(' ')) continue;
 		mem_data_t holder_pattern = pattern;
 		mem_tstring_t holder_mask = mask;
 		pattern = (mem_data_t)malloc((size + 1) * sizeof(mem_byte_t));
@@ -2914,6 +2915,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, me
 	for (p_str = &signature[-1]; p_str != &signature[signature_len] && p_str != NULL; p_str = MEM_STR_CHR(p_str, MEM_STR(' ')))
 	{
 		p_str = &p_str[1];
+		if (p_str[0] == MEM_STR(' ')) continue;
 		mem_data_t holder_pattern = pattern;
 		mem_tstring_t holder_mask = mask;
 		pattern = (mem_data_t)malloc((size + 1) * sizeof(mem_byte_t));

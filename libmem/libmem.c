@@ -3211,13 +3211,8 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
 		return mod;
 
-	Dl_info libdl_info = { 0 };
-	if (!dladdr((void *)dlopen, &libdl_info)) return mod;
-
-	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libdl_info.dli_saddr - (mem_uintptr_t)libdl_info.dli_fbase;
-
 	mem_tchar_t path_buffer[64] = { 0 };
-	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
+	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
 	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
 	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
@@ -3228,10 +3223,10 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 	if (
 		(
-			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libdl-"))) ||
-			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libdl.")))
+			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc-"))) ||
+			(p_module_path_ptr = MEM_STR_STR(maps_buffer, MEM_STR("/libc.")))
 		) &&
-		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR(' ')))
+		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR('\n')))
 	)
 	{
 		mem_size_t module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;
@@ -3242,7 +3237,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
 		free(module_ref);
 
-		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
+		mem_voidptr_t dlopen_ex = (mem_voidptr_t)mem_ex_get_symbol(process, libc_ex, "dlopen");
 		mem_payload_t inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
 		switch (process.arch)
 		{
@@ -3270,7 +3265,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 			ptrace(PT_ATTACH, process.pid, NULL, 0);
 			wait(&status);
-			ptrace(PT_GETREGS, process.pid, (caddr_t)&old_regs, 0);
+			ptrace(PT_GETREGS, process.pid, &old_regs, 0);
 
 			regs = old_regs;
 
@@ -3286,18 +3281,20 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			regs.r_rip = (mem_intptr_t)inj_addr;
 #			endif
 
-			ptrace(PT_SETREGS, process.pid, (caddr_t)&regs, 0);
+			ptrace(PT_SETREGS, process.pid, &regs, 0);
 			ptrace(PT_CONTINUE, process.pid, NULL, 0);
 			waitpid(process.pid, &status, WSTOPPED);
-			ptrace(PT_GETREGS, process.pid, (caddr_t)&regs, 0);
+			ptrace(PT_GETREGS, process.pid, &regs, 0);
 
-			ptrace(PT_SETREGS, process.pid, (caddr_t)&old_regs, 0);
+			ptrace(PT_SETREGS, process.pid, &old_regs, 0);
 			ptrace(PT_DETACH, process.pid, NULL, 0);
 
 			mem_ex_deallocate(process, inj_addr, inj_size);
 			mod = mem_ex_get_module(process, path);
 		}
 	}
+
+	free(maps_buffer);
 #	endif
 
 	return mod;

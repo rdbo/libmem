@@ -698,10 +698,15 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, 
 			mem_size_t cur_byte = 0;
 			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
 			{
-				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'0' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'9')
-					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * 16;
-				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'A' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'F')
-					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('A') + 10) * 16;
+				mem_size_t hex_power = (1 - cur_byte) * 16;
+				if (hex_power == 0) hex_power = 1;
+
+				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('0') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('9'))
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * hex_power;
+				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('A') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('F'))
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('A') + 10) * hex_power;
+				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('a') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('f'))
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('a') + 10) * hex_power;
 			}
 
 			mask[size] = MEM_STR('x');
@@ -2937,10 +2942,15 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, me
 			mem_size_t cur_byte = 0;
 			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
 			{
-				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'0' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'9')
-					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * 16;
-				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'A' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'F')
-					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('A') + 10) * 16;
+				mem_size_t hex_power = (1 - cur_byte) * 16;
+				if (hex_power == 0) hex_power = 1;
+
+				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('0') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('9'))
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * hex_power;
+				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('A') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('F'))
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('A') + 10) * hex_power;
+				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('a') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('f'))
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('a') + 10) * hex_power;
 			}
 
 			mask[size] = MEM_STR('x');

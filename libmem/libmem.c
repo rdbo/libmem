@@ -699,7 +699,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, 
 			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
 			{
 				mem_size_t hex_power = (1 - cur_byte) * 16;
-				if (hex_power == 0) hex_power = 1;
+				if (hex_power <= 0) hex_power = 1;
 
 				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('0') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('9'))
 					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * hex_power;
@@ -2943,7 +2943,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, me
 			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
 			{
 				mem_size_t hex_power = (1 - cur_byte) * 16;
-				if (hex_power == 0) hex_power = 1;
+				if (hex_power <= 0) hex_power = 1;
 
 				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)MEM_STR('0') && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)MEM_STR('9'))
 					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * hex_power;

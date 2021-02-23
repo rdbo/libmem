@@ -44,6 +44,7 @@ mem_in_allocate
 mem_in_deallocate
 mem_in_scan
 mem_in_pattern_scan
+mem_in_signature_scan
 mem_in_payload_size
 mem_in_detour_size
 mem_in_detour
@@ -76,6 +77,7 @@ mem_ex_allocate
 mem_ex_deallocate
 mem_ex_scan
 mem_ex_pattern_scan
+mem_ex_signature_scan
 mem_ex_detour
 mem_ex_load_module
 mem_ex_unload_module

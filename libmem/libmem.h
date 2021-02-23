@@ -360,6 +360,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_allocate(mem_size_t size, mem_prot_t pro
 LIBMEM_EXTERN mem_bool_t         mem_in_deallocate(mem_voidptr_t src, mem_size_t size);
 LIBMEM_EXTERN mem_voidptr_t      mem_in_scan(mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop);
 LIBMEM_EXTERN mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop);
+LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop);
 LIBMEM_EXTERN mem_size_t         mem_in_payload_size(mem_asm_t method);
 LIBMEM_EXTERN mem_size_t         mem_in_detour_size(mem_asm_t method);
 LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes);
@@ -391,6 +392,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size
 LIBMEM_EXTERN mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
 LIBMEM_EXTERN mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop);
 LIBMEM_EXTERN mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop);
+LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop);
 LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes);
 LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path);
 LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod);

@@ -646,6 +646,79 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tst
 	return ret;
 }
 
+LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop)
+{
+	/*
+	 * Description:
+	 *   Searches for a byte signature
+	 *   that can contain unknown
+	 *   bytes ('?')
+	 *
+	 * Return Value:
+	 *   Returns the first occurrence of the
+	 *   byte signature between 'start' and 'stop'
+	 *   or 'MEM_BAD' if no occurrence was found
+	 */
+
+	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
+	mem_data_t pattern = (mem_data_t)malloc(sizeof(mem_byte_t));
+	mem_tstring_t mask = (mem_tstring_t)malloc(sizeof(mem_byte_t));
+	mem_size_t size = 0;
+	mem_size_t signature_len = MEM_STR_LEN(signature);
+
+	mem_tchar_t *p_str = (mem_tchar_t *)NULL;
+	for (p_str = &signature[-1]; p_str != &signature[signature_len] && p_str != NULL; p_str = MEM_STR_CHR(p_str, MEM_STR(' ')))
+	{
+		p_str = &p_str[1];
+		mem_data_t holder_pattern = pattern;
+		mem_tstring_t holder_mask = mask;
+		pattern = (mem_data_t)malloc((size + 1) * sizeof(mem_byte_t));
+		mask = (mem_tstring_t)malloc((size + 2) * sizeof(mem_tchar_t));
+		if (pattern && mask && holder_pattern && holder_mask)
+		{
+			memcpy(pattern, holder_pattern, size * sizeof(mem_byte_t));
+			memcpy(mask, holder_mask, size * sizeof(mem_tchar_t));
+		}
+
+		if (holder_pattern) free(holder_pattern);
+		if (holder_mask) free(holder_mask);
+
+		if (!pattern || !mask) return ret;
+
+		if (p_str[0] == MEM_STR('?'))
+		{
+			pattern[size] = (mem_byte_t)'\x00';
+			mask[size] = MEM_STR('?');
+		}
+
+		else
+		{
+			pattern[size] = 0;
+
+			mem_size_t cur_byte = 0;
+			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
+			{
+				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'0' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'9')
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * 16;
+				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'A' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'F')
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('A') + 10) * 16;
+			}
+
+			mask[size] = MEM_STR('x');
+			mask[size + 1] = MEM_STR('\x00');
+		}
+
+		++size;
+	}
+
+	ret = mem_in_pattern_scan(pattern, mask, start, stop);
+
+	free(mask);
+	free(pattern);
+
+	return ret;
+}
+
 LIBMEM_EXTERN mem_size_t         mem_in_payload_size(mem_asm_t method)
 {
 	/*
@@ -2808,6 +2881,79 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_
 			break;
 		}
 	}
+
+	return ret;
+}
+
+LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop)
+{
+	/*
+	 * Description:
+	 *   Searches for a byte signature
+	 *   that can contain unknown
+	 *   bytes ('?') on process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the first occurrence of the
+	 *   byte signature between 'start' and 'stop'
+	 *   or 'MEM_BAD' if no occurrence was found
+	 */
+
+	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
+	mem_data_t pattern = (mem_data_t)malloc(sizeof(mem_byte_t));
+	mem_tstring_t mask = (mem_tstring_t)malloc(sizeof(mem_byte_t));
+	mem_size_t size = 0;
+	mem_size_t signature_len = MEM_STR_LEN(signature);
+
+	mem_tchar_t *p_str = (mem_tchar_t *)NULL;
+	for (p_str = &signature[-1]; p_str != &signature[signature_len] && p_str != NULL; p_str = MEM_STR_CHR(p_str, MEM_STR(' ')))
+	{
+		p_str = &p_str[1];
+		mem_data_t holder_pattern = pattern;
+		mem_tstring_t holder_mask = mask;
+		pattern = (mem_data_t)malloc((size + 1) * sizeof(mem_byte_t));
+		mask = (mem_tstring_t)malloc((size + 2) * sizeof(mem_tchar_t));
+		if (pattern && mask && holder_pattern && holder_mask)
+		{
+			memcpy(pattern, holder_pattern, size * sizeof(mem_byte_t));
+			memcpy(mask, holder_mask, size * sizeof(mem_tchar_t));
+		}
+
+		if (holder_pattern) free(holder_pattern);
+		if (holder_mask) free(holder_mask);
+
+		if (!pattern || !mask) return ret;
+
+		if (p_str[0] == MEM_STR('?'))
+		{
+			pattern[size] = (mem_byte_t)'\x00';
+			mask[size] = MEM_STR('?');
+		}
+
+		else
+		{
+			pattern[size] = 0;
+
+			mem_size_t cur_byte = 0;
+			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
+			{
+				if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'0' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'9')
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('0')) * 16;
+				else if ((mem_uintptr_t)p_str[cur_byte] >= (mem_uintptr_t)'A' && (mem_uintptr_t)p_str[cur_byte] <= (mem_uintptr_t)'F')
+					pattern[size] += (mem_byte_t)((mem_uintptr_t)p_str[cur_byte] - (mem_uintptr_t)MEM_STR('A') + 10) * 16;
+			}
+
+			mask[size] = MEM_STR('x');
+			mask[size + 1] = MEM_STR('\x00');
+		}
+
+		++size;
+	}
+
+	ret = mem_ex_pattern_scan(process, pattern, mask, start, stop);
+
+	free(mask);
+	free(pattern);
 
 	return ret;
 }

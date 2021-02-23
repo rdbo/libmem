@@ -111,6 +111,10 @@ namespace mem
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_voidptr_t start, mem_voidptr_t stop) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), start, stop); }
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_module_t mod) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), mod.base, mod.end); }
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_page_t page) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), page.base, page.end); }
+		inline mem_voidptr_t                signature_scan(mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop) { return mem_in_signature_scan(signature, start, stop); }
+		inline mem_voidptr_t                signature_scan(mem_string_t signature, mem_voidptr_t start, mem_voidptr_t stop) { return mem_in_signature_scan((mem_tstring_t)signature.c_str(), start, stop); }
+		inline mem_voidptr_t                signature_scan(mem_string_t signature, mem_module_t mod) { return mem_in_signature_scan((mem_tstring_t)signature.c_str(), mod.base, mod.end); }
+		inline mem_voidptr_t                signature_scan(mem_string_t signature, mem_page_t page) { return mem_in_signature_scan((mem_tstring_t)signature.c_str(), page.base, page.end); }
 		inline mem_size_t                   detour_size(mem_asm_t method) { return mem_in_detour_size(method); }
 		inline mem_size_t                   payload_size(mem_asm_t method) { return mem_in_payload_size(method); }
 		inline mem_bool_t                   detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method = MEM_ASM_x86_JMP64, mem_data_t *stolen_bytes = (mem_data_t *)NULL) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
@@ -244,6 +248,10 @@ namespace mem
 		inline mem_voidptr_t                pattern_scan(mem_process_t process, mem_data_t pattern, mem_string_t mask, mem_voidptr_t start, mem_voidptr_t stop) { return mem_ex_pattern_scan(process, pattern, (mem_tstring_t)mask.c_str(), start, stop); }
 		inline mem_voidptr_t                pattern_scan(mem_process_t process, mem_data_t pattern, mem_string_t mask, mem_module_t mod) { return mem_ex_pattern_scan(process, pattern, (mem_tstring_t)mask.c_str(), mod.base, mod.end); }
 		inline mem_voidptr_t                pattern_scan(mem_process_t process, mem_data_t pattern, mem_string_t mask, mem_page_t page) { return mem_ex_pattern_scan(process, pattern, (mem_tstring_t)mask.c_str(), page.base, page.end); }
+		inline mem_voidptr_t                signature_scan(mem_process_t process, mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop) { return mem_ex_signature_scan(process, signature, start, stop); }
+		inline mem_voidptr_t                signature_scan(mem_process_t process, mem_string_t signature, mem_voidptr_t start, mem_voidptr_t stop) { return mem_ex_signature_scan(process, (mem_tstring_t)signature.c_str(), start, stop); }
+		inline mem_voidptr_t                signature_scan(mem_process_t process, mem_string_t signature, mem_module_t mod) { return mem_ex_signature_scan(process, (mem_tstring_t)signature.c_str(), mod.base, mod.end); }
+		inline mem_voidptr_t                signature_scan(mem_process_t process, mem_string_t signature, mem_page_t page) { return mem_ex_signature_scan(process, (mem_tstring_t)signature.c_str(), page.base, page.end); }
 		inline mem_bool_t                   detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes = NULL) { return mem_ex_detour(process, src, dst, size, method, stolen_bytes); }
 		inline mem_module_t                 load_module(mem_process_t process, mem_tstring_t path) { return mem_ex_load_module(process, path); }
 		inline mem_module_t                 load_module(mem_process_t process, mem_string_t path) { return mem_ex_load_module(process, (mem_tstring_t)path.c_str()); }

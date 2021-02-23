@@ -32,10 +32,12 @@ int main()
 	mem_string_t  module_path = MEM_STR("");
 
 	mem_page_t    page = { 0 };
-	mem_byte_t    pattern[] = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+	mem_byte_t    pattern[] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0 };
 	mem_string_t  mask = MEM_STR("xxxxxxxxx");
+	mem_string_t  signature = MEM_STR("10 20 ?? 40 50 ?? 70 80 ?? A0");
 	mem_voidptr_t scan = (mem_voidptr_t)MEM_BAD;
 	mem_voidptr_t pattern_scan = (mem_voidptr_t)MEM_BAD;
+	mem_voidptr_t signature_scan = (mem_voidptr_t)MEM_BAD;
 
 	mem_voidptr_t alloc = (mem_voidptr_t)MEM_BAD;
 	mem_prot_t    protection = 0;
@@ -86,8 +88,10 @@ int main()
 	mem_voidptr_t scan_stop = (mem_voidptr_t)&pattern[10];
 	scan = mem::in::scan(pattern, sizeof(pattern), scan_start, scan_stop);
 	pattern_scan = mem::in::pattern_scan(pattern, mask, scan_start, scan_stop);
+	signature_scan = mem::in::signature_scan(signature, scan_start, scan_stop);
 	tprint(MEM_STR("Scan:            %p\n"), scan);
 	tprint(MEM_STR("Pattern Scan:    %p\n"), pattern_scan);
+	tprint(MEM_STR("Signature Scan:  %p\n"), signature_scan);
 	tprint(MEM_STR("Expected Result: %p\n"), (void*)pattern);
 	tseparator();
 

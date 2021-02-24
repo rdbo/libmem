@@ -13,32 +13,32 @@
 #if   MEM_ARCH == _MEM_ARCH_x86_32
 static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  /* MEM_ASM_x86_JMP32 */
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  /* MEM_ASM_x86_JMP64 */
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00",             5 },                  /* MEM_ASM_x86_CALL32 */
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xD0",     7 },                  /* MEM_ASM_x86_CALL64 */
-	{ (mem_data_t)NULL,                               0 },                  /* MEM_ASM_DETOUR_INVALID */
-	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  /* MEM_ASM_x86_SYSCALL32 */
-	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  /* MEM_ASM_x86_SYSCALL64 */
-	{ (mem_data_t)"\x53\xFF\xD0\xCC",                 4 },                  /* MEM_ASM_x86_LIBCALL32_1 */
-	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",             5 },                  /* MEM_ASM_x86_LIBCALL32_2 */
-	{ (mem_data_t)"\xFF\xD0\xCC",                     3 },                  /* MEM_ASM_x86_LIBCALL64 */
-	{ (mem_data_t)NULL,                               0 },                  /* MEM_ASM_INVALID */
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00",                                          5 }, /* MEM_ASM_x86_JMP32 */
+	{ (mem_data_t)"\xFF\x25\x00\x00\x00\x00\x00\x00\x00\x00",                     10 }, /* MEM_ASM_x86_JMP64 */
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00",                                          5 }, /* MEM_ASM_x86_CALL32 */
+	{ (mem_data_t)"\xFF\x15\x00\x00\x00\x00\x00\x00\x00\x00",                     10 }, /* MEM_ASM_x86_CALL64 */
+	{ (mem_data_t)NULL,                                                            0 }, /* MEM_ASM_DETOUR_INVALID */
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90",                              8 }, /* MEM_ASM_x86_SYSCALL32 */
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90",                              8 }, /* MEM_ASM_x86_SYSCALL64 */
+	{ (mem_data_t)"\x53\xFF\xD0\xCC",                                              4 }, /* MEM_ASM_x86_LIBCALL32_1 */
+	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",                                          5 }, /* MEM_ASM_x86_LIBCALL32_2 */
+	{ (mem_data_t)"\xFF\xD0\xCC",                                                  3 }, /* MEM_ASM_x86_LIBCALL64 */
+	{ (mem_data_t)NULL,                                                            0 }, /* MEM_ASM_INVALID */
 };
 #elif MEM_ARCH == _MEM_ARCH_x86_64
 static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00",                              5 }, /* MEM_ASM_x86_JMP32 */
-	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, /* MEM_ASM_x86_JMP64 */
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00",                              5 }, /* MEM_ASM_x86_CALL32 */
-	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xD0", 12 }, /* MEM_ASM_x86_CALL64 */
-	{ (mem_data_t)NULL,                                                0 }, /* MEM_ASM_DETOUR_INVALID */
-	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90",                  8 }, /* MEM_ASM_x86_SYSCALL32 */
-	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90",                  8 }, /* MEM_ASM_x86_SYSCALL64 */
-	{ (mem_data_t)"\x53\xFF\xD0\xCC",                                  4 }, /* MEM_ASM_x86_LIBCALL32_1 */
-	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",                              5 }, /* MEM_ASM_x86_LIBCALL32_2 */
-	{ (mem_data_t)"\xFF\xD0\xCC",                                      3 }, /* MEM_ASM_x86_LIBCALL64 */
-	{ (mem_data_t)NULL,                                                0 }, /* MEM_ASM_INVALID */
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00",                                          5 }, /* MEM_ASM_x86_JMP32 */
+	{ (mem_data_t)"\xFF\x24\x25\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 15 }, /* MEM_ASM_x86_JMP64 */
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00",                                          5 }, /* MEM_ASM_x86_CALL32 */
+	{ (mem_data_t)"\xFF\x14\x25\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 15 }, /* MEM_ASM_x86_CALL64 */
+	{ (mem_data_t)NULL,                                                            0 }, /* MEM_ASM_DETOUR_INVALID */
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90",                              8 }, /* MEM_ASM_x86_SYSCALL32 */
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90",                              8 }, /* MEM_ASM_x86_SYSCALL64 */
+	{ (mem_data_t)"\x53\xFF\xD0\xCC",                                              4 }, /* MEM_ASM_x86_LIBCALL32_1 */
+	{ (mem_data_t)"\x51\x53\xFF\xD0\xCC",                                          5 }, /* MEM_ASM_x86_LIBCALL32_2 */
+	{ (mem_data_t)"\xFF\xD0\xCC",                                                  3 }, /* MEM_ASM_x86_LIBCALL64 */
+	{ (mem_data_t)NULL,                                                            0 }, /* MEM_ASM_INVALID */
 };
 #endif
 

@@ -3226,9 +3226,10 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			(p_module_path_ptr = MEM_STR_STR(map_buffer, MEM_STR("/libc-"))) ||
 			(p_module_path_ptr = MEM_STR_STR(map_buffer, MEM_STR("/libc.")))
 		) &&
-		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR('\n')))
+		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR(' ')))
 	)
 	{
+		p_module_path_ptr = &p_module_path_ptr;
 		mem_size_t module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;
 		mem_tstring_t module_ref = (mem_tstring_t)malloc(module_ref_size + sizeof(mem_tchar_t));
 		memset(module_ref, 0x0, module_ref_size + sizeof(mem_tchar_t));

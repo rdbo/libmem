@@ -812,13 +812,13 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
 		break;
 	default:
 		break;
@@ -830,13 +830,13 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[2]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[2]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
 		break;
 	default:
 		break;
@@ -3032,13 +3032,13 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
 		break;
 	default:
 		break;
@@ -3050,13 +3050,13 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[2]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[2]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
 		break;
 	default:
 		break;

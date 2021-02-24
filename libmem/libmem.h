@@ -250,8 +250,8 @@ typedef enum
 
 	MEM_ASM_x86_JMP64,
 	/*
-	 * mov eax, ABS_ADDR
-	 * jmp eax
+	 * jmp [eip]
+	 * ABS_ADDR
 	 */
 
 	MEM_ASM_x86_CALL32,
@@ -261,8 +261,8 @@ typedef enum
 
 	MEM_ASM_x86_CALL64,
 	/*
-	 * mov eax, ABS_ADDR
-	 * call eax
+	 * call [eip]
+	 * ABS_ADDR
 	 */
 
 	MEM_ASM_DETOUR_INVALID,

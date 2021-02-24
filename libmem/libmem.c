@@ -29,9 +29,9 @@ static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] =
 static const mem_payload_t MEM_PAYLOADS[MEM_ASM_INVALID + 1] = 
 {
 	{ (mem_data_t)"\xE9\x00\x00\x00\x00",                                          5 }, /* MEM_ASM_x86_JMP32 */
-	{ (mem_data_t)"\xFF\x24\x25\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 15 }, /* MEM_ASM_x86_JMP64 */
+	{ (mem_data_t)"\xFF\x25\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",     14 }, /* MEM_ASM_x86_JMP64 */
 	{ (mem_data_t)"\xE8\x00\x00\x00\x00",                                          5 }, /* MEM_ASM_x86_CALL32 */
-	{ (mem_data_t)"\xFF\x14\x25\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 15 }, /* MEM_ASM_x86_CALL64 */
+	{ (mem_data_t)"\xFF\x15\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",     14 }, /* MEM_ASM_x86_CALL64 */
 	{ (mem_data_t)NULL,                                                            0 }, /* MEM_ASM_DETOUR_INVALID */
 	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90",                              8 }, /* MEM_ASM_x86_SYSCALL32 */
 	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90",                              8 }, /* MEM_ASM_x86_SYSCALL64 */
@@ -812,13 +812,15 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[2]) = (mem_voidptr_t)((mem_uintptr_t)src + detour_size - 4);
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[2]) = (mem_voidptr_t)((mem_uintptr_t)src + detour_size - 4);
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4]) = dst;
 		break;
 	default:
 		break;
@@ -830,13 +832,13 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8]) = dst;
 		break;
 	default:
 		break;
@@ -3032,13 +3034,15 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[2]) = (mem_voidptr_t)((mem_uintptr_t)src + detour_size - 4);
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[2]) = (mem_voidptr_t)((mem_uintptr_t)src + detour_size - 4);
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 4]) = dst;
 		break;
 	default:
 		break;
@@ -3050,13 +3054,13 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_JMP64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8]) = dst;
 		break;
 	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t *)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
 	case MEM_ASM_x86_CALL64:
-		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8 - 1]) = dst;
+		*(mem_voidptr_t *)(&detour_buffer[detour_size - 8]) = dst;
 		break;
 	default:
 		break;

@@ -82,15 +82,17 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 
 	CloseHandle((HANDLE)hFile);
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
+
+	mem_byte_t cur = 0;
 	int fd = open(path, O_RDONLY);
+	
 	if (fd == -1) return filesize;
 	*filebuf = malloc(sizeof(mem_byte_t));
 
-	mem_byte_t cur = 0;
 	while(read(fd, &cur, 1) > 0)
 	{
-		++filesize;
 		mem_byte_t *holder = *filebuf;
+		++filesize;
 		*filebuf = (mem_byte_t *)malloc((filesize + 1) * sizeof(mem_byte_t));
 		memcpy(*filebuf, holder, (filesize - 1) * sizeof(mem_byte_t));
 		free(holder);
@@ -305,6 +307,8 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_ts
 	{
 		mem_tchar_t *p_pos = module_path;
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
+		mem_size_t module_name_size = 0;
+
 #		if   MEM_OS == MEM_WIN
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
 #		elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
@@ -312,7 +316,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_ts
 #		endif
 
 		read_chars = MEM_STR_LEN(module_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)module_path) / sizeof(mem_tchar_t));
-		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
 		if (*pmodule_name)
 		{
@@ -669,10 +673,10 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, 
 	mem_tchar_t *p_str = (mem_tchar_t *)NULL;
 	for (p_str = &signature[-1]; p_str != &signature[signature_len] && p_str != NULL; p_str = MEM_STR_CHR(p_str, MEM_STR(' ')))
 	{
-		p_str = &p_str[1];
-		if (p_str[0] == MEM_STR(' ')) continue;
 		mem_data_t holder_pattern = pattern;
 		mem_tstring_t holder_mask = mask;
+		p_str = &p_str[1];
+		if (p_str[0] == MEM_STR(' ')) continue;
 		pattern = (mem_data_t)malloc((size + 1) * sizeof(mem_byte_t));
 		mask = (mem_tstring_t)malloc((size + 2) * sizeof(mem_tchar_t));
 		if (pattern && mask && holder_pattern && holder_mask)
@@ -694,9 +698,8 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, 
 
 		else
 		{
-			pattern[size] = 0;
-
 			mem_size_t cur_byte = 0;
+			pattern[size] = 0;
 			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
 			{
 				mem_size_t hex_power = (1 - cur_byte) * 16;
@@ -785,6 +788,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 	mem_size_t detour_size = mem_in_detour_size(method);
 	mem_prot_t protection = 0;
 	mem_prot_t old_protection = 0;
+	mem_data_t detour_buffer = (mem_data_t)NULL;
 
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
@@ -801,7 +805,7 @@ LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t 
 			mem_in_read(src, (mem_voidptr_t)*stolen_bytes, size);
 	}
 
-	mem_data_t detour_buffer = (mem_data_t)malloc(detour_size);
+	detour_buffer = (mem_data_t)malloc(detour_size);
 	if (!detour_buffer) return ret;
 	mem_in_read((mem_voidptr_t)MEM_PAYLOADS[method].payload, detour_buffer, detour_size);
 
@@ -878,6 +882,9 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 	mem_size_t detour_size = mem_in_detour_size(method);
 	mem_prot_t protection = 0;
 	mem_prot_t old_protection = 0;
+	mem_size_t gateway_size = 0;
+	mem_data_t p_gateway = (mem_data_t)NULL;
+	mem_data_t p_src = (mem_data_t)NULL;
 
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
@@ -887,12 +894,12 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 
 	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_in_protect(src, size, protection, &old_protection) == MEM_FALSE) return gateway;
 
-	mem_size_t gateway_size = size + detour_size;
+	gateway_size = size + detour_size;
 	gateway = (mem_voidptr_t)malloc(gateway_size);
 	if (!gateway || mem_in_protect(gateway, gateway_size, protection, NULL) == MEM_FALSE) return (mem_voidptr_t)MEM_BAD;
 
-	mem_data_t p_gateway = (mem_data_t)gateway;
-	mem_data_t p_src = (mem_data_t)src;
+	p_gateway = (mem_data_t)gateway;
+	p_src = (mem_data_t)src;
 	mem_in_write((mem_voidptr_t)p_gateway, src, size);
 	mem_in_detour((mem_voidptr_t)& p_gateway[size], &p_src[size], detour_size, method, NULL);
 	mem_in_protect(src, size, old_protection, NULL);
@@ -1084,9 +1091,9 @@ LIBMEM_EXTERN mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 	}
 	CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
+	struct dirent *pdirent;
 	DIR *pdir = opendir("/proc");
 	if (!pdir) return pid;
-	struct dirent *pdirent;
 	while (pid == (mem_pid_t)MEM_BAD && (pdirent = readdir(pdir)))
 	{
 		mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
@@ -1159,6 +1166,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 	{
 		mem_tchar_t *p_pos = process_path;
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
+		mem_size_t process_name_size = 0;
 #		if   MEM_OS == MEM_WIN
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
 #		elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
@@ -1166,7 +1174,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 #		endif
 
 		read_chars = MEM_STR_LEN(process_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)process_path) / sizeof(mem_tchar_t));
-		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pprocess_name = (mem_tstring_t)malloc(process_name_size);
 		if (*pprocess_name)
 		{
@@ -1306,7 +1314,6 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_system_arch(mem_void_t)
 	}
 
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
-
 	struct utsname utsbuf = { 0 };
 	if (uname(&utsbuf) != 0) return arch;
 
@@ -1453,36 +1460,38 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pproces
 	}
 	CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
-	DIR *pdir = opendir("/proc");
-	if (pdir)
 	{
-		struct dirent *pdirent;
-		while ((pdirent = readdir(pdir)))
+		DIR *pdir = opendir("/proc");
+		if (pdir)
 		{
-			mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
-			if (id != (mem_pid_t)-1 && (id || !MEM_STR_CMP(pdirent->d_name, MEM_STR("0"))))
+			struct dirent *pdirent;
+			while ((pdirent = readdir(pdir)))
 			{
-				mem_process_t *holder = *pprocess_list;
-				*pprocess_list = (mem_process_t *)malloc((count + 1) * sizeof(mem_process_t));
-				if (*pprocess_list)
+				mem_pid_t id = (mem_pid_t)atoi(pdirent->d_name);
+				if (id != (mem_pid_t)-1 && (id || !MEM_STR_CMP(pdirent->d_name, MEM_STR("0"))))
 				{
-					memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
-					(*pprocess_list)[count].pid = id;
-					(*pprocess_list)[count].arch = mem_ex_get_arch(id);
+					mem_process_t *holder = *pprocess_list;
+					*pprocess_list = (mem_process_t *)malloc((count + 1) * sizeof(mem_process_t));
+					if (*pprocess_list)
+					{
+						memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
+						(*pprocess_list)[count].pid = id;
+						(*pprocess_list)[count].arch = mem_ex_get_arch(id);
+					}
+
+					free(holder);
+
+					if (!*pprocess_list)
+					{
+						count = 0;
+						break;
+					}
+
+					++count;
 				}
-
-				free(holder);
-
-				if (!*pprocess_list)
-				{
-					count = 0;
-					break;
-				}
-
-				++count;
 			}
+			closedir(pdir);
 		}
-		closedir(pdir);
 	}
 #	elif MEM_OS == MEM_BSD
 	kvm_t *kd = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
@@ -1571,22 +1580,28 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	}
 #	elif MEM_OS == MEM_LINUX
 	mem_tchar_t module_str[MEM_PATH_MAX + 1] = { 0 };
-	snprintf(module_str, sizeof(module_str) - sizeof(mem_tchar_t), "%s\n", module_ref);
 	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
+	mem_size_t maps_size = 0;
+	mem_tchar_t *module_base_ptr;
+	mem_tchar_t *holder;
+	mem_tchar_t *temp;
+	mem_tchar_t *module_base_endptr;
+
+	snprintf(module_str, sizeof(module_str) - sizeof(mem_tchar_t), "%s\n", module_ref);
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
-	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
+	maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
 	if (!maps_size) return mod;
 
-	mem_tchar_t *module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
-	mem_tchar_t *holder = maps_buffer;
-	mem_tchar_t *temp = (mem_tchar_t *)NULL;
+	module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
+	holder = maps_buffer;
+	temp = (mem_tchar_t *)NULL;
 	for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
 	module_base_ptr = holder;
 
 	if (!module_base_ptr) module_base_ptr = maps_buffer;
-	mem_tchar_t *module_base_endptr = MEM_STR_CHR(module_base_ptr, MEM_STR('-'));
+	module_base_endptr = MEM_STR_CHR(module_base_ptr, MEM_STR('-'));
 	if (module_base_endptr)
 	{
 		mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
@@ -1602,14 +1617,15 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 
 			if (module_end_ptr)
 			{
+				mem_tchar_t *module_end_endptr = (mem_tchar_t *)NULL;
 				module_end_ptr = &module_end_ptr[1];
-				mem_tchar_t *module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
+				module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
 				if (module_end_endptr)
 				{
 					mem_tchar_t module_base_str[64] = { 0 };
-					memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
+					mem_tchar_t module_end_str[64]  = { 0 };
 
-					mem_tchar_t module_end_str[64] = { 0 };
+					memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
 					memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
 
 					switch (process.arch)
@@ -1635,21 +1651,28 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 	free(maps_buffer);
 #	elif MEM_OS == MEM_BSD
 	mem_tchar_t module_str[MEM_PATH_MAX + 1] = { 0 };
-	snprintf(module_str, sizeof(module_str) - sizeof(mem_tchar_t), "%s ", module_ref);
 	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = 0;
+	mem_tchar_t *module_base_ptr = (mem_tchar_t *)NULL;
+	mem_tchar_t *holder = (mem_tchar_t *)NULL;
+	mem_tchar_t *temp = (mem_tchar_t *)NULL;
+	mem_tchar_t *module_base_endptr = (mem_tchar_t *)NULL;
+
+	snprintf(module_str, sizeof(module_str) - sizeof(mem_tchar_t), "%s ", module_ref);
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
-	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
+	map_buffer = (mem_tstring_t)NULL;
+	map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
 	if (!map_size) return mod;
 
-	mem_tchar_t *module_base_ptr = MEM_STR_STR(map_buffer, module_str);
-	mem_tchar_t *holder = map_buffer;
-	mem_tchar_t *temp = (mem_tchar_t *)NULL;
+	module_base_ptr = MEM_STR_STR(map_buffer, module_str);
+	holder = map_buffer;
+	temp = (mem_tchar_t *)NULL;
 	for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
 	module_base_ptr = holder;
 	if (!module_base_ptr) module_base_ptr = map_buffer;
-	mem_tchar_t *module_base_endptr = MEM_STR_STR(module_base_ptr, MEM_STR(" 0x"));
+	module_base_endptr = MEM_STR_STR(module_base_ptr, MEM_STR(" 0x"));
 	if (module_base_endptr)
 	{
 		mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
@@ -1664,15 +1687,16 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 
 			if (module_end_ptr)
 			{
+				mem_tchar_t *module_end_endptr = (mem_tchar_t *)NULL;
 				module_base_ptr = &module_base_ptr[2];
 				module_end_ptr = &module_end_ptr[3];
-				mem_tchar_t *module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
+				module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
 				if (module_end_endptr)
 				{
 					mem_tchar_t module_base_str[64] = { 0 };
-					memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
+					mem_tchar_t module_end_str[64]  = { 0 };
 
-					mem_tchar_t module_end_str[64] = { 0 };
+					memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
 					memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
 
 					switch (process.arch)
@@ -1718,12 +1742,14 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_name(mem_process_t process, m
 	 */
 
 	mem_size_t read_chars = 0;
-
 	mem_tstring_t module_path = (mem_tstring_t)NULL;
+
 	if (mem_ex_get_module_path(process, mod, &module_path))
 	{
 		mem_tchar_t *p_pos = module_path;
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
+		mem_size_t module_name_size = 0;
+
 #		if   MEM_OS == MEM_WIN
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
 #		elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
@@ -1731,7 +1757,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_name(mem_process_t process, m
 #		endif
 
 		read_chars = MEM_STR_LEN(module_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)module_path) / sizeof(mem_tchar_t));
-		mem_size_t module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		module_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pmodule_name = (mem_tstring_t)malloc(module_name_size);
 		if (*pmodule_name)
 		{
@@ -1797,6 +1823,10 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 #	elif MEM_OS == MEM_LINUX
 	mem_tchar_t page_base_str[64] = { 0 };
 	mem_tchar_t *page_base = (mem_tchar_t *)MEM_BAD;
+	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
+	mem_size_t maps_size = 0;
+	mem_tchar_t *temp = (mem_tchar_t *)NULL;
 
 	switch (process.arch)
 	{
@@ -1810,15 +1840,12 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 		return read_chars;
 	}
 
-	mem_tchar_t path_buffer[64 + 1] = { 0 };
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
-	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
+	maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
 	if (!maps_size) return read_chars;
 
-	mem_tchar_t *temp = (mem_tchar_t *)NULL;
 	for (temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t *)NULL; page_base = temp);
 
 	if (page_base && page_base != (mem_tchar_t *)MEM_BAD)
@@ -1844,6 +1871,10 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 #	elif MEM_OS == MEM_BSD
 	mem_tchar_t page_base_str[64] = { 0 };
 	mem_tchar_t *page_base = (mem_tchar_t *)MEM_BAD;
+	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = 0;
+	mem_tchar_t *temp = (mem_tchar_t *)NULL;
 
 	switch (process.arch)
 	{
@@ -1857,15 +1888,12 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, m
 		return read_chars;
 	}
 
-	mem_tchar_t path_buffer[64 + 1] = { 0 };
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
-	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
+	map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
 	if (!map_size) return read_chars;
 
-	mem_tchar_t *temp = (mem_tchar_t *)NULL;
 	for (temp = &map_buffer[-1]; (temp = MEM_STR_STR(&temp[1], page_base_str)) != (mem_tchar_t *)NULL; page_base = temp);
 
 	if (page_base && page_base != (mem_tchar_t *)MEM_BAD)
@@ -1952,233 +1980,263 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 		}
 	}
 #	elif MEM_OS == MEM_LINUX
-	mem_tchar_t path_buffer[64 + 1] = { 0 };
-	memset(path_buffer, 0x0, sizeof(path_buffer));
-	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
-
-	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
-	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
-	if (!maps_size) return count;
-
-	mem_tchar_t *module_path_ptr = maps_buffer;
-	mem_tchar_t *module_path_endptr = maps_buffer;
-
-	*pmodule_list = (mem_module_t *)malloc(sizeof(mem_module_t));
-
-	while ((module_path_ptr = MEM_STR_CHR(module_path_endptr, MEM_STR('/'))) != NULL)
 	{
-		module_path_endptr = MEM_STR_CHR(module_path_ptr, MEM_STR('\n'));
-		if (!module_path_endptr) break;
+		mem_tchar_t path_buffer[64] = { 0 };
+		mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
+		mem_size_t maps_size = 0;
+		mem_tchar_t *module_path_ptr = (mem_tchar_t *)NULL;
+		mem_tchar_t *module_path_endptr = (mem_tchar_t *)NULL;
 
-		mem_module_t mod = { 0 };
-		mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
-		mem_tstring_t module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
-		memset(module_str, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
-		memcpy(module_str, module_path_ptr, module_path_size);
+		memset(path_buffer, 0x0, sizeof(path_buffer));
+		snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-		mem_tchar_t *module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
-		mem_tchar_t *holder = maps_buffer;
-		mem_tchar_t *temp = (mem_tchar_t *)NULL;
-		for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
-		module_base_ptr = holder;
+		maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
+		if (!maps_size) return count;
 
-		if (!module_base_ptr) module_base_ptr = maps_buffer;
-		mem_tchar_t *module_base_endptr = MEM_STR_CHR(module_base_ptr, MEM_STR('-'));
-		if (module_base_endptr)
+		module_path_ptr = maps_buffer;
+		module_path_endptr = maps_buffer;
+
+		*pmodule_list = (mem_module_t *)malloc(sizeof(mem_module_t));
+
+		while ((module_path_ptr = MEM_STR_CHR(module_path_endptr, MEM_STR('/'))) != NULL)
 		{
-			mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
-			for (temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t *)NULL; module_end_ptr = temp);
+			mem_module_t mod = { 0 };
+			mem_tchar_t *module_base_ptr = (mem_tchar_t *)NULL;
+			mem_tchar_t *holder = (mem_tchar_t *)NULL;
+			mem_tchar_t *temp = (mem_tchar_t *)NULL;
+			mem_tchar_t *module_base_endptr = (mem_tchar_t *)NULL;
+			mem_size_t module_path_size = 0;
+			mem_tstring_t module_str = (mem_tstring_t)NULL;
 
-			if (module_end_ptr)
+			module_path_endptr = MEM_STR_CHR(module_path_ptr, MEM_STR('\n'));
+			if (!module_path_endptr) break;
+
+			module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
+			module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
+
+			memset(module_str, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
+			memcpy(module_str, module_path_ptr, module_path_size);
+
+			module_base_ptr = MEM_STR_STR(maps_buffer, module_str);
+			holder = maps_buffer;
+			
+			for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
+			module_base_ptr = holder;
+
+			if (!module_base_ptr) module_base_ptr = maps_buffer;
+			module_base_endptr = MEM_STR_CHR(module_base_ptr, MEM_STR('-'));
+			if (module_base_endptr)
 			{
-				holder = maps_buffer;
-				for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
-				module_end_ptr = holder;
-				module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
-				module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
+				mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
+				for (temp = &maps_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t *)NULL; module_end_ptr = temp);
+
+				if (module_end_ptr)
+				{
+					holder = maps_buffer;
+					for (temp = &maps_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_STR(&temp[1], module_str)) < (mem_uintptr_t)module_end_ptr && temp; holder = temp);
+					module_end_ptr = holder;
+					module_end_ptr = &module_end_ptr[MEM_STR_LEN(module_str)];
+					module_end_ptr = MEM_STR_CHR(module_end_ptr, MEM_STR('-'));
+
+					free(module_str);
+
+					if (module_end_ptr)
+					{
+						mem_tchar_t *module_end_endptr = (mem_tchar_t *)NULL;
+						module_end_ptr = &module_end_ptr[1];
+						module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
+						if (module_end_endptr)
+						{
+							mem_tchar_t module_base_str[64] = { 0 };
+							mem_tchar_t module_end_str[64]  = { 0 };
+							mem_module_t *list_holder = (mem_module_t *)NULL;
+
+							memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
+							memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
+
+							if (process.arch >= 0 && process.arch < MEM_ARCH_UNKNOWN)
+							{
+								switch (process.arch)
+								{
+								case MEM_ARCH_x86_32:
+									mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
+									mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
+									mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+									break;
+								case MEM_ARCH_x86_64:
+									mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
+									mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
+									mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+									break;
+								default:
+									break;
+								}
+
+								list_holder = *pmodule_list;
+								*pmodule_list = (mem_module_t *)malloc((count + 1) * sizeof(mem_module_t));
+								if (*pmodule_list)
+								{
+									memcpy(*pmodule_list, list_holder, count * sizeof(mem_module_t));
+									(*pmodule_list)[count] = mod;
+								}
+								
+								free(list_holder);
+
+								if (!*pmodule_list)
+								{
+									count = 0;
+									break;
+								}
+
+								++count;
+
+								module_path_endptr = module_end_endptr;
+								module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
+								if (!module_path_endptr) break;
+								
+								continue;
+							}
+						}
+					}
+				}
+			}
+
+			free(module_str);
+		}
+
+		free(maps_buffer);
+	}
+#	elif MEM_OS == MEM_BSD
+	{
+		mem_tchar_t path_buffer[64 + 1] = { 0 };
+		mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+		mem_size_t map_size = 0;
+		mem_tchar_t *module_path_ptr = (mem_tchar_t *)NULL;
+		mem_tchar_t *module_path_endptr = (mem_tchar_t *)NULL;
+
+		memset(path_buffer, 0x0, sizeof(path_buffer));
+		snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
+
+		map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
+		if (!map_size) return count;
+
+		module_path_ptr = map_buffer;
+		module_path_endptr = map_buffer;
+
+		*pmodule_list = (mem_module_t *)malloc(sizeof(mem_module_t));
+
+		while ((module_path_ptr = MEM_STR_CHR(module_path_endptr, MEM_STR('/'))) != NULL)
+		{
+			mem_tchar_t *temp = map_buffer;
+			mem_tchar_t *holder = (mem_tchar_t *)NULL;
+			mem_module_t mod = { 0 };
+			mem_size_t module_path_size = 0;
+			mem_tstring_t module_str = (mem_tstring_t)NULL;
+			mem_tchar_t *module_base_ptr = (mem_tchar_t *)NULL;
+			mem_tchar_t *module_base_endptr = (mem_tchar_t *)NULL;
+
+			module_path_endptr = MEM_STR_CHR(module_path_ptr, MEM_STR('\n'));
+			holder = module_path_endptr;
+			for (temp = module_path_ptr; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) < (mem_uintptr_t)module_path_endptr && temp; holder = &temp[1]);
+			module_path_endptr = holder;
+			module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR(' '));
+			if (!module_path_endptr) break;
+
+			module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
+			module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
+			memset(module_str, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
+			memcpy(module_str, module_path_ptr, module_path_size);
+
+			module_base_ptr = MEM_STR_STR(map_buffer, module_str);
+			holder = map_buffer;
+			temp = (mem_tchar_t *)NULL;
+			for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
+			module_base_ptr = holder;
+
+			if (!module_base_ptr) module_base_ptr = map_buffer;
+			module_base_endptr = MEM_STR_STR(module_base_ptr, MEM_STR(" 0x"));
+			if (module_base_endptr)
+			{
+				mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
+				for (temp = &map_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t *)NULL; module_end_ptr = temp);
 
 				free(module_str);
 
 				if (module_end_ptr)
 				{
-					module_end_ptr = &module_end_ptr[1];
-					mem_tchar_t *module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
-					if (module_end_endptr)
+					for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_end_ptr; holder = temp);
+					module_end_ptr = holder;
+					module_end_ptr = MEM_STR_STR(module_end_ptr, MEM_STR(" 0x"));
+
+					if (module_end_ptr)
 					{
-						mem_tchar_t module_base_str[64] = { 0 };
-						memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
-
-						mem_tchar_t module_end_str[64] = { 0 };
-						memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
-
-						if (process.arch >= 0 && process.arch < MEM_ARCH_UNKNOWN)
+						mem_tchar_t *module_end_endptr = (mem_tchar_t *)NULL;
+						module_end_ptr = &module_end_ptr[1];
+						module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
+						if (module_end_endptr)
 						{
-							switch (process.arch)
+							mem_tchar_t module_base_str[64] = { 0 };
+							mem_tchar_t module_end_str[64] = { 0 };
+							mem_module_t *list_holder = (mem_module_t *)NULL;
+
+							module_base_ptr = &module_base_ptr[2];
+							module_end_ptr  = &module_end_ptr[2];
+
+							memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
+							memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
+
+							if (process.arch >= 0 && process.arch < MEM_ARCH_UNKNOWN)
 							{
-							case MEM_ARCH_x86_32:
-								mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
-								mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
-								mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-								break;
-							case MEM_ARCH_x86_64:
-								mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
-								mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
-								mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-								break;
-							default:
-								break;
+								switch (process.arch)
+								{
+								case MEM_ARCH_x86_32:
+									mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
+									mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
+									mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+									break;
+								case MEM_ARCH_x86_64:
+									mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
+									mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
+									mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
+									break;
+								default:
+									break;
+								}
+
+								list_holder = *pmodule_list;
+								*pmodule_list = (mem_module_t *)malloc((count + 1) * sizeof(mem_module_t));
+								if (*pmodule_list)
+								{
+									memcpy(*pmodule_list, list_holder, count * sizeof(mem_module_t));
+									(*pmodule_list)[count] = mod;
+								}
+								
+								free(list_holder);
+
+								if (!*pmodule_list)
+								{
+									count = 0;
+									break;
+								}
+
+								++count;
+
+								module_path_endptr = module_end_endptr;
+								module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
+								if (!module_path_endptr) break;
+
+								continue;
 							}
-
-							mem_module_t *list_holder = *pmodule_list;
-							*pmodule_list = (mem_module_t *)malloc((count + 1) * sizeof(mem_module_t));
-							if (*pmodule_list)
-							{
-								memcpy(*pmodule_list, list_holder, count * sizeof(mem_module_t));
-								(*pmodule_list)[count] = mod;
-							}
-							
-							free(list_holder);
-
-							if (!*pmodule_list)
-							{
-								count = 0;
-								break;
-							}
-
-							++count;
-
-							module_path_endptr = module_end_endptr;
-							module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
-							if (!module_path_endptr) break;
-							
-							continue;
 						}
 					}
 				}
 			}
-		}
-
-		free(module_str);
-	}
-
-	free(maps_buffer);
-#	elif MEM_OS == MEM_BSD
-	mem_tchar_t path_buffer[64 + 1] = { 0 };
-	memset(path_buffer, 0x0, sizeof(path_buffer));
-	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
-
-	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
-	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
-	if (!map_size) return count;
-
-	mem_tchar_t *module_path_ptr = map_buffer;
-	mem_tchar_t *module_path_endptr = map_buffer;
-
-	*pmodule_list = (mem_module_t *)malloc(sizeof(mem_module_t));
-
-	while ((module_path_ptr = MEM_STR_CHR(module_path_endptr, MEM_STR('/'))) != NULL)
-	{
-		module_path_endptr = MEM_STR_CHR(module_path_ptr, MEM_STR('\n'));
-		mem_tchar_t *temp = map_buffer;
-		mem_tchar_t *holder = module_path_endptr;
-		for (temp = module_path_ptr; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('/'))) < (mem_uintptr_t)module_path_endptr && temp; holder = &temp[1]);
-		module_path_endptr = holder;
-		module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR(' '));
-		if (!module_path_endptr) break;
-
-		mem_module_t mod = { 0 };
-		mem_size_t module_path_size = (mem_size_t)((mem_uintptr_t)module_path_endptr - (mem_uintptr_t)module_path_ptr);
-		mem_tstring_t module_str = (mem_tstring_t)malloc(module_path_size + (1 * sizeof(mem_tchar_t)));
-		memset(module_str, 0x0, module_path_size + (1 * sizeof(mem_tchar_t)));
-		memcpy(module_str, module_path_ptr, module_path_size);
-
-		mem_tchar_t *module_base_ptr = MEM_STR_STR(map_buffer, module_str);
-		holder = map_buffer;
-		temp = (mem_tchar_t *)NULL;
-		for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_base_ptr && temp; holder = &temp[1]);
-		module_base_ptr = holder;
-
-		if (!module_base_ptr) module_base_ptr = map_buffer;
-		mem_tchar_t *module_base_endptr = MEM_STR_STR(module_base_ptr, MEM_STR(" 0x"));
-		if (module_base_endptr)
-		{
-			mem_tchar_t *module_end_ptr = (mem_tchar_t *)NULL;
-			for (temp = &map_buffer[-1]; (temp = MEM_STR_STR(&temp[1], module_str)) != (mem_tchar_t *)NULL; module_end_ptr = temp);
 
 			free(module_str);
-
-			if (module_end_ptr)
-			{
-				for (temp = &map_buffer[-1]; (mem_uintptr_t)(temp = MEM_STR_CHR(&temp[1], MEM_STR('\n'))) < (mem_uintptr_t)module_end_ptr; holder = temp);
-				module_end_ptr = holder;
-				module_end_ptr = MEM_STR_STR(module_end_ptr, MEM_STR(" 0x"));
-
-				if (module_end_ptr)
-				{
-					module_end_ptr = &module_end_ptr[1];
-					mem_tchar_t *module_end_endptr = MEM_STR_CHR(module_end_ptr, MEM_STR(' '));
-					if (module_end_endptr)
-					{
-						module_base_ptr = &module_base_ptr[2];
-						module_end_ptr  = &module_end_ptr[2];
-
-						mem_tchar_t module_base_str[64] = { 0 };
-						memcpy(module_base_str, module_base_ptr, (mem_uintptr_t)module_base_endptr - (mem_uintptr_t)module_base_ptr);
-
-						mem_tchar_t module_end_str[64] = { 0 };
-						memcpy(module_end_str, module_end_ptr, (mem_uintptr_t)module_end_endptr - (mem_uintptr_t)module_end_ptr);
-
-						if (process.arch >= 0 && process.arch < MEM_ARCH_UNKNOWN)
-						{
-							switch (process.arch)
-							{
-							case MEM_ARCH_x86_32:
-								mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
-								mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
-								mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-								break;
-							case MEM_ARCH_x86_64:
-								mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
-								mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
-								mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
-								break;
-							default:
-								break;
-							}
-
-							mem_module_t *list_holder = *pmodule_list;
-							*pmodule_list = (mem_module_t *)malloc((count + 1) * sizeof(mem_module_t));
-							if (*pmodule_list)
-							{
-								memcpy(*pmodule_list, list_holder, count * sizeof(mem_module_t));
-								(*pmodule_list)[count] = mod;
-							}
-							
-							free(list_holder);
-
-							if (!*pmodule_list)
-							{
-								count = 0;
-								break;
-							}
-
-							++count;
-
-							module_path_endptr = module_end_endptr;
-							module_path_endptr = MEM_STR_CHR(module_path_endptr, MEM_STR('\n'));
-							if (!module_path_endptr) break;
-
-							continue;
-						}
-					}
-				}
-			}
 		}
 
-		free(module_str);
+		free(map_buffer);
 	}
-
-	free(map_buffer);
 #	endif
 
 	if (count == 0 && *pmodule_list) free(*pmodule_list);
@@ -2213,12 +2271,14 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 	page.protection = mbi.Protect;
 	page.flags = mbi.Type;
 #	elif MEM_OS == MEM_LINUX
-	long page_size = sysconf(_SC_PAGE_SIZE);
-	src = (mem_voidptr_t)((mem_uintptr_t)src & -page_size);
-
 	mem_tchar_t page_base_str[64] = { 0 };
 	mem_tchar_t *page_base = (mem_tchar_t *)MEM_BAD;
 	mem_tchar_t *page_end = (mem_tchar_t *)MEM_BAD;
+	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
+	mem_size_t maps_size = 0;
+	long page_size = sysconf(_SC_PAGE_SIZE);
+	src = (mem_voidptr_t)((mem_uintptr_t)src & -page_size);
 
 	switch (process.arch)
 	{
@@ -2232,12 +2292,10 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 		return page;
 	}
 
-	mem_tchar_t path_buffer[64 + 1] = { 0 };
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
-	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
+	maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
 	if (!maps_size) return page;
 
 	page_base = MEM_STR_STR(maps_buffer, page_base_str);
@@ -2252,9 +2310,10 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 			if (holder)
 			{
+				mem_size_t i = 0;
+				mem_tchar_t page_base_addr[64] = { 0 };
+				mem_tchar_t page_end_addr[64]  = { 0 };
 				holder = &holder[1];
-
-				mem_size_t i = (mem_size_t)NULL;
 				for (i = 0; i < 4; ++i)
 				{
 					switch (holder[i])
@@ -2279,9 +2338,7 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 					}
 				}
 
-				mem_tchar_t page_base_addr[64] = { 0 };
 				memcpy(page_base_addr, page_base, (mem_uintptr_t)page_end - (mem_uintptr_t)page_base);
-				mem_tchar_t page_end_addr[64] = { 0 };
 				memcpy(page_end_addr, page_end, (mem_uintptr_t)holder - (mem_uintptr_t)page_end);
 
 				switch (process.arch)
@@ -2305,12 +2362,14 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 	free(maps_buffer);
 #	elif MEM_OS == MEM_BSD
-	long page_size = sysconf(_SC_PAGE_SIZE);
-	src = (mem_voidptr_t)((mem_uintptr_t)src & -page_size);
-
 	mem_tchar_t page_base_str[64] = { 0 };
 	mem_tchar_t *page_base = (mem_tchar_t *)MEM_BAD;
 	mem_tchar_t *page_end = (mem_tchar_t *)MEM_BAD;
+	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = 0;
+	long page_size = sysconf(_SC_PAGE_SIZE);
+	src = (mem_voidptr_t)((mem_uintptr_t)src & -page_size);
 
 	switch (process.arch)
 	{
@@ -2324,12 +2383,10 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 		return page;
 	}
 
-	mem_tchar_t path_buffer[64 + 1] = { 0 };
 	memset(path_buffer, 0x0, sizeof(path_buffer));
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
-	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
+	map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
 	if (!map_size) return page;
 
 	page_base = MEM_STR_STR(map_buffer, page_base_str);
@@ -2349,9 +2406,10 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 			if (holder)
 			{
+				mem_size_t i = 0;
+				mem_tchar_t page_base_addr[64] = { 0 };
+				mem_tchar_t page_end_addr[64]  = { 0 };
 				holder = &holder[1];
-
-				mem_size_t i = (mem_size_t)NULL;
 				for (i = 0; i < 3; ++i)
 				{
 					switch (holder[i])
@@ -2372,9 +2430,7 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 				page_base = &page_base[2];
 				page_end = &page_end[2];
-				mem_tchar_t page_base_addr[64] = { 0 };
 				memcpy(page_base_addr, page_base, (mem_uintptr_t)page_end - (mem_uintptr_t)page_base);
-				mem_tchar_t page_end_addr[64] = { 0 };
 				memcpy(page_end_addr, page_end, (mem_uintptr_t)page_end_endptr - (mem_uintptr_t)page_end);
 
 				switch (process.arch)
@@ -2832,13 +2888,13 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t d
 	for (i = (mem_data_t)start; (mem_uintptr_t)&i[size] <= (mem_uintptr_t)stop; i = &i[1])
 	{
 		mem_int_t found = MEM_TRUE;
-
 		mem_data_t buffer = (mem_data_t)malloc(size);
+		mem_size_t j = 0;
+
 		if (!buffer) break;
 
 		mem_ex_write(process, buffer, i, size);
 
-		mem_size_t j = (mem_size_t)NULL;
 		for (j = 0; j < size; ++j)
 		{
 			found &= buffer[j] == data[j];
@@ -2874,18 +2930,18 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_
 
 	mem_voidptr_t ret = (mem_voidptr_t)MEM_BAD;
 	mem_size_t size = MEM_STR_LEN(mask);
-
 	mem_data_t i = (mem_data_t)NULL;
+
 	for (i = (mem_data_t)start; (mem_uintptr_t)&i[size] <= (mem_uintptr_t)stop; i = &i[1])
 	{
 		mem_int_t found = MEM_TRUE;
-
 		mem_data_t buffer = (mem_data_t)malloc(size);
+		mem_size_t j = 0;
+
 		if (!buffer) break;
 
 		mem_ex_read(process, i, buffer, size);
 
-		mem_size_t j = (mem_size_t)NULL;
 		for (j = 0; j < size; ++j)
 		{
 			found &= ((mask[j] != MEM_STR('x') && mask[j] != MEM_STR('X')) || buffer[j] == pattern[j]);
@@ -2924,14 +2980,16 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, me
 	mem_tstring_t mask = (mem_tstring_t)malloc(sizeof(mem_byte_t));
 	mem_size_t size = 0;
 	mem_size_t signature_len = MEM_STR_LEN(signature);
-
 	mem_tchar_t *p_str = (mem_tchar_t *)NULL;
+
 	for (p_str = &signature[-1]; p_str != &signature[signature_len] && p_str != NULL; p_str = MEM_STR_CHR(p_str, MEM_STR(' ')))
 	{
-		p_str = &p_str[1];
-		if (p_str[0] == MEM_STR(' ')) continue;
 		mem_data_t holder_pattern = pattern;
 		mem_tstring_t holder_mask = mask;
+
+		p_str = &p_str[1];
+		if (p_str[0] == MEM_STR(' ')) continue;
+
 		pattern = (mem_data_t)malloc((size + 1) * sizeof(mem_byte_t));
 		mask = (mem_tstring_t)malloc((size + 2) * sizeof(mem_tchar_t));
 		if (pattern && mask && holder_pattern && holder_mask)
@@ -2953,9 +3011,9 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, me
 
 		else
 		{
+			mem_size_t cur_byte = 0;
 			pattern[size] = 0;
 
-			mem_size_t cur_byte = 0;
 			for (cur_byte = 0; cur_byte < 2; ++cur_byte)
 			{
 				mem_size_t hex_power = (1 - cur_byte) * 16;
@@ -3007,6 +3065,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 	mem_size_t detour_size = mem_in_detour_size(method);
 	mem_prot_t protection = 0;
 	mem_prot_t old_protection = 0;
+	mem_data_t detour_buffer = (mem_data_t)NULL;
 
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
@@ -3023,7 +3082,7 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidpt
 			mem_ex_read(process, src, (mem_voidptr_t)*stolen_bytes, size);
 	}
 
-	mem_data_t detour_buffer = (mem_data_t)malloc(detour_size);
+	detour_buffer = (mem_data_t)malloc(detour_size);
 	if (!detour_buffer) return ret;
 	mem_in_read((mem_voidptr_t)MEM_PAYLOADS[method].payload, detour_buffer, detour_size);
 
@@ -3125,25 +3184,26 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	mod = mem_ex_get_module(process, path);
 
 #	elif MEM_OS == MEM_LINUX
+	extern void *__libc_dlopen_mode(const char *filename, int flag);
+	Dl_info libc_info = { 0 };
+	mem_uintptr_t dlopen_offset = 0;
+	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
+	mem_size_t maps_size = 0;
+	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
+	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
 
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
 		return mod;
 
-	extern void *__libc_dlopen_mode(const char *filename, int flag);
-	Dl_info libc_info = { 0 };
 	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return mod;
 
-	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
+	dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
-	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
-	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
+	maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
 	if (!maps_size) return mod;
-
-	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
-	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
 
 	if (
 		(
@@ -3155,14 +3215,21 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	{
 		mem_size_t module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;
 		mem_tstring_t module_ref = (mem_tstring_t)malloc(module_ref_size + sizeof(mem_tchar_t));
+		mem_module_t libc_ex = { 0 };
+		mem_voidptr_t dlopen_ex = (mem_voidptr_t)NULL;
+		mem_payload_t inj_buf = { 0 };
+		mem_size_t path_size = 0;
+		mem_size_t inj_size = 0;
+		mem_voidptr_t inj_addr = (mem_voidptr_t)NULL;
+
 		memset(module_ref, 0x0, module_ref_size + sizeof(mem_tchar_t));
 		memcpy(module_ref, p_module_path_ptr, module_ref_size);
 
-		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
+		libc_ex = mem_ex_get_module(process, module_ref);
 		free(module_ref);
 
-		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
-		mem_payload_t inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
+		dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
+		inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
 		switch (process.arch)
 		{
 		case MEM_ARCH_x86_32:
@@ -3175,17 +3242,17 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			break;
 		}
 
-		mem_size_t path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
-		mem_size_t inj_size = inj_buf.size + path_size;
-		mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
+		path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
+		inj_size = inj_buf.size + path_size;
+		inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
 		if (inj_addr != (mem_voidptr_t)MEM_BAD)
 		{
-			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
-			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
-			mem_ex_write(process, path_addr, path, path_size);
-
 			int status;
 			struct user_regs_struct old_regs, regs;
+			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
+
+			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
+			mem_ex_write(process, path_addr, path, path_size);
 
 			ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
 			wait(&status);
@@ -3220,18 +3287,18 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 	free(maps_buffer);
 #	elif MEM_OS == MEM_BSD
+	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
+	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
+	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
+	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
+
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
 		return mod;
 
-	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
 
-	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
-	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
 	if (!map_size) return mod;
-
-	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
-	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
 
 	if (
 		(
@@ -3241,17 +3308,26 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 		(p_module_path_endptr = MEM_STR_CHR(p_module_path_ptr, MEM_STR(' ')))
 	)
 	{
+		mem_size_t module_ref_size = 0;
+		mem_tstring_t module_ref = (mem_tstring_t)NULL;
+		mem_module_t libc_ex = { 0 };
+		mem_voidptr_t dlopen_ex = (mem_voidptr_t)NULL;
+		mem_payload_t inj_buf = { 0 };
+		mem_size_t path_size = 0;
+		mem_size_t inj_size = 0;
+		mem_voidptr_t inj_addr = (mem_voidptr_t)NULL;
+
 		p_module_path_ptr = &p_module_path_ptr[1];
-		mem_size_t module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;
-		mem_tstring_t module_ref = (mem_tstring_t)malloc(module_ref_size + sizeof(mem_tchar_t));
+		module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;
+		module_ref = (mem_tstring_t)malloc(module_ref_size + sizeof(mem_tchar_t));
 		memset(module_ref, 0x0, module_ref_size + sizeof(mem_tchar_t));
 		memcpy(module_ref, p_module_path_ptr, module_ref_size);
 
-		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
+		libc_ex = mem_ex_get_module(process, module_ref);
 		free(module_ref);
 
-		mem_voidptr_t dlopen_ex = (mem_voidptr_t)mem_ex_get_symbol(process, libc_ex, "dlopen");
-		mem_payload_t inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
+		dlopen_ex = (mem_voidptr_t)mem_ex_get_symbol(process, libc_ex, "dlopen");
+		inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
 		switch (process.arch)
 		{
 		case MEM_ARCH_x86_32:
@@ -3264,17 +3340,17 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 			break;
 		}
 
-		mem_size_t path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
-		mem_size_t inj_size = inj_buf.size + path_size;
-		mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
+		path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
+		inj_size = inj_buf.size + path_size;
+		inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
 		if (inj_addr != (mem_voidptr_t)MEM_BAD)
 		{
-			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
-			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
-			mem_ex_write(process, path_addr, path, path_size);
-
 			int status;
 			struct reg old_regs, regs;
+			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
+			
+			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
+			mem_ex_write(process, path_addr, path, path_size);
 
 			ptrace(PT_ATTACH, process.pid, (caddr_t)NULL, 0);
 			wait(&status);
@@ -3368,32 +3444,36 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 
 	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
+	mem_tstring_t path = (mem_tstring_t)NULL;
+	mem_size_t path_len = 0;
+	Dl_info libc_info = { 0 };
+	mem_uintptr_t dlopen_offset = 0;
+	mem_uintptr_t dlclose_offset = 0;
+	mem_tchar_t path_buffer[64] = { 0 };
+	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
+	mem_size_t maps_size = 0;
+	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
+	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
+	extern void *__libc_dlopen_mode(const char *filename, int flag);
+	extern int   __libc_dlclose(void *map);
+
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
 		return ret;
 
-	mem_tstring_t path = (mem_tstring_t)NULL;
-	mem_size_t path_len = mem_ex_get_module_path(process, mod, &path);
+	path_len = mem_ex_get_module_path(process, mod, &path);
 	if (!path_len) return ret;
 
-	extern void *__libc_dlopen_mode(const char *filename, int flag);
-	extern int   __libc_dlclose(void *map);
-	Dl_info libc_info = { 0 };
 	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return ret;
 
-	mem_uintptr_t dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
+	dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
 	if (!dladdr((void *)__libc_dlclose, &libc_info)) return ret;
-	mem_uintptr_t dlclose_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
+	dlclose_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
-	mem_tchar_t path_buffer[64] = { 0 };
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);
 
-	mem_tstring_t maps_buffer = (mem_tstring_t)NULL;
-	mem_size_t maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
+	maps_size = mem_in_read_file(path_buffer, (mem_byte_t **)&maps_buffer);
 	if (!maps_size) return ret;
-
-	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
-	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
 
 	if (
 		(
@@ -3405,15 +3485,22 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 	{
 		mem_size_t module_ref_size = (mem_uintptr_t)p_module_path_endptr - (mem_uintptr_t)p_module_path_ptr;
 		mem_tstring_t module_ref = (mem_tstring_t)malloc(module_ref_size + sizeof(mem_tchar_t));
+		mem_module_t libc_ex = { 0 };
+		mem_voidptr_t dlopen_ex = (mem_voidptr_t)NULL;
+		mem_voidptr_t dlclose_ex = (mem_voidptr_t)NULL;
+		mem_payload_t inj_buf = { 0 };
+		mem_size_t path_size = 0;
+		mem_size_t inj_size = 0;
+		mem_voidptr_t inj_addr = (mem_voidptr_t)NULL;
 		memset(module_ref, 0x0, module_ref_size + sizeof(mem_tchar_t));
 		memcpy(module_ref, p_module_path_ptr, module_ref_size);
 
-		mem_module_t libc_ex = mem_ex_get_module(process, module_ref);
+		libc_ex = mem_ex_get_module(process, module_ref);
 		free(module_ref);
 
-		mem_voidptr_t dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
-		mem_voidptr_t dlclose_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlclose_offset);
-		mem_payload_t inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
+		dlopen_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlopen_offset);
+		dlclose_ex = (mem_voidptr_t)((mem_uintptr_t)libc_ex.base + dlclose_offset);
+		inj_buf = MEM_PAYLOADS[MEM_ASM_INVALID];
 		switch (process.arch)
 		{
 		case MEM_ARCH_x86_32:
@@ -3426,18 +3513,18 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 			break;
 		}
 
-		mem_size_t path_size = (path_len + 1) * sizeof(mem_tchar_t);
-		mem_size_t inj_size = inj_buf.size + path_size;
-		mem_voidptr_t inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
+		path_size = (path_len + 1) * sizeof(mem_tchar_t);
+		inj_size = inj_buf.size + path_size;
+		inj_addr = mem_ex_allocate(process, inj_size, PROT_EXEC | PROT_READ | PROT_WRITE);
 		if (inj_addr != (mem_voidptr_t)MEM_BAD)
 		{
-			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
-			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
-			mem_ex_write(process, path_addr, path, path_size);
-
 			int status;
 			struct user_regs_struct old_regs, regs;
 			void *handle = (void *)NULL;
+			mem_voidptr_t path_addr = (mem_voidptr_t)((mem_uintptr_t)inj_addr + inj_buf.size);
+			mem_intptr_t dlclose_ret = 0;
+			mem_ex_write(process, inj_addr, inj_buf.payload, inj_buf.size);
+			mem_ex_write(process, path_addr, path, path_size);
 
 			ptrace(PTRACE_ATTACH, process.pid, NULL, NULL);
 			wait(&status);
@@ -3524,7 +3611,6 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 				waitpid(process.pid, &status, WSTOPPED);
 				ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
 
-				mem_intptr_t dlclose_ret = 0;
 #				if   MEM_ARCH == _MEM_ARCH_x86_32
 				dlclose_ret = (mem_intptr_t)regs.eax;
 #				elif MEM_ARCH == _MEM_ARCH_x86_64
@@ -3581,12 +3667,15 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_mo
 
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	mem_tstring_t module_ref = (mem_tstring_t)NULL;
+	mem_module_t mod_in = { 0 };
+	mem_voidptr_t sym_in = (mem_voidptr_t)NULL;
+	mem_uintptr_t sym_offset = 0;
 	if (!mem_ex_get_module_path(process, mod, &module_ref)) return addr;
-	mem_module_t mod_in = mem_in_load_module(module_ref);
+	mod_in = mem_in_load_module(module_ref);
 	free(module_ref);
-	mem_voidptr_t sym_in = mem_in_get_symbol(mod_in, symbol);
+	sym_in = mem_in_get_symbol(mod_in, symbol);
 	if (!sym_in) return addr;
-	mem_uintptr_t sym_offset = (mem_uintptr_t)sym_in - (mem_uintptr_t)mod_in.base;
+	sym_offset = (mem_uintptr_t)sym_in - (mem_uintptr_t)mod_in.base;
 	addr = (mem_voidptr_t)((mem_uintptr_t)mod.base + sym_offset);
 #	endif
 

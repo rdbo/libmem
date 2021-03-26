@@ -1160,8 +1160,8 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstr
 
 	mem_size_t read_chars = 0;
 
-	mem_tstring_t process_path = (mem_tstring_t)NULL;
 #	if    MEM_OS == MEM_WIN || MEM_OS == MEM_LINUX
+	mem_tstring_t process_path = (mem_tstring_t)NULL;
 	if (mem_ex_get_process_path(pid, &process_path))
 	{
 		mem_tchar_t *p_pos = process_path;
@@ -1501,7 +1501,7 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pproces
 		struct kinfo_proc *procs = kvm_getprocs(kd, KERN_PROC_PROC, 0, &proc_count);
 		if (procs && proc_count > 0)
 		{
-			for (count = 0; count < proc_count; ++count)
+			for (count = 0; count < (mem_size_t)proc_count; ++count)
 			{
 				struct kinfo_proc *pproc = &procs[count];
 				if (pproc)

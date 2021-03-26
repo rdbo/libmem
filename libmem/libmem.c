@@ -3665,7 +3665,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_mo
 	HMODULE hModule = (HMODULE)NULL;
 	MODULEINFO modinfo = { 0 };
 	mem_voidptr_t sym_in = (mem_voidptr_t)NULL;
-	mem_uintptr_t sym_offset = (mem_voidptr_t)NULL;
+	mem_uintptr_t sym_offset = (mem_uintptr_t)NULL;
 
 	if (!mem_ex_get_module_path(process, mod, &module_ref)) return addr;
 	hModule = LoadLibraryEx(module_ref, NULL, DONT_RESOLVE_DLL_REFERENCES);

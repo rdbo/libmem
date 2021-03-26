@@ -8,7 +8,7 @@ Compile `libmem/libmem.c` along with your project.
 
 # Dependencies
 Windows:  
-- Windows SDK  
+- Windows SDK (-luser32, -lpsapi)  
   
 Linux:  
 - libdl (-ldl)  

@@ -64,15 +64,15 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 	mem_size_t filesize = 0;
 #	if MEM_OS == MEM_WIN
 	OFSTRUCT ofs = { 0 };
-	HFILE hFile = OpenFile(path, &ofs, OF_READ);
-	if (!hFile || hFile == (HFILE)INVALID_HANDLE_VALUE) return filesize;
+	HANDLE hFile = (HANDLE)OpenFile(path, &ofs, OF_READ);
 	LARGE_INTEGER file_size = { 0 };
-	GetFileSizeEx((HANDLE)hFile, &file_size);
+	if (!hFile) return filesize;
+	GetFileSizeEx(hFile, &file_size);
 	filesize = (mem_size_t)(file_size.LowPart | (file_size.HighPart >> 0));
 	*filebuf = (mem_byte_t *)malloc(filesize);
 	if (*filebuf)
 	{
-		ReadFile((HANDLE)hFile, *filebuf, filesize, (LPDWORD)NULL, (LPOVERLAPPED)NULL);
+		ReadFile(hFile, *filebuf, filesize, (LPDWORD)NULL, (LPOVERLAPPED)NULL);
 	}
 
 	else
@@ -80,7 +80,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 		filesize = 0;
 	}
 
-	CloseHandle((HANDLE)hFile);
+	CloseHandle(hFile);
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 
 	mem_byte_t cur = 0;
@@ -152,11 +152,12 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess
 	{
 		mem_tchar_t *p_pos = process_path;
 		mem_tchar_t *temp = (mem_tchar_t *)NULL;
+		mem_size_t process_name_size = 0;
 
 		for (temp = &p_pos[-1]; (temp = MEM_STR_CHR(&temp[1], MEM_STR('\\'))) != NULL; p_pos = &temp[1]);
 
 		read_chars = MEM_STR_LEN(process_path) - (((mem_uintptr_t)p_pos - (mem_uintptr_t)process_path) / sizeof(mem_tchar_t));
-		mem_size_t process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
+		process_name_size = (read_chars + 1) * sizeof(mem_tchar_t);
 		*pprocess_name = (mem_tstring_t)malloc(process_name_size);
 		if (*pprocess_name)
 		{
@@ -198,15 +199,16 @@ LIBMEM_EXTERN mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess
 	mem_size_t read_chars = 0;
 	if (!pprocess_path) return read_chars;
 #	if   MEM_OS == MEM_WIN
-	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
-	hModule = GetModuleHandle(NULL);
-	if (!hModule || hModule == INVALID_HANDLE_VALUE) return read_chars;
+	{
+		HMODULE hModule = GetModuleHandle(NULL);
+		if (!hModule || hModule == INVALID_HANDLE_VALUE) return read_chars;
 
-	*pprocess_path = (mem_tstring_t)malloc((MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
-	if (!*pprocess_path) return read_chars;
-	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
+		*pprocess_path = (mem_tstring_t)malloc((MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
+		if (!*pprocess_path) return read_chars;
+		memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 
-	read_chars = (mem_size_t)GetModuleFileName(hModule, *pprocess_path, MEM_PATH_MAX);
+		read_chars = (mem_size_t)GetModuleFileName(hModule, *pprocess_path, MEM_PATH_MAX);
+	}
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	read_chars = mem_ex_get_process_path(mem_in_get_pid(), pprocess_path);
 #	endif
@@ -1235,11 +1237,11 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstr
 	mem_size_t read_chars = 0;
 
 #	if   MEM_OS == MEM_WIN
-
+	HANDLE hProcess = INVALID_HANDLE_VALUE;
 	*pprocess_path = (mem_tstring_t)malloc((MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
 	if (!*pprocess_path) return read_chars;
 	memset(*pprocess_path, 0x0, (MEM_PATH_MAX + 1) * sizeof(mem_tchar_t));
-	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE)
 	{
 		free(*pprocess_path);
@@ -1248,7 +1250,6 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstr
 
 	read_chars = GetModuleFileNameEx(hProcess, NULL, *pprocess_path, MEM_PATH_MAX);
 	CloseHandle(hProcess);
-
 #	elif MEM_OS == MEM_LINUX
 	char path[64] = { 0 };
 	snprintf(path, sizeof(path) - sizeof(mem_tchar_t), "/proc/%i/exe", pid);
@@ -1343,13 +1344,15 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 #	if   MEM_OS == MEM_WIN
 
 	BOOL IsWow64 = FALSE;
+	BOOL Check = FALSE;
+	mem_arch_t sys_arch = MEM_ARCH_UNKNOWN;
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return arch;
-	BOOL Check = IsWow64Process(hProcess, &IsWow64);
+	Check = IsWow64Process(hProcess, &IsWow64);
 	CloseHandle(hProcess);
 	if (!Check) return arch;
 
-	mem_arch_t sys_arch = mem_ex_get_system_arch();
+	sys_arch = mem_ex_get_system_arch();
 
 	switch (mem_in_get_arch())
 	{
@@ -1358,12 +1361,15 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 			arch = MEM_ARCH_x86_32;
 		else if (sys_arch == MEM_ARCH_x86_64 && !IsWow64)
 			arch = MEM_ARCH_x86_64;
+		break;
 	case MEM_ARCH_x86_64:
 		if (IsWow64) arch = MEM_ARCH_x86_32;
 		else arch = MEM_ARCH_x86_64;
 		break;
+	default:
+		arch = MEM_ARCH_UNKNOWN;
+		break;
 	}
-
 #	elif MEM_OS == MEM_LINUX
 	arch = (mem_arch_t)MEM_ARCH;
 #	elif MEM_OS == MEM_BSD
@@ -1426,39 +1432,41 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pproces
 	*pprocess_list = (mem_process_t *)malloc(sizeof(mem_process_t));
 	if (!*pprocess_list) return count;
 #	if   MEM_OS == MEM_WIN
-	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (hSnap != INVALID_HANDLE_VALUE)
 	{
-		PROCESSENTRY32 entry = { 0 };
-		entry.dwSize = sizeof(entry);
-
-		if (Process32First(hSnap, &entry))
+		HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+		if (hSnap != INVALID_HANDLE_VALUE)
 		{
-			do
+			PROCESSENTRY32 entry = { 0 };
+			entry.dwSize = sizeof(entry);
+
+			if (Process32First(hSnap, &entry))
 			{
-				mem_process_t *holder = *pprocess_list;
-				*pprocess_list = (mem_process_t *)malloc((count + 1) * sizeof(mem_process_t));
-				if (*pprocess_list)
+				do
 				{
-					memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
-					(*pprocess_list)[count].pid  = (mem_pid_t)entry.th32ProcessID;
-					(*pprocess_list)[count].arch = mem_ex_get_arch(entry.th32ProcessID);
-				}
+					mem_process_t *holder = *pprocess_list;
+					*pprocess_list = (mem_process_t *)malloc((count + 1) * sizeof(mem_process_t));
+					if (*pprocess_list)
+					{
+						memcpy(*pprocess_list, holder, count * sizeof(mem_process_t));
+						(*pprocess_list)[count].pid  = (mem_pid_t)entry.th32ProcessID;
+						(*pprocess_list)[count].arch = mem_ex_get_arch(entry.th32ProcessID);
+					}
 
-				free(holder);
+					free(holder);
 
-				if (!*pprocess_list)
-				{
-					count = 0;
-					break;
-				}
+					if (!*pprocess_list)
+					{
+						count = 0;
+						break;
+					}
 
-				++count;
-			} while (Process32Next(hSnap, &entry));
+					++count;
+				} while (Process32Next(hSnap, &entry));
 
+			}
 		}
+		CloseHandle(hSnap);
 	}
-	CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
 	{
 		DIR *pdir = opendir("/proc");
@@ -1552,9 +1560,9 @@ LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_ts
 
 	mem_module_t mod = { 0 };
 #	if   MEM_OS == MEM_WIN
+	mem_size_t ref_len = MEM_STR_LEN(module_ref);
 	MODULEENTRY32 mod_info = { 0 };
 	mod_info.dwSize = sizeof(mod_info);
-	mem_size_t ref_len = MEM_STR_LEN(module_ref);
 
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
 	if (hSnap != INVALID_HANDLE_VALUE)
@@ -1946,37 +1954,40 @@ LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, m
 	*pmodule_list = (mem_module_t *)malloc(sizeof(mem_module_t));
 
 #	if   MEM_OS == MEM_WIN
-	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
-	if (hSnap != INVALID_HANDLE_VALUE)
 	{
-		MODULEENTRY32 entry = { 0 };
-		entry.dwSize = sizeof(entry);
-		if (Module32First(hSnap, &entry))
+		HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
+		if (hSnap != INVALID_HANDLE_VALUE)
 		{
-			do
+			MODULEENTRY32 entry = { 0 };
+			entry.dwSize = sizeof(entry);
+			if (Module32First(hSnap, &entry))
 			{
-				mem_module_t *holder = *pmodule_list;
-				*pmodule_list = (mem_module_t *)malloc((count + 1) * sizeof(mem_module_t));
-				if (*pmodule_list)
-					memcpy(*pmodule_list, holder, count * sizeof(mem_module_t));
-
-				free(holder);
-
-				if (!*pmodule_list)
+				do
 				{
-					count = 0;
-					break;
-				}
+					mem_module_t *holder = *pmodule_list;
+					mem_module_t mod = { 0 };
 
-				mem_module_t mod = { 0 };
-				mod.base = (mem_voidptr_t)entry.modBaseAddr;
-				mod.size = (mem_size_t)entry.modBaseSize;
-				mod.end = (mem_voidptr_t)((mem_uintptr_t)mod.base + mod.size);
+					*pmodule_list = (mem_module_t *)malloc((count + 1) * sizeof(mem_module_t));
+					if (*pmodule_list)
+						memcpy(*pmodule_list, holder, count * sizeof(mem_module_t));
 
-				(*pmodule_list)[count] = mod;
-				++count;
+					free(holder);
 
-			} while (Module32Next(hSnap, &entry));
+					if (!*pmodule_list)
+					{
+						count = 0;
+						break;
+					}
+
+					mod.base = (mem_voidptr_t)entry.modBaseAddr;
+					mod.size = (mem_size_t)entry.modBaseSize;
+					mod.end = (mem_voidptr_t)((mem_uintptr_t)mod.base + mod.size);
+
+					(*pmodule_list)[count] = mod;
+					++count;
+
+				} while (Module32Next(hSnap, &entry));
+			}
 		}
 	}
 #	elif MEM_OS == MEM_LINUX
@@ -2261,8 +2272,8 @@ LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_void
 
 #	if   MEM_OS == MEM_WIN
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
-	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return page;
 	MEMORY_BASIC_INFORMATION mbi = { 0 };
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return page;
 	VirtualQueryEx(hProcess, src, &mbi, sizeof(mbi));
 	CloseHandle(hProcess);
 	page.base = mbi.BaseAddress;
@@ -2474,8 +2485,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_is_process_running(mem_process_t process
 
 #	if   MEM_OS == MEM_WIN
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
-	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	DWORD ExitCode = 0;
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	GetExitCodeProcess(hProcess, &ExitCode);
 	CloseHandle(hProcess);
 	ret = ExitCode == STILL_ACTIVE ? MEM_TRUE : MEM_FALSE;
@@ -2772,8 +2783,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidp
 
 #	if   MEM_OS == MEM_WIN
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
-	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	DWORD old_prot = 0;
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = VirtualProtectEx(hProcess, src, size, protection, &old_prot) != 0 ? MEM_TRUE : MEM_FALSE;
 	if (old_protection) *old_protection = old_prot;
 	CloseHandle(hProcess);
@@ -3162,12 +3173,13 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 #	if   MEM_OS == MEM_WIN
 	mem_size_t path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
 	mem_voidptr_t path_buffer_ex = mem_ex_allocate(process, path_size, PAGE_EXECUTE_READWRITE);
+	HANDLE hProcess = INVALID_HANDLE_VALUE;
 	if (path_buffer_ex == (mem_voidptr_t)MEM_BAD) return mod;
 	mem_ex_set(process, path_buffer_ex, 0x0, path_size);
 	mem_ex_write(process, path_buffer_ex, path, path_size);
 
-	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
-	if (hProcess)
+	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (hProcess && hProcess != INVALID_HANDLE_VALUE)
 	{
 		HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, path_buffer_ex, 0, NULL);
 		if (hThread)
@@ -3182,7 +3194,6 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	mem_ex_deallocate(process, path_buffer_ex, path_size);
 
 	mod = mem_ex_get_module(process, path);
-
 #	elif MEM_OS == MEM_LINUX
 	extern void *__libc_dlopen_mode(const char *filename, int flag);
 	Dl_info libc_info = { 0 };
@@ -3405,10 +3416,11 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 	mem_bool_t ret = MEM_FALSE;
 #	if   MEM_OS == MEM_WIN
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
-	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
-
 	mem_tstring_t module_ref = (mem_tstring_t)NULL;
 	mem_size_t    module_ref_len = 0;
+
+	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
+
 	if ((module_ref_len = mem_ex_get_module_name(process, mod, &module_ref)))
 	{
 		mem_size_t module_ref_size = (module_ref_len + 1) * sizeof(mem_tchar_t);
@@ -3650,21 +3662,24 @@ LIBMEM_EXTERN mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_mo
 	mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
 	mem_tstring_t module_ref = (mem_tstring_t)NULL;
+	HMODULE hModule = (HMODULE)NULL;
+	MODULEINFO modinfo = { 0 };
+	mem_voidptr_t sym_in = (mem_voidptr_t)NULL;
+	mem_uintptr_t sym_offset = (mem_voidptr_t)NULL;
+
 	if (!mem_ex_get_module_path(process, mod, &module_ref)) return addr;
-	HMODULE hModule = LoadLibraryEx(module_ref, NULL, DONT_RESOLVE_DLL_REFERENCES);
+	hModule = LoadLibraryEx(module_ref, NULL, DONT_RESOLVE_DLL_REFERENCES);
 	free(module_ref);
 	if (!hModule) return addr;
 
-	MODULEINFO modinfo = { 0 };
 	if (!GetModuleInformation(GetCurrentProcess(), hModule, &modinfo, sizeof(modinfo))) return addr;
 
-	mem_voidptr_t sym_in = (mem_voidptr_t)GetProcAddress(hModule, symbol);
+	sym_in = (mem_voidptr_t)GetProcAddress(hModule, symbol);
 	if (!sym_in) return addr;
 
-	mem_uintptr_t sym_offset = (mem_uintptr_t)sym_in - (mem_uintptr_t)modinfo.lpBaseOfDll;
+	sym_offset = (mem_uintptr_t)sym_in - (mem_uintptr_t)modinfo.lpBaseOfDll;
 
 	addr = (mem_voidptr_t)((mem_uintptr_t)mod.base + sym_offset);
-
 #	elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
 	mem_tstring_t module_ref = (mem_tstring_t)NULL;
 	mem_module_t mod_in = { 0 };

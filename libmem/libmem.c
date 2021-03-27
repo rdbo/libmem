@@ -1371,7 +1371,8 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 		break;
 	}
 #	elif MEM_OS == MEM_LINUX
-	arch = (mem_arch_t)MEM_ARCH;
+	if (mem_ex_is_process_running(mem_ex_get_process(pid)))
+		arch = (mem_arch_t)MEM_ARCH;
 #	elif MEM_OS == MEM_BSD
 	struct procstat *ps = procstat_open_sysctl();
 	if (ps)
@@ -3195,7 +3196,6 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 
 	mod = mem_ex_get_module(process, path);
 #	elif MEM_OS == MEM_LINUX
-	extern void *__libc_dlopen_mode(const char *filename, int flag);
 	Dl_info libc_info = { 0 };
 	mem_uintptr_t dlopen_offset = 0;
 	mem_tchar_t path_buffer[64] = { 0 };
@@ -3203,11 +3203,12 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 	mem_size_t maps_size = 0;
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
+	void *libc_dlopen_addr = dlsym(RTLD_NEXT, "__libc_dlopen_mode");
 
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
 		return mod;
 
-	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return mod;
+	if (!dladdr((void *)libc_dlopen_addr, &libc_info)) return mod;
 
 	dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
@@ -3466,8 +3467,8 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 	mem_size_t maps_size = 0;
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
-	extern void *__libc_dlopen_mode(const char *filename, int flag);
-	extern int   __libc_dlclose(void *map);
+	void *libc_dlopen_addr = dlsym(RTLD_NEXT, "__libc_dlopen_mode");
+	void *libc_dlclose_addr = dlsym(RTLD_NEXT, "__libc_dlclose");
 
 	if (process.arch < 0 || process.arch >= MEM_ARCH_UNKNOWN)
 		return ret;
@@ -3475,11 +3476,11 @@ LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem
 	path_len = mem_ex_get_module_path(process, mod, &path);
 	if (!path_len) return ret;
 
-	if (!dladdr((void *)__libc_dlopen_mode, &libc_info)) return ret;
+	if (!dladdr((void *)libc_dlopen_addr, &libc_info)) return ret;
 
 	dlopen_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
-	if (!dladdr((void *)__libc_dlclose, &libc_info)) return ret;
+	if (!dladdr((void *)libc_dlclose_addr, &libc_info)) return ret;
 	dlclose_offset = (mem_uintptr_t)libc_info.dli_saddr - (mem_uintptr_t)libc_info.dli_fbase;
 
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/maps", process.pid);

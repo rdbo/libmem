@@ -887,6 +887,7 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 	mem_size_t gateway_size = 0;
 	mem_data_t p_gateway = (mem_data_t)NULL;
 	mem_data_t p_src = (mem_data_t)NULL;
+	mem_size_t gateway_detour_size = mem_in_detour_size(MEM_ASM_x86_JMP64);
 
 #	if   MEM_OS == MEM_WIN
 	protection = PAGE_EXECUTE_READWRITE;
@@ -896,14 +897,14 @@ LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem
 
 	if (detour_size == (mem_size_t)MEM_BAD || size < detour_size || mem_in_protect(src, size, protection, &old_protection) == MEM_FALSE) return gateway;
 
-	gateway_size = size + detour_size;
+	gateway_size = size + gateway_detour_size;
 	gateway = (mem_voidptr_t)malloc(gateway_size);
 	if (!gateway || mem_in_protect(gateway, gateway_size, protection, NULL) == MEM_FALSE) return (mem_voidptr_t)MEM_BAD;
 
 	p_gateway = (mem_data_t)gateway;
 	p_src = (mem_data_t)src;
 	mem_in_write((mem_voidptr_t)p_gateway, src, size);
-	mem_in_detour((mem_voidptr_t)& p_gateway[size], &p_src[size], detour_size, method, NULL);
+	mem_in_detour((mem_voidptr_t)&p_gateway[size], &p_src[size], gateway_detour_size, MEM_ASM_x86_JMP64, NULL);
 	mem_in_protect(src, size, old_protection, NULL);
 	if (mem_in_detour(src, dst, size, method, stolen_bytes) == MEM_FALSE)
 	{

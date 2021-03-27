@@ -35,6 +35,8 @@ int main()
 	mem_byte_t    pattern[] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0 };
 	mem_string_t  mask = MEM_STR("xxxxxxxxx");
 	mem_string_t  signature = MEM_STR("10 20 ?? 40 50 ?? 70 80 ?? A0");
+	mem_voidptr_t scan_start = (mem_voidptr_t)&pattern[-10];
+	mem_voidptr_t scan_stop = (mem_voidptr_t)&pattern[10];
 	mem_voidptr_t scan = (mem_voidptr_t)MEM_BAD;
 	mem_voidptr_t pattern_scan = (mem_voidptr_t)MEM_BAD;
 	mem_voidptr_t signature_scan = (mem_voidptr_t)MEM_BAD;
@@ -84,8 +86,6 @@ int main()
 	tprint(MEM_STR("Page Flags:      %p\n"), (void *)(uintptr_t)page.flags);
 	tseparator();
 
-	mem_voidptr_t scan_start = (mem_voidptr_t)&pattern[-10];
-	mem_voidptr_t scan_stop = (mem_voidptr_t)&pattern[10];
 	scan = mem_in_scan(pattern, sizeof(pattern), scan_start, scan_stop);
 	pattern_scan = mem_in_pattern_scan(pattern, mask, scan_start, scan_stop);
 	signature_scan = mem_in_signature_scan(signature, scan_start, scan_stop);

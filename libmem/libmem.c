@@ -3302,7 +3302,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 #	elif MEM_OS == MEM_BSD
 	mem_tchar_t path_buffer[64] = { 0 };
 	mem_tstring_t map_buffer = (mem_tstring_t)NULL;
-	mem_size_t map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
+	mem_size_t map_size = 0;
 	mem_tchar_t *p_module_path_ptr = (mem_tchar_t *)NULL;
 	mem_tchar_t *p_module_path_endptr = (mem_tchar_t *)NULL;
 
@@ -3310,6 +3310,7 @@ LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_t
 		return mod;
 
 	snprintf(path_buffer, sizeof(path_buffer) - sizeof(mem_tchar_t), "/proc/%i/map", process.pid);
+	map_size = mem_in_read_file(path_buffer, (mem_byte_t **)&map_buffer);
 
 	if (!map_size) return mod;
 

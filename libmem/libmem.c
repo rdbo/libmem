@@ -87,7 +87,7 @@ LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t
 	int fd = open(path, O_RDONLY);
 	
 	if (fd == -1) return filesize;
-	*filebuf = malloc(sizeof(mem_byte_t));
+	*filebuf = (mem_byte_t *)malloc(sizeof(mem_byte_t));
 
 	while(read(fd, &cur, 1) > 0)
 	{
@@ -1372,8 +1372,7 @@ LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 		break;
 	}
 #	elif MEM_OS == MEM_LINUX
-	if (mem_ex_is_process_running(mem_ex_get_process(pid)))
-		arch = (mem_arch_t)MEM_ARCH;
+	arch = (mem_arch_t)MEM_ARCH;
 #	elif MEM_OS == MEM_BSD
 	struct procstat *ps = procstat_open_sysctl();
 	if (ps)

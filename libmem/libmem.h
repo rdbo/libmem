@@ -272,6 +272,146 @@ typedef int            lm_prot_t;
 typedef int            lm_flags_t;
 #endif
 
+typedef struct {
+	lm_pid_t pid;
+#	if LM_OS == LM_OS_WIN
+	HANDLE hProcess;
+#	endif
+} lm_process_t;
+
+typedef struct {
+	lm_address_t base;
+	lm_address_t end;
+	lm_size_t    size;
+} lm_module_t;
+
+typedef struct {
+	lm_address_t base;
+	lm_address_t end;
+	lm_size_t    size;
+	lm_prot_t    prot;
+	lm_flags_t   flags;
+} lm_page_t;
+
+/* libmem */
+LM_API lm_bool_t
+LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
+				      lm_void_t *arg),
+		 lm_void_t *arg);
+
+LM_API lm_pid_t
+LM_GetProcessId(lm_void_t);
+
+LM_API lm_pid_t
+LM_GetProcessIdEx(lm_tstring_t procstr);
+
+LM_API lm_pid_t
+LM_GetParentId(lm_void_t);
+
+LM_API lm_pid_t
+LM_GetParentIdEx(lm_pid_t pid);
+
+LM_API lm_bool_t
+LM_OpenProcess(lm_process_t *procbuf);
+
+LM_API lm_bool_t
+LM_OpenProcessEx(lm_pid_t      pid,
+		 lm_process_t *procbuf);
+
+LM_API lm_bool_t
+LM_CloseProcess(lm_process_t *proc);
+
+LM_API lm_size_t
+LM_GetProcessPath(lm_tchar_t *pathbuf,
+		  lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetProcessPathEx(lm_process_t proc,
+		    lm_tchar_t  *pathbuf,
+		    lm_size_t    maxlen);
+
+LM_API lm_size_t
+LM_GetProcessName(lm_tchar_t *namebuf,
+		  lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetProcessNameEx(lm_process_t proc,
+		    lm_tchar_t  *namebuf,
+		    lm_size_t    maxlen);
+
+LM_API lm_size_t
+LM_GetProcessBits(lm_void_t);
+
+LM_API lm_size_t
+LM_GetProcessBitsEx(lm_process_t proc);
+
+/****************************************/
+
+LM_API lm_bool_t
+LM_EnumModules(lm_bool_t(*callback)(lm_module_t mod,
+				    lm_void_t  *arg),
+	       lm_void_t *arg);
+
+LM_API lm_bool_t
+LM_EnumModulesEx(lm_process_t proc,
+		 lm_bool_t  (*callback)(lm_module_t mod,
+					lm_void_t  *arg),
+		 lm_void_t   *arg);
+
+LM_API lm_bool_t
+LM_GetModule(lm_tstring_t modstr,
+	     lm_module_t *modbuf);
+
+LM_API lm_bool_t
+LM_GetModuleEx(lm_process_t proc,
+	       lm_tstring_t modstr,
+	       lm_module_t *modbuf);
+
+LM_API lm_size_t
+LM_GetModulePath(lm_module_t mod,
+		 lm_tchar_t *pathbuf,
+		 lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetModulePathEx(lm_process_t proc,
+		   lm_module_t  mod,
+		   lm_tchar_t  *pathbuf,
+		   lm_size_t    maxlen);
+
+LM_API lm_size_t
+LM_GetModuleName(lm_module_t mod,
+		 lm_tchar_t *namebuf,
+		 lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetModuleNameEx(lm_process_t proc,
+		   lm_tchar_t  *namebuf,
+		   lm_size_t    maxlen);
+
+/****************************************/
+
+LM_API lm_bool_t
+LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
+				  lm_void_t *arg),
+	     lm_void_t *arg);
+
+LM_API lm_bool_t
+LM_EnumPagesEx(lm_process_t proc,
+	       lm_bool_t  (*callback)(lm_page_t  page,
+				      lm_void_t *arg),
+	       lm_void_t   *arg);
+
+LM_API lm_bool_t
+LM_GetPage(lm_address_t addr,
+	   lm_page_t   *page);
+
+LM_API lm_bool_t
+LM_GetPageEx(lm_process_t proc,
+	     lm_address_t addr,
+	     lm_page_t   *page);
+
+/****************************************/
+
 
 
 #if LM_LANG == LM_LANG_CPP

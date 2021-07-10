@@ -148,8 +148,10 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#define LM_PROCFS "/proc"
 #elif LM_OS == LM_OS_BSD
 #define LM_PATH_MAX PATH_MAX
+#define LM_PROCFS "/proc"
 #endif
 
 /* Compatibility */

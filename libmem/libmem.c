@@ -7,3 +7,221 @@
 
 #include "libmem.h"
 
+#if LM_COMPATIBLE
+/* Additional Types */
+typedef struct {
+	lm_pid_t     pid;
+	lm_tstring_t procstr;
+	lm_size_t    len;
+} _lm_get_pid_t;
+
+/* libmem */
+LM_API lm_bool_t
+LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
+				      lm_void_t *arg),
+		 lm_void_t *arg)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!callback)
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		HANDLE hSnap;
+		
+		hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+		if (hSnap != INVALID_HANDLE_VALUE) {
+			PROCESSENTRY32 entry;
+
+			entry.dwSize = sizeof(PROCESSENTRY32);
+			if (Process32First(hSnap, &entry)) {
+				do {
+					lm_pid_t pid = (lm_pid_t)(
+						entry.th32ProcessID;
+					);
+
+					if (callback(pid, arg) == LM_FALSE)
+						break;
+				} while (Process32Next(hSnap, &entry));
+
+				ret = LM_TRUE;
+			}
+		}
+
+		CloseHandle(hSnap);
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		struct dirent *pdirent;
+		DIR *dir;
+
+		dir = opendir(LM_STR(LM_PROCFS));
+
+		if (!dir)
+			return ret;
+		
+		while ((pdirent = readdir(dir))) {
+			lm_pid_t pid = LM_ATOI(pdirent->d_name);
+
+			if (pid || (!pid && LM_STRCMP(pdirent->d_name, "0"))) {
+				if (callback(pid, arg) == LM_FALSE)
+					break;
+			}
+		}
+		
+		closedir(dir);
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		struct procstat *ps;
+		
+		ps = procstat_open_sysctl();
+		if (ps) {
+			unsigned int nprocs = 0;
+			struct kinfo_proc *procs = procstat_getprocs(
+				ps, KERN_PROC_PROC, 
+				pid, &nprocs
+			);
+
+			if (procs) {
+				unsigned int i;
+
+				for (i = 0; i < nprocs; ++i) {
+					lm_pid_t pid = (lm_pid_t)(
+						procs[i].ki_pid
+					);
+
+					if (callback(pid, arg) == LM_FALSE)
+						break;
+				}
+
+				ret = LM_TRUE;
+			}
+		}
+	}
+#	endif
+	return ret;
+}
+
+static lm_bool_t
+_LM_GetProcessIdCallback(lm_pid_t   pid,
+			 lm_void_t *arg)
+{
+	lm_bool_t      ret = LM_TRUE;
+	lm_process_t   proc;
+	_lm_get_pid_t *parg = (_lm_get_pid_t *)arg;
+	lm_tchar_t    *path;
+
+	if (!parg)
+		return LM_FALSE;
+
+	path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+
+	if (!path)
+		return LM_FALSE;
+
+	if (LM_OpenProcessEx(pid, &proc)) {
+		lm_size_t len;
+
+		len = LM_GetProcessPathEx(proc,	path, LM_PATH_MAX - 1);
+		if (len && len >= parg->len) {
+			path[len] = '\x00';
+
+			if (!LM_STRCMP(&path[len - parg->len], 
+				       parg->procstr)) {
+				parg->pid = pid;
+				ret = LM_FALSE;
+			}
+		}
+
+		LM_CloseProcess(&proc);
+	}
+
+	return ret;
+}
+
+LM_API lm_pid_t
+LM_GetProcessId(lm_void_t)
+{
+	lm_pid_t pid = (lm_pid_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	pid = GetCurrentProcessID();
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	pid = getpid();
+#	endif
+
+	return pid;
+}
+
+LM_API lm_pid_t
+LM_GetProcessIdEx(lm_tstring_t procstr)
+{
+	_lm_get_pid_t arg;
+
+	arg.pid = (lm_pid_t)LM_BAD;
+	arg.procstr = procstr;
+	arg.len = LM_STRLEN(arg.procstr);
+
+	LM_EnumProcesses(_LM_GetProcessIdCallback, (lm_void_t *)&arg);
+	return arg.pid;
+}
+
+LM_API lm_pid_t
+LM_GetParentId(lm_void_t)
+{
+	lm_pid_t ppid = (lm_pid_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	ppid = LM_GetParentIdEx(LM_GetProcessId());
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	ppid = getppid();
+#	endif
+
+	if (!ppid)
+		ppid = (lm_pid_t)LM_BAD;
+
+	return ppid;
+}
+
+LM_API lm_pid_t
+LM_GetParentIdEx(lm_pid_t pid);
+
+LM_API lm_bool_t
+LM_OpenProcess(lm_process_t *procbuf);
+
+LM_API lm_bool_t
+LM_OpenProcessEx(lm_pid_t      pid,
+		 lm_process_t *procbuf);
+
+LM_API lm_bool_t
+LM_CloseProcess(lm_process_t *proc);
+
+LM_API lm_size_t
+LM_GetProcessPath(lm_tchar_t *pathbuf,
+		  lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetProcessPathEx(lm_process_t proc,
+		    lm_tchar_t  *pathbuf,
+		    lm_size_t    maxlen);
+
+LM_API lm_size_t
+LM_GetProcessName(lm_tchar_t *namebuf,
+		  lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetProcessNameEx(lm_process_t proc,
+		    lm_tchar_t  *namebuf,
+		    lm_size_t    maxlen);
+
+LM_API lm_size_t
+LM_GetProcessBits(lm_void_t);
+
+LM_API lm_size_t
+LM_GetProcessBitsEx(lm_process_t proc);
+
+/****************************************/
+
+#endif

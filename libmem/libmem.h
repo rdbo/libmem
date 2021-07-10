@@ -10,133 +10,167 @@
 #define LIBMEM_H
 
 /* Operating System */
-#define MEM_WIN   0
-#define MEM_LINUX 1
-#define MEM_BSD   2
+#define LM_OS_WIN   0
+#define LM_OS_LINUX 1
+#define LM_OS_BSD   2
 
-#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32)) && !defined(__CYGWIN__) && !defined(linux)
-#define MEM_OS MEM_WIN
+#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32)) \
+	&& !defined(__CYGWIN__) && !defined(linux)
+#define LM_OS LM_OS_WIN
 #elif defined(linux) || defined(__linux__)
-#define MEM_OS MEM_LINUX
-#elif defined(BSD) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
-#define MEM_OS MEM_BSD
+#define LM_OS LM_OS_LINUX
+#elif defined(BSD) || defined(__FreeBSD__) \
+	|| defined(__OpenBSD__) || defined(__NetBSD__)
+#define LM_OS LM_OS_BSD
 #endif
 
 /* Architecture */
-#define _MEM_ARCH_x86_32  0
-#define _MEM_ARCH_x86_64  1
-#define _MEM_ARCH_UNKNOWN 2
+#define LM_ARCH_X86 0
 
-#if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || (defined(__WORDSIZE) && __WORDSIZE == 64))
-#define MEM_ARCH _MEM_ARCH_x86_64
-#elif (defined(_M_IX86) || defined(__i386__) || (defined(__WORDSIZE) && __WORDSIZE == 32))
-#define MEM_ARCH _MEM_ARCH_x86_32
+#define LM_ARCH LM_ARCH_X86
+
+/* Bits */
+#if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) \
+	|| defined(__x86_64__) || (defined(__WORDSIZE) && __WORDSIZE == 64))
+#define LM_BITS 64
 #else
-#define MEM_ARCH _MEM_ARCH_UNKNOWN
+#define LM_BITS 32
 #endif
 
 /* Compiler */
-#define MEM_COMPILER_MSVC 0
-#define MEM_COMPILER_CC   1
+#define LM_COMPILER_MSVC 0
+#define LM_COMPILER_CC   1
 
 #ifdef _MSC_VER
-#define MEM_COMPILER MEM_COMPILER_MSVC
+#define LM_COMPILER LM_COMPILER_MSVC
 #else
-#define MEM_COMPILER MEM_COMPILER_CC
+#define LM_COMPILER LM_COMPILER_CC
 #endif
 
 /* Charset */
-#define MEM_UCS  0
-#define MEM_MBCS 1
+#define LM_CHARSET_UC 0
+#define LM_CHARSET_MB 1
 
-#if defined(_UNICODE) && MEM_OS == MEM_WIN
-#define MEM_CHARSET MEM_UCS
+#if defined(_UNICODE) && LM_OS == LM_OS_WIN
+#define LM_CHARSET LM_CHARSET_UC
 #else
-#define MEM_CHARSET MEM_MBCS
+#define LM_CHARSET LM_CHARSET_MB
 #endif
 
 /* Language */
-#if defined(__cplusplus)
-#define MEM_CPP
-#else
-#define MEM_C
-#endif
+#define LM_LANG_C   0
+#define LM_LANG_CPP 1
 
-/* Compatibility */
-#if defined(MEM_OS) && defined(MEM_ARCH)
-#define MEM_COMPATIBLE
+#if defined(LIBMEM_HPP) || defined(__cplusplus)
+#define LM_LANG LM_LANG_CPP
+#else
+#define LM_LANG LM_LANG_C
 #endif
 
 /* Helpers */
-#define PAD_STR __pad
-#define CONCAT_STR(str1, str2) str1##str2
-#define _MERGE_STR (str1, str2) str1 str2
-#define MERGE_STR (str1, str2) _MERGE_STR(str1, str2)
-#define _STRINGIFY(str) #str
-#define STRINGIFY (str) _STRINGIFY(str)
-#define NEW_PAD(size) CONCAT_STR(PAD_STR, __COUNTER__)[size]
-#define UNION_MEMBER(type, varname, offset) struct { unsigned char NEW_PAD(offset); type varname; }
-#define UNION_MEMBER_BUF(type, varname, size, offset) struct { unsigned char NEW_PAD(offset); type varname[size]; }
-#if   MEM_CHARSET == MEM_UCS
-#define MEM_STR(str) CONCAT_STR(L, str)
-#define MEM_STR_CMP(str1, str2) wcscmp(str1, str2)
-#define MEM_STR_N_CMP(str1, str2, n) wcsncmp(str1, str2, n)
-#define MEM_STR_LEN(str) wcslen(str)
-#define MEM_STR_CHR(str, c) wcschr(str, c)
-#define MEM_STR_STR(str, sstr) wcsstr(str, sstr)
-#elif MEM_CHARSET == MEM_MBCS
-#define MEM_STR(str) str
-#define MEM_STR_CMP(str1, str2) strcmp(str1, str2)
-#define MEM_STR_N_CMP(str1, str2, n) strncmp(str1, str2, n)
-#define MEM_STR_LEN(str) strlen(str)
-#define MEM_STR_CHR(str, c) strchr(str, c)
-#define MEM_STR_STR(str, sstr) strstr(str, sstr)
+#define LM_MALLOC   malloc
+#define LM_CALLOC   calloc
+#define LM_FREE     free
+#define LM_MEMCPY   memcpy
+#if LM_CHARSET == LM_CHARSET_UC
+#define LM_STR(str) L##str
+#define LM_STRCMP   wcscmp
+#define LM_STRNCMP  wcsncmp
+#define LM_STRCPY   wcscpy
+#define LM_STRNCPY  wcsncpy
+#define LM_STRLEN   wcslen
+#define LM_STRCHR   wcschr
+#define LM_STRSTR   wcsstr
+#define LM_SNPRINTF snwprintf
+#define LM_STRTOP   wcstoul
+#define LM_ATOI     wtoi
+#else
+#define LM_STR(str) str
+#define LM_STRCMP   strcmp
+#define LM_STRNCMP  strncmp
+#define LM_STRCPY   strcpy
+#define LM_STRNCPY  strncpy
+#define LM_STRLEN   strlen
+#define LM_STRCHR   strchr
+#define LM_STRSTR   strstr
+#define LM_SNPRINTF snprintf
+#define LM_STRTOP   strtoul
+#define LM_ATOI     atoi
+#endif
+#define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+
+/* Flags */
+#if LM_OS == LM_OS_WIN
+#define LM_PROT_R   (PAGE_READONLY)
+#define LM_PROT_W   (PAGE_WRITECOPY)
+#define LM_PROT_X   (PAGE_EXECUTE)
+#define LM_PROT_RW  (PAGE_READWRITE)
+#define LM_PROT_XR  (PAGE_EXECUTE_READ)
+#define LM_PROT_XRW (PAGE_EXECUTE_READWRITE)
+#define LM_PROCESS_ACCESS (PROCESS_ALL_ACCESS)
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#define LM_PROT_R   (PROT_READ)
+#define LM_PROT_W   (PROT_WRITE)
+#define LM_PROT_X   (PROT_EXEC)
+#define LM_PROT_RW  (PROT_READ | PROT_WRITE)
+#define LM_PROT_XR  (PROT_EXEC | PROT_READ)
+#define LM_PROT_XRW (PROT_EXEC | PROT_READ | PROT_WRITE)
 #endif
 
-/* Other */
-#define MEM_NULL 0
-#define MEM_BAD  -1
-#define MEM_GOOD !MEM_BAD
-#if   MEM_OS == MEM_WIN
-#define MEM_PATH_MAX MAX_PATH
-#elif MEM_OS == MEM_LINUX
-#define MEM_PATH_MAX PATH_MAX
+/* Imports/Exports */
+#if defined(LM_EXPORT)
+#if LM_COMPILER == LM_COMPILER_MSVC
+#define LM_API __declspec(dllexport)
+#elif LM_COMPILER == LM_COMPILER_CC
+#define LM_API __attribute__((visibility("default")))
+#endif
+#elif defined(LM_IMPORT)
+#if LM_COMPILER == LM_COMPILER_MSVC
+#define LM_API __declspec(dllimport)
+#elif LM_COMPILER == LM_COMPILER_CC
+#define LM_API extern
+#endif
+#else
+#define LM_API
+#endif
+
+/* Others */
+#define LM_NULL  (0)
+#define LM_BAD   (-1)
+#define LM_OK    (!(LM_BAD))
+#define LM_FALSE (0)
+#define LM_TRUE  (!(LM_FALSE))
+#if LM_OS == LM_OS_WIN
+#define LM_PATH_MAX MAX_PATH
+#elif LM_OS == LM_OS_LINUX
+#define LM_PATH_MAX PATH_MAX
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-#elif MEM_OS == MEM_BSD
-#define MEM_PATH_MAX PATH_MAX
+#elif LM_OS == LM_OS_BSD
+#define LM_PATH_MAX PATH_MAX
 #endif
 
-#if defined(LIBMEM_EXPORT)
-#if   MEM_COMPILER == MEM_COMPILER_MSVC
-#define LIBMEM_EXTERN __declspec(dllexport)
-#elif MEM_COMPILER == MEM_COMPILER_CC
-#define LIBMEM_EXTERN __attribute__((visibility("default")))
-#endif
-#elif defined(LIBMEM_IMPORT)
-#if   MEM_COMPILER == MEM_COMPILER_MSVC
-#define LIBMEM_EXTERN __declspec(dllimport)
-#elif MEM_COMPILER == MEM_COMPILER_CC
-#define LIBMEM_EXTERN extern
-#endif
+/* Compatibility */
+#if defined(LM_OS) && defined(LM_ARCH) && defined(LM_BITS) \
+	&& defined(LM_COMPILER) && defined(LM_CHARSET) && defined(LM_LANG)
+#define LM_COMPATIBLE 1
 #else
-#define LIBMEM_EXTERN
+#define LM_COMPATIBLE 0
 #endif
 
-#ifdef MEM_COMPATIBLE
-
+#if LM_COMPATIBLE
 /* Includes */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
-#if   MEM_OS == MEM_WIN
+#if LM_OS == LM_OS_WIN
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <Psapi.h>
-#elif MEM_OS == MEM_LINUX
+#elif LM_OS == LM_OS_LINUX
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -153,7 +187,7 @@
 #include <dlfcn.h>
 #include <link.h>
 #include <fcntl.h>
-#elif MEM_OS == MEM_BSD
+#elif LM_OS == LM_OS_BSD
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -174,233 +208,75 @@
 #include <kvm.h>
 #include <libprocstat.h>
 #include <paths.h>
-#endif /* MEM_OS */
+#endif /* LM_OS */
 
-#ifdef MEM_CPP
-extern "C"
-{
+#if LM_LANG == LM_LANG_CPP
+extern "C" {
 #endif
 
 /* Types */
-typedef enum { MEM_FALSE = 0, MEM_TRUE = 1 } mem_bool_t;
-typedef int                                  mem_int_t;
-typedef void                                 mem_void_t;
+typedef char           lm_char_t;
+typedef unsigned char  lm_uchar_t;
+typedef int            lm_int_t;
+typedef unsigned int   lm_uint_t;
+typedef short          lm_short_t;
+typedef unsigned short lm_ushort_t;
+typedef long           lm_long_t;
+typedef unsigned long  lm_ulong_t;
+typedef wchar_t        lm_wchar_t;
+typedef void           lm_void_t;
+typedef lm_int_t       lm_bool_t;
 
-typedef int8_t                               mem_int8_t;
-typedef int16_t                              mem_int16_t;
-typedef int32_t                              mem_int32_t;
-typedef int64_t                              mem_int64_t;
+typedef char           lm_int8_t;
+typedef short          lm_int16_t;
+typedef int            lm_int32_t;
+typedef long           lm_int64_t;
 
-typedef uint8_t                              mem_uint8_t;
-typedef uint16_t                             mem_uint16_t;
-typedef uint32_t                             mem_uint32_t;
-typedef uint64_t                             mem_uint64_t;
+typedef unsigned char  lm_uint8_t;
+typedef unsigned short lm_uint16_t;
+typedef unsigned int   lm_uint32_t;
+typedef unsigned long  lm_uint64_t;
 
-typedef intptr_t                             mem_intptr_t;
-typedef uintptr_t                            mem_uintptr_t;
+typedef lm_uint8_t     lm_byte_t;
+typedef lm_uint16_t    lm_word_t;
+typedef lm_uint32_t    lm_dword_t;
+typedef lm_uint64_t    lm_qword_t;
 
-typedef mem_uint8_t                          mem_byte_t;
-typedef mem_uint16_t                         mem_word_t;
-typedef mem_uint32_t                         mem_dword_t;
-typedef mem_uint64_t                         mem_qword_t;
+typedef lm_long_t      lm_intptr_t;
+typedef lm_ulong_t     lm_uintptr_t;
+typedef lm_void_t     *lm_voidptr_t;
 
-typedef size_t                               mem_size_t;
+typedef lm_voidptr_t   lm_address_t;
+typedef lm_ulong_t     lm_size_t;
 
-typedef wchar_t                              mem_wchar_t;
-typedef char                                 mem_char_t;
-
-#if   MEM_CHARSET == MEM_UCS
-typedef mem_wchar_t                          mem_tchar_t;
-#elif MEM_CHARSET == MEM_MBCS
-typedef mem_char_t                           mem_tchar_t;
+#if LM_CHARSET == LM_CHARSET_UC
+typedef lm_wchar_t     lm_tchar_t;
+#else
+typedef lm_char_t      lm_tchar_t;
 #endif
 
-typedef mem_char_t                          *mem_cstring_t;
-typedef mem_wchar_t                         *mem_wstring_t;
-typedef mem_tchar_t                         *mem_tstring_t;
-#ifndef MEM_CPP
-typedef mem_tstring_t                        mem_string_t;
-#endif
-typedef mem_byte_t                          *mem_data_t;
-typedef mem_void_t                          *mem_voidptr_t;
-
-#if   MEM_OS == MEM_WIN
-typedef DWORD                                mem_pid_t;
-typedef DWORD                                mem_prot_t;
-typedef DWORD                                mem_flags_t;
-#elif MEM_OS == MEM_LINUX || MEM_OS == MEM_BSD
-typedef mem_int32_t                          mem_pid_t;
-typedef mem_int32_t                          mem_prot_t;
-typedef mem_int32_t                          mem_flags_t;
+typedef lm_char_t     *lm_cstring_t;
+typedef lm_wchar_t    *lm_wstring_t;
+typedef lm_tchar_t    *lm_tstring_t;
+#if LM_LANG == LM_LANG_C
+typedef lm_tstring_t   lm_string_t;
 #endif
 
-typedef enum
-{
-	MEM_ARCH_x86_32  = _MEM_ARCH_x86_32,
-	MEM_ARCH_x86_64  = _MEM_ARCH_x86_64,
-	MEM_ARCH_UNKNOWN = _MEM_ARCH_UNKNOWN
-} mem_arch_t;
+#if LM_OS == LM_OS_WIN
+typedef DWORD          lm_pid_t;
+typedef DWORD          lm_prot_t;
+typedef DWORD          lm_flags_t;
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+typedef pid_t          lm_pid_t;
+typedef int            lm_prot_t;
+typedef int            lm_flags_t;
+#endif
 
-typedef enum
-{
-	MEM_ASM_x86_JMP32 = 0,
-	/*
-	 * jmp REL_ADDR
-	 */
 
-	MEM_ASM_x86_JMP64,
-	/*
-	 * jmp [eip]
-	 * ABS_ADDR
-	 */
 
-	MEM_ASM_x86_CALL32,
-	/*
-	 * call REL_ADDR
-	 */
-
-	MEM_ASM_x86_CALL64,
-	/*
-	 * call [eip]
-	 * ABS_ADDR
-	 */
-
-	MEM_ASM_DETOUR_INVALID,
-
-	MEM_ASM_x86_SYSCALL32,
-
-	/*
-	 * int80
-	 */
-
-	MEM_ASM_x86_SYSCALL64,
-
-	/*
-	 * syscall
-	 */
-
-	MEM_ASM_x86_LIBCALL32_1, /* x86_32 Library Call with 1 parameter */
-	/*
-	 * push ebx
-	 * call eax
-	 * int3
-	 */
-
-	MEM_ASM_x86_LIBCALL32_2, /* x86_32 Library Call with 2 parameters */
-	/*
-	 * push ecx
-	 * push ebx
-	 * call eax
-	 * int3
-	 */
-
-	MEM_ASM_x86_LIBCALL64, /* x86_64 Library Call */
-	/*
-	 * call rax
-	 * int3
-	 */
-
-	MEM_ASM_INVALID
-} mem_asm_t;
-
-typedef enum
-{
-	MEM_LOAD_FILE = 0,
-	MEM_LOAD_MEMORY,
-	MEM_LOAD_INVALID
-} mem_load_t;
-
-typedef struct
-{
-	mem_data_t payload;
-	mem_size_t size;
-} mem_payload_t;
-
-typedef struct
-{
-	mem_pid_t  pid;
-	mem_arch_t arch;
-} mem_process_t;
-
-typedef struct
-{
-	mem_voidptr_t base;
-	mem_uintptr_t size;
-	mem_voidptr_t end;
-} mem_module_t;
-
-typedef struct
-{
-	mem_voidptr_t base;
-	mem_uintptr_t size;
-	mem_voidptr_t end;
-	mem_flags_t   flags;
-	mem_prot_t    protection;
-} mem_page_t;
-
-/* Functions */
-/* mem_in */
-LIBMEM_EXTERN mem_size_t         mem_in_read_file(mem_tstring_t path, mem_byte_t **filebuf);
-LIBMEM_EXTERN mem_pid_t          mem_in_get_pid(mem_void_t);
-LIBMEM_EXTERN mem_size_t         mem_in_get_process_name(mem_tstring_t *pprocess_name);
-LIBMEM_EXTERN mem_size_t         mem_in_get_process_path(mem_tstring_t *pprocess_path);
-LIBMEM_EXTERN mem_arch_t         mem_in_get_arch(mem_void_t);
-LIBMEM_EXTERN mem_process_t      mem_in_get_process(mem_void_t);
-LIBMEM_EXTERN mem_module_t       mem_in_get_module(mem_tstring_t module_ref);
-LIBMEM_EXTERN mem_size_t         mem_in_get_module_name(mem_module_t mod, mem_tstring_t *pmodule_name);
-LIBMEM_EXTERN mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t *pmodule_path);
-LIBMEM_EXTERN mem_size_t         mem_in_get_module_list(mem_module_t **pmodule_list);
-LIBMEM_EXTERN mem_page_t         mem_in_get_page(mem_voidptr_t src);
-LIBMEM_EXTERN mem_bool_t         mem_in_read(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
-LIBMEM_EXTERN mem_bool_t         mem_in_write(mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
-LIBMEM_EXTERN mem_bool_t         mem_in_set(mem_voidptr_t src, mem_byte_t byte, mem_size_t size);
-LIBMEM_EXTERN mem_voidptr_t      mem_in_syscall(mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5);
-LIBMEM_EXTERN mem_bool_t         mem_in_protect(mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t *pold_protection);
-LIBMEM_EXTERN mem_voidptr_t      mem_in_allocate(mem_size_t size, mem_prot_t protection);
-LIBMEM_EXTERN mem_bool_t         mem_in_deallocate(mem_voidptr_t src, mem_size_t size);
-LIBMEM_EXTERN mem_voidptr_t      mem_in_scan(mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop);
-LIBMEM_EXTERN mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop);
-LIBMEM_EXTERN mem_voidptr_t      mem_in_signature_scan(mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop);
-LIBMEM_EXTERN mem_size_t         mem_in_payload_size(mem_asm_t method);
-LIBMEM_EXTERN mem_size_t         mem_in_detour_size(mem_asm_t method);
-LIBMEM_EXTERN mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes);
-LIBMEM_EXTERN mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes);
-LIBMEM_EXTERN mem_bool_t         mem_in_detour_restore(mem_voidptr_t src, mem_data_t stolen_bytes, mem_size_t size);
-LIBMEM_EXTERN mem_module_t       mem_in_load_module(mem_tstring_t path);
-LIBMEM_EXTERN mem_bool_t         mem_in_unload_module(mem_module_t mod);
-LIBMEM_EXTERN mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol);
-/* mem_ex */
-LIBMEM_EXTERN mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref);
-LIBMEM_EXTERN mem_size_t         mem_ex_get_process_name(mem_pid_t pid, mem_tstring_t *pprocess_name);
-LIBMEM_EXTERN mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t *pprocess_path);
-LIBMEM_EXTERN mem_arch_t         mem_ex_get_system_arch(mem_void_t);
-LIBMEM_EXTERN mem_arch_t         mem_ex_get_arch(mem_pid_t pid);
-LIBMEM_EXTERN mem_process_t      mem_ex_get_process(mem_pid_t pid);
-LIBMEM_EXTERN mem_size_t         mem_ex_get_process_list(mem_process_t **pprocess_list);
-LIBMEM_EXTERN mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module_ref);
-LIBMEM_EXTERN mem_size_t         mem_ex_get_module_name(mem_process_t process, mem_module_t mod, mem_tstring_t *pmodule_name);
-LIBMEM_EXTERN mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mod, mem_tstring_t *pmodule_path);
-LIBMEM_EXTERN mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t **pmodule_list);
-LIBMEM_EXTERN mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src);
-LIBMEM_EXTERN mem_bool_t         mem_ex_is_process_running(mem_process_t process);
-LIBMEM_EXTERN mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size);
-LIBMEM_EXTERN mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_voidptr_t src, mem_size_t size);
-LIBMEM_EXTERN mem_bool_t         mem_ex_set(mem_process_t process, mem_voidptr_t dst, mem_byte_t byte, mem_size_t size);
-LIBMEM_EXTERN mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, mem_voidptr_t arg0, mem_voidptr_t arg1, mem_voidptr_t arg2, mem_voidptr_t arg3, mem_voidptr_t arg4, mem_voidptr_t arg5);
-LIBMEM_EXTERN mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_size_t size, mem_prot_t protection, mem_prot_t *pold_protection);
-LIBMEM_EXTERN mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_prot_t protection);
-LIBMEM_EXTERN mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, mem_size_t size);
-LIBMEM_EXTERN mem_voidptr_t      mem_ex_scan(mem_process_t process, mem_data_t data, mem_size_t size, mem_voidptr_t start, mem_voidptr_t stop);
-LIBMEM_EXTERN mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern, mem_tstring_t mask, mem_voidptr_t start, mem_voidptr_t stop);
-LIBMEM_EXTERN mem_voidptr_t      mem_ex_signature_scan(mem_process_t process, mem_tstring_t signature, mem_voidptr_t start, mem_voidptr_t stop);
-LIBMEM_EXTERN mem_bool_t         mem_ex_detour(mem_process_t process, mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t *stolen_bytes);
-LIBMEM_EXTERN mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path);
-LIBMEM_EXTERN mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod);
-LIBMEM_EXTERN mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, mem_cstring_t symbol);
-
-#ifdef MEM_CPP
+#if LM_LANG == LM_LANG_CPP
 }
 #endif
 
-#endif /* MEM_COMPATIBLE */
+#endif /* LM_COMPATIBLE */
 #endif /* LIBMEM_H */

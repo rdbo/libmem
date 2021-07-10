@@ -1,5 +1,8 @@
 # libmem by rdbo - Documentation 
   
+# V4 UNDER DEVELOPMENT
+Please, use the latest release. The project is being rewritten and the branch `master` is being used for development.  
+
 **ALL LIBMEM FUNCTIONS ARE DOCUMENTS ON `libmem/libmem.c`. Make sure to read the comments**  
   
 # Overview

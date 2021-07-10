@@ -215,7 +215,7 @@
 extern "C" {
 #endif
 
-/* Types */
+/* Types/Enums */
 typedef char           lm_char_t;
 typedef unsigned char  lm_uchar_t;
 typedef int            lm_int_t;
@@ -294,6 +294,20 @@ typedef struct {
 	lm_prot_t    prot;
 	lm_flags_t   flags;
 } lm_page_t;
+
+enum {
+#	if LM_ARCH == LM_ARCH_X86
+	LM_DETOUR_JMP32,
+	LM_DETOUR_JMP64,
+	LM_DETOUR_CALL32,
+	LM_DETOUR_CALL64,
+	LM_DETOUR_RET32,
+	LM_DETOUR_RET64,
+#	endif
+	LM_DETOUR_INVAL
+};
+
+typedef lm_int_t lm_detour_t;
 
 /* libmem */
 LM_API lm_bool_t
@@ -405,6 +419,13 @@ LM_UnloadModule(lm_module_t mod);
 LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t proc,
 		  lm_module_t  mod);
+
+LM_API lm_address_t
+LM_GetSymbol(lm_module_t mod);
+
+LM_API lm_address_t
+LM_GetSymbolEx(lm_process_t proc,
+	       lm_module_t  mod);
 
 /****************************************/
 
@@ -527,6 +548,67 @@ LM_SigScanEx(lm_process_t proc,
 	     lm_tstring_t sig,
 	     lm_address_t start,
 	     lm_address_t stop);
+
+/****************************************/
+
+LM_API lm_uintptr_t
+LM_SystemCall(lm_int_t     nsyscall,
+	      lm_uintptr_t arg0,
+	      lm_uintptr_t arg1,
+	      lm_uintptr_t arg2,
+	      lm_uintptr_t arg3,
+	      lm_uintptr_t arg4,
+	      lm_uintptr_t arg5);
+
+LM_API lm_uintptr_t
+LM_SystemCallEx(lm_process_t proc,
+		lm_int_t     nsyscall,
+		lm_uintptr_t arg0,
+		lm_uintptr_t arg1,
+		lm_uintptr_t arg2,
+		lm_uintptr_t arg3,
+		lm_uintptr_t arg4,
+		lm_uintptr_t arg5);
+
+LM_API lm_uintptr_t
+LM_LibraryCall(lm_address_t fnaddr,
+	       lm_size_t    nargs,
+	       ...);
+
+LM_API lm_uintptr_t
+LM_LibraryCallEx(lm_process_t proc,
+		 lm_address_t fnaddr,
+		 lm_size_t    nargs,
+		 ...);
+
+LM_API lm_bool_t
+LM_DetourCode(lm_address_t src,
+	      lm_address_t dst,
+	      lm_detour_t  detour);
+
+LM_API lm_bool_t
+LM_DetourCodeEx(lm_process_t proc,
+		lm_address_t src,
+		lm_address_t dst,
+		lm_detour_t  detour);
+
+LM_API lm_address_t
+LM_MakeTrampoline(lm_address_t src,
+		  lm_address_t dst,
+		  lm_size_t    size);
+
+LM_API lm_address_t
+LM_MakeTrampolineEx(lm_process_t proc,
+		    lm_address_t src,
+		    lm_address_t dst,
+		    lm_size_t    size);
+
+LM_API lm_void_t
+LM_DestroyTrampoline(lm_address_t tramp);
+
+LM_API lm_void_t
+LM_DestroyTrampolineEx(lm_process_t proc,
+		       lm_address_t tramp);
 
 #if LM_LANG == LM_LANG_CPP
 }

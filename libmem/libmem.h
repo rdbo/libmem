@@ -140,6 +140,7 @@
 #define LM_OK    (!(LM_BAD))
 #define LM_FALSE (0)
 #define LM_TRUE  (!(LM_FALSE))
+#define LM_MAX   (-1UL)
 #if LM_OS == LM_OS_WIN
 #define LM_PATH_MAX MAX_PATH
 #elif LM_OS == LM_OS_LINUX
@@ -255,6 +256,7 @@ typedef lm_wchar_t     lm_tchar_t;
 typedef lm_char_t      lm_tchar_t;
 #endif
 
+typedef lm_byte_t     *lm_bstring_t;
 typedef lm_char_t     *lm_cstring_t;
 typedef lm_wchar_t    *lm_wstring_t;
 typedef lm_tchar_t    *lm_tstring_t;
@@ -388,6 +390,22 @@ LM_GetModuleNameEx(lm_process_t proc,
 		   lm_tchar_t  *namebuf,
 		   lm_size_t    maxlen);
 
+LM_API lm_bool_t
+LM_LoadModule(lm_tstring_t path,
+	      lm_module_t *mod);
+
+LM_API lm_bool_t
+LM_LoadModuleEx(lm_process_t proc,
+		lm_tstring_t path,
+		lm_module_t *mod);
+
+LM_API lm_bool_t
+LM_UnloadModule(lm_module_t mod);
+
+LM_API lm_bool_t
+LM_UnloadModuleEx(lm_process_t proc,
+		  lm_module_t  mod);
+
 /****************************************/
 
 LM_API lm_bool_t
@@ -412,7 +430,103 @@ LM_GetPageEx(lm_process_t proc,
 
 /****************************************/
 
+LM_API lm_size_t
+LM_ReadMemory(lm_address_t src,
+	      lm_void_t   *dst,
+	      lm_size_t    size);
 
+LM_API lm_size_t
+LM_ReadMemoryEx(lm_process_t proc,
+		lm_address_t src,
+		lm_void_t   *dst,
+		lm_size_t    size);
+
+LM_API lm_size_t
+LM_WriteMemory(lm_address_t dst,
+	       lm_void_t   *src,
+	       lm_size_t    size);
+
+LM_API lm_size_t
+LM_WriteMemoryEx(lm_process_t proc,
+		 lm_address_t dst,
+		 lm_void_t   *src,
+		 lm_size_t    size);
+
+LM_API lm_size_t
+LM_SetMemory(lm_address_t dst,
+	     lm_byte_t    byte,
+	     lm_size_t    size);
+
+LM_API lm_size_t
+LM_SetMemoryEx(lm_address_t dst,
+	       lm_byte_t    byte,
+	       lm_size_t    size);
+
+LM_API lm_size_t
+LM_ProtMemory(lm_address_t addr,
+	      lm_prot_t    prot,
+	      lm_size_t    size);
+
+LM_API lm_size_t
+LM_ProtMemoryEx(lm_process_t proc,
+		lm_address_t addr,
+		lm_prot_t    prot,
+		lm_size_t    size);
+
+LM_API lm_address_t
+LM_AllocMemory(lm_prot_t prot,
+	       lm_size_t size);
+
+LM_API lm_address_t
+LM_AllocMemoryEx(lm_process_t proc,
+		 lm_prot_t    prot,
+		 lm_size_t    size);
+
+LM_API lm_void_t
+LM_FreeMemory(lm_address_t alloc,
+	      lm_size_t    size);
+
+LM_API lm_void_t
+LM_FreeMemoryEx(lm_process_t proc,
+		lm_address_t alloc,
+		lm_size_t    size);
+
+LM_API lm_address_t
+LM_DataScan(lm_bstring_t data,
+	    lm_size_t    size,
+	    lm_address_t start,
+	    lm_address_t stop);
+
+LM_API lm_address_t
+LM_DataScanEx(lm_process_t proc,
+	      lm_bstring_t data,
+	      lm_size_t    size,
+	      lm_address_t start,
+	      lm_address_t stop);
+
+LM_API lm_address_t
+LM_PatternScan(lm_bstring_t pattern,
+	       lm_tstring_t mask,
+	       lm_address_t start,
+	       lm_address_t stop);
+
+LM_API lm_address_t
+LM_PatternScanEx(lm_process_t proc,
+		 lm_bstring_t pattern,
+		 lm_tstring_t mask,
+		 lm_address_t start,
+		 lm_address_t stop);
+
+LM_API lm_address_t
+LM_SigScan(lm_tstring_t sig,
+	   lm_address_t start,
+	   lm_address_t stop);
+
+LM_API lm_address_t
+LM_SigScanEx(lm_process_t proc,
+	     lm_tstring_t sig,
+	     lm_address_t start,
+	     lm_address_t stop);
 
 #if LM_LANG == LM_LANG_CPP
 }

@@ -48,7 +48,7 @@ _LM_OpenFileBuf(lm_tstring_t path,
 {
 	int         fd;
 	lm_size_t   total = 0;
-	lm_tchar_t  buf[1024];
+	lm_tchar_t  c;
 	ssize_t     rdsize;
 	lm_tchar_t *filebuf = (lm_tchar_t *)LM_NULL;
 
@@ -56,19 +56,14 @@ _LM_OpenFileBuf(lm_tstring_t path,
 	if (fd == -1)
 		return total;
 	
-	while ((rdsize = read(fd, buf, sizeof(buf)) > 0)) {
+	while ((rdsize = read(fd, &c, sizeof(c)) > 0)) {
 		lm_tchar_t *old_filebuf;
 
-		rdsize /= sizeof(buf[0]);
-
-		filebuf = LM_CALLOC(total + (size_t)rdsize + 1,
-				    sizeof(lm_tchar_t));
 		old_filebuf = filebuf;
-
+		filebuf = LM_CALLOC(total + 2, sizeof(c));
 		if (old_filebuf) {
 			if (filebuf)
 				LM_STRNCPY(filebuf, old_filebuf, total);
-
 			LM_FREE(old_filebuf);
 		}
 
@@ -77,13 +72,14 @@ _LM_OpenFileBuf(lm_tstring_t path,
 			break;
 		}
 
-		LM_STRNCPY(&filebuf[total], buf, LM_ARRLEN(buf));
-		total += (size_t)rdsize;
-		filebuf[total] = '\x00';
+		filebuf[total++] = c;
+		filebuf[total] = LM_STR('\x00');
 	}
 
-	if (filebuf)
+	if (filebuf) {
+		filebuf[total] = LM_STR('\x00');
 		*pfilebuf = filebuf;
+	}
 
 	close(fd);
 	return total;
@@ -148,7 +144,8 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 		while ((pdirent = readdir(dir))) {
 			lm_pid_t pid = LM_ATOI(pdirent->d_name);
 
-			if (pid || (!pid && !LM_STRCMP(pdirent->d_name, "0"))) {
+			if (pid || (!pid && !LM_STRCMP(pdirent->d_name,
+						       LM_STR("0")))) {
 				if (callback(pid, arg) == LM_FALSE)
 					break;
 			}
@@ -214,7 +211,7 @@ _LM_GetProcessIdCallback(lm_pid_t   pid,
 
 		len = LM_GetProcessPathEx(proc,	path, LM_PATH_MAX - 1);
 		if (len && len >= parg->len) {
-			path[len] = '\x00';
+			path[len] = LM_STR('\x00');
 
 			if (!LM_STRCMP(&path[len - parg->len], 
 				       parg->procstr)) {
@@ -321,15 +318,15 @@ LM_GetParentIdEx(lm_pid_t pid)
 		lm_tchar_t *ptr;
 
 		LM_SNPRINTF(status_path, LM_ARRLEN(status_path) - 1,
-			    "%s/%d/status", LM_PROCFS, pid);
+			    LM_STR("%s/%d/status"), LM_STR(LM_PROCFS), pid);
 		
 		if (!_LM_OpenFileBuf(status_path, &status_buf))
 			return ppid;
 
-		ptr = LM_STRSTR(status_buf, "\nPPid:\t");
+		ptr = LM_STRSTR(status_buf, LM_STR("\nPPid:\t"));
 
 		if (ptr) {
-			ptr = LM_STRCHR(ptr, '\t');
+			ptr = LM_STRCHR(ptr, LM_STR('\t'));
 			ptr = &ptr[1];
 			ppid = (lm_pid_t)LM_ATOI(ptr);
 		}
@@ -440,25 +437,21 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 		if (!hModule)
 		return chr_count;
 
-		len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
+		len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen - 1);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
 		lm_process_t proc;
 
 		if (LM_OpenProcess(&proc)) {
-			len = LM_GetProcessPathEx(proc, pathbuf, maxlen);
+			len = LM_GetProcessPathEx(proc, pathbuf, maxlen - 1);
 			LM_CloseProcess(&proc);
 		}
 	}
 #	endif
 
-	if (len) {
-		if (len == maxlen)
-			--len;
-		
-		pathbuf[len] = '\x00';
-	}
+	if (len)
+		pathbuf[len] = LM_STR('\x00');
 
 	return len;
 }
@@ -476,15 +469,15 @@ LM_GetProcessPathEx(lm_process_t proc,
 #	if LM_OS == LM_OS_WIN
 	{
 		len = (lm_size_t)GetModuleFileNameEx(proc.handle, NULL,
-						     pathbuf, maxlen);
+						     pathbuf, maxlen - 1);
 	}
 #	elif LM_OS == LM_OS_LINUX
 	{
 		lm_tchar_t exe_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 		LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path) - 1,
-			    "%s/%d/exe", LM_PROCFS, proc.pid);
+			    LM_STR("%s/%d/exe"), LM_STR(LM_PROCFS), proc.pid);
 		
-		len = (lm_size_t)readlink(exe_path, pathbuf, maxlen);
+		len = (lm_size_t)readlink(exe_path, pathbuf, maxlen - 1);
 		if (len == (lm_size_t)-1)
 			len = 0;
 	}
@@ -501,7 +494,8 @@ LM_GetProcessPathEx(lm_process_t proc,
 			);
 
 			if (procs && nprocs) {
-				if (procstat_getpathname(ps, pproc, pathbuf, maxlen))
+				if (procstat_getpathname(ps, pproc,
+							 pathbuf, maxlen - 1))
 					len = LM_STRLEN(proc_path);
 
 				procstat_freeprocs(ps, procs);
@@ -514,24 +508,133 @@ LM_GetProcessPathEx(lm_process_t proc,
 	}
 #	endif
 
-	if (len) {
-		if (len == maxlen)
-			--len;
-		
-		pathbuf[len] = '\x00';
-	}
+	if (len)
+		pathbuf[len] = LM_STR('\x00');
 
 	return len;
 }
 
 LM_API lm_size_t
 LM_GetProcessName(lm_tchar_t *namebuf,
-		  lm_size_t   maxlen);
+		  lm_size_t   maxlen)
+{
+	lm_size_t len = 0;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		lm_tchar_t *path;
+		lm_size_t   pathlen;
+
+		path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+
+		if !(path)
+			return len;
+		
+		if (LM_GetProcessPath(path, LM_PATH_MAX)) {
+			lm_tchar_t *tmp;
+			lm_tchar_t *ptr = (lm_tchar_t *)LM_NULL;
+
+			for (tmp = path;
+			     tmp = LM_STRCHR(tmp, LM_STR('\\');
+			     tmp = &tmp[1])
+				ptr = tmp;
+			
+			if (ptr) {
+				ptr = &ptr[1];
+				len = LM_STRLEN(ptr);
+				if (len >= maxlen)
+					len = maxlen - 1;
+				
+				LM_STRNCPY(namebuf, ptr, len);
+				namebuf[len] = LM_STR('\x00');
+			}
+		}
+
+		LM_FREE(path);
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_process_t proc;
+		if (LM_OpenProcess(&proc)) {
+			len = LM_GetProcessNameEx(proc, namebuf, maxlen);
+			LM_CloseProcess(&proc);
+		}
+	}
+#	endif
+
+	return len;
+}
 
 LM_API lm_size_t
 LM_GetProcessNameEx(lm_process_t proc,
 		    lm_tchar_t  *namebuf,
-		    lm_size_t    maxlen);
+		    lm_size_t    maxlen)
+{
+	lm_size_t len = 0;
+
+	if (!_LM_CheckProcess(proc) || !namebuf || !maxlen)
+		return len;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		len = (lm_size_t)GetModuleBaseName(proc.handle, NULL, namebuf, maxlen - 1);
+		if (len)
+			namebuf[len] = LM_STR('\x00');
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		lm_tchar_t *filebuf;
+		lm_tchar_t comm_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
+
+		LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path) - 1,
+			    LM_STR("%s/%d/comm"), LM_STR(LM_PROCFS), proc.pid);
+		
+		len = _LM_OpenFileBuf(comm_path, &filebuf);
+
+		if (len) {
+			--len;
+
+			if (len >= maxlen)
+				len = maxlen - 1;
+			
+			LM_STRNCPY(namebuf, filebuf, len);
+			namebuf[len] = LM_STR('\x00');
+
+			_LM_CloseFileBuf(&filebuf);
+		}
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		struct procstat *ps;
+		
+		ps = procstat_open_sysctl();
+		if (ps) {
+			unsigned int nprocs = 0;
+			struct kinfo_proc *procs = procstat_getprocs(
+				ps, KERN_PROC_PID,
+				pid, &nprocs
+			);
+
+			if (procs && nprocs) {
+				len = LM_STRLEN(procs->ki_comm);
+				if (len > maxlen)
+					len = maxlen - 1;
+				
+				LM_STRNCPY(namebuf, procs->ki_comm, len);
+				namebuf[len] = LM_STR('\x00');
+
+				procstat_freeprocs(ps, procs);
+
+				ret = LM_TRUE;
+			}
+
+			procstat_close(ps);
+		}
+	}
+#	endif
+
+	return len;
+}
 
 LM_API lm_size_t
 LM_GetProcessBits(lm_void_t);

@@ -742,4 +742,223 @@ LM_GetProcessBitsEx(lm_process_t proc)
 
 /****************************************/
 
+LM_API lm_bool_t
+LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
+				    lm_tstring_t path,
+				    lm_void_t   *arg),
+	       lm_void_t *arg)
+{
+	lm_byte_t ret = LM_FALSE;
+	lm_process_t proc;
+
+	LM_OpenProcess(&proc);
+	ret = LM_EnumModulesEx(proc, callback, arg);
+	LM_CloseProcess(&proc);
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_EnumModulesEx(lm_process_t proc,
+		 lm_bool_t  (*callback)(lm_module_t  mod,
+					lm_tstring_t path,
+					lm_void_t   *arg),
+		 lm_void_t   *arg)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		HANDLE hSnap;
+
+		hSnap = CreateToolhelp32Snapshot(
+			TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
+			proc.pid
+		);
+
+		if (hSnap != INVALID_HANDLE_VALUE) {
+			MODULEENTRY32 entry;
+			entry.dwSize = sizeof(MODULEENTRY32);
+
+			if (Module32First(hSnap, &entry)) {
+				do {
+					lm_module_t mod;
+
+					mod.base = (lm_address_t)(
+						entry.modBaseAddr
+					);
+					mod.size = (lm_size_t)(
+						entry.modBaseSize
+					);
+					mod.end  = (lm_address_t)(
+						&((lm_byte_t *)mod.base)[
+							mod.size
+						]
+					);
+
+					if (callback(mod,
+						     entry.szExePath,
+						     arg) == LM_FALSE)
+						break;
+				} while (Module32Next(hSnap, &entry));
+
+				ret = LM_TRUE;
+			}
+
+			CloseHandle(hSnap);
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_tchar_t *maps_buf;
+		lm_tchar_t *ptr;
+		lm_tchar_t maps_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
+
+#		if LM_OS == LM_OS_LINUX
+		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
+			    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
+#		elif LM_OS == LM_OS_BSD
+		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
+			    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
+#		endif
+		
+		if (!_LM_OpenFileBuf(maps_path, &maps_buf))
+			return ret;
+
+		ret = LM_TRUE;
+
+		for (ptr = maps_buf;
+		     ptr && (ptr = LM_STRCHR(ptr, LM_STR('/')));
+		     ptr = LM_STRCHR(ptr, LM_STR('\n'))) {
+			lm_tchar_t *tmp, *holder;
+			lm_tchar_t *path;
+			lm_size_t   pathlen;
+			lm_module_t mod;
+
+			tmp = LM_STRCHR(ptr, LM_STR('\n'));
+			pathlen = (lm_size_t)(
+				((lm_uintptr_t)tmp - (lm_uintptr_t)ptr) /
+				sizeof(tmp[0])
+			);
+			
+			path = LM_CALLOC(pathlen + 1, sizeof(lm_tchar_t));
+			if (!path) {
+				ret = LM_FALSE;
+				break;
+			}
+
+			LM_STRNCPY(path, ptr, pathlen);
+			path[pathlen] = LM_STR('\x00');
+
+			holder = maps_buf;
+			for (tmp = maps_buf;
+			     (lm_uintptr_t)(
+				     tmp = LM_STRCHR(tmp, LM_STR('\n'))
+			     ) < (lm_uintptr_t)ptr;
+			     tmp = &tmp[1])
+				holder = &tmp[1];
+			
+			mod.base = (lm_address_t)LM_STRTOP(holder, NULL, 16);
+
+			holder = ptr;
+			for (tmp = maps_buf;
+			     (tmp = LM_STRSTR(tmp, path));
+			     tmp = &tmp[1])
+				holder = tmp;
+			
+			ptr = holder;
+
+			holder = maps_buf;
+			for (tmp = maps_buf;
+			     (lm_uintptr_t)(
+				     tmp = LM_STRCHR(tmp, LM_STR('\n'))
+			     ) < (lm_uintptr_t)ptr;
+			     tmp = &tmp[1])
+				holder = &tmp[1];
+
+#			if LM_OS == LM_OS_LINUX
+			holder = LM_STRCHR(holder, LM_STR('-'));
+#			elif LM_OS == LM_OS_BSD
+			holder = LM_STRSTR(holder, LM_STR(" 0x"));
+#			endif
+			holder = &holder[1];
+
+			mod.end = (lm_address_t)LM_STRTOP(holder, NULL, 16);
+			mod.size = (
+				(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
+			);
+
+			{
+				lm_bool_t cbret;
+
+				cbret = callback(mod, path, arg);
+				LM_FREE(path);
+
+				if (cbret == LM_FALSE)
+					break;
+			}
+		}
+
+		_LM_CloseFileBuf(&maps_buf);
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_GetModule(lm_tstring_t modstr,
+	     lm_module_t *modbuf);
+
+LM_API lm_bool_t
+LM_GetModuleEx(lm_process_t proc,
+	       lm_tstring_t modstr,
+	       lm_module_t *modbuf);
+
+LM_API lm_size_t
+LM_GetModulePath(lm_module_t mod,
+		 lm_tchar_t *pathbuf,
+		 lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetModulePathEx(lm_process_t proc,
+		   lm_module_t  mod,
+		   lm_tchar_t  *pathbuf,
+		   lm_size_t    maxlen);
+
+LM_API lm_size_t
+LM_GetModuleName(lm_module_t mod,
+		 lm_tchar_t *namebuf,
+		 lm_size_t   maxlen);
+
+LM_API lm_size_t
+LM_GetModuleNameEx(lm_process_t proc,
+		   lm_tchar_t  *namebuf,
+		   lm_size_t    maxlen);
+
+LM_API lm_bool_t
+LM_LoadModule(lm_tstring_t path,
+	      lm_module_t *mod);
+
+LM_API lm_bool_t
+LM_LoadModuleEx(lm_process_t proc,
+		lm_tstring_t path,
+		lm_module_t *mod);
+
+LM_API lm_bool_t
+LM_UnloadModule(lm_module_t mod);
+
+LM_API lm_bool_t
+LM_UnloadModuleEx(lm_process_t proc,
+		  lm_module_t  mod);
+
+LM_API lm_address_t
+LM_GetSymbol(lm_module_t mod);
+
+LM_API lm_address_t
+LM_GetSymbolEx(lm_process_t proc,
+	       lm_module_t  mod);
+
+/****************************************/
+
 #endif

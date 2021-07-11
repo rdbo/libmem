@@ -23,12 +23,43 @@ EnumProcessesCallback(lm_pid_t   pid,
 
 	LM_CloseProcess(&proc);
 
+	if (pid == LM_GetProcessId()) {
+		*(lm_pid_t *)arg = pid;
+		return LM_FALSE;
+	}
+
+	return LM_TRUE;
+}
+
+lm_bool_t
+EnumModulesCallback(lm_module_t  mod,
+		    lm_tstring_t path,
+		    lm_void_t   *arg)
+{
+	printf("[*] Module Path: %s\n", path);
+	printf("[*] Module Base: %p\n", mod.base);
+	printf("[*] Module Size: %p\n", (lm_void_t *)mod.size);
+	printf("[*] Module End:  %p\n", mod.end);
+	printf("====================\n");
+
 	return LM_TRUE;
 }
 
 int
 main()
 {
-	LM_EnumProcesses(EnumProcessesCallback, (lm_void_t *)LM_NULL);
+	lm_pid_t pid;
+	lm_process_t proc;
+
+	printf("[+] Tests Started\n");
+
+	LM_EnumProcesses(EnumProcessesCallback, (lm_void_t *)&pid);
+	LM_OpenProcessEx(pid, &proc);
+	LM_EnumModulesEx(proc, EnumModulesCallback, (lm_void_t *)LM_NULL);
+	LM_CloseProcess(&proc);
+
+	printf("[-] Tests Ended\n");
+	getchar();
+
 	return 0;
 }

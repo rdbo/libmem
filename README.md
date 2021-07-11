@@ -1,9 +1,7 @@
 ![libmem-logo](img/logo.png)  
-  
+#   
 # V4 UNDER DEVELOPMENT
 Please, use the latest release. The project is being rewritten and the branch `master` is being used for development.  
-
-# 
 # Usage
 Copy the `libmem` folder to your project directory.  
 Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  

@@ -351,8 +351,8 @@ LM_OpenProcessEx(lm_pid_t      pid,
 #	if LM_OS == LM_OS_WIN
 	{
 		procbuf->handle = OpenProcess(LM_PROCESS_ACCESS,
-						FALSE,
-						procbuf->pid);
+					      FALSE,
+					      procbuf->pid);
 		
 		if (procbuf->handle)
 			ret = LM_TRUE;

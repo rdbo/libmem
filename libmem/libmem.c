@@ -162,7 +162,7 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 			unsigned int nprocs = 0;
 			struct kinfo_proc *procs = procstat_getprocs(
 				ps, KERN_PROC_PROC, 
-				pid, &nprocs
+				0, &nprocs
 			);
 
 			if (procs) {
@@ -490,17 +490,15 @@ LM_GetProcessPathEx(lm_process_t proc,
 			unsigned int nprocs = 0;
 			struct kinfo_proc *procs = procstat_getprocs(
 				ps, KERN_PROC_PID,
-				pid, &nprocs
+				proc.pid, &nprocs
 			);
 
 			if (procs && nprocs) {
-				if (procstat_getpathname(ps, pproc,
+				if (procstat_getpathname(ps, procs,
 							 pathbuf, maxlen - 1))
-					len = LM_STRLEN(proc_path);
+					len = LM_STRLEN(pathbuf);
 
 				procstat_freeprocs(ps, procs);
-
-				ret = LM_TRUE;
 			}
 
 			procstat_close(ps);
@@ -612,7 +610,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 			unsigned int nprocs = 0;
 			struct kinfo_proc *procs = procstat_getprocs(
 				ps, KERN_PROC_PID,
-				pid, &nprocs
+				proc.pid, &nprocs
 			);
 
 			if (procs && nprocs) {
@@ -624,8 +622,6 @@ LM_GetProcessNameEx(lm_process_t proc,
 				namebuf[len] = LM_STR('\x00');
 
 				procstat_freeprocs(ps, procs);
-
-				ret = LM_TRUE;
 			}
 
 			procstat_close(ps);

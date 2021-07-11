@@ -16,11 +16,35 @@ typedef struct {
 } _lm_get_pid_t;
 
 /* Helpers */
+static lm_bool_t
+_LM_CheckProcess(lm_process_t proc)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (proc.pid == (lm_pid_t)LM_BAD)
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		if (proc.pid != LM_GetProcessId() && !proc.handle)
+			return ret;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		
+	}
+#	endif
+
+	ret = LM_TRUE;
+
+	return ret;
+}
+
 #if LM_OS == LM_OS_WIN
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 static lm_size_t
 _LM_OpenFileBuf(lm_tstring_t path, 
-	     lm_tchar_t **pfilebuf)
+		lm_tchar_t **pfilebuf)
 {
 	int         fd;
 	lm_size_t   total = 0;
@@ -124,7 +148,7 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 		while ((pdirent = readdir(dir))) {
 			lm_pid_t pid = LM_ATOI(pdirent->d_name);
 
-			if (pid || (!pid && LM_STRCMP(pdirent->d_name, "0"))) {
+			if (pid || (!pid && !LM_STRCMP(pdirent->d_name, "0"))) {
 				if (callback(pid, arg) == LM_FALSE)
 					break;
 			}
@@ -156,8 +180,12 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 						break;
 				}
 
+				procstat_freeprocs(ps, procs);
+
 				ret = LM_TRUE;
 			}
+
+			procstat_close(ps);
 		}
 	}
 #	endif
@@ -289,7 +317,7 @@ LM_GetParentIdEx(lm_pid_t pid)
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
 		lm_tchar_t *status_buf;
-		lm_tchar_t  status_path[64] = { 0 };
+		lm_tchar_t  status_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 		lm_tchar_t *ptr;
 
 		LM_SNPRINTF(status_path, LM_ARRLEN(status_path) - 1,
@@ -320,19 +348,21 @@ LM_OpenProcess(lm_process_t *procbuf)
 
 	if (!procbuf)
 		return ret;
-	
-	procbuf->pid = LM_GetProcessId();
+
+	procbuf->pid = (lm_pid_t)LM_BAD;
 
 #	if LM_OS == LM_OS_WIN
 	{
 		procbuf->handle = GetCurrentProcess();
-		ret = LM_TRUE;
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
-		ret = LM_TRUE;
+		
 	}
 #	endif
+
+	procbuf->pid = LM_GetProcessId();
+	ret = LM_TRUE;
 
 	return ret;
 }
@@ -346,22 +376,29 @@ LM_OpenProcessEx(lm_pid_t      pid,
 	if (!procbuf)
 		return ret;
 	
-	procbuf->pid = pid;
+	procbuf->pid = (lm_pid_t)LM_BAD;
 
 #	if LM_OS == LM_OS_WIN
 	{
-		procbuf->handle = OpenProcess(LM_PROCESS_ACCESS,
+		if (pid != LM_GetProcessId()) {
+			procbuf->handle = OpenProcess(LM_PROCESS_ACCESS,
 					      FALSE,
-					      procbuf->pid);
+					      pid);
 		
-		if (procbuf->handle)
-			ret = LM_TRUE;
+			if (!procbuf->handle)
+				return ret;
+		} else {
+			procbuf->handle = GetCurrentProcess();
+		}
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
-		ret = LM_TRUE;
+		
 	}
 #	endif
+
+	procbuf->pid = pid;
+	ret = LM_TRUE;
 
 	return ret;
 }
@@ -390,12 +427,102 @@ LM_CloseProcess(lm_process_t *proc)
 
 LM_API lm_size_t
 LM_GetProcessPath(lm_tchar_t *pathbuf,
-		  lm_size_t   maxlen);
+		  lm_size_t   maxlen)
+{
+	lm_size_t len = 0;
+
+	if (!pathbuf || !maxlen)
+		return len;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		HMODULE hModule = GetModuleHandle(NULL);
+		if (!hModule)
+		return chr_count;
+
+		len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_process_t proc;
+
+		if (LM_OpenProcess(&proc)) {
+			len = LM_GetProcessPathEx(proc, pathbuf, maxlen);
+			LM_CloseProcess(&proc);
+		}
+	}
+#	endif
+
+	if (len) {
+		if (len == maxlen)
+			--len;
+		
+		pathbuf[len] = '\x00';
+	}
+
+	return len;
+}
 
 LM_API lm_size_t
 LM_GetProcessPathEx(lm_process_t proc,
 		    lm_tchar_t  *pathbuf,
-		    lm_size_t    maxlen);
+		    lm_size_t    maxlen)
+{
+	lm_size_t len = 0;
+
+	if (!_LM_CheckProcess(proc) || !pathbuf || !maxlen)
+		return len;
+	
+#	if LM_OS == LM_OS_WIN
+	{
+		len = (lm_size_t)GetModuleFileNameEx(proc.handle, NULL,
+						     pathbuf, maxlen);
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		lm_tchar_t exe_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
+		LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path) - 1,
+			    "%s/%d/exe", LM_PROCFS, proc.pid);
+		
+		len = (lm_size_t)readlink(exe_path, pathbuf, maxlen);
+		if (len == (lm_size_t)-1)
+			len = 0;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		struct procstat *ps;
+		
+		ps = procstat_open_sysctl();
+		if (ps) {
+			unsigned int nprocs = 0;
+			struct kinfo_proc *procs = procstat_getprocs(
+				ps, KERN_PROC_PID,
+				pid, &nprocs
+			);
+
+			if (procs && nprocs) {
+				if (procstat_getpathname(ps, pproc, pathbuf, maxlen))
+					len = LM_STRLEN(proc_path);
+
+				procstat_freeprocs(ps, procs);
+
+				ret = LM_TRUE;
+			}
+
+			procstat_close(ps);
+		}
+	}
+#	endif
+
+	if (len) {
+		if (len == maxlen)
+			--len;
+		
+		pathbuf[len] = '\x00';
+	}
+
+	return len;
+}
 
 LM_API lm_size_t
 LM_GetProcessName(lm_tchar_t *namebuf,

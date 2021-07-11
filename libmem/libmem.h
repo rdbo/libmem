@@ -279,7 +279,7 @@ typedef int            lm_flags_t;
 typedef struct {
 	lm_pid_t pid;
 #	if LM_OS == LM_OS_WIN
-	HANDLE hProcess;
+	HANDLE   handle;
 #	endif
 } lm_process_t;
 
@@ -336,7 +336,7 @@ LM_API lm_bool_t
 LM_OpenProcessEx(lm_pid_t      pid,
 		 lm_process_t *procbuf);
 
-LM_API lm_bool_t
+LM_API lm_void_t
 LM_CloseProcess(lm_process_t *proc);
 
 LM_API lm_size_t

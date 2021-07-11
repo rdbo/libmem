@@ -15,6 +15,66 @@ typedef struct {
 	lm_size_t    len;
 } _lm_get_pid_t;
 
+/* Helpers */
+#if LM_OS == LM_OS_WIN
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+static lm_size_t
+_LM_OpenFileBuf(lm_tstring_t path, 
+	     lm_tchar_t **pfilebuf)
+{
+	int         fd;
+	lm_size_t   total = 0;
+	lm_tchar_t  buf[1024];
+	ssize_t     rdsize;
+	lm_tchar_t *filebuf = (lm_tchar_t *)LM_NULL;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return total;
+	
+	while ((rdsize = read(fd, buf, sizeof(buf)) > 0)) {
+		lm_tchar_t *old_filebuf;
+
+		rdsize /= sizeof(buf[0]);
+
+		filebuf = LM_CALLOC(total + (size_t)rdsize + 1,
+				    sizeof(lm_tchar_t));
+		old_filebuf = filebuf;
+
+		if (old_filebuf) {
+			if (filebuf)
+				LM_STRNCPY(filebuf, old_filebuf, total);
+
+			LM_FREE(old_filebuf);
+		}
+
+		if (!filebuf) {
+			total = 0;
+			break;
+		}
+
+		LM_STRNCPY(&filebuf[total], buf, LM_ARRLEN(buf));
+		total += (size_t)rdsize;
+		filebuf[total] = '\x00';
+	}
+
+	if (filebuf)
+		*pfilebuf = filebuf;
+
+	close(fd);
+	return total;
+}
+
+static lm_void_t
+_LM_CloseFileBuf(lm_tchar_t **pfilebuf)
+{
+	if (pfilebuf && *pfilebuf) {
+		LM_FREE(*pfilebuf);
+		*pfilebuf = (lm_tchar_t *)LM_NULL;
+	}
+}
+#endif
+
 /* libmem */
 LM_API lm_bool_t
 LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
@@ -147,9 +207,13 @@ LM_GetProcessId(lm_void_t)
 	lm_pid_t pid = (lm_pid_t)LM_BAD;
 
 #	if LM_OS == LM_OS_WIN
-	pid = GetCurrentProcessID();
+	{
+		pid = GetCurrentProcessID();
+	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
-	pid = getpid();
+	{
+		pid = getpid();
+	}
 #	endif
 
 	return pid;
@@ -174,9 +238,13 @@ LM_GetParentId(lm_void_t)
 	lm_pid_t ppid = (lm_pid_t)LM_BAD;
 
 #	if LM_OS == LM_OS_WIN
-	ppid = LM_GetParentIdEx(LM_GetProcessId());
+	{
+		ppid = LM_GetParentIdEx(LM_GetProcessId());
+	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
-	ppid = getppid();
+	{
+		ppid = getppid();
+	}
 #	endif
 
 	if (!ppid)
@@ -186,17 +254,139 @@ LM_GetParentId(lm_void_t)
 }
 
 LM_API lm_pid_t
-LM_GetParentIdEx(lm_pid_t pid);
+LM_GetParentIdEx(lm_pid_t pid)
+{
+	lm_pid_t ppid = (lm_pid_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		HANDLE hSnap;
+		
+		hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+		if (hSnap != INVALID_HANDLE_VALUE) {
+			PROCESSENTRY32 entry;
+
+			entry.dwSize = sizeof(PROCESSENTRY32);
+			if (Process32First(hSnap, &entry)) {
+				do {
+					lm_pid_t curpid = (lm_pid_t)(
+						entry.th32ProcessID;
+					);
+
+					if (curpid == pid) {
+						ppid = (lm_pid_t)(
+						      entry.th32ParentProcessID
+						);
+
+						break;
+					}
+				} while (Process32Next(hSnap, &entry));
+			}
+		}
+
+		CloseHandle(hSnap);
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_tchar_t *status_buf;
+		lm_tchar_t  status_path[64] = { 0 };
+		lm_tchar_t *ptr;
+
+		LM_SNPRINTF(status_path, LM_ARRLEN(status_path) - 1,
+			    "%s/%d/status", LM_PROCFS, pid);
+		
+		if (!_LM_OpenFileBuf(status_path, &status_buf))
+			return ppid;
+
+		ptr = LM_STRSTR(status_buf, "\nPPid:\t");
+
+		if (ptr) {
+			ptr = LM_STRCHR(ptr, '\t');
+			ptr = &ptr[1];
+			ppid = (lm_pid_t)LM_ATOI(ptr);
+		}
+
+		_LM_CloseFileBuf(&status_buf);
+	}
+#	endif
+
+	return ppid;
+}
 
 LM_API lm_bool_t
-LM_OpenProcess(lm_process_t *procbuf);
+LM_OpenProcess(lm_process_t *procbuf)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!procbuf)
+		return ret;
+	
+	procbuf->pid = LM_GetProcessId();
+
+#	if LM_OS == LM_OS_WIN
+	{
+		procbuf->handle = GetCurrentProcess();
+		ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_bool_t
 LM_OpenProcessEx(lm_pid_t      pid,
-		 lm_process_t *procbuf);
+		 lm_process_t *procbuf)
+{
+	lm_bool_t ret = LM_FALSE;
 
-LM_API lm_bool_t
-LM_CloseProcess(lm_process_t *proc);
+	if (!procbuf)
+		return ret;
+	
+	procbuf->pid = pid;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		procbuf->handle = OpenProcess(LM_PROCESS_ACCESS,
+						FALSE,
+						procbuf->pid);
+		
+		if (procbuf->handle)
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_void_t
+LM_CloseProcess(lm_process_t *proc)
+{
+	if (!proc)
+		return;
+	
+#	if LM_OS == LM_OS_WIN
+	{
+		if (proc->handle && proc->pid != LM_GetProcessId()) {
+			CloseHandle(proc->handle);
+			proc->handle = (HANDLE)NULL;
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+
+	}
+#	endif
+
+	proc->pid = (lm_pid_t)LM_BAD;
+}
 
 LM_API lm_size_t
 LM_GetProcessPath(lm_tchar_t *pathbuf,

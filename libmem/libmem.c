@@ -637,10 +637,108 @@ LM_GetProcessNameEx(lm_process_t proc,
 }
 
 LM_API lm_size_t
-LM_GetProcessBits(lm_void_t);
+LM_GetSystemBits(lm_void_t)
+{
+	lm_size_t bits = 0;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		SYSTEM_INFO sysinfo = { 0 };
+
+		GetNativeSystemInfo(&sysinfo);
+		switch (sysinfo.wProcessorArchitecture)
+		{
+		case PROCESSOR_ARCHITECTURE_INTEL:
+			bits = 32;
+			break;
+		case PROCESSOR_ARCHITECTURE_AMD64:
+			bits = 64;
+			break;
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		struct utsname utsbuf;
+
+		if (uname(&utsbuf))
+			return bits;
+		
+		if (LM_STRCMP(utsbuf.machine, "x86_32"))
+			bits = 32;
+		else if (LM_STRCMP(utsbuf.machine, "x86_64"))
+			bits = 64;
+	}
+#	endif
+
+	return bits;
+}
 
 LM_API lm_size_t
-LM_GetProcessBitsEx(lm_process_t proc);
+LM_GetProcessBits(lm_void_t)
+{
+	return (lm_size_t)LM_BITS;
+}
+
+LM_API lm_size_t
+LM_GetProcessBitsEx(lm_process_t proc)
+{
+	lm_size_t bits = 0;
+
+	if (!_LM_CheckProcess(proc))
+		return bits;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		BOOL IsWow64;
+		BOOL Check;
+		lm_size_t sysbits;
+
+		if (!IsWow64Process(proc.handle, &IsWow64))
+			return bits;
+
+		sysbits = LM_GetSystemBits();
+
+		if (sysbits == 32 || IsWow64)
+			bits = 32;
+		else if (sysbits == 64)
+			bits = 64;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_tchar_t *path;
+
+		path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		if (!path)
+			return bits;
+		
+		if (LM_GetProcessPathEx(proc, path, LM_PATH_MAX)) {
+			int fd;
+
+			fd = open(path, O_RDONLY);
+			if (fd != -1) {
+				unsigned char elf_num;
+
+				/*
+				 * 32 bits: 0x7F, ELF, 1
+				 * 64 bits: 0x7F, ELF, 2
+				 */
+
+				lseek(fd, 4, SEEK_SET);
+				if (read(fd, &elf_num, sizeof(elf_num)) > 0 &&
+				    (elf_num == 1 || elf_num == 2))
+					bits = elf_num * 32;
+				
+				close(fd);
+			}
+		}
+
+		LM_FREE(path);
+		
+	}
+#	endif
+
+	return bits;
+}
 
 /****************************************/
 

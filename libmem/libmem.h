@@ -358,6 +358,9 @@ LM_GetProcessNameEx(lm_process_t proc,
 		    lm_size_t    maxlen);
 
 LM_API lm_size_t
+LM_GetSystemBits(lm_void_t);
+
+LM_API lm_size_t
 LM_GetProcessBits(lm_void_t);
 
 LM_API lm_size_t

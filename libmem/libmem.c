@@ -527,7 +527,7 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 
 		path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 
-		if !(path)
+		if (!path)
 			return len;
 		
 		if (LM_GetProcessPath(path, LM_PATH_MAX)) {
@@ -535,7 +535,7 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 			lm_tchar_t *ptr = (lm_tchar_t *)LM_NULL;
 
 			for (tmp = path;
-			     tmp = LM_STRCHR(tmp, LM_STR('\\');
+			     tmp = LM_STRCHR(tmp, LM_STR('\\'));
 			     tmp = &tmp[1])
 				ptr = tmp;
 			

@@ -831,7 +831,11 @@ LM_EnumModulesEx(lm_process_t proc,
 			lm_size_t   pathlen;
 			lm_module_t mod;
 
+#			if LM_OS == LM_OS_LINUX
 			tmp = LM_STRCHR(ptr, LM_STR('\n'));
+#			elif LM_OS == LM_OS_BSD
+			tmp = LM_STRCHR(ptr, LM_STR(' ')); /* TOFIX: Won't work on paths that have spaces */
+#			endif
 			pathlen = (lm_size_t)(
 				((lm_uintptr_t)tmp - (lm_uintptr_t)ptr) /
 				sizeof(tmp[0])

@@ -1,4 +1,4 @@
-![libmem-logo](img/logo.png)  
+![libmem-logo](LOGO.png)  
 #   
 # V4 UNDER DEVELOPMENT
 Please, use the latest release. The project is being rewritten and the branch `master` is being used for development.  

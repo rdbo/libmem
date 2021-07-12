@@ -18,6 +18,8 @@ main()
 	lm_size_t    procbits;
 	lm_tchar_t  *modname;
 	lm_tchar_t  *modpath;
+	int          myvar = 0;
+	int          mybuf;
 
 	LM_PRINTF(LM_STR("[+] Tests Started\n"));
 
@@ -47,6 +49,18 @@ main()
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
+	LM_PRINTF(LM_STR("====================\n"));
+
+	mybuf = 1337;
+	LM_WriteMemoryEx(proc, (lm_address_t)&myvar,
+			 (lm_bstring_t)&mybuf, sizeof(mybuf));
+	
+	mybuf = 0;
+	LM_ReadMemoryEx(proc, (lm_address_t)&myvar,
+			(lm_byte_t *)&mybuf, sizeof(myvar));
+	
+	LM_PRINTF(LM_STR("[*] Written Value: %d\n"), myvar);
+	LM_PRINTF(LM_STR("[*] Read Value:    %d\n"), mybuf);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_CloseProcess(&proc);

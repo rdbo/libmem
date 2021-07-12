@@ -26,12 +26,12 @@ libmem32: setup
 
 tests: libmem setup
 	@printf "[+] Building 'tests'...\n"
-	$(CC) -o $(OUT_DIR)/$(TESTS_OUT) $(CFLAGS) -DPROCNAME=\"$(TESTS_OUT)\" -I$(LIBMEM_DIR) $(LDFLAGS) $(TESTS_SRC)
+	$(CC) -o $(OUT_DIR)/$(TESTS_OUT) $(CFLAGS) -DTARGET_NAME=\"$(TESTS_OUT)\" -I$(LIBMEM_DIR) $(LDFLAGS) $(TESTS_SRC)
 	@printf "[-] Done\n"
 
 tests32: libmem32
 	@printf "[+] Building 'tests32'...\n"
-	$(CC) -o $(OUT_DIR)/$(TESTS32_OUT) $(CFLAGS) -m32 -DPROCNAME=\"$(TESTS32_OUT)\" -I$(LIBMEM_DIR) $(LDFLAGS32) $(TESTS_SRC)
+	$(CC) -o $(OUT_DIR)/$(TESTS32_OUT) $(CFLAGS) -m32 -DTARGET_NAME=\"$(TESTS32_OUT)\" -I$(LIBMEM_DIR) $(LDFLAGS32) $(TESTS_SRC)
 	@printf "[-] Done\n"
 
 setup:

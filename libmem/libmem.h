@@ -461,33 +461,34 @@ LM_GetPageEx(lm_process_t proc,
 
 LM_API lm_size_t
 LM_ReadMemory(lm_address_t src,
-	      lm_void_t   *dst,
+	      lm_byte_t   *dst,
 	      lm_size_t    size);
 
 LM_API lm_size_t
 LM_ReadMemoryEx(lm_process_t proc,
 		lm_address_t src,
-		lm_void_t   *dst,
+		lm_byte_t   *dst,
 		lm_size_t    size);
 
 LM_API lm_size_t
 LM_WriteMemory(lm_address_t dst,
-	       lm_void_t   *src,
+	       lm_bstring_t src,
 	       lm_size_t    size);
 
 LM_API lm_size_t
 LM_WriteMemoryEx(lm_process_t proc,
 		 lm_address_t dst,
-		 lm_void_t   *src,
+		 lm_bstring_t src,
 		 lm_size_t    size);
 
 LM_API lm_size_t
-LM_SetMemory(lm_address_t dst,
-	     lm_byte_t    byte,
-	     lm_size_t    size);
+LM_SetMemory(lm_byte_t *dst,
+	     lm_byte_t  byte,
+	     lm_size_t  size);
 
 LM_API lm_size_t
-LM_SetMemoryEx(lm_address_t dst,
+LM_SetMemoryEx(lm_process_t proc,
+	       lm_address_t dst,
 	       lm_byte_t    byte,
 	       lm_size_t    size);
 

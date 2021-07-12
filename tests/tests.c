@@ -26,7 +26,7 @@ main()
 	modname  = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 	modpath  = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 
-	pid = LM_GetProcessIdEx(PROCNAME);
+	pid = LM_GetProcessIdEx(TARGET_NAME);
 	LM_OpenProcessEx(pid, &proc);
 	LM_GetProcessNameEx(proc, procname, LM_PATH_MAX);
 	LM_GetProcessPathEx(proc, procpath, LM_PATH_MAX);

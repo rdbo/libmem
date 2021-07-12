@@ -1159,4 +1159,239 @@ LM_GetSymbolEx(lm_process_t proc,
 
 /****************************************/
 
+LM_API lm_size_t
+LM_ReadMemory(lm_address_t src,
+	      lm_byte_t   *dst,
+	      lm_size_t    size)
+{
+	lm_size_t i;
+
+	for (i = 0; i < size; ++i)
+		dst[i] = ((lm_byte_t *)src)[i];
+
+	return i;
+}
+
+LM_API lm_size_t
+LM_ReadMemoryEx(lm_process_t proc,
+		lm_address_t src,
+		lm_byte_t   *dst,
+		lm_size_t    size)
+{
+	lm_size_t rdsize = 0;
+
+	if (!_LM_CheckProcess(proc) || !src || !dst || !size)
+		return rdsize;
+	
+#	if LM_OS == LM_OS_WIN
+	{
+		rdsize = (lm_size_t)ReadProcessMemory(proc.handle, src, dst,
+						      size, NULL);
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		struct iovec iosrc = { 0 };
+		struct iovec iodst = { 0 };
+		iodst.iov_base = dst;
+		iodst.iov_len  = size;
+		iosrc.iov_base = src;
+		iosrc.iov_len  = size;
+		rdsize = (lm_size_t)process_vm_readv(proc.pid, &iodst, 1,
+						     &iosrc, 1, 0);
+
+		if (rdsize == (lm_size_t)-1)
+			rdsize = 0;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		int fd;
+		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
+
+		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
+			    LM_STR("%s/%d/maps"), LM_STR(LM_PROCFS), proc.pid);
+		
+		fd = open(mem_path, O_RDONLY);
+		if (fd == -1)
+			return rdsize;
+		
+		rdsize = (lm_size_t)pread(fd, dst, size, (off_t)src);
+		close(fd);
+
+		if (rdsize == (lm_size_t)-1)
+			rdsize = 0;
+	}
+#	endif
+
+	return rdsize;
+}
+
+LM_API lm_size_t
+LM_WriteMemory(lm_address_t dst,
+	       lm_bstring_t src,
+	       lm_size_t    size)
+{
+	lm_size_t i;
+
+	for (i = 0; i < size; ++i)
+		((lm_byte_t *)dst)[i] = src[i];
+
+	return i;
+}
+
+LM_API lm_size_t
+LM_WriteMemoryEx(lm_process_t proc,
+		 lm_address_t dst,
+		 lm_bstring_t src,
+		 lm_size_t    size)
+{
+	lm_size_t wrsize = 0;
+
+	if (!_LM_CheckProcess(proc) || !dst || !src || !size)
+		return wrsize;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		wrsize = (lm_size_t)WriteProcessMemory(proc.handle, dst, src,
+						       size, NULL);
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		struct iovec iosrc = { 0 };
+		struct iovec iodst = { 0 };
+		iosrc.iov_base = src;
+		iosrc.iov_len = size;
+		iodst.iov_base = dst;
+		iodst.iov_len = size;
+		wrsize = (lm_size_t)process_vm_writev(proc.pid, &iosrc, 1,
+						      &iodst, 1, 0);
+
+		if (wrsize == (lm_size_t)-1)
+			wrsize = 0;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		int fd;
+		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
+
+		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
+			    LM_STR("%s/%d/maps"), LM_STR(LM_PROCFS), proc.pid);
+		
+		fd = open(mem_path, O_RDONLY);
+		if (fd == -1)
+			return rdsize;
+		
+		wrsize = (lm_size_t)pwrite(fd, src, size, (off_t)dst);
+		close(fd);
+
+		if (wrsize == (lm_size_t)-1)
+			wrsize = 0;
+	}
+#	endif
+
+	return wrsize;
+}
+
+LM_API lm_size_t
+LM_SetMemory(lm_byte_t *dst,
+	     lm_byte_t  byte,
+	     lm_size_t  size)
+{
+	lm_size_t i;
+
+	for (i = 0; i < size; ++i)
+		dst[i] = byte;
+	
+	return i;
+}
+
+LM_API lm_size_t
+LM_SetMemoryEx(lm_process_t proc,
+	       lm_address_t dst,
+	       lm_byte_t    byte,
+	       lm_size_t    size)
+{
+	lm_size_t  wrsize = 0;
+	lm_byte_t *data;
+
+	data = LM_MALLOC(size);
+	if (!data)
+		return wrsize;
+
+	if (LM_SetMemory(data, byte, size) != size)
+		return wrsize;
+	
+	wrsize = LM_WriteMemoryEx(proc, dst, data, size);
+
+	LM_FREE(data);
+	return wrsize;
+}
+
+LM_API lm_size_t
+LM_ProtMemory(lm_address_t addr,
+	      lm_prot_t    prot,
+	      lm_size_t    size);
+
+LM_API lm_size_t
+LM_ProtMemoryEx(lm_process_t proc,
+		lm_address_t addr,
+		lm_prot_t    prot,
+		lm_size_t    size);
+
+LM_API lm_address_t
+LM_AllocMemory(lm_prot_t prot,
+	       lm_size_t size);
+
+LM_API lm_address_t
+LM_AllocMemoryEx(lm_process_t proc,
+		 lm_prot_t    prot,
+		 lm_size_t    size);
+
+LM_API lm_void_t
+LM_FreeMemory(lm_address_t alloc,
+	      lm_size_t    size);
+
+LM_API lm_void_t
+LM_FreeMemoryEx(lm_process_t proc,
+		lm_address_t alloc,
+		lm_size_t    size);
+
+LM_API lm_address_t
+LM_DataScan(lm_bstring_t data,
+	    lm_size_t    size,
+	    lm_address_t start,
+	    lm_address_t stop);
+
+LM_API lm_address_t
+LM_DataScanEx(lm_process_t proc,
+	      lm_bstring_t data,
+	      lm_size_t    size,
+	      lm_address_t start,
+	      lm_address_t stop);
+
+LM_API lm_address_t
+LM_PatternScan(lm_bstring_t pattern,
+	       lm_tstring_t mask,
+	       lm_address_t start,
+	       lm_address_t stop);
+
+LM_API lm_address_t
+LM_PatternScanEx(lm_process_t proc,
+		 lm_bstring_t pattern,
+		 lm_tstring_t mask,
+		 lm_address_t start,
+		 lm_address_t stop);
+
+LM_API lm_address_t
+LM_SigScan(lm_tstring_t sig,
+	   lm_address_t start,
+	   lm_address_t stop);
+
+LM_API lm_address_t
+LM_SigScanEx(lm_process_t proc,
+	     lm_tstring_t sig,
+	     lm_address_t start,
+	     lm_address_t stop);
+
+/****************************************/
+
 #endif

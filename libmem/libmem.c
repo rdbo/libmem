@@ -131,7 +131,7 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 			if (Process32First(hSnap, &entry)) {
 				do {
 					lm_pid_t pid = (lm_pid_t)(
-						entry.th32ProcessID;
+						entry.th32ProcessID
 					);
 
 					if (callback(pid, arg) == LM_FALSE)
@@ -243,7 +243,7 @@ LM_GetProcessId(lm_void_t)
 
 #	if LM_OS == LM_OS_WIN
 	{
-		pid = GetCurrentProcessID();
+		pid = GetCurrentProcessId();
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
@@ -305,7 +305,7 @@ LM_GetParentIdEx(lm_pid_t pid)
 			if (Process32First(hSnap, &entry)) {
 				do {
 					lm_pid_t curpid = (lm_pid_t)(
-						entry.th32ProcessID;
+						entry.th32ProcessID
 					);
 
 					if (curpid == pid) {
@@ -445,7 +445,7 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 	{
 		HMODULE hModule = GetModuleHandle(NULL);
 		if (!hModule)
-		return chr_count;
+			return len;
 
 		len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen - 1);
 	}

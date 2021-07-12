@@ -1,10 +1,10 @@
 default:
-	@echo "[*] Usage: make <os>"
-	@echo "[*] Example: make linux"
-	@echo "[*] Example: ARGS=clean make linux"
+	@echo [*] Usage: make 'os'
+	@echo [*] Example: make linux
+	@echo [*] Example: ARGS=clean make linux
 
 win:
-	make -f Win.mk $(ARGS)
+	nmake -f Win.mk $(ARGS)
 
 linux:
 	make -f Linux.mk $(ARGS)

@@ -18,6 +18,7 @@ main()
 	lm_size_t    procbits;
 	lm_tchar_t  *modname;
 	lm_tchar_t  *modpath;
+	lm_page_t    page;
 	int          myvar = 0;
 	int          mybuf;
 
@@ -49,6 +50,14 @@ main()
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
+	LM_PRINTF(LM_STR("====================\n"));
+
+	LM_GetPageEx(proc, mod.base, &page);
+	LM_PRINTF(LM_STR("[*] Page Base:  %p\n"), page.base);
+	LM_PRINTF(LM_STR("[*] Page Size:  %p\n"), (lm_void_t *)page.size);
+	LM_PRINTF(LM_STR("[*] Page End:   %p\n"), page.end);
+	LM_PRINTF(LM_STR("[*] Page Prot:  %d\n"), page.prot);
+	LM_PRINTF(LM_STR("[*] Page Flags: %d\n"), page.flags);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	mybuf = 1337;

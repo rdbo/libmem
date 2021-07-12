@@ -1,64 +1,61 @@
 #include <libmem.h>
+#include <stdio.h>
 
-lm_bool_t
-EnumProcessesCallback(lm_pid_t   pid,
-		      lm_void_t *arg)
-{
-	lm_process_t proc;
-	lm_tchar_t   path[LM_PATH_MAX] = { 0 };
-	lm_tchar_t   name[64] = { 0 };
-	lm_size_t    bits;
-
-	LM_OpenProcessEx(pid, &proc);
-
-	LM_GetProcessPathEx(proc, path, LM_ARRLEN(path));
-	LM_GetProcessNameEx(proc, name, LM_ARRLEN(name));
-	bits = LM_GetProcessBitsEx(proc);
-
-	printf("[*] PID:  %d\n",  proc.pid);
-	printf("[*] Path: %s\n",  path);
-	printf("[*] Name: %s\n",  name);
-	printf("[*] Bits: %lu\n", bits);
-	printf("====================\n");
-
-	LM_CloseProcess(&proc);
-
-	if (pid == LM_GetProcessId()) {
-		*(lm_pid_t *)arg = pid;
-		return LM_FALSE;
-	}
-
-	return LM_TRUE;
-}
-
-lm_bool_t
-EnumModulesCallback(lm_module_t  mod,
-		    lm_tstring_t path,
-		    lm_void_t   *arg)
-{
-	printf("[*] Module Path: %s\n", path);
-	printf("[*] Module Base: %p\n", mod.base);
-	printf("[*] Module Size: %p\n", (lm_void_t *)mod.size);
-	printf("[*] Module End:  %p\n", mod.end);
-	printf("====================\n");
-
-	return LM_TRUE;
-}
+#if LM_CHARSET == LM_CHARSET_UC
+#define LM_PRINTF wprintf
+#else
+#define LM_PRINTF printf
+#endif
 
 int
 main()
 {
-	lm_pid_t pid;
+	lm_pid_t     pid;
 	lm_process_t proc;
+	lm_module_t  mod;
+	lm_tchar_t  *procname;
+	lm_tchar_t  *procpath;
+	lm_size_t    procbits;
+	lm_tchar_t  *modname;
+	lm_tchar_t  *modpath;
 
-	printf("[+] Tests Started\n");
+	LM_PRINTF(LM_STR("[+] Tests Started\n"));
 
-	LM_EnumProcesses(EnumProcessesCallback, (lm_void_t *)&pid);
+	procname = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	procpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	modname  = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	modpath  = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+
+	pid = LM_GetProcessIdEx(PROCNAME);
 	LM_OpenProcessEx(pid, &proc);
-	LM_EnumModulesEx(proc, EnumModulesCallback, (lm_void_t *)LM_NULL);
-	LM_CloseProcess(&proc);
+	LM_GetProcessNameEx(proc, procpath, LM_PATH_MAX);
+	LM_GetProcessPathEx(proc, procpath, LM_PATH_MAX);
+	procbits = LM_GetProcessBitsEx(proc);
 
-	printf("[-] Tests Ended\n");
+	LM_PRINTF(LM_STR("[*] Process ID:   %d\n"), proc.pid);
+	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), procname);
+	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
+	LM_PRINTF(LM_STR("[*] Process Bits: %lu\n"), procbits);
+	LM_PRINTF(LM_STR("====================\n"));
+
+	LM_GetModuleEx(proc, procpath, &mod);
+	LM_GetModuleNameEx(proc, mod, modname, LM_PATH_MAX);
+	LM_GetModulePathEx(proc, mod, modpath, LM_PATH_MAX);
+
+	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);
+	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (lm_void_t *)mod.size);
+	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
+	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
+	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
+	LM_PRINTF(LM_STR("====================\n"));
+
+	LM_CloseProcess(&proc);
+	LM_FREE(procname);
+	LM_FREE(procpath);
+	LM_FREE(modname);
+	LM_FREE(modpath);
+
+	LM_PRINTF(LM_STR("[-] Tests Ended\n"));
 	getchar();
 
 	return 0;

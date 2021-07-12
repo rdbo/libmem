@@ -15,6 +15,19 @@ typedef struct {
 	lm_size_t    len;
 } _lm_get_pid_t;
 
+typedef struct {
+	lm_module_t  mod;
+	lm_tstring_t modstr;
+	lm_size_t    len;
+} _lm_get_mod_t;
+
+typedef struct {
+	lm_module_t  mod;
+	lm_tstring_t pathbuf;
+	lm_size_t    maxlen;
+	lm_size_t    len;
+} _lm_get_mod_path_t;
+
 /* Helpers */
 static lm_bool_t
 _LM_CheckProcess(lm_process_t proc)
@@ -197,9 +210,6 @@ _LM_GetProcessIdCallback(lm_pid_t   pid,
 	lm_process_t   proc;
 	_lm_get_pid_t *parg = (_lm_get_pid_t *)arg;
 	lm_tchar_t    *path;
-
-	if (!parg)
-		return LM_FALSE;
 
 	path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 
@@ -747,6 +757,9 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 	lm_byte_t ret = LM_FALSE;
 	lm_process_t proc;
 
+	if (!callback)
+		return ret;
+
 	LM_OpenProcess(&proc);
 	ret = LM_EnumModulesEx(proc, callback, arg);
 	LM_CloseProcess(&proc);
@@ -762,6 +775,9 @@ LM_EnumModulesEx(lm_process_t proc,
 		 lm_void_t   *arg)
 {
 	lm_bool_t ret = LM_FALSE;
+
+	if (!_LM_CheckProcess(proc) || !callback)
+		return ret;
 
 #	if LM_OS == LM_OS_WIN
 	{
@@ -826,7 +842,8 @@ LM_EnumModulesEx(lm_process_t proc,
 		for (ptr = maps_buf;
 		     ptr && (ptr = LM_STRCHR(ptr, LM_STR('/')));
 		     ptr = LM_STRCHR(ptr, LM_STR('\n'))) {
-			lm_tchar_t *tmp, *holder;
+			lm_tchar_t *tmp;
+			lm_tchar_t *holder;
 			lm_tchar_t *path;
 			lm_size_t   pathlen;
 			lm_module_t mod;
@@ -906,35 +923,214 @@ LM_EnumModulesEx(lm_process_t proc,
 	return ret;
 }
 
+static lm_bool_t
+_LM_GetModuleCallback(lm_module_t  mod,
+		      lm_tstring_t path,
+		      lm_void_t   *arg)
+{
+	_lm_get_mod_t *parg = (_lm_get_mod_t *)arg;
+	lm_size_t      pathlen;
+	
+	pathlen = LM_STRLEN(path);
+
+	if (pathlen >= parg->len) {
+		if (!LM_STRCMP(&path[pathlen - parg->len], parg->modstr)) {
+			parg->mod = mod;
+			return LM_FALSE;
+		}
+	}
+
+	return LM_TRUE;
+}
+
 LM_API lm_bool_t
 LM_GetModule(lm_tstring_t modstr,
-	     lm_module_t *modbuf);
+	     lm_module_t *modbuf)
+{
+	lm_bool_t ret = LM_FALSE;
+	_lm_get_mod_t arg;
+
+	if (!modstr || !modbuf)
+		return ret;
+
+	arg.mod.base = (lm_address_t)LM_BAD;
+	arg.mod.size = 0;
+	arg.mod.end  = (lm_address_t)LM_BAD;
+	arg.modstr = modstr;
+	arg.len = LM_STRLEN(arg.modstr);
+
+	ret = LM_EnumModules(_LM_GetModuleCallback, (lm_void_t *)&arg);
+
+	return ret;
+}
 
 LM_API lm_bool_t
 LM_GetModuleEx(lm_process_t proc,
 	       lm_tstring_t modstr,
-	       lm_module_t *modbuf);
+	       lm_module_t *modbuf)
+{
+	lm_bool_t ret = LM_FALSE;
+	_lm_get_mod_t arg;
+
+	if (_LM_CheckProcess(proc) || !modstr || !modbuf)
+		return ret;
+
+	arg.mod.base = (lm_address_t)LM_BAD;
+	arg.mod.size = 0;
+	arg.mod.end  = (lm_address_t)LM_BAD;
+	arg.modstr = modstr;
+	arg.len = LM_STRLEN(arg.modstr);
+
+	ret = LM_EnumModulesEx(proc, _LM_GetModuleCallback, (lm_void_t *)&arg);
+
+	return ret;
+}
+
+static lm_bool_t
+_LM_GetModulePathCallback(lm_module_t  mod,
+			  lm_tstring_t path,
+			  lm_void_t   *arg)
+{
+	_lm_get_mod_path_t *parg = (_lm_get_mod_path_t *)arg;
+	
+	if (parg->mod.base == mod.base) {
+		parg->len = LM_STRLEN(path);
+		if (parg->len >= parg->maxlen)
+			parg->len = parg->maxlen - 1;
+		LM_STRNCPY(parg->pathbuf, path, parg->len);
+		parg->pathbuf[parg->len] = LM_STR('\x00');
+	}
+
+	return LM_TRUE;
+}
 
 LM_API lm_size_t
 LM_GetModulePath(lm_module_t mod,
 		 lm_tchar_t *pathbuf,
-		 lm_size_t   maxlen);
+		 lm_size_t   maxlen)
+{
+	_lm_get_mod_path_t arg;
+
+	arg.mod     = mod;
+	arg.pathbuf = pathbuf;
+	arg.maxlen  = maxlen;
+	arg.len     = 0;
+
+	if (!arg.pathbuf || !arg.maxlen)
+		return arg.len;
+
+	LM_EnumModules(_LM_GetModulePathCallback, (lm_void_t *)&arg);
+
+	return arg.len;
+}
 
 LM_API lm_size_t
 LM_GetModulePathEx(lm_process_t proc,
 		   lm_module_t  mod,
 		   lm_tchar_t  *pathbuf,
-		   lm_size_t    maxlen);
+		   lm_size_t    maxlen)
+{
+	_lm_get_mod_path_t arg;
+	
+	arg.mod     = mod;
+	arg.pathbuf = pathbuf;
+	arg.maxlen  = maxlen;
+	arg.len     = 0;
+
+	if (!arg.pathbuf || !arg.maxlen)
+		return arg.len;
+
+	LM_EnumModulesEx(proc, _LM_GetModulePathCallback, (lm_void_t *)&arg);
+
+	return arg.len;
+}
 
 LM_API lm_size_t
 LM_GetModuleName(lm_module_t mod,
 		 lm_tchar_t *namebuf,
-		 lm_size_t   maxlen);
+		 lm_size_t   maxlen)
+{
+	lm_size_t   len = 0;
+	lm_tchar_t *path;
+
+	if (!namebuf || !maxlen)
+		return len;
+
+	path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!path)
+		return len;
+
+	if (LM_GetModulePath(mod, path, LM_PATH_MAX)) {
+		lm_tchar_t  sep;
+		lm_tchar_t *ptr;
+		lm_tchar_t *holder;
+
+#		if LM_OS == LM_OS_WIN
+		sep = LM_STR('\\');
+#		elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+		sep = LM_STR('/');
+#		endif
+
+		holder = path;
+
+		for (ptr = path; (ptr = LM_STRCHR(ptr, sep)); ptr = &ptr[1])
+			holder = &ptr[1];
+		
+		len = LM_STRLEN(holder);
+		if (len >= maxlen)
+			len = maxlen - 1;
+		
+		LM_STRNCPY(namebuf, holder, len);
+		namebuf[len] = LM_STR('\x00');
+	}
+
+	LM_FREE(path);
+	return len;
+}
 
 LM_API lm_size_t
 LM_GetModuleNameEx(lm_process_t proc,
+		   lm_module_t  mod,
 		   lm_tchar_t  *namebuf,
-		   lm_size_t    maxlen);
+		   lm_size_t    maxlen)
+{
+	lm_size_t   len = 0;
+	lm_tchar_t *path;
+
+	if (!namebuf || !maxlen)
+		return len;
+
+	path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!path)
+		return len;
+
+	if (LM_GetModulePathEx(proc, mod, path, LM_PATH_MAX)) {
+		lm_tchar_t  sep;
+		lm_tchar_t *ptr;
+		lm_tchar_t *holder;
+
+#		if LM_OS == LM_OS_WIN
+		sep = LM_STR('\\');
+#		elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+		sep = LM_STR('/');
+#		endif
+
+		holder = path;
+
+		for (ptr = path; (ptr = LM_STRCHR(ptr, sep)); ptr = &ptr[1])
+			holder = &ptr[1];
+		
+		len = LM_STRLEN(holder);
+		if (len >= maxlen)
+			len = maxlen - 1;
+		
+		LM_STRNCPY(namebuf, holder, len);
+		namebuf[len] = LM_STR('\x00');
+	}
+
+	LM_FREE(path);
+	return len;
+}
 
 LM_API lm_bool_t
 LM_LoadModule(lm_tstring_t path,

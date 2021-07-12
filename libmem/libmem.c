@@ -16,7 +16,7 @@ typedef struct {
 } _lm_get_pid_t;
 
 typedef struct {
-	lm_module_t  mod;
+	lm_module_t *modbuf;
 	lm_tstring_t modstr;
 	lm_size_t    len;
 } _lm_get_mod_t;
@@ -935,7 +935,7 @@ _LM_GetModuleCallback(lm_module_t  mod,
 
 	if (pathlen >= parg->len) {
 		if (!LM_STRCMP(&path[pathlen - parg->len], parg->modstr)) {
-			parg->mod = mod;
+			*(parg->modbuf) = mod;
 			return LM_FALSE;
 		}
 	}
@@ -953,9 +953,10 @@ LM_GetModule(lm_tstring_t modstr,
 	if (!modstr || !modbuf)
 		return ret;
 
-	arg.mod.base = (lm_address_t)LM_BAD;
-	arg.mod.size = 0;
-	arg.mod.end  = (lm_address_t)LM_BAD;
+	arg.modbuf = modbuf;
+	arg.modbuf->base = (lm_address_t)LM_BAD;
+	arg.modbuf->size = 0;
+	arg.modbuf->end  = (lm_address_t)LM_BAD;
 	arg.modstr = modstr;
 	arg.len = LM_STRLEN(arg.modstr);
 
@@ -972,12 +973,13 @@ LM_GetModuleEx(lm_process_t proc,
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_mod_t arg;
 
-	if (_LM_CheckProcess(proc) || !modstr || !modbuf)
+	if (!modstr || !modbuf)
 		return ret;
 
-	arg.mod.base = (lm_address_t)LM_BAD;
-	arg.mod.size = 0;
-	arg.mod.end  = (lm_address_t)LM_BAD;
+	arg.modbuf = modbuf;
+	arg.modbuf->base = (lm_address_t)LM_BAD;
+	arg.modbuf->size = 0;
+	arg.modbuf->end  = (lm_address_t)LM_BAD;
 	arg.modstr = modstr;
 	arg.len = LM_STRLEN(arg.modstr);
 

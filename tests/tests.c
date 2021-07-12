@@ -11,8 +11,8 @@ int
 main()
 {
 	lm_pid_t     pid;
-	lm_process_t proc;
-	lm_module_t  mod;
+	lm_process_t proc = { 0 };
+	lm_module_t  mod = { 0 };
 	lm_tchar_t  *procname;
 	lm_tchar_t  *procpath;
 	lm_size_t    procbits;
@@ -28,7 +28,7 @@ main()
 
 	pid = LM_GetProcessIdEx(PROCNAME);
 	LM_OpenProcessEx(pid, &proc);
-	LM_GetProcessNameEx(proc, procpath, LM_PATH_MAX);
+	LM_GetProcessNameEx(proc, procname, LM_PATH_MAX);
 	LM_GetProcessPathEx(proc, procpath, LM_PATH_MAX);
 	procbits = LM_GetProcessBitsEx(proc);
 

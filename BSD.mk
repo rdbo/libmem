@@ -4,11 +4,11 @@ OUT_DIR=./bin
 LIBMEM_DIR=./libmem
 LIBMEM_SRC=$(LIBMEM_DIR)/libmem.c
 LIBMEM_OUT=libmem.so
-LIBMEM_CFLAGS=-shared -fPIC -DLM_EXPORT -ldl
+LIBMEM_CFLAGS=-shared -fPIC -DLM_EXPORT -ldl -lkvm -lprocstat -lelf -lutil
 TESTS_DIR=./tests
 TESTS_SRC=$(TESTS_DIR)/tests.c
 TESTS_OUT=tests
-TESTS_CFLAGS=-I$(LIBMEM_DIR) -DLM_IMPORT -DTARGET_NAME=\"$(TESTS_OUT)\" -Wl,-R,$(OUT_DIR) -Wl,--enable-new-dtags -L$(OUT_DIR) -l:$(LIBMEM_OUT) -ldl -lkvm -lprocstat -lelf -lutil
+TESTS_CFLAGS=-I$(LIBMEM_DIR) -DLM_IMPORT -DTARGET_NAME=\"$(TESTS_OUT)\" -Wl,-R,$(OUT_DIR) -Wl,--enable-new-dtags -L$(OUT_DIR) -l:$(LIBMEM_OUT)
 
 all: setup libmem tests
 

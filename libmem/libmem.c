@@ -1278,7 +1278,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 		
 		fd = open(mem_path, O_RDONLY);
 		if (fd == -1)
-			return rdsize;
+			return wrsize;
 		
 		wrsize = (lm_size_t)pwrite(fd, src, size, (off_t)dst);
 		close(fd);

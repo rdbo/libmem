@@ -1359,7 +1359,32 @@ LM_API lm_address_t
 LM_DataScan(lm_bstring_t data,
 	    lm_size_t    size,
 	    lm_address_t start,
-	    lm_address_t stop);
+	    lm_address_t stop)
+{
+	/* TODO: Protect Search Region as XRW */
+	lm_address_t match = (lm_address_t)LM_BAD;
+	lm_byte_t *ptr;
+
+	if (!data || !size || !start || !stop || 
+	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+		return match;
+
+	for (ptr = (lm_byte_t *)start; ptr != stop; ptr = &ptr[1]) {
+		lm_size_t i;
+		lm_bool_t check = LM_TRUE;
+
+		for (i = 0; check && i < size; ++i)
+			check = (ptr[i] == data[i]) ? check : LM_FALSE;
+		
+		if (!check)
+			continue;
+		
+		match = (lm_address_t)ptr;
+		break;
+	}
+
+	return match;
+}
 
 LM_API lm_address_t
 LM_DataScanEx(lm_process_t proc,

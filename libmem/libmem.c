@@ -1159,6 +1159,28 @@ LM_GetSymbolEx(lm_process_t proc,
 
 /****************************************/
 
+LM_API lm_bool_t
+LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
+				  lm_void_t *arg),
+	     lm_void_t *arg);
+
+LM_API lm_bool_t
+LM_EnumPagesEx(lm_process_t proc,
+	       lm_bool_t  (*callback)(lm_page_t  page,
+				      lm_void_t *arg),
+	       lm_void_t   *arg);
+
+LM_API lm_bool_t
+LM_GetPage(lm_address_t addr,
+	   lm_page_t   *page);
+
+LM_API lm_bool_t
+LM_GetPageEx(lm_process_t proc,
+	     lm_address_t addr,
+	     lm_page_t   *page);
+
+/****************************************/
+
 LM_API lm_size_t
 LM_ReadMemory(lm_address_t src,
 	      lm_byte_t   *dst,

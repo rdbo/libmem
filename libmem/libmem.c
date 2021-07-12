@@ -504,8 +504,8 @@ LM_GetProcessPathEx(lm_process_t proc,
 			);
 
 			if (procs && nprocs) {
-				if (procstat_getpathname(ps, procs,
-							 pathbuf, maxlen - 1))
+				if (!procstat_getpathname(ps, procs,
+							  pathbuf, maxlen - 1))
 					len = LM_STRLEN(pathbuf);
 
 				procstat_freeprocs(ps, procs);

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wextra
+CFLAGS=-g -Wall -Wextra
 OUT_DIR=./bin
 LIBMEM_DIR=./libmem
 LIBMEM_SRC=$(LIBMEM_DIR)/libmem.c

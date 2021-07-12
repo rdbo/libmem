@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c89 -ansi -pedantic -Wall -Wextra
+CFLAGS=-g -std=c89 -ansi -pedantic -Wall -Wextra
 OUT_DIR=./bin
 LIBMEM_DIR=./libmem
 LIBMEM_SRC=$(LIBMEM_DIR)/libmem.c

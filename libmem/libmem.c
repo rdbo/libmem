@@ -1469,7 +1469,7 @@ LM_ReadMemoryEx(lm_process_t proc,
 		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
 		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
-			    LM_STR("%s/%d/maps"), LM_STR(LM_PROCFS), proc.pid);
+			    LM_STR("%s/%d/mem"), LM_STR(LM_PROCFS), proc.pid);
 		
 		fd = open(mem_path, O_RDONLY);
 		if (fd == -1)
@@ -1535,7 +1535,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
 		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
-			    LM_STR("%s/%d/maps"), LM_STR(LM_PROCFS), proc.pid);
+			    LM_STR("%s/%d/mem"), LM_STR(LM_PROCFS), proc.pid);
 		
 		fd = open(mem_path, O_RDONLY);
 		if (fd == -1)

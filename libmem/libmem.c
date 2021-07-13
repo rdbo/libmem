@@ -1157,7 +1157,31 @@ LM_GetModuleNameEx(lm_process_t proc,
 
 LM_API lm_bool_t
 LM_LoadModule(lm_tstring_t path,
-	      lm_module_t *mod);
+	      lm_module_t *mod)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!path)
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		if (LoadLibrary(path)) {
+			if (!mod || LM_GetModule(path, mod))
+				ret = LM_TRUE;
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		if (dlopen(path, RTLD_LAZY)) {
+			if (!mod || LM_GetModule(path, mod))
+				ret = LM_TRUE;
+		}
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_bool_t
 LM_LoadModuleEx(lm_process_t proc,
@@ -1165,18 +1189,103 @@ LM_LoadModuleEx(lm_process_t proc,
 		lm_module_t *mod);
 
 LM_API lm_bool_t
-LM_UnloadModule(lm_module_t mod);
+LM_UnloadModule(lm_module_t mod)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		HMODULE hModule;
+		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+				  (LPTSTR)mod.base, &hModule);
+		
+		if (hModule && FreeLibrary(hModule))
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_tchar_t *libpath;
+
+		libpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		if (!libpath)
+			return ret;
+		
+		if (LM_GetModulePath(mod, libpath, LM_PATH_MAX)) {
+			void *libhandle;
+
+			libhandle = dlopen(libpath, RTLD_NOLOAD);
+
+			if (libhandle) {
+				dlclose(libhandle);
+				dlclose(libhandle);
+
+				ret = LM_TRUE;
+			}
+		}
+
+		LM_FREE(libpath);
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t proc,
 		  lm_module_t  mod);
 
 LM_API lm_address_t
-LM_GetSymbol(lm_module_t mod);
+LM_GetSymbol(lm_module_t  mod,
+	     lm_cstring_t symstr)
+{
+	lm_address_t symaddr = (lm_address_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		HMODULE hModule;
+		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+				  (LPTSTR)mod.base, &hModule);
+		
+		if (hModule) {
+			symaddr = (lm_address_t)GetProcAddress(hModule, symstr);
+			if (!symaddr)
+				symaddr = (lm_address_t)LM_BAD;
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_tchar_t *libpath;
+
+		libpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		if (!libpath)
+			return symaddr;
+		
+		if (LM_GetModulePath(mod, libpath, LM_PATH_MAX)) {
+			void *libhandle;
+
+			libhandle = dlopen(libpath, RTLD_NOLOAD);
+
+			if (libhandle) {
+				symaddr = (lm_address_t)dlsym(libhandle, symstr);
+
+				if (!symaddr)
+					symaddr = (lm_address_t)LM_BAD;
+
+				dlclose(libhandle);
+			}
+		}
+
+		LM_FREE(libpath);
+	}
+#	endif
+
+	return symaddr;
+}
 
 LM_API lm_address_t
 LM_GetSymbolEx(lm_process_t proc,
-	       lm_module_t  mod);
+	       lm_module_t  mod,
+	       lm_cstring_t symstr);
 
 /****************************************/
 

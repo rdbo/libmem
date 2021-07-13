@@ -98,6 +98,8 @@
 #define LM_ATOI     atoi
 #endif
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+#define LM_CHKMASK(c)  (c == LM_STR(LM_MASK_KNOWN) || c == LM_STR(LM_MASK_KNOWN2))
+#define LM_RCHKMASK(c) (c == LM_STR(LM_MASK_UNKNOWN) || c == LM_STR(LM_MASK_UNKNOWN2))
 
 /* Flags */
 #if LM_OS == LM_OS_WIN
@@ -141,6 +143,10 @@
 #define LM_FALSE (0)
 #define LM_TRUE  (!(LM_FALSE))
 #define LM_MAX   (-1UL)
+#define LM_MASK_KNOWN    'x'
+#define LM_MASK_KNOWN2   'X'
+#define LM_MASK_UNKNOWN  '?'
+#define LM_MASK_UNKNOWN2 '*'
 #if LM_OS == LM_OS_WIN
 #define LM_PATH_MAX MAX_PATH
 #elif LM_OS == LM_OS_LINUX

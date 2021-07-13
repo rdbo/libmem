@@ -1839,7 +1839,9 @@ LM_DataScan(lm_bstring_t data,
 	if (!LM_ProtMemory(start, size, LM_PROT_XRW, &oldprot))
 		return match;
 
-	for (ptr = (lm_byte_t *)start; ptr != stop; ptr = &ptr[1]) {
+	for (ptr = (lm_byte_t *)start;
+	     ptr != (lm_byte_t *)stop;
+	     ptr = &ptr[1]) {
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
 
@@ -1876,7 +1878,9 @@ LM_DataScanEx(lm_process_t proc,
 	if (!LM_ProtMemoryEx(proc, start, size, LM_PROT_XRW, &oldprot))
 		return match;
 
-	for (ptr = (lm_byte_t *)start; ptr != stop; ptr = &ptr[1]) {
+	for (ptr = (lm_byte_t *)start;
+	     ptr != (lm_byte_t *)stop;
+	     ptr = &ptr[1]) {
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
 
@@ -1884,8 +1888,10 @@ LM_DataScanEx(lm_process_t proc,
 			lm_byte_t curbyte = 0;
 
 			if (!LM_ReadMemoryEx(proc, (lm_address_t)(&ptr[i]),
-					     &curbyte, sizeof(curbyte)))
+					     &curbyte, sizeof(curbyte))) {
+				check = LM_FALSE;
 				break;
+			}
 			
 			check = (curbyte == data[i]) ? check : LM_FALSE;
 		}
@@ -1906,25 +1912,237 @@ LM_API lm_address_t
 LM_PatternScan(lm_bstring_t pattern,
 	       lm_tstring_t mask,
 	       lm_address_t start,
-	       lm_address_t stop);
+	       lm_address_t stop)
+{
+	lm_address_t match = (lm_address_t)LM_BAD;
+	lm_size_t    size;
+	lm_prot_t    oldprot;
+	lm_byte_t   *ptr;
+
+	if (!pattern || !mask || !start || !stop ||
+	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+		return match;
+	
+	size = LM_STRLEN(mask);
+	if (!size)
+		return match;
+	
+	if (!LM_ProtMemory(start, size, LM_PROT_XRW, &oldprot))
+		return match;
+	
+	for (ptr = (lm_byte_t *)start;
+	     ptr != (lm_byte_t *)stop;
+	     ptr = &ptr[1]) {
+		lm_size_t i;
+		lm_bool_t check = LM_TRUE;
+
+		for (i = 0; check && i < size; ++i) {
+			if (!LM_CHKMASK(mask[i]) && ptr[i] != pattern[i])
+				check = LM_FALSE;
+		}
+		
+		if (!check)
+			continue;
+		
+		match = (lm_address_t)ptr;
+		break;
+	}
+	
+	LM_ProtMemory(start, size, oldprot, (lm_prot_t *)LM_NULL);
+
+	return match;
+}
 
 LM_API lm_address_t
 LM_PatternScanEx(lm_process_t proc,
 		 lm_bstring_t pattern,
 		 lm_tstring_t mask,
 		 lm_address_t start,
-		 lm_address_t stop);
+		 lm_address_t stop)
+{
+	lm_address_t match = (lm_address_t)LM_BAD;
+	lm_size_t    size;
+	lm_prot_t    oldprot;
+	lm_byte_t   *ptr;
+
+	if (!_LM_CheckProcess(proc) || !pattern || !mask || !start || !stop ||
+	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+		return match;
+	
+	size = LM_STRLEN(mask);
+	if (!size)
+		return match;
+	
+	if (!LM_ProtMemory(start, size, LM_PROT_XRW, &oldprot))
+		return match;
+	
+	for (ptr = (lm_byte_t *)start;
+	     ptr != (lm_byte_t *)stop;
+	     ptr = &ptr[1]) {
+		lm_size_t i;
+		lm_bool_t check = LM_TRUE;
+
+		for (i = 0; check && i < size; ++i) {
+			lm_byte_t curbyte;
+
+			if (!LM_ReadMemoryEx(proc, (lm_address_t)&ptr[i],
+					     &curbyte, sizeof(curbyte))) {
+				check = LM_FALSE;
+				break;
+			}
+
+			if (LM_CHKMASK(mask[i]) && curbyte != pattern[i])
+				check = LM_FALSE;
+		}
+		
+		if (!check)
+			continue;
+		
+		match = (lm_address_t)ptr;
+		break;
+	}
+	
+	LM_ProtMemory(start, size, oldprot, (lm_prot_t *)LM_NULL);
+
+	return match;
+}
 
 LM_API lm_address_t
 LM_SigScan(lm_tstring_t sig,
 	   lm_address_t start,
-	   lm_address_t stop);
+	   lm_address_t stop)
+{
+	lm_address_t match = (lm_address_t)LM_BAD;
+	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
+	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
+	lm_size_t    len = 0;
+	lm_tchar_t  *ptr;
+
+	if (!sig || !start || !stop ||
+	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+		return match;
+	
+	for (ptr = sig; ptr; ptr = LM_STRCHR(ptr, LM_STR(' '))) {
+		lm_byte_t  *old_pattern = pattern;
+		lm_tchar_t *old_mask = mask;
+		lm_byte_t   curbyte = 0;
+		lm_tchar_t  curchar = LM_STR(LM_MASK_UNKNOWN);
+
+		pattern = LM_CALLOC(len + 1, sizeof(lm_byte_t));
+		if (old_pattern) {
+			if (pattern)
+				LM_MEMCPY(pattern, old_pattern, len * sizeof(lm_byte_t));
+			LM_FREE(old_pattern);
+		}
+
+		if (!pattern) {
+			if (mask)
+				LM_FREE(mask);
+			return match;
+		}
+
+		mask = LM_CALLOC(len + 2, sizeof(lm_tchar_t));
+		if (old_mask) {
+			if (mask)
+				LM_STRNCPY(mask, old_mask, len);
+			
+			LM_FREE(old_mask);
+		}
+
+		if (!mask) {
+			LM_FREE(pattern);
+			return match;
+		}
+
+		if (ptr != sig)
+			ptr = &ptr[1];
+		
+		if (!LM_RCHKMASK(*ptr)) {
+			curbyte = (lm_byte_t)LM_STRTOP(ptr, NULL, 16);
+			curchar = LM_STR(LM_MASK_KNOWN);
+		}
+
+		pattern[len] = curbyte;
+		mask[len++] = curchar;
+		mask[len] = LM_STR('\x00');
+	}
+	
+	match = LM_PatternScan(pattern, mask, start, stop);
+
+	LM_FREE(pattern);
+	LM_FREE(mask);
+
+	return match;
+}
 
 LM_API lm_address_t
 LM_SigScanEx(lm_process_t proc,
 	     lm_tstring_t sig,
 	     lm_address_t start,
-	     lm_address_t stop);
+	     lm_address_t stop)
+{
+	lm_address_t match = (lm_address_t)LM_BAD;
+	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
+	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
+	lm_size_t    len = 0;
+	lm_tchar_t  *ptr;
+
+	if (!_LM_CheckProcess(proc) || !sig || !start || !stop ||
+	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+		return match;
+	
+	for (ptr = sig; ptr; ptr = LM_STRCHR(ptr, LM_STR(' '))) {
+		lm_byte_t  *old_pattern = pattern;
+		lm_tchar_t *old_mask = mask;
+		lm_byte_t   curbyte = 0;
+		lm_tchar_t  curchar = LM_STR(LM_MASK_UNKNOWN);
+
+		pattern = LM_CALLOC(len + 1, sizeof(lm_byte_t));
+		if (old_pattern) {
+			if (pattern)
+				LM_MEMCPY(pattern, old_pattern, len * sizeof(lm_byte_t));
+			LM_FREE(old_pattern);
+		}
+
+		if (!pattern) {
+			if (mask)
+				LM_FREE(mask);
+			return match;
+		}
+
+		mask = LM_CALLOC(len + 2, sizeof(lm_tchar_t));
+		if (old_mask) {
+			if (mask)
+				LM_STRNCPY(mask, old_mask, len);
+			
+			LM_FREE(old_mask);
+		}
+
+		if (!mask) {
+			LM_FREE(pattern);
+			return match;
+		}
+
+		if (ptr != sig)
+			ptr = &ptr[1];
+		
+		if (!LM_RCHKMASK(*ptr)) {
+			curbyte = (lm_byte_t)LM_STRTOP(ptr, NULL, 16);
+			curchar = LM_STR(LM_MASK_KNOWN);
+		}
+
+		pattern[len] = curbyte;
+		mask[len++] = curchar;
+		mask[len] = LM_STR('\x00');
+	}
+	
+	match = LM_PatternScanEx(proc, pattern, mask, start, stop);
+
+	LM_FREE(pattern);
+	LM_FREE(mask);
+
+	return match;
+}
 
 /****************************************/
 

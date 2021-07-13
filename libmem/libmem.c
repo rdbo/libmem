@@ -853,10 +853,25 @@ LM_EnumModulesEx(lm_process_t proc,
 			lm_size_t   pathlen;
 			lm_module_t mod;
 
-#			if LM_OS == LM_OS_LINUX
 			tmp = LM_STRCHR(ptr, LM_STR('\n'));
-#			elif LM_OS == LM_OS_BSD
-			tmp = LM_STRCHR(ptr, LM_STR(' ')); /* TOFIX: Won't work on paths that have spaces */
+
+#			if LM_OS == LM_OS_BSD
+			{
+				lm_tchar_t *tmp2;
+				lm_size_t i;
+
+				for (i = 0; i < 2; ++i) {
+					for (tmp2 = ptr;
+					     (lm_uintptr_t)(
+					        tmp2 = LM_STRCHR(tmp,
+								 LM_STR(' '))
+					     ) < (lm_uintptr_t)tmp;
+					     tmp2 = &tmp2[1])
+						holder = tmp2;
+
+					tmp = holder;
+				}
+			}
 #			endif
 			pathlen = (lm_size_t)(
 				((lm_uintptr_t)tmp - (lm_uintptr_t)ptr) /

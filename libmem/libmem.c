@@ -1616,7 +1616,9 @@ LM_ProtMemory(lm_address_t addr,
 		}
 
 		pagesize = sysconf(_SC_PAGE_SIZE);
-		addr = (lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize);
+		addr = (lm_address_t)(
+			(lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize)
+		);
 		if (!mprotect(addr, size, prot))
 			ret = LM_TRUE;
 		
@@ -1662,7 +1664,9 @@ LM_ProtMemoryEx(lm_process_t proc,
 		}
 
 		pagesize = sysconf(_SC_PAGE_SIZE);
-		addr = (lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize);
+		addr = (lm_address_t)(
+			(lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize)
+		);
 		if (!LM_SystemCallEx(proc, SYS_mprotect,
 				     (lm_uintptr_t)addr,
 				     (lm_uintptr_t)size,
@@ -1735,13 +1739,15 @@ LM_AllocMemoryEx(lm_process_t proc,
 		else
 			nsyscall = 192;
 
-		alloc = LM_SystemCallEx(proc, nsyscall,
+		alloc = (lm_address_t)(
+			LM_SystemCallEx(proc, nsyscall,
 					LM_NULL,
 					size,
 					(lm_uintptr_t)prot,
 					MAP_PRIVATE | MAP_ANON,
 					(lm_uintptr_t)-1,
-					0);
+					0)
+		);
 		
 		if (alloc == (lm_address_t)MAP_FAILED)
 			alloc = (lm_address_t)LM_BAD;
@@ -1790,7 +1796,7 @@ LM_FreeMemoryEx(lm_process_t proc,
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
 		if (!LM_SystemCallEx(proc, SYS_munmap,
-				     alloc, size,
+				     (lm_uintptr_t)alloc, size,
 				     LM_NULL, LM_NULL,
 				     LM_NULL, LM_NULL))
 			ret = LM_TRUE;

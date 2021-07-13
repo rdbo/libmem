@@ -492,31 +492,33 @@ LM_SetMemoryEx(lm_process_t proc,
 	       lm_byte_t    byte,
 	       lm_size_t    size);
 
-LM_API lm_size_t
+LM_API lm_bool_t
 LM_ProtMemory(lm_address_t addr,
+	      lm_size_t    size,
 	      lm_prot_t    prot,
-	      lm_size_t    size);
+	      lm_prot_t   *oldprot);
 
-LM_API lm_size_t
+LM_API lm_bool_t
 LM_ProtMemoryEx(lm_process_t proc,
 		lm_address_t addr,
+		lm_size_t    size,
 		lm_prot_t    prot,
-		lm_size_t    size);
+		lm_prot_t   *oldprot);
 
 LM_API lm_address_t
-LM_AllocMemory(lm_prot_t prot,
-	       lm_size_t size);
+LM_AllocMemory(lm_size_t size,
+	       lm_prot_t prot);
 
 LM_API lm_address_t
 LM_AllocMemoryEx(lm_process_t proc,
-		 lm_prot_t    prot,
-		 lm_size_t    size);
+		 lm_size_t    size,
+		 lm_prot_t    prot);
 
-LM_API lm_void_t
+LM_API lm_bool_t
 LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size);
 
-LM_API lm_void_t
+LM_API lm_bool_t
 LM_FreeMemoryEx(lm_process_t proc,
 		lm_address_t alloc,
 		lm_size_t    size);

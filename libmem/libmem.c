@@ -1587,34 +1587,218 @@ LM_SetMemoryEx(lm_process_t proc,
 	return wrsize;
 }
 
-LM_API lm_size_t
+LM_API lm_bool_t
 LM_ProtMemory(lm_address_t addr,
+	      lm_size_t    size,
 	      lm_prot_t    prot,
-	      lm_size_t    size);
+	      lm_prot_t   *oldprot)
+{
+	lm_bool_t ret = LM_FALSE;
 
-LM_API lm_size_t
+#	if LM_OS == LM_OS_WIN
+	{
+		DWORD old_prot;
+		if (VirtualProtect(addr, size, prot, &old_prot)) {
+			if (oldprot)
+				*oldprot = (lm_prot_t)old_prot;
+			
+			ret = LM_TRUE;
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		long pagesize;
+		lm_page_t page;
+
+		if (oldprot) {
+			if (!LM_GetPage(addr, &page))
+				return ret;
+		}
+
+		pagesize = sysconf(_SC_PAGE_SIZE);
+		addr = (lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize);
+		if (!mprotect(addr, size, prot))
+			ret = LM_TRUE;
+		
+		if (oldprot)
+			*oldprot = page.prot;
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
 LM_ProtMemoryEx(lm_process_t proc,
 		lm_address_t addr,
+		lm_size_t    size,
 		lm_prot_t    prot,
-		lm_size_t    size);
+		lm_prot_t   *oldprot)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!_LM_CheckProcess(proc))
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		DWORD old_prot;
+		if (VirtualProtectEx(proc.handle, addr, size,
+				     prot, &old_prot)) {
+			if (oldprot)
+				*oldprot = (lm_prot_t)old_prot;
+			
+			ret = LM_TRUE;
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		long pagesize;
+		lm_page_t page;
+
+		if (oldprot) {
+			if (!LM_GetPageEx(proc, addr, &page))
+				return ret;
+		}
+
+		pagesize = sysconf(_SC_PAGE_SIZE);
+		addr = (lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize);
+		if (!LM_SystemCallEx(proc, SYS_mprotect,
+				     (lm_uintptr_t)addr,
+				     (lm_uintptr_t)size,
+				     (lm_uintptr_t)prot,
+				     LM_NULL, LM_NULL, LM_NULL))
+			ret = LM_TRUE;
+		
+		if (oldprot)
+			*oldprot = page.prot;
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_address_t
-LM_AllocMemory(lm_prot_t prot,
-	       lm_size_t size);
+LM_AllocMemory(lm_size_t size,
+	       lm_prot_t prot)
+{
+	lm_address_t alloc = (lm_address_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		alloc = VirtualAlloc(NULL,
+				     size, 
+				     MEM_COMMIT | MEM_RESERVE,
+				     prot);
+		
+		if (!alloc)
+			alloc = (lm_address_t)LM_BAD;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		alloc = mmap(NULL, size, prot, MAP_PRIVATE | MAP_ANON, -1, 0);
+		if (alloc == (lm_address_t)MAP_FAILED)
+			alloc = (lm_address_t)LM_BAD;
+	}
+#	endif
+
+	return alloc;
+}
 
 LM_API lm_address_t
 LM_AllocMemoryEx(lm_process_t proc,
-		 lm_prot_t    prot,
-		 lm_size_t    size);
+		 lm_size_t    size,
+		 lm_prot_t    prot)
+{
+	lm_address_t alloc = (lm_address_t)LM_BAD;
 
-LM_API lm_void_t
+	if (!_LM_CheckProcess(proc))
+		return alloc;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		alloc = VirtualAllocEx(proc.handle,
+				       NULL,
+				       size, 
+				       MEM_COMMIT | MEM_RESERVE,
+				       prot);
+		
+		if (!alloc)
+			alloc = (lm_address_t)LM_BAD;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_int_t nsyscall;
+
+		if (LM_GetProcessBitsEx(proc) == 64)
+			nsyscall = 9;
+		else
+			nsyscall = 192;
+
+		alloc = LM_SystemCallEx(proc, nsyscall,
+					LM_NULL,
+					size,
+					(lm_uintptr_t)prot,
+					MAP_PRIVATE | MAP_ANON,
+					(lm_uintptr_t)-1,
+					0);
+		
+		if (alloc == (lm_address_t)MAP_FAILED)
+			alloc = (lm_address_t)LM_BAD;
+	}
+#	endif
+
+	return alloc;
+}
+
+LM_API lm_bool_t
 LM_FreeMemory(lm_address_t alloc,
-	      lm_size_t    size);
+	      lm_size_t    size)
+{
+	lm_bool_t ret = LM_FALSE;
 
-LM_API lm_void_t
+#	if LM_OS == LM_OS_WIN
+	{
+		if (VirtualFree(alloc, 0, MEM_RELEASE))
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		if (!munmap(alloc, size))
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
 LM_FreeMemoryEx(lm_process_t proc,
 		lm_address_t alloc,
-		lm_size_t    size);
+		lm_size_t    size)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!_LM_CheckProcess(proc))
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		if (VirtualFreeEx(proc.handle, alloc, 0, MEM_RELEASE))
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		if (!LM_SystemCallEx(proc, SYS_munmap,
+				     alloc, size,
+				     LM_NULL, LM_NULL,
+				     LM_NULL, LM_NULL))
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_address_t
 LM_DataScan(lm_bstring_t data,
@@ -1622,12 +1806,15 @@ LM_DataScan(lm_bstring_t data,
 	    lm_address_t start,
 	    lm_address_t stop)
 {
-	/* TODO: Protect Search Region as XRW */
 	lm_address_t match = (lm_address_t)LM_BAD;
-	lm_byte_t *ptr;
+	lm_byte_t   *ptr;
+	lm_prot_t    oldprot;
 
 	if (!data || !size || !start || !stop || 
 	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+		return match;
+	
+	if (!LM_ProtMemory(start, size, LM_PROT_XRW, &oldprot))
 		return match;
 
 	for (ptr = (lm_byte_t *)start; ptr != stop; ptr = &ptr[1]) {
@@ -1643,6 +1830,8 @@ LM_DataScan(lm_bstring_t data,
 		match = (lm_address_t)ptr;
 		break;
 	}
+
+	LM_ProtMemory(start, size, oldprot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }

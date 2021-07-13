@@ -1553,7 +1553,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
 			    LM_STR("%s/%d/mem"), LM_STR(LM_PROCFS), proc.pid);
 		
-		fd = open(mem_path, O_RDONLY);
+		fd = open(mem_path, O_WRONLY);
 		if (fd == -1)
 			return wrsize;
 		

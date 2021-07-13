@@ -21,6 +21,8 @@ main()
 	lm_page_t    page;
 	int          myvar = 0;
 	int          mybuf;
+	lm_byte_t    scanbuf[] = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+	lm_address_t datascan;
 
 	LM_PRINTF(LM_STR("[+] Tests Started\n"));
 
@@ -68,8 +70,16 @@ main()
 	LM_ReadMemoryEx(proc, (lm_address_t)&myvar,
 			(lm_byte_t *)&mybuf, sizeof(myvar));
 	
+	datascan = LM_DataScanEx(proc,
+				 scanbuf,
+				 sizeof(scanbuf),
+				 (lm_address_t)&scanbuf[-10],
+				 (lm_address_t)&scanbuf[10]);
+	
 	LM_PRINTF(LM_STR("[*] Written Value: %d\n"), myvar);
 	LM_PRINTF(LM_STR("[*] Read Value:    %d\n"), mybuf);
+	LM_PRINTF(LM_STR("[*] ScanBuf Addr:  %p\n"), (lm_void_t *)scanbuf);
+	LM_PRINTF(LM_STR("[*] Data Scan:     %p\n"), datascan);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_CloseProcess(&proc);

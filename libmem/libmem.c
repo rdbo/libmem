@@ -1847,7 +1847,44 @@ LM_DataScanEx(lm_process_t proc,
 	      lm_bstring_t data,
 	      lm_size_t    size,
 	      lm_address_t start,
-	      lm_address_t stop);
+	      lm_address_t stop)
+{
+	lm_address_t match = (lm_address_t)LM_BAD;
+	lm_byte_t   *ptr;
+	lm_prot_t    oldprot;
+
+	if (!_LM_CheckProcess(proc) || !data || !size || !start || !stop ||
+	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+		return match;
+	
+	if (!LM_ProtMemoryEx(proc, start, size, LM_PROT_XRW, &oldprot))
+		return match;
+
+	for (ptr = (lm_byte_t *)start; ptr != stop; ptr = &ptr[1]) {
+		lm_size_t i;
+		lm_bool_t check = LM_TRUE;
+
+		for (i = 0; check && i < size; ++i) {
+			lm_byte_t curbyte = 0;
+
+			if (!LM_ReadMemoryEx(proc, (lm_address_t)(&ptr[i]),
+					     &curbyte, sizeof(curbyte)))
+				break;
+			
+			check = (curbyte == data[i]) ? check : LM_FALSE;
+		}
+		
+		if (!check)
+			continue;
+		
+		match = (lm_address_t)ptr;
+		break;
+	}
+
+	LM_ProtMemory(start, size, oldprot, (lm_prot_t *)LM_NULL);
+
+	return match;
+}
 
 LM_API lm_address_t
 LM_PatternScan(lm_bstring_t pattern,
@@ -1874,5 +1911,68 @@ LM_SigScanEx(lm_process_t proc,
 	     lm_address_t stop);
 
 /****************************************/
+
+LM_API lm_uintptr_t
+LM_SystemCall(lm_int_t     nsyscall,
+	      lm_uintptr_t arg0,
+	      lm_uintptr_t arg1,
+	      lm_uintptr_t arg2,
+	      lm_uintptr_t arg3,
+	      lm_uintptr_t arg4,
+	      lm_uintptr_t arg5);
+
+LM_API lm_uintptr_t
+LM_SystemCallEx(lm_process_t proc,
+		lm_int_t     nsyscall,
+		lm_uintptr_t arg0,
+		lm_uintptr_t arg1,
+		lm_uintptr_t arg2,
+		lm_uintptr_t arg3,
+		lm_uintptr_t arg4,
+		lm_uintptr_t arg5)
+{
+	/* WIP */
+	return 0;
+}
+
+LM_API lm_uintptr_t
+LM_LibraryCall(lm_address_t fnaddr,
+	       lm_size_t    nargs,
+	       ...);
+
+LM_API lm_uintptr_t
+LM_LibraryCallEx(lm_process_t proc,
+		 lm_address_t fnaddr,
+		 lm_size_t    nargs,
+		 ...);
+
+LM_API lm_bool_t
+LM_DetourCode(lm_address_t src,
+	      lm_address_t dst,
+	      lm_detour_t  detour);
+
+LM_API lm_bool_t
+LM_DetourCodeEx(lm_process_t proc,
+		lm_address_t src,
+		lm_address_t dst,
+		lm_detour_t  detour);
+
+LM_API lm_address_t
+LM_MakeTrampoline(lm_address_t src,
+		  lm_address_t dst,
+		  lm_size_t    size);
+
+LM_API lm_address_t
+LM_MakeTrampolineEx(lm_process_t proc,
+		    lm_address_t src,
+		    lm_address_t dst,
+		    lm_size_t    size);
+
+LM_API lm_void_t
+LM_DestroyTrampoline(lm_address_t tramp);
+
+LM_API lm_void_t
+LM_DestroyTrampolineEx(lm_process_t proc,
+		       lm_address_t tramp);
 
 #endif

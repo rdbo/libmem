@@ -859,11 +859,12 @@ LM_EnumModulesEx(lm_process_t proc,
 			{
 				lm_tchar_t *tmp2;
 				lm_size_t i;
+				holder = tmp;
 
 				for (i = 0; i < 2; ++i) {
 					for (tmp2 = ptr;
 					     (lm_uintptr_t)(
-					        tmp2 = LM_STRCHR(tmp,
+					        tmp2 = LM_STRCHR(tmp2,
 								 LM_STR(' '))
 					     ) < (lm_uintptr_t)tmp;
 					     tmp2 = &tmp2[1])

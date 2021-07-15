@@ -47,7 +47,8 @@ main()
 	LM_PRINTF(LM_STR("[*] Process Bits: %lu\n"), procbits);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	LM_GetModuleEx(proc, procpath, &mod);
+	LM_GetModuleEx(proc, procpath, &mod, LM_MOD_BY_STR);
+	LM_GetModuleEx(proc, mod.base, &mod, LM_MOD_BY_ADDR);
 	LM_GetModuleNameEx(proc, mod, modname, LM_PATH_MAX);
 	LM_GetModulePathEx(proc, mod, modpath, LM_PATH_MAX);
 

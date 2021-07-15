@@ -317,6 +317,12 @@ enum {
 
 typedef lm_int_t lm_detour_t;
 
+/* LM_GetModule(Ex) Flags */
+enum {
+	LM_MOD_BY_STR = 0,
+	LM_MOD_BY_ADDR
+};
+
 /* libmem */
 LM_API lm_bool_t
 LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
@@ -388,13 +394,15 @@ LM_EnumModulesEx(lm_process_t proc,
 		 lm_void_t   *arg);
 
 LM_API lm_bool_t
-LM_GetModule(lm_tstring_t modstr,
-	     lm_module_t *modbuf);
+LM_GetModule(lm_void_t   *modarg,
+	     lm_module_t *modbuf,
+	     lm_int_t     flags);
 
 LM_API lm_bool_t
 LM_GetModuleEx(lm_process_t proc,
-	       lm_tstring_t modstr,
-	       lm_module_t *modbuf);
+	       lm_void_t   *modarg,
+	       lm_module_t *modbuf,
+	       lm_int_t     flags);
 
 LM_API lm_size_t
 LM_GetModulePath(lm_module_t mod,

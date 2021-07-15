@@ -17,8 +17,9 @@ typedef struct {
 
 typedef struct {
 	lm_module_t *modbuf;
-	lm_tstring_t modstr;
+	lm_void_t   *modarg;
 	lm_size_t    len;
+	lm_int_t     flags;
 } _lm_get_mod_t;
 
 typedef struct {
@@ -950,36 +951,65 @@ _LM_GetModuleCallback(lm_module_t  mod,
 		      lm_void_t   *arg)
 {
 	_lm_get_mod_t *parg = (_lm_get_mod_t *)arg;
-	lm_size_t      pathlen;
-	
-	pathlen = LM_STRLEN(path);
 
-	if (pathlen >= parg->len) {
-		if (!LM_STRCMP(&path[pathlen - parg->len], parg->modstr)) {
-			*(parg->modbuf) = mod;
-			return LM_FALSE;
+	switch (parg->flags) {
+	case LM_MOD_BY_STR:
+		{
+			lm_tstring_t modstr = (lm_tstring_t)parg->modarg;
+			lm_size_t pathlen;
+
+			pathlen = LM_STRLEN(path);
+
+			if (pathlen >= parg->len) {
+				if (!LM_STRCMP(&path[pathlen - parg->len],
+					       modstr)) {
+					*(parg->modbuf) = mod;
+					return LM_FALSE;
+				}
+			}
+
+			break;
 		}
+
+	case LM_MOD_BY_ADDR:
+		{
+			lm_address_t addr = (lm_address_t)parg->modarg;
+
+			if ((lm_uintptr_t)addr >= (lm_uintptr_t)mod.base &&
+			    (lm_uintptr_t)addr < (lm_uintptr_t)mod.end) {
+				*(parg->modbuf) = mod;
+				return LM_FALSE;
+			}
+
+			break;
+		}
+	default:
+		return LM_FALSE;
 	}
 
 	return LM_TRUE;
 }
 
 LM_API lm_bool_t
-LM_GetModule(lm_tstring_t modstr,
-	     lm_module_t *modbuf)
+LM_GetModule(lm_void_t   *modarg,
+	     lm_module_t *modbuf,
+	     lm_int_t     flags)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_mod_t arg;
 
-	if (!modstr || !modbuf)
+	if (!modarg || !modbuf)
 		return ret;
 
 	arg.modbuf = modbuf;
 	arg.modbuf->base = (lm_address_t)LM_BAD;
 	arg.modbuf->size = 0;
 	arg.modbuf->end  = (lm_address_t)LM_BAD;
-	arg.modstr = modstr;
-	arg.len = LM_STRLEN(arg.modstr);
+	arg.modarg = modarg;
+	arg.flags  = flags;
+
+	if (flags == LM_MOD_BY_STR)
+		arg.len = LM_STRLEN((lm_tstring_t)arg.modarg);
 
 	ret = LM_EnumModules(_LM_GetModuleCallback, (lm_void_t *)&arg);
 
@@ -988,21 +1018,25 @@ LM_GetModule(lm_tstring_t modstr,
 
 LM_API lm_bool_t
 LM_GetModuleEx(lm_process_t proc,
-	       lm_tstring_t modstr,
-	       lm_module_t *modbuf)
+	       lm_void_t   *modarg,
+	       lm_module_t *modbuf,
+	       lm_int_t     flags)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_mod_t arg;
 
-	if (!modstr || !modbuf)
+	if (!modarg || !modbuf)
 		return ret;
 
 	arg.modbuf = modbuf;
 	arg.modbuf->base = (lm_address_t)LM_BAD;
 	arg.modbuf->size = 0;
 	arg.modbuf->end  = (lm_address_t)LM_BAD;
-	arg.modstr = modstr;
-	arg.len = LM_STRLEN(arg.modstr);
+	arg.modarg = modarg;
+	arg.flags  = flags;
+
+	if (flags == LM_MOD_BY_STR)
+		arg.len = LM_STRLEN((lm_tstring_t)arg.modarg);
 
 	ret = LM_EnumModulesEx(proc, _LM_GetModuleCallback, (lm_void_t *)&arg);
 
@@ -1174,7 +1208,7 @@ LM_LoadModule(lm_tstring_t path,
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
 		if (dlopen(path, RTLD_LAZY)) {
-			if (!mod || LM_GetModule(path, mod))
+			if (!mod || LM_GetModule(path, mod, LM_MOD_BY_STR))
 				ret = LM_TRUE;
 		}
 	}

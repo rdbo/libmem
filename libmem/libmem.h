@@ -26,12 +26,23 @@
 
 /* Architecture */
 #define LM_ARCH_X86 0
+#define LM_ARCH_ARM 1
 
+#if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) \
+	|| defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64) \
+	|| defined (i386) || defined(__i386) || defined(__i386__)
 #define LM_ARCH LM_ARCH_X86
+#elif defined(__arm__) || defined(_ARM) \
+	|| defined(_M_ARM) || defined(__aarch64__)
+#define LM_ARCH LM_ARCH_ARM
+#endif
 
 /* Bits */
-#if (defined(_M_X64) || defined(__LP64__) || defined(_LP64) \
-	|| defined(__x86_64__) || (defined(__WORDSIZE) && __WORDSIZE == 64))
+#if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) \
+	|| defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64) \
+	|| defined(__aarch64__) \
+	|| defined(__LP64__) || defined(_LP64) \
+	|| (defined(__WORDSIZE) && __WORDSIZE == 64)
 #define LM_BITS 64
 #else
 #define LM_BITS 32

@@ -204,7 +204,9 @@ _LM_GetElfSymOffset(lm_tstring_t path,
 				      strtab_off + sym.st_name);
 				
 				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)sym.st_value;
+					offset = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
 					goto _CLEAN_RET;
 				}
 			}
@@ -220,7 +222,9 @@ _LM_GetElfSymOffset(lm_tstring_t path,
 				      dynstr_off + sym.st_name);
 				
 				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)sym.st_value;
+					offset = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
 					goto _CLEAN_RET;
 				}
 			}

@@ -870,7 +870,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 LM_API lm_size_t
 LM_GetSystemBits(lm_void_t)
 {
-	lm_size_t bits = 0;
+	lm_size_t bits = LM_BITS;
 
 #	if LM_OS == LM_OS_WIN
 	{
@@ -879,9 +879,6 @@ LM_GetSystemBits(lm_void_t)
 		GetNativeSystemInfo(&sysinfo);
 		switch (sysinfo.wProcessorArchitecture)
 		{
-		case PROCESSOR_ARCHITECTURE_INTEL:
-			bits = 32;
-			break;
 		case PROCESSOR_ARCHITECTURE_AMD64:
 			bits = 64;
 			break;
@@ -894,12 +891,9 @@ LM_GetSystemBits(lm_void_t)
 		if (uname(&utsbuf))
 			return bits;
 		
-		if (!LM_STRCMP(utsbuf.machine, LM_STR("x86_32")) ||
-		    !LM_STRCMP(utsbuf.machine, LM_STR("arm")))
-			bits = 32;
-		else if (!LM_STRCMP(utsbuf.machine, LM_STR("x86_64")) ||
-			 !LM_STRCMP(utsbuf.machine, LM_STR("amd64")) ||
-			 !LM_STRCMP(utsbuf.machine, LM_STR("aarch64")))
+		if (!LM_STRCMP(utsbuf.machine, LM_STR("x86_64")) ||
+		    !LM_STRCMP(utsbuf.machine, LM_STR("amd64")) ||
+		    !LM_STRCMP(utsbuf.machine, LM_STR("aarch64")))
 			bits = 64;
 	}
 #	endif

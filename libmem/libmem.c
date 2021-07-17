@@ -1561,13 +1561,16 @@ LM_GetSymbolEx(lm_process_t proc,
 			lm_uint_t    type;
 
 			offset = _LM_GetElfSymOffset(path, symstr, &type);
-			if (type != ET_EXEC &&
-			    offset != (lm_address_t)LM_BAD) {
-				symaddr = (lm_address_t)(
-					&((lm_byte_t *)mod.base)[
-						(lm_uintptr_t)offset
-					]
-				);
+			if (offset != (lm_address_t)LM_BAD) {
+				if (type != ET_EXEC) {
+					symaddr = (lm_address_t)(
+						&((lm_byte_t *)mod.base)[
+							(lm_uintptr_t)offset
+						]
+					);
+				} else {
+					symaddr = offset;
+				}
 			}
 		}
 

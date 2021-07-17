@@ -18,6 +18,7 @@ main()
 	lm_size_t    procbits;
 	lm_tchar_t  *modname;
 	lm_tchar_t  *modpath;
+	lm_address_t main_addr;
 	lm_page_t    page;
 	int          myvar = 0;
 	int          mybuf;
@@ -45,18 +46,22 @@ main()
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), procname);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
 	LM_PRINTF(LM_STR("[*] Process Bits: %lu\n"), procbits);
+	LM_PRINTF(LM_STR("[*] System Bits:  %lu\n"), LM_GetSystemBits());
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_GetModuleEx(proc, procpath, &mod, LM_MOD_BY_STR);
 	LM_GetModuleEx(proc, mod.base, &mod, LM_MOD_BY_ADDR);
 	LM_GetModuleNameEx(proc, mod, modname, LM_PATH_MAX);
 	LM_GetModulePathEx(proc, mod, modpath, LM_PATH_MAX);
+	main_addr = LM_GetSymbolEx(proc, mod, "main");
 
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (lm_void_t *)mod.size);
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
+	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), &main);
+	LM_PRINTF(LM_STR("[*] Symbol Addr: %p\n"), main_addr);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_GetPageEx(proc, mod.base, &page);

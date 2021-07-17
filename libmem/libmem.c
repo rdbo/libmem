@@ -879,9 +879,12 @@ LM_GetSystemBits(lm_void_t)
 		if (uname(&utsbuf))
 			return bits;
 		
-		if (!LM_STRCMP(utsbuf.machine, LM_STR("x86_32")))
+		if (!LM_STRCMP(utsbuf.machine, LM_STR("x86_32")) ||
+		    !LM_STRCMP(utsbuf.machine, LM_STR("arm")))
 			bits = 32;
-		else if (!LM_STRCMP(utsbuf.machine, LM_STR("x86_64")))
+		else if (!LM_STRCMP(utsbuf.machine, LM_STR("x86_64")) ||
+			 !LM_STRCMP(utsbuf.machine, LM_STR("amd64")) ||
+			 !LM_STRCMP(utsbuf.machine, LM_STR("aarch64")))
 			bits = 64;
 	}
 #	endif

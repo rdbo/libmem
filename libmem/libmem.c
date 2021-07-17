@@ -115,7 +115,8 @@ _LM_CloseFileBuf(lm_tchar_t **pfilebuf)
 
 static lm_address_t
 _LM_GetElfSymOffset(lm_tstring_t path,
-		    lm_cstring_t symstr)
+		    lm_cstring_t symstr,
+		    lm_uint_t   *type)
 {
 	lm_address_t offset = (lm_address_t)LM_BAD;
 	int          fd;
@@ -159,6 +160,9 @@ _LM_GetElfSymOffset(lm_tstring_t path,
 
 			lseek(fd, 0, SEEK_SET);
 			read(fd, &ehdr, sizeof(ehdr));
+
+			if (type)
+				*type = (lm_uint_t)ehdr.e_type;
 			
 			shstrtab_off = ehdr.e_shoff + 
 				       (ehdr.e_shstrndx * ehdr.e_shentsize);
@@ -209,7 +213,7 @@ _LM_GetElfSymOffset(lm_tstring_t path,
 			for (i = 0; i < dynsym_num; ++i) {
 				Elf64_Sym sym;
 
-				read(fd, &sym, symtab_entsize);
+				read(fd, &sym, dynsym_entsize);
 				pread(fd,
 				      symstrbuf,
 				      symlen * sizeof(lm_tchar_t),
@@ -242,6 +246,9 @@ _LM_GetElfSymOffset(lm_tstring_t path,
 
 			lseek(fd, 0, SEEK_SET);
 			read(fd, &ehdr, sizeof(ehdr));
+
+			if (type)
+				*type = (lm_uint_t)ehdr.e_type;
 			
 			shstrtab_off = ehdr.e_shoff + 
 				       (ehdr.e_shstrndx * ehdr.e_shentsize);
@@ -283,7 +290,9 @@ _LM_GetElfSymOffset(lm_tstring_t path,
 				      strtab_off + sym.st_name);
 				
 				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)sym.st_value;
+					offset = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
 					goto _CLEAN_RET;
 				}
 			}
@@ -292,14 +301,16 @@ _LM_GetElfSymOffset(lm_tstring_t path,
 			for (i = 0; i < dynsym_num; ++i) {
 				Elf32_Sym sym;
 
-				read(fd, &sym, symtab_entsize);
+				read(fd, &sym, dynsym_entsize);
 				pread(fd,
 				      symstrbuf,
 				      symlen * sizeof(lm_tchar_t),
 				      dynstr_off + sym.st_name);
 				
 				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)sym.st_value;
+					offset = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
 					goto _CLEAN_RET;
 				}
 			}
@@ -1547,9 +1558,11 @@ LM_GetSymbolEx(lm_process_t proc,
 		
 		if (LM_GetModulePathEx(proc, mod, path, LM_PATH_MAX)) {
 			lm_address_t offset;
+			lm_uint_t    type;
 
-			offset = _LM_GetElfSymOffset(path, symstr);
-			if (offset != (lm_address_t)LM_BAD) {
+			offset = _LM_GetElfSymOffset(path, symstr, &type);
+			if (type != ET_EXEC &&
+			    offset != (lm_address_t)LM_BAD) {
 				symaddr = (lm_address_t)(
 					&((lm_byte_t *)mod.base)[
 						(lm_uintptr_t)offset

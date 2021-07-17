@@ -60,7 +60,7 @@ main()
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
-	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), &main);
+	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), (lm_void_t *)&main);
 	LM_PRINTF(LM_STR("[*] Symbol Addr: %p\n"), main_addr);
 	LM_PRINTF(LM_STR("====================\n"));
 

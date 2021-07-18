@@ -148,12 +148,13 @@
 #endif
 
 /* Others */
-#define LM_NULL  (0)
-#define LM_BAD   (-1)
-#define LM_OK    (!(LM_BAD))
-#define LM_FALSE (0)
-#define LM_TRUE  (!(LM_FALSE))
-#define LM_MAX   (-1UL)
+#define LM_NULL    (0)
+#define LM_NULLPTR ((lm_void_t *)LM_NULL)
+#define LM_BAD     (-1)
+#define LM_OK      (!(LM_BAD))
+#define LM_FALSE   (0)
+#define LM_TRUE    (!(LM_FALSE))
+#define LM_MAX     (-1UL)
 #define LM_MASK_KNOWN    'x'
 #define LM_MASK_KNOWN2   'X'
 #define LM_MASK_UNKNOWN  '?'

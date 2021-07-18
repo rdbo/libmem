@@ -1701,6 +1701,9 @@ LM_EnumPagesEx(lm_process_t proc,
 			ptr = LM_STRSTR(ptr, LM_STR(" 0x"));
 #			endif
 
+			if (!ptr)
+				break; /* EOF */
+
 			ptr = &ptr[1];
 
 			page.end = (lm_address_t)LM_STRTOP(ptr, NULL, 16);
@@ -2166,7 +2169,9 @@ LM_AllocMemoryEx(lm_process_t proc,
 					0)
 		);
 		
-		if (alloc == (lm_address_t)MAP_FAILED)
+		if (alloc == (lm_address_t)MAP_FAILED || 
+		    alloc == (lm_address_t)(lm_uintptr_t)nsyscall ||
+		    (lm_uintptr_t)alloc >= (lm_uintptr_t)-1024)
 			alloc = (lm_address_t)LM_BAD;
 	}
 #	endif
@@ -2554,7 +2559,24 @@ LM_SystemCall(lm_int_t     nsyscall,
 	      lm_uintptr_t arg2,
 	      lm_uintptr_t arg3,
 	      lm_uintptr_t arg4,
-	      lm_uintptr_t arg5);
+	      lm_uintptr_t arg5)
+{
+	lm_uintptr_t syscall_ret = (lm_uintptr_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		syscall_ret = (lm_uintptr_t)syscall(nsyscall,
+						    arg0, arg1, arg2,
+						    arg3, arg4, arg5);
+	}
+#	endif
+
+	return syscall_ret;
+}
 
 LM_API lm_uintptr_t
 LM_SystemCallEx(lm_process_t proc,
@@ -2566,8 +2588,116 @@ LM_SystemCallEx(lm_process_t proc,
 		lm_uintptr_t arg4,
 		lm_uintptr_t arg5)
 {
-	/* WIP */
-	return 0;
+	lm_uintptr_t syscall_ret = (lm_uintptr_t)LM_BAD;
+
+	if (!_LM_CheckProcess(proc))
+		return syscall_ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		int status;
+		lm_size_t bits;
+
+		bits = LM_GetProcessBitsEx(proc);
+
+		if (bits > LM_GetProcessBits())
+			return syscall_ret;
+
+#		if LM_ARCH == LM_ARCH_X86
+		{
+			struct user_regs_struct regs, old_regs;
+			lm_uintptr_t code;
+			lm_uintptr_t old_code;
+			lm_address_t inj_addr;
+
+#			if LM_BITS == 64
+			if (bits == 64) {
+				code = 0x909090909090050F;
+				/* code:
+				* syscall
+				* nop
+				* nop
+				* nop
+				* nop
+				* nop
+				* nop
+				*/
+			} else {
+				code = 0x909080CD;
+				/*
+				* code:
+				* int $80
+				* nop
+				* nop
+				*/
+			}
+#			else
+			code = 0xCD809090;
+			/*
+			 * code:
+			 * int $80
+			 * nop
+			 * nop
+			 */
+#			endif
+
+			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
+			wait(&status);
+			ptrace(PTRACE_GETREGS, proc.pid, NULL, &old_regs);
+			regs = old_regs;
+#			if LM_BITS == 64
+			regs.rax = (lm_uintptr_t)nsyscall;
+			regs.rdi = arg0;
+			regs.rsi = arg1;
+			regs.rdx = arg2;
+			regs.r10 = arg3;
+			regs.r8  = arg4;
+			regs.r9  = arg5;
+			inj_addr = (lm_address_t)regs.rip;
+#			else
+			regs.eax = (lm_uintptr_t)nsyscall;
+			regs.ebx = arg0;
+			regs.ecx = arg1;
+			regs.edx = arg2;
+			regs.esi = arg3;
+			regs.edi = arg4;
+			regs.ebp = arg5;
+			inj_addr = (lm_address_t)regs.eip;
+#			endif
+
+			old_code = (lm_uintptr_t)ptrace(PTRACE_PEEKDATA, proc.pid,
+							inj_addr, NULL);
+			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, code);
+			ptrace(PTRACE_SETREGS, proc.pid, NULL, &regs);
+			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
+			waitpid(proc.pid, &status, WSTOPPED);
+			ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs);
+#			if LM_BITS == 64
+			syscall_ret = (lm_uintptr_t)regs.rax;
+#			else
+			syscall_ret = (lm_uintptr_t)regs.eax;
+#			endif
+			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, old_code);
+			ptrace(PTRACE_SETREGS, proc.pid, NULL, &old_regs);
+			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
+		}
+#		elif LM_ARCH == LM_ARCH_ARM
+		{
+
+		}
+#		endif
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+
+	}
+#	endif
+
+	return syscall_ret;
 }
 
 LM_API lm_uintptr_t

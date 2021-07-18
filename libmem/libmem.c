@@ -2718,10 +2718,7 @@ LM_SystemCallEx(lm_process_t proc,
 			lm_uintptr_t code;
 			lm_uintptr_t old_code;
 			lm_address_t inj_addr;
-			struct {
-				void  *buf;
-				size_t len;
-			} pt_iovec;
+			struct iovec pt_iovec;
 
 #			if LM_BITS == 64
 			code = 0x00F020E3000000EF;
@@ -2738,8 +2735,8 @@ LM_SystemCallEx(lm_process_t proc,
 
 			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
 			wait(&status);
-			pt_iovec.buf = (void *)&old_regs;
-			pt_iovec.len = sizeof(old_regs);
+			pt_iovec.iov_base = (void *)&old_regs;
+			pt_iovec.iov_len = sizeof(old_regs);
 			ptrace(PTRACE_GETREGSET, proc.pid,
 			       (void *)NT_PRSTATUS, &pt_iovec);
 			regs = old_regs;
@@ -2761,20 +2758,20 @@ LM_SystemCallEx(lm_process_t proc,
 			old_code = (lm_uintptr_t)ptrace(PTRACE_PEEKDATA, proc.pid,
 							inj_addr, NULL);
 			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, code);
-			pt_iovec.buf = (void *)&regs;
-			pt_iovec.len = sizeof(regs);
+			pt_iovec.iov_base = (void *)&regs;
+			pt_iovec.iov_len = sizeof(regs);
 			ptrace(PTRACE_SETREGSET, proc.pid,
 			       (void *)NT_PRSTATUS, &pt_iovec);
 			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
 			waitpid(proc.pid, &status, WSTOPPED);
-			pt_iovec.buf = (void *)&regs;
-			pt_iovec.len = sizeof(regs);
+			pt_iovec.iov_base = (void *)&regs;
+			pt_iovec.iov_len = sizeof(regs);
 			ptrace(PTRACE_GETREGSET, proc.pid,
 			       (void *)NT_PRSTATUS, &pt_iovec);
 			syscall_ret = (lm_uintptr_t)regs.uregs[0];
 			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, old_code);
-			pt_iovec.buf = (void *)&old_regs;
-			pt_iovec.len = sizeof(old_regs);
+			pt_iovec.iov_base = (void *)&old_regs;
+			pt_iovec.iov_len = sizeof(old_regs);
 			ptrace(PTRACE_SETREGSET, proc.pid,
 			       (void *)NT_PRSTATUS, &pt_iovec);
 			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);

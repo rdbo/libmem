@@ -2077,17 +2077,23 @@ LM_ProtMemoryEx(lm_process_t proc,
 	{
 		long pagesize;
 		lm_page_t page;
+		lm_int_t  nsyscall;
 
 		if (oldprot) {
 			if (!LM_GetPageEx(proc, addr, &page))
 				return ret;
 		}
 
+		if (LM_GetProcessBitsEx(proc) == 64)
+			nsyscall = 10;
+		else
+			nsyscall = 125;
+
 		pagesize = sysconf(_SC_PAGE_SIZE);
 		addr = (lm_address_t)(
 			(lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize)
 		);
-		if (!LM_SystemCallEx(proc, SYS_mprotect,
+		if (!LM_SystemCallEx(proc, nsyscall,
 				     (lm_uintptr_t)addr,
 				     (lm_uintptr_t)size,
 				     (lm_uintptr_t)prot,
@@ -2217,7 +2223,14 @@ LM_FreeMemoryEx(lm_process_t proc,
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
-		if (!LM_SystemCallEx(proc, SYS_munmap,
+		lm_int_t nsyscall;
+
+		if (LM_GetProcessBitsEx(proc) == 64)
+			nsyscall = 11;
+		else
+			nsyscall = 91;
+
+		if (!LM_SystemCallEx(proc, nsyscall,
 				     (lm_uintptr_t)alloc, size,
 				     LM_NULL, LM_NULL,
 				     LM_NULL, LM_NULL))
@@ -2627,10 +2640,14 @@ LM_SystemCallEx(lm_process_t proc,
 				* nop
 				*/
 			} else {
-				code = 0x909080CD;
+				code = 0x90909090909080CD;
 				/*
 				* code:
 				* int $80
+				* nop
+				* nop
+				* nop
+				* nop
 				* nop
 				* nop
 				*/
@@ -2650,13 +2667,23 @@ LM_SystemCallEx(lm_process_t proc,
 			ptrace(PTRACE_GETREGS, proc.pid, NULL, &old_regs);
 			regs = old_regs;
 #			if LM_BITS == 64
-			regs.rax = (lm_uintptr_t)nsyscall;
-			regs.rdi = arg0;
-			regs.rsi = arg1;
-			regs.rdx = arg2;
-			regs.r10 = arg3;
-			regs.r8  = arg4;
-			regs.r9  = arg5;
+			if (bits == 64) {
+				regs.rax = (lm_uintptr_t)nsyscall;
+				regs.rdi = arg0;
+				regs.rsi = arg1;
+				regs.rdx = arg2;
+				regs.r10 = arg3;
+				regs.r8  = arg4;
+				regs.r9  = arg5;
+			} else {
+				regs.rax = (lm_uintptr_t)nsyscall;
+				regs.rbx = arg0;
+				regs.rcx = arg1;
+				regs.rdx = arg2;
+				regs.rsi = arg3;
+				regs.rdi = arg4;
+				regs.rbp = arg5;
+			}
 			inj_addr = (lm_address_t)regs.rip;
 #			else
 			regs.eax = (lm_uintptr_t)nsyscall;

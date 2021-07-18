@@ -282,7 +282,7 @@ typedef lm_byte_t     *lm_bstring_t;
 typedef lm_char_t     *lm_cstring_t;
 typedef lm_wchar_t    *lm_wstring_t;
 typedef lm_tchar_t    *lm_tstring_t;
-#if LM_LANG == LM_LANG_C
+#if !defined(LIBMEM_HPP)
 typedef lm_tstring_t   lm_string_t;
 #endif
 

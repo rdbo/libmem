@@ -2714,7 +2714,70 @@ LM_SystemCallEx(lm_process_t proc,
 		}
 #		elif LM_ARCH == LM_ARCH_ARM
 		{
+			struct user_regs regs, old_regs;
+			lm_uintptr_t code;
+			lm_uintptr_t old_code;
+			lm_address_t inj_addr;
+			struct {
+				void  *buf;
+				size_t len;
+			} pt_iovec;
 
+#			if LM_BITS == 64
+			code = 0x00F020E3000000EF;
+			/* code:
+			 * swi #0
+			 * nop
+			 */
+#			else
+			code = 0x000000EF;
+			/* code:
+			 * swi #0
+			 */
+#			endif
+
+			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
+			wait(&status);
+			pt_iovec.buf = (void *)&old_regs;
+			pt_iovec.len = sizeof(old_regs);
+			ptrace(PTRACE_GETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			regs = old_regs;
+			regs.uregs[0] = arg0;
+			regs.uregs[1] = arg1;
+			regs.uregs[2] = arg2;
+			regs.uregs[3] = arg3;
+			regs.uregs[4] = arg4;
+			regs.uregs[5] = arg5;
+			if (bits == 64) {
+				regs.uregs[8] = (lm_uintptr_t)nsyscall;
+			} else {
+				regs.uregs[6] = 0;
+				regs.uregs[7] = (lm_uintptr_t)nsyscall;
+			}
+
+			inj_addr = (lm_address_t)regs.uregs[15];
+
+			old_code = (lm_uintptr_t)ptrace(PTRACE_PEEKDATA, proc.pid,
+							inj_addr, NULL);
+			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, code);
+			pt_iovec.buf = (void *)&regs;
+			pt_iovec.len = sizeof(regs);
+			ptrace(PTRACE_SETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
+			waitpid(proc.pid, &status, WSTOPPED);
+			pt_iovec.buf = (void *)&regs;
+			pt_iovec.len = sizeof(regs);
+			ptrace(PTRACE_GETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			syscall_ret = (lm_uintptr_t)regs.uregs[0];
+			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, old_code);
+			pt_iovec.buf = (void *)&old_regs;
+			pt_iovec.len = sizeof(old_regs);
+			ptrace(PTRACE_SETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
 		}
 #		endif
 	}

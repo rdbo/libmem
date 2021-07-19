@@ -2084,10 +2084,14 @@ LM_ProtMemoryEx(lm_process_t proc,
 				return ret;
 		}
 
+#		if LM_OS == LM_OS_LINUX
 		if (LM_GetProcessBitsEx(proc) == 64)
 			nsyscall = 10;
 		else
 			nsyscall = 125;
+#		elif LM_OS == LM_OS_BSD
+		nsyscall = SYS_mprotect;
+#		endif
 
 		pagesize = sysconf(_SC_PAGE_SIZE);
 		addr = (lm_address_t)(
@@ -2160,10 +2164,14 @@ LM_AllocMemoryEx(lm_process_t proc,
 	{
 		lm_int_t nsyscall;
 
+#		if LM_OS == LM_OS_LINUX
 		if (LM_GetProcessBitsEx(proc) == 64)
 			nsyscall = 9;
 		else
 			nsyscall = 192;
+#		elif LM_OS == LM_OS_BSD
+		nsyscall = SYS_mmap;
+#		endif
 
 		alloc = (lm_address_t)(
 			LM_SystemCallEx(proc, nsyscall,
@@ -2225,10 +2233,14 @@ LM_FreeMemoryEx(lm_process_t proc,
 	{
 		lm_int_t nsyscall;
 
+#		if LM_OS == LM_OS_LINUX
 		if (LM_GetProcessBitsEx(proc) == 64)
 			nsyscall = 11;
 		else
 			nsyscall = 91;
+#		elif LM_OS == LM_OS_BSD
+		nsyscall = SYS_munmap;
+#		endif
 
 		if (!LM_SystemCallEx(proc, nsyscall,
 				     (lm_uintptr_t)alloc, size,

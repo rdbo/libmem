@@ -2867,7 +2867,7 @@ LM_SystemCallEx(lm_process_t proc,
 			old_code = (lm_uintptr_t)ptrace(PT_READ_D,
 							proc.pid,
 							(caddr_t)inj_addr,
-							NULL);
+							0);
 			ptrace(PT_WRITE_D, proc.pid, (caddr_t)inj_addr, code);
 			ptrace(PT_SETREGS, proc.pid, (caddr_t)&regs, 0);
 			ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0);
@@ -2880,7 +2880,7 @@ LM_SystemCallEx(lm_process_t proc,
 #			endif
 			ptrace(PT_WRITE_D, proc.pid, (caddr_t)inj_addr, old_code);
 			ptrace(PT_SETREGS, proc.pid, (caddr_t)&old_regs, 0);
-			ptrace(PTRACE_DETACH, proc.pid, NULL, 0);
+			ptrace(PT_DETACH, proc.pid, NULL, 0);
 		}
 #		elif LM_ARCH == LM_ARCH_ARM
 		{

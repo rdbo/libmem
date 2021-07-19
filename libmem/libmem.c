@@ -2665,7 +2665,7 @@ LM_SystemCallEx(lm_process_t proc,
 				*/
 			}
 #			else
-			code = 0xCD809090;
+			code = 0x909080CD;
 			/*
 			 * code:
 			 * int $80
@@ -2833,7 +2833,7 @@ LM_SystemCallEx(lm_process_t proc,
 				*/
 			}
 #			else
-			code = 0xCD809090;
+			code = 0x909080CD;
 			/*
 			 * code:
 			 * int $80

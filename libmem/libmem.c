@@ -2780,7 +2780,173 @@ LM_SystemCallEx(lm_process_t proc,
 	}
 #	elif LM_OS == LM_OS_BSD
 	{
+		int status;
+		lm_size_t bits;
 
+		bits = LM_GetProcessBitsEx(proc);
+
+		if (bits > LM_GetProcessBits())
+			return syscall_ret;
+
+#		if LM_ARCH == LM_ARCH_X86
+		{
+			struct reg regs, old_regs;
+			lm_uintptr_t code;
+			lm_uintptr_t old_code;
+			lm_address_t inj_addr;
+
+#			if LM_BITS == 64
+			if (bits == 64) {
+				code = 0x909090909090050F;
+				/* code:
+				* syscall
+				* nop
+				* nop
+				* nop
+				* nop
+				* nop
+				* nop
+				*/
+			} else {
+				code = 0x90909090909080CD;
+				/*
+				* code:
+				* int $80
+				* nop
+				* nop
+				* nop
+				* nop
+				* nop
+				* nop
+				*/
+			}
+#			else
+			code = 0xCD809090;
+			/*
+			 * code:
+			 * int $80
+			 * nop
+			 * nop
+			 */
+#			endif
+
+			ptrace(PT_ATTACH, proc.pid, NULL, 0);
+			wait(&status);
+			ptrace(PT_GETREGS, proc.pid, (caddr_t)&old_regs, 0);
+			regs = old_regs;
+#			if LM_BITS == 64
+			if (bits == 64) {
+				regs.r_rax = (lm_uintptr_t)nsyscall;
+				regs.r_rdi = arg0;
+				regs.r_rsi = arg1;
+				regs.r_rdx = arg2;
+				regs.r_r10 = arg3;
+				regs.r_r8  = arg4;
+				regs.r_r9  = arg5;
+			} else {
+				regs.r_rax = (lm_uintptr_t)nsyscall;
+				regs.r_rbx = arg0;
+				regs.r_rcx = arg1;
+				regs.r_rdx = arg2;
+				regs.r_rsi = arg3;
+				regs.r_rdi = arg4;
+				regs.r_rbp = arg5;
+			}
+			inj_addr = (lm_address_t)regs.r_rip;
+#			else
+			regs.r_eax = (lm_uintptr_t)nsyscall;
+			regs.r_ebx = arg0;
+			regs.r_ecx = arg1;
+			regs.r_edx = arg2;
+			regs.r_esi = arg3;
+			regs.r_edi = arg4;
+			regs.r_ebp = arg5;
+			inj_addr = (lm_address_t)regs.r_eip;
+#			endif
+
+			old_code = (lm_uintptr_t)ptrace(PT_READ_D,
+							proc.pid,
+							(caddr_t)inj_addr,
+							NULL);
+			ptrace(PT_WRITE_D, proc.pid, (caddr_t)inj_addr, code);
+			ptrace(PT_SETREGS, proc.pid, (caddr_t)&regs, 0);
+			ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0);
+			waitpid(proc.pid, &status, WSTOPPED);
+			ptrace(PT_GETREGS, proc.pid, (caddr_t)&regs, 0);
+#			if LM_BITS == 64
+			syscall_ret = (lm_uintptr_t)regs.r_rax;
+#			else
+			syscall_ret = (lm_uintptr_t)regs.r_eax;
+#			endif
+			ptrace(PT_WRITE_D, proc.pid, (caddr_t)inj_addr, old_code);
+			ptrace(PT_SETREGS, proc.pid, (caddr_t)&old_regs, 0);
+			ptrace(PTRACE_DETACH, proc.pid, NULL, 0);
+		}
+#		elif LM_ARCH == LM_ARCH_ARM
+		{
+			struct reg regs, old_regs;
+			lm_uintptr_t code;
+			lm_uintptr_t old_code;
+			lm_address_t inj_addr;
+			struct iovec pt_iovec;
+
+#			if LM_BITS == 64
+			code = 0x00F020E3000000EF;
+			/* code:
+			 * swi #0
+			 * nop
+			 */
+#			else
+			code = 0x000000EF;
+			/* code:
+			 * swi #0
+			 */
+#			endif
+
+			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
+			wait(&status);
+			pt_iovec.iov_base = (void *)&old_regs;
+			pt_iovec.iov_len = sizeof(old_regs);
+			ptrace(PTRACE_GETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			regs = old_regs;
+			regs.uregs[0] = arg0;
+			regs.uregs[1] = arg1;
+			regs.uregs[2] = arg2;
+			regs.uregs[3] = arg3;
+			regs.uregs[4] = arg4;
+			regs.uregs[5] = arg5;
+			if (bits == 64) {
+				regs.uregs[8] = (lm_uintptr_t)nsyscall;
+			} else {
+				regs.uregs[6] = 0;
+				regs.uregs[7] = (lm_uintptr_t)nsyscall;
+			}
+
+			inj_addr = (lm_address_t)regs.uregs[15];
+
+			old_code = (lm_uintptr_t)ptrace(PTRACE_PEEKDATA, proc.pid,
+							inj_addr, NULL);
+			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, code);
+			pt_iovec.iov_base = (void *)&regs;
+			pt_iovec.iov_len = sizeof(regs);
+			ptrace(PTRACE_SETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
+			waitpid(proc.pid, &status, WSTOPPED);
+			pt_iovec.iov_base = (void *)&regs;
+			pt_iovec.iov_len = sizeof(regs);
+			ptrace(PTRACE_GETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			syscall_ret = (lm_uintptr_t)regs.uregs[0];
+			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, old_code);
+			pt_iovec.iov_base = (void *)&old_regs;
+			pt_iovec.iov_len = sizeof(old_regs);
+			ptrace(PTRACE_SETREGSET, proc.pid,
+			       (void *)NT_PRSTATUS, &pt_iovec);
+			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
+		}
+#		endif
 	}
 #	endif
 

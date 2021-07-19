@@ -2217,14 +2217,15 @@ LM_AllocMemoryEx(lm_process_t proc,
 			alloc = (lm_address_t)(
 				LM_SystemCallEx(proc, nsyscall,
 						syscall_arg, LM_NULL, LM_NULL,
-						LM_NULL, LM_NULL, LM_NULL);
-			)
+						LM_NULL, LM_NULL, LM_NULL)
+			);
 		}
 #		endif
 		
 		if (alloc == (lm_address_t)MAP_FAILED || 
 		    alloc == (lm_address_t)(lm_uintptr_t)nsyscall ||
-		    (lm_uintptr_t)alloc >= (lm_uintptr_t)-1024)
+		    (lm_uintptr_t)alloc >= (lm_uintptr_t)-1024 ||
+		    (lm_uintptr_t)alloc <= (lm_uintptr_t)1024)
 			alloc = (lm_address_t)LM_BAD;
 	}
 #	endif

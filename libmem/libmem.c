@@ -2871,7 +2871,7 @@ LM_SystemCallEx(lm_process_t proc,
 #		if LM_ARCH == LM_ARCH_X86
 		{
 			struct reg regs, old_regs;
-			lm_byte_t code[10] = { 0 };
+			lm_byte_t code[9] = { 0 };
 			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
 
@@ -2891,10 +2891,9 @@ LM_SystemCallEx(lm_process_t proc,
 				code[3] = 0x52;
 				code[4] = 0x51;
 				code[5] = 0x53;
-				code[6] = 0x50;
-				code[7] = 0xCD;
-				code[8] = 0x80;
-				code[9] = 0xCC;
+				code[6] = 0xCD;
+				code[7] = 0x80;
+				code[8] = 0xCC;
 				/*
 				 * code:
 				 * push ebp
@@ -2903,7 +2902,6 @@ LM_SystemCallEx(lm_process_t proc,
 				 * push edx
 				 * push ecx
 				 * push ebx
-				 * push eax
 				 * int $80
 				 * int3
 				*/
@@ -2915,10 +2913,9 @@ LM_SystemCallEx(lm_process_t proc,
 			code[3] = 0x52;
 			code[4] = 0x51;
 			code[5] = 0x53;
-			code[6] = 0x50;
-			code[7] = 0xCD;
-			code[8] = 0x80;
-			code[9] = 0xCC;
+			code[6] = 0xCD;
+			code[7] = 0x80;
+			code[8] = 0xCC;
 			/*
 			 * code:
 			 * push ebp
@@ -2927,7 +2924,6 @@ LM_SystemCallEx(lm_process_t proc,
 			 * push edx
 			 * push ecx
 			 * push ebx
-			 * push eax
 			 * int $80
 			 * int3
 			 */

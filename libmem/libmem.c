@@ -2871,7 +2871,7 @@ LM_SystemCallEx(lm_process_t proc,
 #		if LM_ARCH == LM_ARCH_X86
 		{
 			struct reg regs, old_regs;
-			lm_byte_t code[2] = { 0 };
+			lm_byte_t code[9] = { 0 };
 			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
 
@@ -2879,23 +2879,53 @@ LM_SystemCallEx(lm_process_t proc,
 			if (bits == 64) {
 				code[0] = 0x0F;
 				code[1] = 0x05;
+				code[2] = 0xCC;
 				/* code:
-				* syscall
-				*/
+				 * syscall
+				 * int $3
+				 */
 			} else {
-				code[0] = 0xCD;
-				code[1] = 0x80;
+				code[0] = 0x55;
+				code[1] = 0x57;
+				code[2] = 0x56;
+				code[3] = 0x52;
+				code[4] = 0x51;
+				code[5] = 0x53;
+				code[6] = 0xCD;
+				code[7] = 0x80;
+				code[8] = 0xCC;
 				/*
-				* code:
-				* int $80
-				*/
+				 * code:
+				 * push ebp
+				 * push edi
+				 * push esi
+				 * push edx
+				 * push ecx
+				 * push ebx
+				 * int $80
+				 * int $3
+				 */
 			}
 #			else
-			code[0] = 0xCD;
-			code[1] = 0x80;
+			code[0] = 0x55;
+			code[1] = 0x57;
+			code[2] = 0x56;
+			code[3] = 0x52;
+			code[4] = 0x51;
+			code[5] = 0x53;
+			code[6] = 0xCD;
+			code[7] = 0x80;
+			code[8] = 0xCC;
 			/*
 			 * code:
+			 * push ebp
+			 * push edi
+			 * push esi
+			 * push edx
+			 * push ecx
+			 * push ebx
 			 * int $80
+			 * int $3
 			 */
 #			endif
 
@@ -2936,7 +2966,7 @@ LM_SystemCallEx(lm_process_t proc,
 			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
 			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 			ptrace(PT_SETREGS, proc.pid, (caddr_t)&regs, 0);
-			ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0);
+			ptrace(PT_CONTINUE, proc.pid, (caddr_t)NULL, 0);
 			waitpid(proc.pid, &status, WSTOPPED);
 			ptrace(PT_GETREGS, proc.pid, (caddr_t)&regs, 0);
 #			if LM_BITS == 64

@@ -2837,23 +2837,18 @@ LM_SystemCallEx(lm_process_t proc,
 #		elif LM_ARCH == LM_ARCH_ARM
 		{
 			struct user_regs regs, old_regs;
-			lm_uintptr_t code;
-			lm_uintptr_t old_code;
+			lm_byte_t code[4] = { 0 };
+			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
 			struct iovec pt_iovec;
 
-#			if LM_BITS == 64
-			code = 0x00F020E3000000EF;
-			/* code:
-			 * swi #0
-			 * nop
-			 */
-#			else
-			code = 0x000000EF;
+			code[0] = 0xEF;
+			code[1] = 0x00;
+			code[2] = 0x00;
+			code[3] = 0x00;
 			/* code:
 			 * swi #0
 			 */
-#			endif
 
 			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
 			wait(&status);
@@ -2877,9 +2872,8 @@ LM_SystemCallEx(lm_process_t proc,
 
 			inj_addr = (lm_address_t)regs.uregs[15];
 
-			old_code = (lm_uintptr_t)ptrace(PTRACE_PEEKDATA, proc.pid,
-							inj_addr, NULL);
-			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, code);
+			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
+			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 			pt_iovec.iov_base = (void *)&regs;
 			pt_iovec.iov_len = sizeof(regs);
 			ptrace(PTRACE_SETREGSET, proc.pid,
@@ -2891,7 +2885,7 @@ LM_SystemCallEx(lm_process_t proc,
 			ptrace(PTRACE_GETREGSET, proc.pid,
 			       (void *)NT_PRSTATUS, &pt_iovec);
 			syscall_ret = (lm_uintptr_t)regs.uregs[0];
-			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, old_code);
+			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
 			pt_iovec.iov_base = (void *)&old_regs;
 			pt_iovec.iov_len = sizeof(old_regs);
 			ptrace(PTRACE_SETREGSET, proc.pid,
@@ -2913,42 +2907,31 @@ LM_SystemCallEx(lm_process_t proc,
 #		if LM_ARCH == LM_ARCH_X86
 		{
 			struct reg regs, old_regs;
-			lm_uintptr_t code;
-			lm_uintptr_t old_code;
+			lm_byte_t code[2] = { 0 };
+			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
 
 #			if LM_BITS == 64
 			if (bits == 64) {
-				code = 0x909090909090050F;
+				code[0] = 0x0F;
+				code[1] = 0x05;
 				/* code:
 				* syscall
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
 				*/
 			} else {
-				code = 0x90909090909080CD;
+				code[0] = 0xCD;
+				code[1] = 0x80;
 				/*
 				* code:
 				* int $80
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
 				*/
 			}
 #			else
-			code = 0x909080CD;
+			code[0] = 0xCD;
+			code[1] = 0x80;
 			/*
 			 * code:
 			 * int $80
-			 * nop
-			 * nop
 			 */
 #			endif
 
@@ -2986,11 +2969,8 @@ LM_SystemCallEx(lm_process_t proc,
 			inj_addr = (lm_address_t)regs.r_eip;
 #			endif
 
-			old_code = (lm_uintptr_t)ptrace(PT_READ_D,
-							proc.pid,
-							(caddr_t)inj_addr,
-							0);
-			ptrace(PT_WRITE_D, proc.pid, (caddr_t)inj_addr, code);
+			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
+			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 			ptrace(PT_SETREGS, proc.pid, (caddr_t)&regs, 0);
 			ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0);
 			waitpid(proc.pid, &status, WSTOPPED);
@@ -3000,30 +2980,22 @@ LM_SystemCallEx(lm_process_t proc,
 #			else
 			syscall_ret = (lm_uintptr_t)regs.r_eax;
 #			endif
-			ptrace(PT_WRITE_D, proc.pid, (caddr_t)inj_addr, old_code);
+			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
 			ptrace(PT_SETREGS, proc.pid, (caddr_t)&old_regs, 0);
 			ptrace(PT_DETACH, proc.pid, NULL, 0);
 		}
 #		elif LM_ARCH == LM_ARCH_ARM
 		{
 			struct reg regs, old_regs;
-			lm_uintptr_t code;
-			lm_uintptr_t old_code;
+			lm_byte_t code[4];
+			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
 			struct iovec pt_iovec;
 
-#			if LM_BITS == 64
-			code = 0x00F020E3000000EF;
-			/* code:
-			 * swi #0
-			 * nop
-			 */
-#			else
-			code = 0x000000EF;
-			/* code:
-			 * swi #0
-			 */
-#			endif
+			code[0] = 0xEF;
+			code[1] = 0x00;
+			code[2] = 0x00;
+			code[3] = 0x00;
 
 			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
 			wait(&status);
@@ -3047,9 +3019,8 @@ LM_SystemCallEx(lm_process_t proc,
 
 			inj_addr = (lm_address_t)regs.uregs[15];
 
-			old_code = (lm_uintptr_t)ptrace(PTRACE_PEEKDATA, proc.pid,
-							inj_addr, NULL);
-			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, code);
+			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
+			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 			pt_iovec.iov_base = (void *)&regs;
 			pt_iovec.iov_len = sizeof(regs);
 			ptrace(PTRACE_SETREGSET, proc.pid,
@@ -3061,7 +3032,7 @@ LM_SystemCallEx(lm_process_t proc,
 			ptrace(PTRACE_GETREGSET, proc.pid,
 			       (void *)NT_PRSTATUS, &pt_iovec);
 			syscall_ret = (lm_uintptr_t)regs.uregs[0];
-			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, old_code);
+			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
 			pt_iovec.iov_base = (void *)&old_regs;
 			pt_iovec.iov_len = sizeof(old_regs);
 			ptrace(PTRACE_SETREGSET, proc.pid,

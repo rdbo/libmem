@@ -402,7 +402,7 @@ _LM_PtraceWrite(lm_process_t proc,
 	}
 #	elif LM_OS == LM_OS_BSD
 	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
-		ptrace(PTRACE_WRITE_D,
+		ptrace(PT_WRITE_D,
 		       proc.pid,
 		       (caddr_t)(&((lm_byte_t *)dst)[i]),
 		       *(lm_uintptr_t *)(&buf[i]));

@@ -2905,7 +2905,7 @@ LM_SystemCallEx(lm_process_t proc,
 				 * push ebx
 				 * push eax
 				 * int $80
-				 * int $3
+				 * int3
 				*/
 			}
 #			else
@@ -2929,7 +2929,7 @@ LM_SystemCallEx(lm_process_t proc,
 			 * push ebx
 			 * push eax
 			 * int $80
-			 * int $3
+			 * int3
 			 */
 #			endif
 

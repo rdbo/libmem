@@ -2882,7 +2882,7 @@ LM_SystemCallEx(lm_process_t proc,
 				code[2] = 0xCC;
 				/* code:
 				 * syscall
-				 * int $3
+				 * int3
 				 */
 			} else {
 				code[0] = 0x55;
@@ -2903,7 +2903,7 @@ LM_SystemCallEx(lm_process_t proc,
 				 * push ecx
 				 * push ebx
 				 * int $80
-				 * int $3
+				 * int3
 				 */
 			}
 #			else
@@ -2966,7 +2966,10 @@ LM_SystemCallEx(lm_process_t proc,
 			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
 			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 			ptrace(PT_SETREGS, proc.pid, (caddr_t)&regs, 0);
-			ptrace(PT_CONTINUE, proc.pid, (caddr_t)NULL, 0);
+			if (bits == 64)
+				ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0);
+			else
+				ptrace(PT_CONTINUE, proc.pid, (caddr_t)NULL, 0);
 			waitpid(proc.pid, &status, WSTOPPED);
 			ptrace(PT_GETREGS, proc.pid, (caddr_t)&regs, 0);
 #			if LM_BITS == 64

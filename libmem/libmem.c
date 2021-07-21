@@ -331,6 +331,88 @@ _CLOSE_RET:
 
 	return offset;
 }
+
+static lm_bool_t
+_LM_PtraceRead(lm_process_t proc,
+	       lm_address_t src,
+	       lm_byte_t   *dst,
+	       lm_size_t    size)
+{
+	lm_bool_t   ret = LM_FALSE;
+	lm_size_t   i;
+
+	if (!dst || !size)
+		return ret;
+
+#	if LM_OS == LM_OS_LINUX
+	for (i = 0; i < size; ++i) {
+		dst[i] = (lm_byte_t)ptrace(PTRACE_PEEKDATA,
+					   proc.pid,
+					   (void *)(
+						   &((lm_byte_t *)src)[i]
+					   ),
+					   NULL);
+	}
+#	elif LM_OS == LM_OS_BSD
+	for (i = 0; i < size; ++i) {
+		dst[i] = (lm_byte_t)ptrace(PT_READ_D,
+					   proc.pid,
+					   (caddr_t)(
+						   &((lm_byte_t *)src)[i]
+					   ),
+					   0);
+	}
+#	endif
+	
+	ret = LM_TRUE;
+	return ret;
+}
+
+static lm_bool_t
+_LM_PtraceWrite(lm_process_t proc,
+		lm_address_t dst,
+		lm_byte_t   *src,
+		lm_size_t    size)
+{
+	lm_bool_t   ret = LM_FALSE;
+	lm_size_t   i;
+	lm_size_t   aligned_size = size;
+	lm_byte_t  *buf;
+
+	if (!src || !size)
+		return ret;
+	
+	aligned_size += aligned_size > sizeof(lm_uintptr_t) ?
+		aligned_size % sizeof(lm_uintptr_t) :
+		sizeof(lm_uintptr_t) - aligned_size;
+	
+	buf = LM_CALLOC(aligned_size, sizeof(lm_byte_t));
+	if (!buf)
+		return ret;
+	
+	_LM_PtraceRead(proc, dst, buf, aligned_size);
+	LM_MEMCPY(buf, src, size);
+
+#	if LM_OS == LM_OS_LINUX
+	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
+		ptrace(PTRACE_POKEDATA,
+		       proc.pid,
+		       (void *)(&((lm_byte_t *)dst)[i]),
+		       *(lm_uintptr_t *)(&buf[i]));
+	}
+#	elif LM_OS == LM_OS_BSD
+	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
+		ptrace(PTRACE_WRITE_D,
+		       proc.pid,
+		       (caddr_t)(&((lm_byte_t *)dst)[i]),
+		       *(lm_uintptr_t *)(&buf[i]));
+	}
+#	endif
+	
+	LM_FREE(buf);
+	ret = LM_TRUE;
+	return ret;
+}
 #endif
 
 /* libmem */
@@ -2675,42 +2757,31 @@ LM_SystemCallEx(lm_process_t proc,
 #		if LM_ARCH == LM_ARCH_X86
 		{
 			struct user_regs_struct regs, old_regs;
-			lm_uintptr_t code;
-			lm_uintptr_t old_code;
+			lm_byte_t code[2] = { 0 };
+			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
 
 #			if LM_BITS == 64
 			if (bits == 64) {
-				code = 0x909090909090050F;
+				code[0] = 0x0F;
+				code[1] = 0x05;
 				/* code:
-				* syscall
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
-				*/
+				 * syscall
+				 */
 			} else {
-				code = 0x90909090909080CD;
+				code[0] = 0xCD;
+				code[1] = 0x80;
 				/*
-				* code:
-				* int $80
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
-				* nop
-				*/
+				 * code:
+				 * int $80
+				 */
 			}
 #			else
-			code = 0x909080CD;
+			code[0] = 0xCD;
+			code[1] = 0x80;
 			/*
 			 * code:
 			 * int $80
-			 * nop
-			 * nop
 			 */
 #			endif
 
@@ -2748,9 +2819,8 @@ LM_SystemCallEx(lm_process_t proc,
 			inj_addr = (lm_address_t)regs.eip;
 #			endif
 
-			old_code = (lm_uintptr_t)ptrace(PTRACE_PEEKDATA, proc.pid,
-							inj_addr, NULL);
-			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, code);
+			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
+			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 			ptrace(PTRACE_SETREGS, proc.pid, NULL, &regs);
 			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
 			waitpid(proc.pid, &status, WSTOPPED);
@@ -2760,7 +2830,7 @@ LM_SystemCallEx(lm_process_t proc,
 #			else
 			syscall_ret = (lm_uintptr_t)regs.eax;
 #			endif
-			ptrace(PTRACE_POKEDATA, proc.pid, inj_addr, old_code);
+			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
 			ptrace(PTRACE_SETREGS, proc.pid, NULL, &old_regs);
 			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
 		}

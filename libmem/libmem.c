@@ -2258,7 +2258,6 @@ LM_AllocMemoryEx(lm_process_t proc,
 		nsyscall = SYS_mmap;
 #		endif
 
-#		if LM_OS == LM_OS_LINUX
 		alloc = (lm_address_t)(
 			LM_SystemCallEx(proc, nsyscall,
 					LM_NULL,
@@ -2268,41 +2267,6 @@ LM_AllocMemoryEx(lm_process_t proc,
 					(lm_uintptr_t)-1,
 					0)
 		);
-#		elif LM_OS == LM_OS_BSD
-		if (bits == 64) {
-			alloc = (lm_address_t)(
-				LM_SystemCallEx(proc, nsyscall,
-						LM_NULL,
-						size,
-						(lm_uintptr_t)prot,
-						MAP_PRIVATE | MAP_ANON,
-						(lm_uintptr_t)-1,
-						0)
-			);
-		} else {
-			struct {
-				void  *addr;
-				size_t len;
-				int    prot;
-				int    flags;
-				int    fd;
-				off_t  offset;
-			} syscall_arg;
-
-			syscall_arg.addr   = NULL;
-			syscall_arg.len    = size;
-			syscall_arg.prot   = prot;
-			syscall_arg.flags  = MAP_PRIVATE | MAP_ANON;
-			syscall_arg.fd     = -1;
-			syscall_arg.offset = 0;
-
-			alloc = (lm_address_t)(
-				LM_SystemCallEx(proc, nsyscall,
-						syscall_arg, LM_NULL, LM_NULL,
-						LM_NULL, LM_NULL, LM_NULL)
-			);
-		}
-#		endif
 		
 		if (alloc == (lm_address_t)MAP_FAILED || 
 		    alloc == (lm_address_t)(lm_uintptr_t)nsyscall ||

@@ -2871,7 +2871,7 @@ LM_SystemCallEx(lm_process_t proc,
 #		if LM_ARCH == LM_ARCH_X86
 		{
 			struct reg regs, old_regs;
-			lm_byte_t code[9] = { 0 };
+			lm_byte_t code[10] = { 0 };
 			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
 

@@ -2969,7 +2969,7 @@ LM_SystemCallEx(lm_process_t proc,
 			if (bits == 64)
 				ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0);
 			else
-				ptrace(PT_CONTINUE, proc.pid, (caddr_t)NULL, 0);
+				ptrace(PT_CONTINUE, proc.pid, (caddr_t)1, 0);
 			waitpid(proc.pid, &status, WSTOPPED);
 			ptrace(PT_GETREGS, proc.pid, (caddr_t)&regs, 0);
 #			if LM_BITS == 64

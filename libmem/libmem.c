@@ -3183,14 +3183,20 @@ LM_DetourCode(lm_address_t src,
 	      lm_detour_t  detour)
 {
 	lm_bool_t  ret = LM_FALSE;
-	lm_byte_t *buf;
+	lm_byte_t *buf = (lm_byte_t *)LM_NULL;
 	lm_size_t  size;
+	lm_prot_t  old_prot = LM_PROT_XRW;
 
 	size = _LM_DetourPayload(src, dst, detour, LM_GetProcessBits(), &buf);
-	if (!size)
+	if (!size || !buf)
 		return ret;
+	
+	if (!LM_ProtMemory(src, size, LM_PROT_XRW, &old_prot))
+		goto _FREE_EXIT;
 
 	ret = LM_WriteMemory(src, buf, size) == size ? LM_TRUE : ret;
+	LM_ProtMemory(src, size, old_prot, LM_NULLPTR);
+_FREE_EXIT:
 	LM_FREE(buf);
 
 	return ret;
@@ -3205,13 +3211,19 @@ LM_DetourCodeEx(lm_process_t proc,
 	lm_bool_t  ret = LM_FALSE;
 	lm_byte_t *buf = (lm_byte_t *)LM_NULL;
 	lm_size_t  size;
+	lm_prot_t  old_prot = LM_PROT_XRW;
 
 	size = _LM_DetourPayload(src, dst, detour,
 				 LM_GetProcessBitsEx(proc), &buf);
 	if (!size || !buf)
 		return ret;
+	
+	if (!LM_ProtMemoryEx(proc, src, size, LM_PROT_XRW, &old_prot))
+		goto _FREE_EXIT;
 
 	ret = LM_WriteMemoryEx(proc, src, buf, size) == size ? LM_TRUE : ret;
+	LM_ProtMemoryEx(proc, src, size, old_prot, LM_NULLPTR);
+_FREE_EXIT:
 	LM_FREE(buf);
 
 	return ret;
@@ -3234,7 +3246,7 @@ LM_MakeTrampoline(lm_address_t src,
 		lm_size_t  payload_size;
 		
 		payload_size = _LM_DetourPayload(LM_NULLPTR,
-						 dst,
+						 &((lm_byte_t *)src)[size],
 						 LM_DETOUR_JMP64,
 						 LM_GetProcessBits(),
 						 &payload);

@@ -59,6 +59,129 @@ _LM_CheckProcess(lm_process_t proc)
 	return ret;
 }
 
+static lm_size_t
+_LM_DetourPayload(lm_address_t src,
+		  lm_address_t dst,
+		  lm_detour_t  detour,
+		  lm_size_t    bits,
+		  lm_byte_t  **buf)
+{
+	lm_size_t  size = 0;
+
+	if (!buf)
+		return size;
+
+#	if LM_ARCH == LM_ARCH_X86
+	switch (detour) {
+	case LM_DETOUR_JMP32:
+	{
+		lm_byte_t payload[] = {
+			0xE9, 0x0, 0x0, 0x0, 0x0 /* jmp 0x0 */
+		};
+
+		size = sizeof(payload);
+
+		*(lm_uint32_t *)&payload[1] = (lm_uint32_t)(
+			(lm_uintptr_t)dst - (lm_uintptr_t)src - size
+		);
+
+		*buf = LM_MALLOC(size);
+		LM_MEMCPY(*buf, payload, size);
+		break;
+	}
+	case LM_DETOUR_JMP64:
+	{
+		if (bits == 64) {
+			lm_byte_t payload[] = {
+			     0xFF, 0x25, 0x0, 0x0, 0x0, 0x0, /* jmp [rip] */
+			     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 /* <dst> */
+			};
+
+			size = sizeof(payload);
+
+			*(lm_uintptr_t *)&payload[6] = (lm_uintptr_t)dst;
+
+			*buf = LM_MALLOC(size);
+			LM_MEMCPY(*buf, payload, size);	
+		} else {
+			lm_byte_t payload[] = {
+				0xFF, 0x25, 0x0, 0x0, 0x0, 0x0, /* jmp [eip] */
+				0x0, 0x0, 0x0, 0x0 /* <dst> */
+			};
+
+			size = sizeof(payload);
+
+			*(lm_uint32_t *)&payload[6] = (lm_uint32_t)(
+				(lm_uintptr_t)dst
+			);
+
+			*buf = LM_MALLOC(size);
+			LM_MEMCPY(*buf, payload, size);	
+		}
+		break;
+	}
+	case LM_DETOUR_CALL32:
+	{
+		lm_byte_t payload[] = {
+			0xE8, 0x0, 0x0, 0x0, 0x0 /* call 0x0 */
+		};
+
+		size = sizeof(payload);
+
+		*(lm_uint32_t *)&payload[1] = (lm_uint32_t)(
+			(lm_uintptr_t)dst - (lm_uintptr_t)src - size
+		);
+
+		*buf = LM_MALLOC(size);
+		LM_MEMCPY(*buf, payload, size);
+		break;
+	}
+	case LM_DETOUR_CALL64:
+	{
+		if (bits == 64) {
+			lm_byte_t payload[] = {
+			     0xFF, 0x15, 0x0, 0x0, 0x0, 0x0, /* call [rip] */
+			     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 /* <dst> */
+			};
+
+			size = sizeof(payload);
+
+			*(lm_uintptr_t *)&payload[6] = (lm_uintptr_t)dst;
+
+			*buf = LM_MALLOC(size);
+			LM_MEMCPY(*buf, payload, size);	
+		} else {
+			lm_byte_t payload[] = {
+			       0xFF, 0x15, 0x0, 0x0, 0x0, 0x0, /* call [eip] */
+			       0x0, 0x0, 0x0, 0x0 /* <dst> */
+			};
+
+			size = sizeof(payload);
+
+			*(lm_uint32_t *)&payload[6] = (lm_uint32_t)(
+				(lm_uintptr_t)dst
+			);
+
+			*buf = LM_MALLOC(size);
+			LM_MEMCPY(*buf, payload, size);	
+		}
+		break;
+	}
+	case LM_DETOUR_RET32:
+	{
+		break;
+	}
+	case LM_DETOUR_RET64:
+	{
+		break;
+	}
+	}
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
+
+	return size;
+}
+
 #if LM_OS == LM_OS_WIN
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 static lm_size_t
@@ -3057,13 +3180,42 @@ LM_LibraryCallEx(lm_process_t proc,
 LM_API lm_bool_t
 LM_DetourCode(lm_address_t src,
 	      lm_address_t dst,
-	      lm_detour_t  detour);
+	      lm_detour_t  detour)
+{
+	lm_bool_t  ret = LM_FALSE;
+	lm_byte_t *buf;
+	lm_size_t  size;
+
+	size = _LM_DetourPayload(src, dst, detour, LM_GetProcessBits(), &buf);
+	if (!size)
+		return ret;
+
+	ret = LM_WriteMemory(src, buf, size) == size ? LM_TRUE : ret;
+	LM_FREE(buf);
+
+	return ret;
+}
 
 LM_API lm_bool_t
 LM_DetourCodeEx(lm_process_t proc,
 		lm_address_t src,
 		lm_address_t dst,
-		lm_detour_t  detour);
+		lm_detour_t  detour)
+{
+	lm_bool_t  ret = LM_FALSE;
+	lm_byte_t *buf = (lm_byte_t *)LM_NULL;
+	lm_size_t  size;
+
+	size = _LM_DetourPayload(src, dst, detour,
+				 LM_GetProcessBitsEx(proc), &buf);
+	if (!size || !buf)
+		return ret;
+
+	ret = LM_WriteMemoryEx(proc, src, buf, size) == size ? LM_TRUE : ret;
+	LM_FREE(buf);
+
+	return ret;
+}
 
 LM_API lm_address_t
 LM_MakeTrampoline(lm_address_t src,

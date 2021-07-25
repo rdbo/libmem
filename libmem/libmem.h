@@ -635,13 +635,11 @@ LM_DetourCodeEx(lm_process_t proc,
 
 LM_API lm_address_t
 LM_MakeTrampoline(lm_address_t src,
-		  lm_address_t dst,
 		  lm_size_t    size);
 
 LM_API lm_address_t
 LM_MakeTrampolineEx(lm_process_t proc,
 		    lm_address_t src,
-		    lm_address_t dst,
 		    lm_size_t    size);
 
 LM_API lm_void_t

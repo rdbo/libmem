@@ -3231,7 +3231,6 @@ _FREE_EXIT:
 
 LM_API lm_address_t
 LM_MakeTrampoline(lm_address_t src,
-		  lm_address_t dst,
 		  lm_size_t    size)
 {
 	lm_address_t tramp = (lm_address_t)LM_BAD;
@@ -3276,7 +3275,6 @@ LM_MakeTrampoline(lm_address_t src,
 LM_API lm_address_t
 LM_MakeTrampolineEx(lm_process_t proc,
 		    lm_address_t src,
-		    lm_address_t dst,
 		    lm_size_t    size)
 {
 	lm_address_t tramp = (lm_address_t)LM_BAD;

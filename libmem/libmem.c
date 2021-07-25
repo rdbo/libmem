@@ -3291,7 +3291,7 @@ LM_MakeTrampolineEx(lm_process_t proc,
 		lm_size_t  payload_size;
 		
 		payload_size = _LM_DetourPayload(LM_NULLPTR,
-						 dst,
+						 &((lm_byte_t *)src)[size],
 						 LM_DETOUR_JMP64,
 						 LM_GetProcessBits(),
 						 &payload);

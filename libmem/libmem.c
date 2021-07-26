@@ -3322,7 +3322,7 @@ LM_API lm_void_t
 LM_DestroyTrampoline(lm_address_t tramp)
 {
 	if (tramp)
-		LM_FreeMemory(tramp, 0);
+		LM_FreeMemory(tramp, 1);
 }
 
 LM_API lm_void_t
@@ -3330,7 +3330,7 @@ LM_DestroyTrampolineEx(lm_process_t proc,
 		       lm_address_t tramp)
 {
 	if (tramp)
-		LM_FreeMemoryEx(proc, tramp, 0);
+		LM_FreeMemoryEx(proc, tramp, 1);
 }
 
 #endif

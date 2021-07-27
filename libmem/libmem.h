@@ -147,6 +147,166 @@
 #define LM_API
 #endif
 
+/* Old V3 API */
+#if defined(LM_OLD)
+#define MEM_OS_WIN        LM_OS_WIN
+#define MEM_OS_LINUX      LM_OS_LINUX
+#define MEM_OS_BSD        LM_OS_BSD
+#define MEM_OS            LM_OS
+
+#define MEM_ARCH_X86      LM_ARCH_X86
+#define MEM_ARCH_ARM      LM_ARCH_ARM
+#define MEM_ARCH          LM_ARCH
+#define MEM_BITS          LM_BITS
+
+#define MEM_CHARSET_UC    LM_CHARSET_UC
+#define MEM_CHARSET_MB    LM_CHARSET_MB
+#define MEM_CHARSET       LM_CHARSET
+
+#define MEM_COMPILER_MSVC LM_COMPILER_MSVC
+#define MEM_COMPILER_CC   LM_COMPILER_CC
+#define MEM_COMPILER      LM_COMPILER
+
+#define MEM_LANG_C        LM_LANG_C
+#define MEM_LANG_CPP      LM_LANG_CPP
+#define MEM_LANG          LM_LANG
+
+#define MEM_NULL          LM_NULL
+#define MEM_NULLPTR       LM_NULLPTR
+#define MEM_TRUE          LM_TRUE
+#define MEM_FALSE         LM_FALSE
+#define MEM_BAD           LM_BAD
+#define MEM_MAX           LM_MAX
+#define MEM_PATH_MAX      LM_PATH_MAX
+#define MEM_MASK_KNOWN    LM_MASK_KNOWN
+#define MEM_MASK_KNOWN2   LM_MASK_KNOWN2
+#define MEM_MASK_UNKNOWN  LM_MASK_UNKNOWN
+#define MEM_MASK_UNKNOWN2 LM_MASK_UNKNOWN2
+#define MEM_PROT_R        LM_PROT_R
+#define MEM_PROT_W        LM_PROT_W
+#define MEM_PROT_RW       LM_PROT_RW
+#define MEM_PROT_XR       LM_PROT_XR
+#define MEM_PROT_XRW      LM_PROT_XRW
+
+#define MEM_STR           LM_STR
+
+#define mem_char_t    lm_char_t
+#define mem_uchar_t   lm_uchar_t
+#define mem_int_t     lm_int_t
+#define mem_uint_t    lm_uint_t
+#define mem_short_t   lm_short_t
+#define mem_ushort_t  lm_ushort_t
+#define mem_long_t    lm_long_t
+#define mem_ulong_t   lm_ulong_t
+#define mem_wchar_t   lm_wchar_t
+#define mem_void_t    lm_void_t
+#define mem_bool_t    lm_bool_t
+
+#define mem_int8_t    lm_int8_t
+#define mem_int16_t   lm_int16_t
+#define mem_int32_t   lm_int32_t
+#define mem_int64_t   lm_int64_t
+#define mem_uint8_t   lm_uint8_t
+#define mem_uint16_t  lm_uint16_t
+#define mem_uint32_t  lm_uint32_t
+#define mem_uint64_t  lm_uint64_t
+
+#define mem_byte_t    lm_byte_t
+#define mem_word_t    lm_word_t
+#define mem_dword_t   lm_dword_t
+#define mem_qword_t   lm_qword_t
+
+#define mem_intptr_t  lm_intptr_t
+#define mem_uintptr_t lm_uintptr_t
+#define mem_voidptr_t lm_voidptr_t
+
+#define mem_address_t lm_address_t
+#define mem_size_t    lm_size_t
+#define mem_tchar_t   lm_tchar_t
+
+#define mem_bstring_t lm_bstring_t
+#define mem_cstring_t lm_cstring_t
+#define mem_wstring_t lm_wstring_t
+#define mem_tstring_t lm_tstring_t
+#define mem_string_t  lm_string_t
+
+#define mem_pid_t     lm_pid_t
+#define mem_prot_t    lm_prot_t
+#define mem_flags_t   lm_flags_t
+#define mem_detour_t  lm_detour_t
+
+#define mem_process_t lm_process_t
+#define mem_module_t  lm_module_t
+#define mem_page_t    lm_page_t
+
+#define mem_ex_enum_processes   LM_EnumProcesses
+#define mem_in_get_pid          LM_GetProcessId
+#define mem_ex_get_pid          LM_GetProcessIdEx
+#define mem_in_get_parent       LM_GetParentId
+#define mem_ex_get_parent       LM_GetParentIdEx
+#define mem_in_open_process     LM_OpenProcess
+#define mem_ex_open_process     LM_OpenProcessEx
+#define mem_in_close_process    LM_CloseProcess
+#define mem_ex_close_process    LM_CloseProcess
+#define mem_in_get_process_path LM_GetProcessPath
+#define mem_ex_get_process_path LM_GetProcessPathEx
+#define mem_in_get_process_name LM_GetProcessName
+#define mem_ex_get_process_name LM_GetProcessNameEx
+#define mem_ex_get_system_bits  LM_GetSystemBits
+#define mem_in_get_bits         LM_GetProcessBits
+#define mem_ex_get_bits         LM_GetProcessBitsEx
+
+#define mem_in_enum_modules     LM_EnumModules
+#define mem_ex_enum_modules     LM_EnumModulesEx
+#define mem_in_get_module       LM_GetModule
+#define mem_ex_get_module       LM_GetModuleEx
+#define mem_in_get_module_path  LM_GetModulePath
+#define mem_ex_get_module_path  LM_GetModulePathEx
+#define mem_in_get_module_name  LM_GetModuleName
+#define mem_ex_get_module_name  LM_GetModuleNameEx
+#define mem_in_load_module      LM_LoadModule
+#define mem_ex_load_module      LM_LoadModuleEx
+#define mem_in_unload_module    LM_UnloadModule
+#define mem_ex_unload_module    LM_UnloadModuleEx
+#define mem_in_get_symbol       LM_GetSymbol
+#define mem_ex_get_symbol       LM_GetSymbolEx
+
+#define mem_in_enum_pages       LM_EnumPages
+#define mem_ex_enum_pages       LM_EnumPagesEx
+#define mem_in_get_page         LM_GetPage
+#define mem_ex_get_page         LM_GetPageEx
+
+#define mem_in_read             LM_ReadMemory
+#define mem_ex_read             LM_ReadMemoryEx
+#define mem_in_write            LM_WriteMemory
+#define mem_ex_write            LM_WriteMemoryEx
+#define mem_in_set              LM_SetMemory
+#define mem_ex_set              LM_SetMemoryEx
+#define mem_in_protect          LM_ProtMemory
+#define mem_ex_protect          LM_ProtMemoryEx
+#define mem_in_allocate         LM_AllocMemory
+#define mem_ex_allocate         LM_AllocMemoryEx
+#define mem_in_deallocate       LM_FreeMemory
+#define mem_ex_deallocate       LM_FreeMemoryEx
+#define mem_in_scan             LM_DataScan
+#define mem_ex_scan             LM_DataScanEx
+#define mem_in_pattern_scan     LM_PatternScan
+#define mem_ex_pattern_scan     LM_PatternScanEx
+#define mem_in_signature_scan   LM_SigScan
+#define mem_ex_signature_scan   LM_SigScanEx
+
+#define mem_in_syscall          LM_SystemCall
+#define mem_ex_syscall          LM_SystemCallEx
+#define mem_in_libcall          LM_LibraryCall
+#define mem_ex_libcall          LM_LibraryCallEx
+#define mem_in_detour           LM_DetourCode
+#define mem_ex_detour           LM_DetourCodeEx
+#define mem_in_make_trampoline  LM_MakeTrampoline
+#define mem_ex_make_trampoline  LM_MakeTrampolineEx
+#define mem_in_del_trampoline   LM_DestroyTrampoline
+#define mem_ex_del_trampoline   LM_DestroyTrampolineEx
+#endif
+
 /* Others */
 #define LM_NULL    (0)
 #define LM_NULLPTR ((lm_void_t *)LM_NULL)
@@ -282,9 +442,7 @@ typedef lm_byte_t     *lm_bstring_t;
 typedef lm_char_t     *lm_cstring_t;
 typedef lm_wchar_t    *lm_wstring_t;
 typedef lm_tchar_t    *lm_tstring_t;
-#if !defined(LIBMEM_HPP)
 typedef lm_tstring_t   lm_string_t;
-#endif
 
 #if LM_OS == LM_OS_WIN
 typedef DWORD          lm_pid_t;

@@ -59,6 +59,69 @@ _LM_CheckProcess(lm_process_t proc)
 	return ret;
 }
 
+static lm_bool_t
+_LM_ParseSig(lm_tstring_t  sig,
+	     lm_bstring_t *ppattern,
+	     lm_tstring_t *pmask)
+{
+	lm_bool_t    ret = LM_FALSE;
+	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
+	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
+	lm_size_t    len = 0;
+	lm_tchar_t  *ptr;
+	
+	for (ptr = sig; ptr; ptr = LM_STRCHR(ptr, LM_STR(' '))) {
+		lm_byte_t  *old_pattern = pattern;
+		lm_tchar_t *old_mask = mask;
+		lm_byte_t   curbyte = 0;
+		lm_tchar_t  curchar = LM_STR(LM_MASK_UNKNOWN);
+
+		pattern = LM_CALLOC(len + 1, sizeof(lm_byte_t));
+		if (old_pattern) {
+			if (pattern)
+				LM_MEMCPY(pattern, old_pattern, len * sizeof(lm_byte_t));
+			LM_FREE(old_pattern);
+		}
+
+		if (!pattern) {
+			if (mask)
+				LM_FREE(mask);
+			return ret;
+		}
+
+		mask = LM_CALLOC(len + 2, sizeof(lm_tchar_t));
+		if (old_mask) {
+			if (mask)
+				LM_STRNCPY(mask, old_mask, len);
+			
+			LM_FREE(old_mask);
+		}
+
+		if (!mask) {
+			LM_FREE(pattern);
+			return ret;
+		}
+
+		if (ptr != sig)
+			ptr = &ptr[1];
+		
+		if (!LM_RCHKMASK(*ptr)) {
+			curbyte = (lm_byte_t)LM_STRTOP(ptr, NULL, 16);
+			curchar = LM_STR(LM_MASK_KNOWN);
+		}
+
+		pattern[len] = curbyte;
+		mask[len++] = curchar;
+		mask[len] = LM_STR('\x00');
+	}
+
+	*ppattern = pattern;
+	*pmask = mask;
+	ret = LM_TRUE;
+	
+	return ret;
+}
+
 static lm_size_t
 _LM_DetourPayload(lm_address_t src,
 		  lm_address_t dst,
@@ -2653,59 +2716,15 @@ LM_SigScan(lm_tstring_t sig,
 	   lm_address_t stop)
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
-	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
-	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
-	lm_size_t    len = 0;
-	lm_tchar_t  *ptr;
-
+	lm_bstring_t pattern = (lm_byte_t *)LM_NULL;
+	lm_tstring_t mask = (lm_tchar_t *)LM_NULL;
+	
 	if (!sig || !start || !stop ||
 	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
 		return match;
-	
-	for (ptr = sig; ptr; ptr = LM_STRCHR(ptr, LM_STR(' '))) {
-		lm_byte_t  *old_pattern = pattern;
-		lm_tchar_t *old_mask = mask;
-		lm_byte_t   curbyte = 0;
-		lm_tchar_t  curchar = LM_STR(LM_MASK_UNKNOWN);
 
-		pattern = LM_CALLOC(len + 1, sizeof(lm_byte_t));
-		if (old_pattern) {
-			if (pattern)
-				LM_MEMCPY(pattern, old_pattern, len * sizeof(lm_byte_t));
-			LM_FREE(old_pattern);
-		}
-
-		if (!pattern) {
-			if (mask)
-				LM_FREE(mask);
-			return match;
-		}
-
-		mask = LM_CALLOC(len + 2, sizeof(lm_tchar_t));
-		if (old_mask) {
-			if (mask)
-				LM_STRNCPY(mask, old_mask, len);
-			
-			LM_FREE(old_mask);
-		}
-
-		if (!mask) {
-			LM_FREE(pattern);
-			return match;
-		}
-
-		if (ptr != sig)
-			ptr = &ptr[1];
-		
-		if (!LM_RCHKMASK(*ptr)) {
-			curbyte = (lm_byte_t)LM_STRTOP(ptr, NULL, 16);
-			curchar = LM_STR(LM_MASK_KNOWN);
-		}
-
-		pattern[len] = curbyte;
-		mask[len++] = curchar;
-		mask[len] = LM_STR('\x00');
-	}
+	if (!_LM_ParseSig(sig, &pattern, &mask))
+		return match;
 	
 	match = LM_PatternScan(pattern, mask, start, stop);
 
@@ -2724,57 +2743,13 @@ LM_SigScanEx(lm_process_t proc,
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
 	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
-	lm_size_t    len = 0;
-	lm_tchar_t  *ptr;
 
 	if (!_LM_CheckProcess(proc) || !sig || !start || !stop ||
 	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
 		return match;
 	
-	for (ptr = sig; ptr; ptr = LM_STRCHR(ptr, LM_STR(' '))) {
-		lm_byte_t  *old_pattern = pattern;
-		lm_tchar_t *old_mask = mask;
-		lm_byte_t   curbyte = 0;
-		lm_tchar_t  curchar = LM_STR(LM_MASK_UNKNOWN);
-
-		pattern = LM_CALLOC(len + 1, sizeof(lm_byte_t));
-		if (old_pattern) {
-			if (pattern)
-				LM_MEMCPY(pattern, old_pattern, len * sizeof(lm_byte_t));
-			LM_FREE(old_pattern);
-		}
-
-		if (!pattern) {
-			if (mask)
-				LM_FREE(mask);
-			return match;
-		}
-
-		mask = LM_CALLOC(len + 2, sizeof(lm_tchar_t));
-		if (old_mask) {
-			if (mask)
-				LM_STRNCPY(mask, old_mask, len);
-			
-			LM_FREE(old_mask);
-		}
-
-		if (!mask) {
-			LM_FREE(pattern);
-			return match;
-		}
-
-		if (ptr != sig)
-			ptr = &ptr[1];
-		
-		if (!LM_RCHKMASK(*ptr)) {
-			curbyte = (lm_byte_t)LM_STRTOP(ptr, NULL, 16);
-			curchar = LM_STR(LM_MASK_KNOWN);
-		}
-
-		pattern[len] = curbyte;
-		mask[len++] = curchar;
-		mask[len] = LM_STR('\x00');
-	}
+	if (!_LM_ParseSig(sig, &pattern, &mask))
+		return match;
 	
 	match = LM_PatternScanEx(proc, pattern, mask, start, stop);
 

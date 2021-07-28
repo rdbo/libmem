@@ -2676,7 +2676,7 @@ LM_PatternScanEx(lm_process_t proc,
 	if (!size)
 		return match;
 	
-	if (!LM_ProtMemory(start, size, LM_PROT_XRW, &oldprot))
+	if (!LM_ProtMemoryEx(proc, start, size, LM_PROT_XRW, &oldprot))
 		return match;
 	
 	for (ptr = (lm_byte_t *)start;
@@ -2705,7 +2705,7 @@ LM_PatternScanEx(lm_process_t proc,
 		break;
 	}
 	
-	LM_ProtMemory(start, size, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemoryEx(proc, start, size, oldprot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }

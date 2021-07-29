@@ -771,15 +771,15 @@ LM_SystemCallEx(lm_process_t proc,
 		lm_uintptr_t arg5);
 
 LM_API lm_uintptr_t
-LM_LibraryCall(lm_address_t fnaddr,
-	       lm_size_t    nargs,
-	       ...);
+LM_FunctionCall(lm_address_t fnaddr,
+		lm_size_t    nargs,
+		...);
 
 LM_API lm_uintptr_t
-LM_LibraryCallEx(lm_process_t proc,
-		 lm_address_t fnaddr,
-		 lm_size_t    nargs,
-		 ...);
+LM_FunctionCallEx(lm_process_t proc,
+		  lm_address_t fnaddr,
+		  lm_size_t    nargs,
+		  ...);
 
 LM_API lm_bool_t
 LM_DetourCode(lm_address_t src,

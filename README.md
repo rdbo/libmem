@@ -82,8 +82,8 @@ LM_SigScanEx
 
 LM_SystemCall
 LM_SystemCallEx
-LM_LibraryCall
-LM_LibraryCallEx
+LM_FunctionCall
+LM_FunctionCallEx
 LM_DetourCode
 LM_DetourCodeEx
 LM_MakeTrampoline

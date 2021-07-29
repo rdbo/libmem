@@ -527,7 +527,6 @@ enum {
 #	define LM_ARGLOC_EBP LM_ARGLOC_RBP
 #	elif LM_ARCH == LM_ARCH_ARM
 #	endif
-
 	LM_ARGLOC_STACK
 };
 

@@ -235,10 +235,12 @@
 #define mem_prot_t    lm_prot_t
 #define mem_flags_t   lm_flags_t
 #define mem_detour_t  lm_detour_t
+#define mem_argloc_t  lm_argloc_t
 
 #define mem_process_t lm_process_t
 #define mem_module_t  lm_module_t
 #define mem_page_t    lm_page_t
+#define mem_callarg_t lm_callarg_t
 
 #define mem_ex_enum_processes   LM_EnumProcesses
 #define mem_in_get_pid          LM_GetProcessId
@@ -298,8 +300,8 @@
 
 #define mem_in_syscall          LM_SystemCall
 #define mem_ex_syscall          LM_SystemCallEx
-#define mem_in_libcall          LM_LibraryCall
-#define mem_ex_libcall          LM_LibraryCallEx
+#define mem_in_fncall           LM_FunctionCall
+#define mem_ex_fncall           LM_FunctionCallEx
 #define mem_in_detour           LM_DetourCode
 #define mem_ex_detour           LM_DetourCodeEx
 #define mem_in_make_trampoline  LM_MakeTrampoline
@@ -495,6 +497,47 @@ enum {
 	LM_MOD_BY_STR = 0,
 	LM_MOD_BY_ADDR
 };
+
+enum {
+	LM_ARGLOC_INVAL = 0,
+#	if LM_ARCH == LM_ARCH_X86
+	LM_ARGLOC_RAX,
+	LM_ARGLOC_RBX,
+	LM_ARGLOC_RCX,
+	LM_ARGLOC_RDX,
+	LM_ARGLOC_RSI,
+	LM_ARGLOC_RDI,
+	LM_ARGLOC_RSP,
+	LM_ARGLOC_RBP,
+	LM_ARGLOC_R8,
+	LM_ARGLOC_R9,
+	LM_ARGLOC_R10,
+	LM_ARGLOC_R11,
+	LM_ARGLOC_R12,
+	LM_ARGLOC_R13,
+	LM_ARGLOC_R14,
+	LM_ARGLOC_R15,
+#	define LM_ARGLOC_EAX LM_ARGLOC_RAX
+#	define LM_ARGLOC_EBX LM_ARGLOC_RBX
+#	define LM_ARGLOC_ECX LM_ARGLOC_RCX
+#	define LM_ARGLOC_EDX LM_ARGLOC_RDX
+#	define LM_ARGLOC_ESI LM_ARGLOC_RSI
+#	define LM_ARGLOC_EDI LM_ARGLOC_RDI
+#	define LM_ARGLOC_ESP LM_ARGLOC_RSP
+#	define LM_ARGLOC_EBP LM_ARGLOC_RBP
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
+
+	LM_ARGLOC_STACK
+};
+
+typedef lm_int_t lm_argloc_t;
+
+typedef struct {
+	lm_argloc_t argloc;
+	lm_size_t   size;
+	lm_void_t  *data;
+} lm_callarg_t;
 
 /* libmem */
 LM_API lm_bool_t

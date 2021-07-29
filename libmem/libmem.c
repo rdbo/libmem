@@ -3142,15 +3142,244 @@ LM_SystemCallEx(lm_process_t proc,
 }
 
 LM_API lm_uintptr_t
-LM_LibraryCall(lm_address_t fnaddr,
-	       lm_size_t    nargs,
-	       ...);
+LM_FunctionCall(lm_address_t fnaddr,
+		lm_size_t    nargs,
+		...);
 
 LM_API lm_uintptr_t
-LM_LibraryCallEx(lm_process_t proc,
-		 lm_address_t fnaddr,
-		 lm_size_t    nargs,
-		 ...);
+LM_FunctionCallEx(lm_process_t proc,
+		  lm_address_t fnaddr,
+		  lm_size_t    nargs,
+		  ...)
+{
+	lm_uintptr_t  ret = (lm_uintptr_t)LM_BAD;
+	lm_callarg_t *callargs = (lm_callarg_t *)LM_NULL;
+
+	if (!_LM_CheckProcess(proc))
+		return ret;
+	
+	if (nargs > 0) {
+		va_list   args;
+		lm_size_t i;
+
+		callargs = LM_CALLOC(nargs, sizeof(lm_callarg_t));
+		if (!callargs)
+			return ret;
+		
+		va_start(args, nargs);
+
+		for (i = 0; i < nargs; ++i)
+			callargs[i] = va_arg(args, lm_callarg_t);
+
+		va_end(args);
+	}
+	
+
+#	if LM_OS == LM_OS_WIN
+	{
+
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		int status;
+		lm_size_t bits;
+
+		bits = LM_GetProcessBitsEx(proc);
+
+		if (bits > LM_GetProcessBits())
+			return ret;
+		
+#		if LM_ARCH == LM_ARCH_X86
+		{
+			int status;
+			struct user_regs_struct regs, old_regs;
+			lm_byte_t code[] = {
+				/* LM_DETOUR_CALL64 */
+				0xFF, 0x15, 0x0, 0x0, 0x0, 0x0,
+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+			};
+
+			lm_byte_t old_code[LM_ARRLEN(code)];
+			lm_address_t inj_addr;
+
+			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
+			wait(&status);
+			ptrace(PTRACE_GETREGS, proc.pid, NULL, &old_regs);
+			regs = old_regs;
+
+			{
+				lm_size_t i;
+#				if LM_BITS == 64
+				inj_addr = (lm_address_t)regs.rip;
+
+				for (i = 0; i < nargs; ++i) {
+					switch (callargs[i].argloc) {
+						case LM_ARGLOC_RAX:
+							regs.rax = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_RBX:
+							regs.rbx = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_RCX:
+							regs.rcx = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_RDX:
+							regs.rdx = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_RSI:
+							regs.rsi = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_RDI:
+							regs.rdi = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_RSP:
+							regs.rsp = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_RBP:
+							regs.rbp = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R8:
+							regs.r8 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R9:
+							regs.r9 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R10:
+							regs.r10 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R11:
+							regs.r11 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R12:
+							regs.r12 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R13:
+							regs.r13 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R14:
+							regs.r14 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_R15:
+							regs.r15 = (
+							   *(lm_uintptr_t *)
+							      callargs[i].data
+							);
+							break;
+						case LM_ARGLOC_STACK:
+							regs.rsp -= 
+							    callargs[i].size;
+							
+							_LM_PtraceWrite(
+							  proc,
+							  (lm_address_t)regs.rsp,
+							  callargs[i].data,
+							  callargs[i].size
+							);
+
+							break;
+					}
+				}
+#				else
+
+#				endif
+			}
+
+			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
+			*(lm_uintptr_t *)(&code[6]) = (lm_uintptr_t)fnaddr;
+			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
+
+			ptrace(PTRACE_SETREGS, proc.pid, NULL, &regs);
+			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
+			waitpid(proc.pid, &status, WSTOPPED);
+			ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs);
+#			if LM_BITS == 64
+			ret = (lm_uintptr_t)regs.rax;
+#			else
+			ret = (lm_uintptr_t)regs.eax;
+#			endif
+
+			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
+			ptrace(PTRACE_SETREGS, proc.pid, NULL, &old_regs);
+			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
+		}
+#		elif LM_ARCH == LM_ARCH_ARM
+		{
+
+		}
+#		endif
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		int status;
+		lm_size_t bits;
+
+		bits = LM_GetProcessBitsEx(proc);
+
+		if (bits > LM_GetProcessBits())
+			return ret;
+		
+#		if LM_ARCH == LM_ARCH_X86
+		{
+
+		}
+#		elif LM_ARCH == LM_ARCH_ARM
+		{
+			
+		}
+#		endif
+	}
+#	endif
+
+	if (callargs)
+		LM_FREE(callargs);
+
+	return ret;
+}
 
 LM_API lm_bool_t
 LM_DetourCode(lm_address_t src,

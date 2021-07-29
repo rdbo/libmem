@@ -347,7 +347,7 @@
 /* Includes */
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #if LM_OS == LM_OS_WIN
@@ -535,7 +535,7 @@ typedef lm_int_t lm_argloc_t;
 typedef struct {
 	lm_argloc_t argloc;
 	lm_size_t   size;
-	lm_void_t  *data;
+	lm_byte_t  *data;
 } lm_callarg_t;
 
 /* libmem */

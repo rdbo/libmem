@@ -3194,9 +3194,9 @@ LM_FunctionCallEx(lm_process_t proc,
 			int status;
 			struct user_regs_struct regs, old_regs;
 			lm_byte_t code[] = {
-				/* LM_DETOUR_CALL64 */
-				0xFF, 0x15, 0x0, 0x0, 0x0, 0x0,
-				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+				0xFF, 0x15, 0x1, 0x0, 0x0, 0x0, /* call [rip + 1] */
+				0xCC, /* int3 */
+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 /* <abs_addr> */
 			};
 
 			lm_byte_t old_code[LM_ARRLEN(code)];
@@ -3330,11 +3330,11 @@ LM_FunctionCallEx(lm_process_t proc,
 			}
 
 			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
-			*(lm_uintptr_t *)(&code[6]) = (lm_uintptr_t)fnaddr;
+			*(lm_uintptr_t *)(&code[7]) = (lm_uintptr_t)fnaddr;
 			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 
 			ptrace(PTRACE_SETREGS, proc.pid, NULL, &regs);
-			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
+			ptrace(PTRACE_CONT, proc.pid, NULL, NULL);
 			waitpid(proc.pid, &status, WSTOPPED);
 			ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs);
 #			if LM_BITS == 64

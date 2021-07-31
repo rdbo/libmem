@@ -533,17 +533,10 @@ enum {
 typedef lm_int_t lm_datloc_t;
 
 typedef struct {
-	lm_datloc_t argloc;
+	lm_datloc_t datloc;
 	lm_size_t   size;
 	lm_byte_t  *data;
-} lm_callarg_t;
-
-enum {
-	LM_STACK_R2L, /* Right to Left */
-	LM_STACK_L2R  /* Left to right */
-};
-
-typedef lm_int_t lm_stack_t;
+} lm_datio_t;
 
 /* libmem */
 LM_API lm_bool_t
@@ -824,21 +817,10 @@ LM_FunctionCall(lm_address_t fnaddr,
 		lm_size_t    nargs,
 		...);
 
-/*
 LM_API lm_bool_t
 LM_FunctionCallEx(lm_process_t proc,
-		  lm_size_t    stack_align,
-		  lm_stack_t   stack_order,
-		  lm_datloc_t  retloc,
-		  lm_size_t    retsize,
-		  lm_byte_t   *retbuf,
-		  lm_address_t fnaddr,
-		  lm_size_t    nargs,
-		  ...);
-*/
-
-LM_API lm_uintptr_t
-LM_FunctionCallEx(lm_process_t proc,
+		  lm_uintptr_t stack_align,
+		  lm_datio_t   retbuf,
 		  lm_address_t fnaddr,
 		  lm_size_t    nargs,
 		  ...);

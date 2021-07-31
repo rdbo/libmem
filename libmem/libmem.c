@@ -3146,14 +3146,16 @@ LM_FunctionCall(lm_address_t fnaddr,
 		lm_size_t    nargs,
 		...);
 
-LM_API lm_uintptr_t
+LM_API lm_bool_t
 LM_FunctionCallEx(lm_process_t proc,
+		  lm_uintptr_t stack_align,
+		  lm_datio_t   retbuf,
 		  lm_address_t fnaddr,
 		  lm_size_t    nargs,
 		  ...)
 {
-	lm_uintptr_t  ret = (lm_uintptr_t)LM_BAD;
-	lm_callarg_t *callargs = (lm_callarg_t *)LM_NULL;
+	lm_bool_t   ret = LM_FALSE;
+	lm_datio_t *callargs = (lm_datio_t *)LM_NULL;
 
 	if (!_LM_CheckProcess(proc))
 		return ret;
@@ -3162,14 +3164,14 @@ LM_FunctionCallEx(lm_process_t proc,
 		va_list   args;
 		lm_size_t i;
 
-		callargs = LM_CALLOC(nargs, sizeof(lm_callarg_t));
+		callargs = LM_CALLOC(nargs, sizeof(lm_datio_t));
 		if (!callargs)
 			return ret;
 		
 		va_start(args, nargs);
 
 		for (i = 0; i < nargs; ++i)
-			callargs[i] = va_arg(args, lm_callarg_t);
+			callargs[i] = va_arg(args, lm_datio_t);
 
 		va_end(args);
 	}
@@ -3213,7 +3215,7 @@ LM_FunctionCallEx(lm_process_t proc,
 				inj_addr = (lm_address_t)regs.rip;
 
 				for (i = 0; i < nargs; ++i) {
-					switch (callargs[i].argloc) {
+					switch (callargs[i].datloc) {
 						case LM_DATLOC_RAX:
 							regs.rax = (
 							   *(lm_uintptr_t *)
@@ -3314,6 +3316,8 @@ LM_FunctionCallEx(lm_process_t proc,
 							regs.rsp -= 
 							    callargs[i].size;
 							
+							regs.rsp &= stack_align;
+							
 							_LM_PtraceWrite(
 							  proc,
 							  (lm_address_t)regs.rsp,
@@ -3338,14 +3342,14 @@ LM_FunctionCallEx(lm_process_t proc,
 			waitpid(proc.pid, &status, WSTOPPED);
 			ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs);
 #			if LM_BITS == 64
-			ret = (lm_uintptr_t)regs.rax;
 #			else
-			ret = (lm_uintptr_t)regs.eax;
 #			endif
 
 			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
 			ptrace(PTRACE_SETREGS, proc.pid, NULL, &old_regs);
 			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
+
+			ret = LM_TRUE;
 		}
 #		elif LM_ARCH == LM_ARCH_ARM
 		{

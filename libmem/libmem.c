@@ -3214,103 +3214,103 @@ LM_FunctionCallEx(lm_process_t proc,
 
 				for (i = 0; i < nargs; ++i) {
 					switch (callargs[i].argloc) {
-						case LM_ARGLOC_RAX:
+						case LM_DATLOC_RAX:
 							regs.rax = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_RBX:
+						case LM_DATLOC_RBX:
 							regs.rbx = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_RCX:
+						case LM_DATLOC_RCX:
 							regs.rcx = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_RDX:
+						case LM_DATLOC_RDX:
 							regs.rdx = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_RSI:
+						case LM_DATLOC_RSI:
 							regs.rsi = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_RDI:
+						case LM_DATLOC_RDI:
 							regs.rdi = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_RSP:
+						case LM_DATLOC_RSP:
 							regs.rsp = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_RBP:
+						case LM_DATLOC_RBP:
 							regs.rbp = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R8:
+						case LM_DATLOC_R8:
 							regs.r8 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R9:
+						case LM_DATLOC_R9:
 							regs.r9 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R10:
+						case LM_DATLOC_R10:
 							regs.r10 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R11:
+						case LM_DATLOC_R11:
 							regs.r11 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R12:
+						case LM_DATLOC_R12:
 							regs.r12 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R13:
+						case LM_DATLOC_R13:
 							regs.r13 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R14:
+						case LM_DATLOC_R14:
 							regs.r14 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_R15:
+						case LM_DATLOC_R15:
 							regs.r15 = (
 							   *(lm_uintptr_t *)
 							      callargs[i].data
 							);
 							break;
-						case LM_ARGLOC_STACK:
+						case LM_DATLOC_STACK:
 							regs.rsp -= 
 							    callargs[i].size;
 							

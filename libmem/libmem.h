@@ -499,44 +499,51 @@ enum {
 };
 
 enum {
-	LM_ARGLOC_INVAL = 0,
+	LM_DATLOC_INVAL = 0,
 #	if LM_ARCH == LM_ARCH_X86
-	LM_ARGLOC_RAX,
-	LM_ARGLOC_RBX,
-	LM_ARGLOC_RCX,
-	LM_ARGLOC_RDX,
-	LM_ARGLOC_RSI,
-	LM_ARGLOC_RDI,
-	LM_ARGLOC_RSP,
-	LM_ARGLOC_RBP,
-	LM_ARGLOC_R8,
-	LM_ARGLOC_R9,
-	LM_ARGLOC_R10,
-	LM_ARGLOC_R11,
-	LM_ARGLOC_R12,
-	LM_ARGLOC_R13,
-	LM_ARGLOC_R14,
-	LM_ARGLOC_R15,
-#	define LM_ARGLOC_EAX LM_ARGLOC_RAX
-#	define LM_ARGLOC_EBX LM_ARGLOC_RBX
-#	define LM_ARGLOC_ECX LM_ARGLOC_RCX
-#	define LM_ARGLOC_EDX LM_ARGLOC_RDX
-#	define LM_ARGLOC_ESI LM_ARGLOC_RSI
-#	define LM_ARGLOC_EDI LM_ARGLOC_RDI
-#	define LM_ARGLOC_ESP LM_ARGLOC_RSP
-#	define LM_ARGLOC_EBP LM_ARGLOC_RBP
+	LM_DATLOC_RAX,
+	LM_DATLOC_RBX,
+	LM_DATLOC_RCX,
+	LM_DATLOC_RDX,
+	LM_DATLOC_RSI,
+	LM_DATLOC_RDI,
+	LM_DATLOC_RSP,
+	LM_DATLOC_RBP,
+	LM_DATLOC_R8,
+	LM_DATLOC_R9,
+	LM_DATLOC_R10,
+	LM_DATLOC_R11,
+	LM_DATLOC_R12,
+	LM_DATLOC_R13,
+	LM_DATLOC_R14,
+	LM_DATLOC_R15,
+#	define LM_DATLOC_EAX LM_DATLOC_RAX
+#	define LM_DATLOC_EBX LM_DATLOC_RBX
+#	define LM_DATLOC_ECX LM_DATLOC_RCX
+#	define LM_DATLOC_EDX LM_DATLOC_RDX
+#	define LM_DATLOC_ESI LM_DATLOC_RSI
+#	define LM_DATLOC_EDI LM_DATLOC_RDI
+#	define LM_DATLOC_ESP LM_DATLOC_RSP
+#	define LM_DATLOC_EBP LM_DATLOC_RBP
 #	elif LM_ARCH == LM_ARCH_ARM
 #	endif
-	LM_ARGLOC_STACK
+	LM_DATLOC_STACK
 };
 
-typedef lm_int_t lm_argloc_t;
+typedef lm_int_t lm_datloc_t;
 
 typedef struct {
-	lm_argloc_t argloc;
+	lm_datloc_t argloc;
 	lm_size_t   size;
 	lm_byte_t  *data;
 } lm_callarg_t;
+
+enum {
+	LM_STACK_R2L, /* Right to Left */
+	LM_STACK_L2R  /* Left to right */
+};
+
+typedef lm_int_t lm_stack_t;
 
 /* libmem */
 LM_API lm_bool_t
@@ -816,6 +823,19 @@ LM_API lm_uintptr_t
 LM_FunctionCall(lm_address_t fnaddr,
 		lm_size_t    nargs,
 		...);
+
+/*
+LM_API lm_bool_t
+LM_FunctionCallEx(lm_process_t proc,
+		  lm_size_t    stack_align,
+		  lm_stack_t   stack_order,
+		  lm_datloc_t  retloc,
+		  lm_size_t    retsize,
+		  lm_byte_t   *retbuf,
+		  lm_address_t fnaddr,
+		  lm_size_t    nargs,
+		  ...);
+*/
 
 LM_API lm_uintptr_t
 LM_FunctionCallEx(lm_process_t proc,

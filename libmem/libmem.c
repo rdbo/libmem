@@ -1267,6 +1267,64 @@ LM_GetProcessBitsEx(lm_process_t proc)
 /****************************************/
 
 LM_API lm_bool_t
+LM_EnumThreads(lm_bool_t(*callback)(lm_tid_t   tid,
+				    lm_void_t *arg),
+	       lm_void_t *arg)
+{
+	lm_bool_t ret = LM_FALSE;
+	lm_process_t proc;
+
+	if (LM_OpenProcess(&proc)) {
+		ret = LM_EnumThreadsEx(proc, callback, arg);
+		LM_CloseProcess(&proc);
+	}
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_EnumThreadsEx(lm_process_t proc,
+		 lm_bool_t  (*callback)(lm_tid_t   tid,
+					lm_void_t *arg),
+		 lm_void_t   *arg)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!_LM_CheckProcess(proc) || !callback)
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+
+	}
+#	endif
+}
+
+LM_API lm_tid_t
+LM_GetThreadId(lm_void_t)
+{
+	lm_tid_t tid = (lm_tid_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		tid = (lm_tid_t)GetCurrentThreadId();
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		tid = (lm_tid_t)gettid();
+	}
+#	endif
+
+	return tid;
+}
+
+/****************************************/
+
+LM_API lm_bool_t
 LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 				    lm_tstring_t path,
 				    lm_void_t   *arg),

@@ -232,10 +232,12 @@
 #define mem_string_t  lm_string_t
 
 #define mem_pid_t     lm_pid_t
+#define mem_tid_t     lm_tid_t
 #define mem_prot_t    lm_prot_t
 #define mem_flags_t   lm_flags_t
 #define mem_detour_t  lm_detour_t
-#define mem_argloc_t  lm_argloc_t
+#define mem_argloc_t  lm_datloc_t
+#define mem_datio_t   lm_datio_t
 
 #define mem_process_t lm_process_t
 #define mem_module_t  lm_module_t
@@ -451,8 +453,10 @@ typedef lm_tstring_t   lm_string_t;
 typedef DWORD          lm_pid_t;
 typedef DWORD          lm_prot_t;
 typedef DWORD          lm_flags_t;
+typedef DWORD          lm_tid_t;
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 typedef pid_t          lm_pid_t;
+typedef lm_pid_t       lm_tid_t;
 typedef int            lm_prot_t;
 typedef int            lm_flags_t;
 #endif
@@ -592,6 +596,22 @@ LM_GetProcessBits(lm_void_t);
 
 LM_API lm_size_t
 LM_GetProcessBitsEx(lm_process_t proc);
+
+/****************************************/
+
+LM_API lm_bool_t
+LM_EnumThreads(lm_bool_t(*callback)(lm_tid_t   tid,
+				    lm_void_t *arg),
+	       lm_void_t *arg);
+
+LM_API lm_bool_t
+LM_EnumThreadsEx(lm_process_t proc,
+		 lm_bool_t  (*callback)(lm_tid_t   tid,
+					lm_void_t *arg),
+		 lm_void_t   *arg);
+
+LM_API lm_tid_t
+LM_GetThreadId(lm_void_t);
 
 /****************************************/
 

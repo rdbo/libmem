@@ -3160,7 +3160,7 @@ LM_FunctionCallEx(lm_process_t proc,
 	if (!_LM_CheckProcess(proc))
 		return ret;
 	
-	if (nargs > 0) {
+	if (nargs + nrets > 0) {
 		va_list   args;
 		lm_size_t i;
 

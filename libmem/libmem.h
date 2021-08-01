@@ -564,7 +564,7 @@ LM_OpenProcessEx(lm_pid_t      pid,
 		 lm_process_t *procbuf);
 
 LM_API lm_void_t
-LM_CloseProcess(lm_process_t *proc);
+LM_CloseProcess(lm_process_t *procbuf);
 
 LM_API lm_size_t
 LM_GetProcessPath(lm_tchar_t *pathbuf,
@@ -643,12 +643,12 @@ LM_GetModuleNameEx(lm_process_t proc,
 
 LM_API lm_bool_t
 LM_LoadModule(lm_tstring_t path,
-	      lm_module_t *mod);
+	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
 LM_LoadModuleEx(lm_process_t proc,
 		lm_tstring_t path,
-		lm_module_t *mod);
+		lm_module_t *modbuf);
 
 LM_API lm_bool_t
 LM_UnloadModule(lm_module_t mod);

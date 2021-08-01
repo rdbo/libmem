@@ -599,6 +599,34 @@ _LM_PtraceWrite(lm_process_t proc,
 	ret = LM_TRUE;
 	return ret;
 }
+
+static lm_bool_t
+_LM_GetLibcMod(lm_module_t  mod,
+	       lm_tstring_t path,
+	       lm_void_t   *arg)
+{
+	lm_module_t *pmod = (lm_module_t *)arg;
+	lm_tchar_t  *modname = (lm_tchar_t *)LM_NULL;
+
+	{
+		lm_tchar_t *tmp;
+
+		for (tmp = path;
+		     (tmp = LM_STRCHR(tmp, LM_STR('/')));
+		     tmp = &tmp[1])
+			modname = &tmp[1];
+	}
+
+	if (modname) {
+		if (!LM_STRNCMP(modname, LM_STR("libc."), 5) ||
+		    !LM_STRNCMP(modname, LM_STR("libc-"), 5)) {
+			*pmod = mod;
+			return LM_FALSE;
+		}
+	}
+
+	return LM_TRUE;
+}
 #endif
 
 /* libmem */
@@ -904,16 +932,16 @@ LM_OpenProcessEx(lm_pid_t      pid,
 }
 
 LM_API lm_void_t
-LM_CloseProcess(lm_process_t *proc)
+LM_CloseProcess(lm_process_t *procbuf)
 {
-	if (!proc)
+	if (!procbuf)
 		return;
 	
 #	if LM_OS == LM_OS_WIN
 	{
-		if (proc->handle && proc->pid != LM_GetProcessId()) {
-			CloseHandle(proc->handle);
-			proc->handle = (HANDLE)NULL;
+		if (procbuf->handle && procbuf->pid != LM_GetProcessId()) {
+			CloseHandle(procbuf->handle);
+			procbuf->handle = (HANDLE)NULL;
 		}
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
@@ -922,7 +950,7 @@ LM_CloseProcess(lm_process_t *proc)
 	}
 #	endif
 
-	proc->pid = (lm_pid_t)LM_BAD;
+	procbuf->pid = (lm_pid_t)LM_BAD;
 }
 
 LM_API lm_size_t
@@ -1675,7 +1703,7 @@ LM_GetModuleNameEx(lm_process_t proc,
 
 LM_API lm_bool_t
 LM_LoadModule(lm_tstring_t path,
-	      lm_module_t *mod)
+	      lm_module_t *modbuf)
 {
 	lm_bool_t ret = LM_FALSE;
 
@@ -1692,7 +1720,8 @@ LM_LoadModule(lm_tstring_t path,
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
 		if (dlopen(path, RTLD_LAZY)) {
-			if (!mod || LM_GetModule(path, mod, LM_MOD_BY_STR))
+			if (!modbuf ||
+			    LM_GetModule(path, modbuf, LM_MOD_BY_STR))
 				ret = LM_TRUE;
 		}
 	}
@@ -1704,7 +1733,89 @@ LM_LoadModule(lm_tstring_t path,
 LM_API lm_bool_t
 LM_LoadModuleEx(lm_process_t proc,
 		lm_tstring_t path,
-		lm_module_t *mod);
+		lm_module_t *modbuf)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!_LM_CheckProcess(proc) || !path)
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		lm_address_t dlopen_addr = (lm_address_t)LM_NULL;
+		lm_module_t  libc_mod = { 0 };
+
+		LM_EnumModulesEx(proc, _LM_GetLibcMod, (lm_void_t *)&libc_mod);
+
+		if (!libc_mod.size)
+			return ret;
+		
+#		if LM_OS == LM_OS_LINUX
+		dlopen_addr = LM_GetSymbolEx(proc, libc_mod,
+					     "__libc_dlopen_mode");
+#		else
+		dlopen_addr = LM_GetSymbolEx(proc, libc_mod, "dlopen");
+#		endif
+
+		if (dlopen_addr) {
+			lm_datio_t   arg0;
+			lm_datio_t   arg1;
+			lm_address_t path_addr = (lm_address_t)LM_NULL;
+			lm_size_t    path_size;
+			lm_size_t    bits;
+			lm_uintptr_t mode = RTLD_LAZY;
+
+			path_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
+
+			path_addr = LM_AllocMemoryEx(
+				proc,
+				path_size,
+				LM_PROT_RW
+			);
+
+			if (!path_addr)
+				return ret;
+			
+			LM_WriteMemoryEx(proc, path_addr,
+					 (lm_bstring_t)path, path_size);
+
+			bits = LM_GetProcessBitsEx(proc);
+
+#			if LM_ARCH == LM_ARCH_X86
+			if (bits == 64) {
+				arg0.datloc = LM_DATLOC_RDI;
+				arg0.data   = (lm_byte_t *)&path_addr;
+
+				arg1.datloc = LM_DATLOC_RSI;
+				arg1.data   = (lm_byte_t *)&mode;
+			} else {
+				arg0.datloc = LM_DATLOC_EBX;
+				arg0.data   = (lm_byte_t *)&path_addr;
+
+				arg1.datloc = LM_DATLOC_ECX;
+				arg1.data   = (lm_byte_t *)&mode;
+			}
+#			elif LM_ARCH == LM_ARCH_ARM
+#			endif
+
+			ret = LM_FunctionCallEx(proc, 0, dlopen_addr, 2, 0,
+						arg1, arg0);
+			
+			LM_FreeMemoryEx(proc, path_addr, path_size);
+		}
+	}
+#	endif
+
+	if (modbuf && ret == LM_TRUE) {
+		ret = LM_GetModuleEx(proc, path, modbuf, LM_MOD_BY_STR);
+	}
+
+	return ret;
+}
 
 LM_API lm_bool_t
 LM_UnloadModule(lm_module_t mod)

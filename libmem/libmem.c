@@ -3329,7 +3329,74 @@ LM_FunctionCallEx(lm_process_t proc,
 					}
 				}
 #				else
+				inj_addr = (lm_address_t)regs.eip;
 
+				for (i = 0; i < nargs; ++i) {
+					switch (datargs[i].datloc) {
+						case LM_DATLOC_EAX:
+							regs.eax = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_EBX:
+							regs.ebx = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_ECX:
+							regs.ecx = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_EDX:
+							regs.edx = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_ESI:
+							regs.esi = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_EDI:
+							regs.edi = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_ESP:
+							regs.esp = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_EBP:
+							regs.ebp = (
+							   *(lm_uintptr_t *)
+							      datargs[i].data
+							);
+							break;
+						case LM_DATLOC_STACK:
+							regs.esp -= 
+							    datargs[i].size;
+							
+							regs.esp &= stack_align;
+							
+							_LM_PtraceWrite(
+							  proc,
+							  (lm_address_t)regs.esp,
+							  datargs[i].data,
+							  datargs[i].size
+							);
+
+							break;
+					}
+				}
 #				endif
 			}
 
@@ -3380,19 +3447,19 @@ LM_FunctionCallEx(lm_process_t proc,
 					case LM_DATLOC_RDI:
 						*(lm_uintptr_t *)(
 							datargs[i].data
-						) = regs.rax;
+						) = regs.rdi;
 
 						break;
 					case LM_DATLOC_RSP:
 						*(lm_uintptr_t *)(
 							datargs[i].data
-						) = regs.rax;
+						) = regs.rsp;
 
 						break;
 					case LM_DATLOC_RBP:
 						*(lm_uintptr_t *)(
 							datargs[i].data
-						) = regs.rax;
+						) = regs.rbp;
 
 						break;
 					case LM_DATLOC_R8:
@@ -3454,6 +3521,68 @@ LM_FunctionCallEx(lm_process_t proc,
 				}
 			}
 #			else
+			{
+				lm_size_t i;
+				for (i = nargs; i < nargs + nrets; ++i) {
+					switch (datargs[i].datloc) {
+					case LM_DATLOC_EAX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.eax;
+
+						break;
+					case LM_DATLOC_EBX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.ebx;
+
+						break;
+					case LM_DATLOC_ECX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.ecx;
+
+						break;
+					case LM_DATLOC_EDX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.edx;
+
+						break;
+					case LM_DATLOC_ESI:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.esi;
+
+						break;
+					case LM_DATLOC_EDI:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.edi;
+
+						break;
+					case LM_DATLOC_ESP:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.esp;
+
+						break;
+					case LM_DATLOC_EBP:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.ebp;
+
+						break;
+					case LM_DATLOC_STACK:
+						_LM_PtraceRead(
+							proc,
+							(lm_address_t)regs.esp,
+							datargs[i].data,
+							datargs[i].size
+						);
+					}
+				}
+			}
 #			endif
 
 			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));

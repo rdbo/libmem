@@ -820,9 +820,9 @@ LM_FunctionCall(lm_address_t fnaddr,
 LM_API lm_bool_t
 LM_FunctionCallEx(lm_process_t proc,
 		  lm_uintptr_t stack_align,
-		  lm_datio_t   retbuf,
 		  lm_address_t fnaddr,
 		  lm_size_t    nargs,
+		  lm_size_t    nrets,
 		  ...);
 
 LM_API lm_bool_t

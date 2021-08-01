@@ -3149,13 +3149,13 @@ LM_FunctionCall(lm_address_t fnaddr,
 LM_API lm_bool_t
 LM_FunctionCallEx(lm_process_t proc,
 		  lm_uintptr_t stack_align,
-		  lm_datio_t   retbuf,
 		  lm_address_t fnaddr,
 		  lm_size_t    nargs,
+		  lm_size_t    nrets,
 		  ...)
 {
 	lm_bool_t   ret = LM_FALSE;
-	lm_datio_t *callargs = (lm_datio_t *)LM_NULL;
+	lm_datio_t *datargs = (lm_datio_t *)LM_NULL;
 
 	if (!_LM_CheckProcess(proc))
 		return ret;
@@ -3164,14 +3164,14 @@ LM_FunctionCallEx(lm_process_t proc,
 		va_list   args;
 		lm_size_t i;
 
-		callargs = LM_CALLOC(nargs, sizeof(lm_datio_t));
-		if (!callargs)
+		datargs = LM_CALLOC(nargs + nrets, sizeof(lm_datio_t));
+		if (!datargs)
 			return ret;
 		
-		va_start(args, nargs);
+		va_start(args, nrets);
 
-		for (i = 0; i < nargs; ++i)
-			callargs[i] = va_arg(args, lm_datio_t);
+		for (i = 0; i < nargs + nrets; ++i)
+			datargs[i] = va_arg(args, lm_datio_t);
 
 		va_end(args);
 	}
@@ -3215,114 +3215,114 @@ LM_FunctionCallEx(lm_process_t proc,
 				inj_addr = (lm_address_t)regs.rip;
 
 				for (i = 0; i < nargs; ++i) {
-					switch (callargs[i].datloc) {
+					switch (datargs[i].datloc) {
 						case LM_DATLOC_RAX:
 							regs.rax = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_RBX:
 							regs.rbx = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_RCX:
 							regs.rcx = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_RDX:
 							regs.rdx = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_RSI:
 							regs.rsi = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_RDI:
 							regs.rdi = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_RSP:
 							regs.rsp = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_RBP:
 							regs.rbp = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R8:
 							regs.r8 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R9:
 							regs.r9 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R10:
 							regs.r10 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R11:
 							regs.r11 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R12:
 							regs.r12 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R13:
 							regs.r13 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R14:
 							regs.r14 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_R15:
 							regs.r15 = (
 							   *(lm_uintptr_t *)
-							      callargs[i].data
+							      datargs[i].data
 							);
 							break;
 						case LM_DATLOC_STACK:
 							regs.rsp -= 
-							    callargs[i].size;
+							    datargs[i].size;
 							
 							regs.rsp &= stack_align;
 							
 							_LM_PtraceWrite(
 							  proc,
 							  (lm_address_t)regs.rsp,
-							  callargs[i].data,
-							  callargs[i].size
+							  datargs[i].data,
+							  datargs[i].size
 							);
 
 							break;
@@ -3342,6 +3342,117 @@ LM_FunctionCallEx(lm_process_t proc,
 			waitpid(proc.pid, &status, WSTOPPED);
 			ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs);
 #			if LM_BITS == 64
+			{
+				lm_size_t i;
+
+				for (i = nargs; i < nargs + nrets; ++i) {
+					switch (datargs[i].datloc) {
+					case LM_DATLOC_RAX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rax;
+
+						break;
+					case LM_DATLOC_RBX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rbx;
+
+						break;
+					case LM_DATLOC_RCX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rcx;
+
+						break;
+					case LM_DATLOC_RDX:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rdx;
+
+						break;
+					case LM_DATLOC_RSI:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rsi;
+
+						break;
+					case LM_DATLOC_RDI:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rax;
+
+						break;
+					case LM_DATLOC_RSP:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rax;
+
+						break;
+					case LM_DATLOC_RBP:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.rax;
+
+						break;
+					case LM_DATLOC_R8:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r8;
+
+						break;
+					case LM_DATLOC_R9:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r9;
+
+						break;
+					case LM_DATLOC_R10:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r10;
+
+						break;
+					case LM_DATLOC_R11:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r11;
+
+						break;
+					case LM_DATLOC_R12:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r12;
+
+						break;
+					case LM_DATLOC_R13:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r13;
+
+						break;
+					case LM_DATLOC_R14:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r14;
+
+						break;
+					case LM_DATLOC_R15:
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						) = regs.r15;
+
+						break;
+					case LM_DATLOC_STACK:
+						_LM_PtraceRead(
+							proc,
+							(lm_address_t)regs.rsp,
+							datargs[i].data,
+							datargs[i].size
+						);
+					}
+				}
+			}
 #			else
 #			endif
 
@@ -3379,8 +3490,8 @@ LM_FunctionCallEx(lm_process_t proc,
 	}
 #	endif
 
-	if (callargs)
-		LM_FREE(callargs);
+	if (datargs)
+		LM_FREE(datargs);
 
 	return ret;
 }

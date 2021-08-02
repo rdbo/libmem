@@ -1318,7 +1318,7 @@ LM_EnumThreadsEx(lm_process_t proc,
 
 					if (callback(tid, arg) == LM_FALSE)
 						break;
-				} while (Module32Next(hSnap, &entry));
+				} while (Thread32Next(hSnap, &entry));
 
 				ret = LM_TRUE;
 			}

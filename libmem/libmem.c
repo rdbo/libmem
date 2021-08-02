@@ -3441,7 +3441,6 @@ LM_FunctionCallEx(lm_process_t proc,
 		
 #		if LM_ARCH == LM_ARCH_X86
 		{
-			int status;
 			struct user_regs_struct regs, old_regs;
 			lm_byte_t code[] = {
 				0xFF, 0x15, 0x1, 0x0, 0x0, 0x0, /* call [rip + 1] */

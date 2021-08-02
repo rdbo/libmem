@@ -613,6 +613,9 @@ LM_EnumThreadsEx(lm_process_t proc,
 LM_API lm_tid_t
 LM_GetThreadId(lm_void_t);
 
+LM_API lm_tid_t
+LM_GetThreadIdEx(lm_process_t proc);
+
 /****************************************/
 
 LM_API lm_bool_t

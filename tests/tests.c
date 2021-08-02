@@ -12,6 +12,7 @@ main()
 {
 	lm_pid_t     pid;
 	lm_process_t proc = { 0 };
+	lm_tid_t     tid;
 	lm_module_t  mod = { 0 };
 	lm_tchar_t  *procname;
 	lm_tchar_t  *procpath;
@@ -47,6 +48,11 @@ main()
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
 	LM_PRINTF(LM_STR("[*] Process Bits: %lu\n"), procbits);
 	LM_PRINTF(LM_STR("[*] System Bits:  %lu\n"), LM_GetSystemBits());
+	LM_PRINTF(LM_STR("====================\n"));
+
+	tid = LM_GetThreadIdEx(proc);
+
+	LM_PRINTF(LM_STR("[*] Thread ID: %d\n"), tid);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_GetModuleEx(proc, procpath, &mod, LM_MOD_BY_STR);

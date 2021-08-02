@@ -1297,11 +1297,39 @@ LM_EnumThreadsEx(lm_process_t proc,
 	{
 
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX
+	{
+		DIR *pdir;
+		struct dirent *pdirent;
+		lm_tchar_t task_path[64] = { 0 };
+
+		LM_SNPRINTF(task_path, LM_ARRLEN(task_path) - 1,
+			    LM_STR("/proc/%d/task"), proc.pid);
+		
+		pdir = opendir(task_path);
+		if (!pdir)
+			return ret;
+		
+		while ((pdirent = readdir(pdir))) {
+			lm_tid_t tid = LM_ATOI(pdirent->d_name);
+
+			if (!tid && LM_STRCMP(pdirent->d_name, "0"))
+				continue;
+
+			if (callback(tid, arg) == LM_FALSE)
+				break;
+		}
+		
+		closedir(pdir);
+		ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_BSD
 	{
 
 	}
 #	endif
+
+	return ret;
 }
 
 LM_API lm_tid_t

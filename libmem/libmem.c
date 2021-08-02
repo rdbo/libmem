@@ -1379,6 +1379,27 @@ LM_GetThreadId(lm_void_t)
 	return tid;
 }
 
+static lm_bool_t
+_LM_GetThreadIdCallback(lm_tid_t   tid,
+			lm_void_t *arg)
+{
+	*(lm_tid_t *)arg = tid;
+	return LM_FALSE;
+}
+
+LM_API lm_tid_t
+LM_GetThreadIdEx(lm_process_t proc)
+{
+	lm_tid_t tid = (lm_tid_t)LM_BAD;
+
+	if (!_LM_CheckProcess(proc))
+		return tid;
+
+	LM_EnumThreadsEx(proc, _LM_GetThreadIdCallback, (lm_void_t *)&tid);
+
+	return tid;
+}
+
 /****************************************/
 
 LM_API lm_bool_t

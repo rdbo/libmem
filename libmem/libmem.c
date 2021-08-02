@@ -1828,7 +1828,8 @@ LM_LoadModule(lm_tstring_t path,
 #	if LM_OS == LM_OS_WIN
 	{
 		if (LoadLibrary(path)) {
-			if (!mod || LM_GetModule(path, mod))
+			if (!modbuf ||
+			    LM_GetModule(path, modbuf, LM_MOD_BY_STR))
 				ret = LM_TRUE;
 		}
 	}

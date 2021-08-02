@@ -86,22 +86,19 @@ main()
 	LM_ReadMemoryEx(proc, (lm_address_t)&myvar,
 			(lm_byte_t *)&mybuf, sizeof(myvar));
 	
-	datascan = LM_DataScanEx(proc,
-				 scanbuf,
-				 sizeof(scanbuf),
-				 (lm_address_t)&scanbuf[-10],
-				 (lm_address_t)&scanbuf[10]);
-	
-	patternscan = LM_PatternScanEx(proc,
-				       scanbuf,
-				       LM_STR("xxxxxxxxxx"),
-				       (lm_address_t)&scanbuf[-10],
-				       (lm_address_t)&scanbuf[10]);
-	
-	sigscan = LM_SigScanEx(proc,
-			       LM_STR("01 02 03 04 05 ?? 07 08 09 0A"),
+	datascan = LM_DataScan(scanbuf,
+			       sizeof(scanbuf),
 			       (lm_address_t)&scanbuf[-10],
 			       (lm_address_t)&scanbuf[10]);
+	
+	patternscan = LM_PatternScan(scanbuf,
+				     LM_STR("xxxxxxxxxx"),
+				     (lm_address_t)&scanbuf[-10],
+				     (lm_address_t)&scanbuf[10]);
+	
+	sigscan = LM_SigScan(LM_STR("01 02 03 04 05 ?? 07 08 09 0A"),
+			     (lm_address_t)&scanbuf[-10],
+			     (lm_address_t)&scanbuf[10]);
 	
 	LM_PRINTF(LM_STR("[*] Written Value: %d\n"), myvar);
 	LM_PRINTF(LM_STR("[*] Read Value:    %d\n"), mybuf);

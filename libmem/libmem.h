@@ -109,8 +109,10 @@
 #define LM_ATOI     atoi
 #endif
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
-#define LM_CHKMASK(c)  (c == LM_STR(LM_MASK_KNOWN) || c == LM_STR(LM_MASK_KNOWN2))
-#define LM_RCHKMASK(c) (c == LM_STR(LM_MASK_UNKNOWN) || c == LM_STR(LM_MASK_UNKNOWN2))
+#define LM_CHKMASK(c) \
+	(c == LM_STR(LM_MASK_KNOWN) || c == LM_STR(LM_MASK_KNOWN2))
+#define LM_RCHKMASK(c) \
+	(c == LM_STR(LM_MASK_UNKNOWN) || c == LM_STR(LM_MASK_UNKNOWN2))
 #define LM_CHKADDR(addr) ((lm_address_t)addr != (lm_address_t)LM_BAD)
 
 /* Flags */

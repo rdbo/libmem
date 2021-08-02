@@ -1295,7 +1295,36 @@ LM_EnumThreadsEx(lm_process_t proc,
 
 #	if LM_OS == LM_OS_WIN
 	{
+		HANDLE hSnap;
 
+		hSnap = CreateToolhelp32Snapshot(
+			TH32CS_SNAPTHREAD,
+			0
+		);
+
+		if (hSnap != INVALID_HANDLE_VALUE) {
+			THREADENTRY32 entry;
+			entry.dwSize = sizeof(THREADENTRY32);
+
+			if (Thread32First(hSnap, &entry)) {
+				do {
+					lm_tid_t tid;
+
+					if (entry.th32OwnerProcessID !=
+					    proc.pid)
+						continue;
+					
+					tid = (lm_tid_t)entry.th32ThreadID;
+
+					if (callback(tid, arg) == LM_FALSE)
+						break;
+				} while (Module32Next(hSnap, &entry));
+
+				ret = LM_TRUE;
+			}
+
+			CloseHandle(hSnap);
+		}
 	}
 #	elif LM_OS == LM_OS_LINUX
 	{

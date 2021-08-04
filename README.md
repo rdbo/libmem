@@ -15,9 +15,9 @@ Linux:
   
 BSD:  
 - libdl (-ldl)  
-- libkvm (-lkvm)  
+- libkvm (-lkvm)
+- libprocstat (-lprocstat)    
 - libelf (-lelf)
-- libprocstat (-lprocstat)  
 
 ### License
 Read `LICENSE`  

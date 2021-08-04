@@ -3460,11 +3460,7 @@ LM_FunctionCallEx(lm_process_t proc,
 #		if LM_ARCH == LM_ARCH_X86
 		{
 			struct user_regs_struct regs, old_regs;
-			lm_byte_t code[] = {
-				0xFF, 0x15, 0x1, 0x0, 0x0, 0x0, /* call [rip + 1] */
-				0xCC, /* int3 */
-				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 /* <abs_addr> */
-			};
+			lm_byte_t code[32] = { 0 };
 
 			lm_byte_t old_code[LM_ARRLEN(code)];
 			lm_address_t inj_addr;
@@ -3665,8 +3661,32 @@ LM_FunctionCallEx(lm_process_t proc,
 #				endif
 			}
 
+			if (bits == 64) {
+				lm_byte_t _code[] = {
+					0xFF, 0x15, 0x1, 0x0, 0x0, 0x0, /* call [rip + 1] */
+					0xCC, /* int3 */
+					0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 /* <abs_addr> */
+				};
+
+				*(lm_uintptr_t *)(&_code[7]) = (lm_uintptr_t)fnaddr;
+
+				LM_MEMCPY(code, _code, sizeof(_code));
+			} else {
+				lm_byte_t _code[] = {
+					0xE8, 0x0, 0x0, 0x0, 0x0, /* call <rel_addr> */
+					0xCC, /* int3 */
+				};
+
+				*(lm_uintptr_t *)(&_code[1]) = (lm_uintptr_t)(
+					(lm_uintptr_t)fnaddr - 
+					(lm_uintptr_t)inj_addr -
+					(sizeof(_code) - 1)
+				);
+
+				LM_MEMCPY(code, _code, sizeof(_code));
+			}
+
 			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
-			*(lm_uintptr_t *)(&code[7]) = (lm_uintptr_t)fnaddr;
 			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
 
 			ptrace(PTRACE_SETREGS, proc.pid, NULL, &regs);

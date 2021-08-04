@@ -1370,9 +1370,13 @@ LM_GetThreadId(lm_void_t)
 	{
 		tid = (lm_tid_t)GetCurrentThreadId();
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX
 	{
 		tid = (lm_tid_t)gettid();
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		
 	}
 #	endif
 
@@ -1380,7 +1384,7 @@ LM_GetThreadId(lm_void_t)
 }
 
 static lm_bool_t
-_LM_GetThreadIdCallback(lm_tid_t   tid,
+_LM_GetThreadIdExCallback(lm_tid_t   tid,
 			lm_void_t *arg)
 {
 	*(lm_tid_t *)arg = tid;
@@ -1395,7 +1399,7 @@ LM_GetThreadIdEx(lm_process_t proc)
 	if (!_LM_CheckProcess(proc))
 		return tid;
 
-	LM_EnumThreadsEx(proc, _LM_GetThreadIdCallback, (lm_void_t *)&tid);
+	LM_EnumThreadsEx(proc, _LM_GetThreadIdExCallback, (lm_void_t *)&tid);
 
 	return tid;
 }

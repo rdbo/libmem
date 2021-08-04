@@ -14,6 +14,15 @@
 #define LM_OS_LINUX 1
 #define LM_OS_BSD   2
 
+#if defined(LM_FORCE_OS_WIN)
+#define LM_OS LM_OS_WIN
+#elif defined(LM_FORCE_OS_LINUX)
+#define LM_OS LM_OS_LINUX
+#elif defined(LM_FORCE_OS_BSD)
+#define LM_OS LM_OS_BSD
+#endif
+
+#ifndef LM_OS
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32)) \
 	&& !defined(__CYGWIN__) && !defined(linux)
 #define LM_OS LM_OS_WIN
@@ -23,14 +32,23 @@
 	|| defined(__OpenBSD__) || defined(__NetBSD__)
 #define LM_OS LM_OS_BSD
 #endif
+#endif
 
 /* Architecture */
 #define LM_ARCH_X86 0
 #define LM_ARCH_ARM 1
 
+#if defined(LM_FORCE_ARCH_X86)
+#define LM_ARCH LM_ARCH_X86
+#elif defined(LM_FORCE_ARCH_ARM)
+#define LM_ARCH LM_ARCH_ARM
+#endif
+
+#ifndef LM_ARCH
 #if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) \
 	|| defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64) \
-	|| defined (i386) || defined(__i386) || defined(__i386__)
+	|| defined (i386) || defined(__i386) || defined(__i386__) \
+	|| defined(_M_IX86)
 #define LM_ARCH LM_ARCH_X86
 #elif defined(__arm__) || defined(_ARM) \
 	|| defined(_M_ARM) || defined(__aarch64__)
@@ -38,8 +56,14 @@
 #else /* TOFIX: Improve arch detection for Visual Studio */
 #define LM_ARCH LM_ARCH_X86
 #endif
+#endif
 
 /* Bits */
+#if defined(LM_FORCE_BITS)
+#define LM_BITS (sizeof(void *) * 8)
+#endif
+
+#ifndef LM_BITS
 #if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) \
 	|| defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64) \
 	|| defined(__aarch64__) \
@@ -49,35 +73,60 @@
 #else
 #define LM_BITS 32
 #endif
+#endif
 
 /* Compiler */
 #define LM_COMPILER_MSVC 0
 #define LM_COMPILER_CC   1
 
+#if defined(LM_FORCE_COMPILER_MSVC)
+#define LM_COMPILER LM_COMPILER_MSVC
+#elif defined(LM_FORCE_COMPILER_CC)
+#define LM_COMPILER LM_COMPILER_CC
+#endif
+
+#ifndef LM_COMPILER
 #ifdef _MSC_VER
 #define LM_COMPILER LM_COMPILER_MSVC
 #else
 #define LM_COMPILER LM_COMPILER_CC
+#endif
 #endif
 
 /* Charset */
 #define LM_CHARSET_UC 0
 #define LM_CHARSET_MB 1
 
+#if defined(LM_FORCE_CHARSET_UC)
+#define LM_CHARSET LM_CHARSET_UC
+#elif defined(LM_FORCE_CHARSET_MB)
+#define LM_CHARSET LM_CHARSET_MB
+#endif
+
+#ifndef LM_CHARSET
 #if defined(_UNICODE) && LM_OS == LM_OS_WIN
 #define LM_CHARSET LM_CHARSET_UC
 #else
 #define LM_CHARSET LM_CHARSET_MB
+#endif
 #endif
 
 /* Language */
 #define LM_LANG_C   0
 #define LM_LANG_CPP 1
 
+#if defined(LM_FORCE_LANG_C)
+#define LM_LANG LM_LANG_C
+#elif defined(LM_FORCE_LANG_CPP)
+#define LM_LANG LM_LANG_CPP
+#endif
+
+#ifndef LM_LANG
 #if defined(LIBMEM_HPP) || defined(__cplusplus)
 #define LM_LANG LM_LANG_CPP
 #else
 #define LM_LANG LM_LANG_C
+#endif
 #endif
 
 /* Helpers */

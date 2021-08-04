@@ -53,8 +53,6 @@
 #elif defined(__arm__) || defined(_ARM) \
 	|| defined(_M_ARM) || defined(__aarch64__)
 #define LM_ARCH LM_ARCH_ARM
-#else /* TOFIX: Improve arch detection for Visual Studio */
-#define LM_ARCH LM_ARCH_X86
 #endif
 #endif
 

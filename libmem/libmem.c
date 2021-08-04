@@ -74,7 +74,7 @@ _LM_ParseSig(lm_tstring_t  sig,
 		lm_byte_t  *old_pattern = pattern;
 		lm_tchar_t *old_mask = mask;
 		lm_byte_t   curbyte = 0;
-		lm_tchar_t  curchar = LM_STR(LM_MASK_UNKNOWN);
+		lm_tchar_t  curchar = LM_MASK_UNKNOWN;
 
 		pattern = LM_CALLOC(len + 1, sizeof(lm_byte_t));
 		if (old_pattern) {
@@ -107,7 +107,7 @@ _LM_ParseSig(lm_tstring_t  sig,
 		
 		if (!LM_RCHKMASK(*ptr)) {
 			curbyte = (lm_byte_t)LM_STRTOP(ptr, NULL, 16);
-			curchar = LM_STR(LM_MASK_KNOWN);
+			curchar = LM_MASK_KNOWN;
 		}
 
 		pattern[len] = curbyte;
@@ -670,7 +670,7 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 		struct dirent *pdirent;
 		DIR *dir;
 
-		dir = opendir(LM_STR(LM_PROCFS));
+		dir = opendir(LM_PROCFS);
 
 		if (!dir)
 			return ret;
@@ -851,7 +851,7 @@ LM_GetParentIdEx(lm_pid_t pid)
 		lm_tchar_t *ptr;
 
 		LM_SNPRINTF(status_path, LM_ARRLEN(status_path) - 1,
-			    LM_STR("%s/%d/status"), LM_STR(LM_PROCFS), pid);
+			    LM_STR("%s/%d/status"), LM_PROCFS, pid);
 		
 		if (!_LM_OpenFileBuf(status_path, &status_buf))
 			return ppid;
@@ -1008,7 +1008,7 @@ LM_GetProcessPathEx(lm_process_t proc,
 	{
 		lm_tchar_t exe_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 		LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path) - 1,
-			    LM_STR("%s/%d/exe"), LM_STR(LM_PROCFS), proc.pid);
+			    LM_STR("%s/%d/exe"), LM_PROCFS, proc.pid);
 		
 		len = (lm_size_t)readlink(exe_path, pathbuf, maxlen - 1);
 		if (len == (lm_size_t)-1)
@@ -1118,7 +1118,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 		lm_tchar_t comm_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
 		LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path) - 1,
-			    LM_STR("%s/%d/comm"), LM_STR(LM_PROCFS), proc.pid);
+			    LM_STR("%s/%d/comm"), LM_PROCFS, proc.pid);
 		
 		len = _LM_OpenFileBuf(comm_path, &filebuf);
 
@@ -2411,7 +2411,7 @@ LM_ReadMemoryEx(lm_process_t proc,
 		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
 		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
-			    LM_STR("%s/%d/mem"), LM_STR(LM_PROCFS), proc.pid);
+			    LM_STR("%s/%d/mem"), LM_PROCFS, proc.pid);
 		
 		fd = open(mem_path, O_RDONLY);
 		if (fd == -1)
@@ -2477,7 +2477,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
 		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
-			    LM_STR("%s/%d/mem"), LM_STR(LM_PROCFS), proc.pid);
+			    LM_STR("%s/%d/mem"), LM_PROCFS, proc.pid);
 		
 		fd = open(mem_path, O_WRONLY);
 		if (fd == -1)

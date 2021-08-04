@@ -109,10 +109,8 @@
 #define LM_ATOI     atoi
 #endif
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
-#define LM_CHKMASK(c) \
-	(c == LM_STR(LM_MASK_KNOWN) || c == LM_STR(LM_MASK_KNOWN2))
-#define LM_RCHKMASK(c) \
-	(c == LM_STR(LM_MASK_UNKNOWN) || c == LM_STR(LM_MASK_UNKNOWN2))
+#define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)
+#define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
 #define LM_CHKADDR(addr) ((lm_address_t)addr != (lm_address_t)LM_BAD)
 
 /* Flags */
@@ -322,10 +320,10 @@
 #define LM_FALSE   (0)
 #define LM_TRUE    (!(LM_FALSE))
 #define LM_MAX     (-1UL)
-#define LM_MASK_KNOWN    'x'
-#define LM_MASK_KNOWN2   'X'
-#define LM_MASK_UNKNOWN  '?'
-#define LM_MASK_UNKNOWN2 '*'
+#define LM_MASK_KNOWN    LM_STR('x')
+#define LM_MASK_KNOWN2   LM_STR('X')
+#define LM_MASK_UNKNOWN  LM_STR('?')
+#define LM_MASK_UNKNOWN2 LM_STR('*')
 #if LM_OS == LM_OS_WIN
 #define LM_PATH_MAX MAX_PATH
 #elif LM_OS == LM_OS_LINUX
@@ -333,10 +331,10 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-#define LM_PROCFS "/proc"
+#define LM_PROCFS LM_STR("/proc")
 #elif LM_OS == LM_OS_BSD
 #define LM_PATH_MAX PATH_MAX
-#define LM_PROCFS "/proc"
+#define LM_PROCFS LM_STR("/proc")
 #endif
 
 /* Compatibility */

@@ -754,6 +754,8 @@ _LM_GetProcessIdCallback(lm_pid_t   pid,
 		LM_CloseProcess(&proc);
 	}
 
+	LM_FREE(path);
+
 	return ret;
 }
 

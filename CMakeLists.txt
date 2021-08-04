@@ -9,9 +9,7 @@ set(LIBMEM_SRC "${LIBMEM_DIR}/libmem.c")
 set(TESTS_DIR "${CMAKE_SOURCE_DIR}/tests")
 set(TESTS_SRC "${TESTS_DIR}/tests.c")
 
-if(MSVC)
-	add_compile_options(/W4 /WX)
-else()
+if(NOT MSVC)
 	add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 

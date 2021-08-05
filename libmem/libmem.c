@@ -4460,15 +4460,93 @@ LM_DebugSetRegs(lm_process_t proc,
 }
 
 LM_API lm_bool_t
-LM_DebugContinue(lm_process_t proc);
+LM_DebugContinue(lm_process_t proc)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		if (ptrace(PTRACE_CONT, proc.pid, NULL, NULL) != -1)
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		if (ptrace(PT_CONTINUE, proc.pid, (caddr_t)1, 0) != -1)
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_bool_t
-LM_DebugStep(lm_process_t proc);
+LM_DebugStep(lm_process_t proc)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		if (ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL) != -1)
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		if (ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0) != -1)
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_bool_t
-LM_DebugWait(lm_void_t);
+LM_DebugWait(lm_void_t)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		int status;
+
+		if (wait(&status) != -1)
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
 
 LM_API lm_bool_t
-LM_DebugWaitProcess(lm_process_t proc);
+LM_DebugWaitProcess(lm_process_t proc)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		int status;
+
+		if (waitpid(proc.pid, &status, WSTOPPED) != -1)
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
 
 #endif

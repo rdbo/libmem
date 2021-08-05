@@ -1378,7 +1378,7 @@ LM_GetThreadId(lm_void_t)
 	}
 #	elif LM_OS == LM_OS_BSD
 	{
-		
+		tid = (lm_tid_t)LM_GetProcessId();
 	}
 #	endif
 

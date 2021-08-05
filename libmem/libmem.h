@@ -983,6 +983,9 @@ LM_API lm_bool_t
 LM_DebugDetach(lm_process_t proc);
 
 LM_API lm_bool_t
+LM_DebugCheck(lm_process_t proc);
+
+LM_API lm_bool_t
 LM_DebugRead(lm_process_t proc,
 	     lm_address_t src,
 	     lm_byte_t   *dst,
@@ -1013,6 +1016,13 @@ LM_DebugWait(lm_void_t);
 
 LM_API lm_bool_t
 LM_DebugWaitProcess(lm_process_t proc);
+
+LM_API lm_bool_t
+LM_DebugInject(lm_process_t proc,
+	       lm_bstring_t payload,
+	       lm_size_t    size,
+	       lm_regs_t    regs,
+	       lm_regs_t   *post_regs);
 
 #if LM_LANG == LM_LANG_CPP
 }

@@ -4551,4 +4551,47 @@ LM_DebugWaitProcess(lm_process_t proc)
 	return ret;
 }
 
+LM_API lm_bool_t
+LM_DebugInject(lm_process_t proc,
+	       lm_bstring_t payload,
+	       lm_size_t    size,
+	       lm_regs_t    regs,
+	       lm_regs_t   *post_regs)
+{
+	lm_bool_t    ret = LM_FALSE;
+	lm_address_t inj_addr;
+	lm_byte_t   *old_code = (lm_byte_t *)LM_NULL;
+	lm_regs_t    old_regs;
+
+	old_code = (lm_byte_t *)LM_MALLOC(size);
+	if (!old_code)
+		return ret;
+
+	LM_DebugGetRegs(proc, &old_regs);
+
+#	if LM_ARCH == LM_ARCH_X86
+#	if LM_BITS == 64
+	inj_addr = regs.rip;
+#	else
+	inj_addr = regs.eip;
+#	endif
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
+
+	LM_DebugRead(proc, inj_addr, old_code, size);	
+	LM_DebugWrite(proc, inj_addr, payload, size);
+	LM_DebugSetRegs(proc, regs);
+	LM_DebugContinue(proc);
+	LM_DebugWaitProcess(proc);
+	if (post_regs)
+		LM_DebugGetRegs(proc, post_regs);
+	LM_DebugWrite(proc, inj_addr, old_code, size);
+	LM_DebugSetRegs(proc, old_regs);
+
+	ret = LM_TRUE;
+	LM_FREE(old_code);
+
+	return ret;
+}
+
 #endif

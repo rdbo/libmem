@@ -93,6 +93,7 @@ LM_DestroyTrampolineEx
 
 LM_DebugAttach
 LM_DebugDetach
+LM_DebugCheck
 LM_DebugRead
 LM_DebugWrite
 LM_DebugGetRegs
@@ -101,6 +102,7 @@ LM_DebugContinue
 LM_DebugStep
 LM_DebugWait
 LM_DebugWaitProcess
+LM_DebugInject
 ```
 
 ## Projects

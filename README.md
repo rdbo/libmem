@@ -1,12 +1,12 @@
 ![libmem-logo](LOGO.png)  
 #  
 
-### Usage
+## Usage
 Copy the `libmem` folder to your project directory.  
 Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  
 Compile `libmem/libmem.c` along with your project.  
 
-### Dependencies
+## Dependencies
 Windows:  
 - Windows SDK (-luser32, -lpsapi)  
   
@@ -19,10 +19,10 @@ BSD:
 - libprocstat (-lprocstat)    
 - libelf (-lelf)
 
-### License
+## License
 Read `LICENSE`  
   
-### Overview
+## Overview
 ```
 LM_EnumProcesses
 LM_GetProcessId
@@ -103,7 +103,7 @@ LM_DebugWait
 LM_DebugWaitProcess
 ```
 
-### Projects
+## Projects
 Made with libmem:  
 - ![AssaultCube Multihack](https://github.com/rdbo/AssaultCube-Multihack)  
 - ![X-Inject](https://github.com/rdbo/x-inject)  

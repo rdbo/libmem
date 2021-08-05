@@ -4066,4 +4066,409 @@ LM_DestroyTrampolineEx(lm_process_t proc,
 		LM_FreeMemoryEx(proc, tramp, 1);
 }
 
+/****************************************/
+
+LM_API lm_bool_t
+LM_DebugAttach(lm_process_t proc)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!_LM_CheckProcess(proc))
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		if (DebugActiveProcess(proc.pid))
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		if (ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL) != -1)
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		if (ptrace(PT_ATTACH, proc.pid, NULL, 0) != -1)
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_DebugDetach(lm_process_t proc)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		if (DebugActiveProcessStop(proc.pid))
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		if (ptrace(PTRACE_DETACH, proc.pid, NULL, NULL) != -1)
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		if (ptrace(PT_DETACH, proc.pid, NULL, 0) != -1)
+			ret = LM_TRUE;
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_DebugRead(lm_process_t proc,
+	     lm_address_t src,
+	     lm_byte_t   *dst,
+	     lm_size_t    size)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		ret = LM_ReadMemoryEx(proc, src, dst, size);
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		ret = _LM_PtraceRead(proc, src, dst, size);
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_DebugWrite(lm_process_t proc,
+	      lm_address_t dst,
+	      lm_byte_t   *src,
+	      lm_size_t    size)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		ret = LM_ReadMemoryEx(proc, src, dst, size);
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		ret = _LM_PtraceRead(proc, src, dst, size);
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_DebugGetRegs(lm_process_t proc,
+		lm_regs_t   *regsbuf)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!regsbuf)
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		lm_tid_t tid;
+
+		tid = LM_GetThreadIdEx(proc);
+		if (tid != (lm_tid_t)LM_BAD) {
+			HANDLE  hThread;
+			CONTEXT ctx;
+
+			hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
+			if (!hThread)
+				return ret;
+			if (GetThreadContext(hThread, &ctx)) {
+#				if LM_ARCH == LM_ARCH_X86
+#				if LM_BITS == 64
+				regsbuf->rax = ctx.Rax;
+				regsbuf->rbx = ctx.Rbx;
+				regsbuf->rcx = ctx.Rcx;
+				regsbuf->rdx = ctx.Rdx;
+				regsbuf->rsi = ctx.Rsi;
+				regsbuf->rdi = ctx.Rdi;
+				regsbuf->rsp = ctx.Rsp;
+				regsbuf->rbp = ctx.Rbp;
+				regsbuf->rip = ctx.Rip;
+				regsbuf->r8  = ctx.R8;
+				regsbuf->r9  = ctx.R9;
+				regsbuf->r10 = ctx.R10;
+				regsbuf->r11 = ctx.R11;
+				regsbuf->r12 = ctx.R12;
+				regsbuf->r13 = ctx.R13;
+				regsbuf->r14 = ctx.R14;
+				regsbuf->r15 = ctx.R15;
+#				else
+				regsbuf->eax = ctx.Eax;
+				regsbuf->ebx = ctx.Ebx;
+				regsbuf->ecx = ctx.Ecx;
+				regsbuf->edx = ctx.Edx;
+				regsbuf->esi = ctx.Esi;
+				regsbuf->edi = ctx.Edi;
+				regsbuf->esp = ctx.Esp;
+				regsbuf->ebp = ctx.Ebp;
+				regsbuf->eip = ctx.Eip;
+#				endif
+#				elif LM_ARCH == LM_ARCH_ARM
+#				endif
+			}
+
+			CloseThread(hThread);
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+#		if LM_ARCH == LM_ARCH_X86
+		struct user_regs_struct regs;
+
+		if (ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs) == -1)
+			return ret;
+		
+#		if LM_BITS == 64
+		regsbuf->rax = regs.rax;
+		regsbuf->rbx = regs.rbx;
+		regsbuf->rcx = regs.rcx;
+		regsbuf->rdx = regs.rdx;
+		regsbuf->rsi = regs.rsi;
+		regsbuf->rdi = regs.rdi;
+		regsbuf->rsp = regs.rsp;
+		regsbuf->rbp = regs.rbp;
+		regsbuf->rip = regs.rip;
+		regsbuf->r8  = regs.r8;
+		regsbuf->r9  = regs.r9;
+		regsbuf->r10 = regs.r10;
+		regsbuf->r11 = regs.r11;
+		regsbuf->r12 = regs.r12;
+		regsbuf->r13 = regs.r13;
+		regsbuf->r14 = regs.r14;
+		regsbuf->r15 = regs.r15;
+#		else
+		regsbuf->eax = regs.eax;
+		regsbuf->ebx = regs.ebx;
+		regsbuf->ecx = regs.ecx;
+		regsbuf->edx = regs.edx;
+		regsbuf->esi = regs.esi;
+		regsbuf->edi = regs.edi;
+		regsbuf->esp = regs.esp;
+		regsbuf->ebp = regs.ebp;
+		regsbuf->eip = regs.eip;
+#		endif
+
+		ret = LM_TRUE;
+#		elif LM_ARCH == LM_ARCH_ARM
+#		endif
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+#		if LM_ARCH == LM_ARCH_X86
+		struct reg regs;
+
+		if (ptrace(PT_GETREGS, proc.pid, (caddr_t)&regs, 0) == -1)
+			return ret;
+		
+#		if LM_BITS == 64
+		regsbuf->rax = regs.r_rax;
+		regsbuf->rbx = regs.r_rbx;
+		regsbuf->rcx = regs.r_rcx;
+		regsbuf->rdx = regs.r_rdx;
+		regsbuf->rsi = regs.r_rsi;
+		regsbuf->rdi = regs.r_rdi;
+		regsbuf->rsp = regs.r_rsp;
+		regsbuf->rbp = regs.r_rbp;
+		regsbuf->rip = regs.r_rip;
+		regsbuf->r8  = regs.r_r8;
+		regsbuf->r9  = regs.r_r9;
+		regsbuf->r10 = regs.r_r10;
+		regsbuf->r11 = regs.r_r11;
+		regsbuf->r12 = regs.r_r12;
+		regsbuf->r13 = regs.r_r13;
+		regsbuf->r14 = regs.r_r14;
+		regsbuf->r15 = regs.r_r15;
+#		else
+		regsbuf->eax = regs.r_eax;
+		regsbuf->ebx = regs.r_ebx;
+		regsbuf->ecx = regs.r_ecx;
+		regsbuf->edx = regs.r_edx;
+		regsbuf->esi = regs.r_esi;
+		regsbuf->edi = regs.r_edi;
+		regsbuf->esp = regs.r_esp;
+		regsbuf->ebp = regs.r_ebp;
+		regsbuf->eip = regs.r_eip;
+#		endif
+
+		ret = LM_TRUE;
+#		elif LM_ARCH == LM_ARCH_ARM
+#		endif
+	}
+#	endif
+}
+
+LM_API lm_bool_t
+LM_DebugSetRegs(lm_process_t proc,
+		lm_regs_t    regs)
+{
+	lm_bool_t ret = LM_FALSE;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		lm_tid_t tid;
+
+		tid = LM_GetThreadIdEx(proc);
+		if (tid != (lm_tid_t)LM_BAD) {
+			HANDLE  hThread;
+			CONTEXT ctx;
+
+			hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
+			if (!hThread)
+				return ret;
+			if (GetThreadContext(hThread, &ctx)) {
+#				if LM_ARCH == LM_ARCH_X86
+#				if LM_BITS == 64
+				ctx.Rax = regs.rax;
+				ctx.Rbx = regs.rbx;
+				ctx.Rcx = regs.rcx;
+				ctx.Rdx = regs.rdx;
+				ctx.Rsi = regs.rsi;
+				ctx.Rdi = regs.rdi;
+				ctx.Rsp = regs.rsp;
+				ctx.Rbp = regs.rbp;
+				ctx.Rip = regs.rip;
+				ctx.R8  = regs.r8;
+				ctx.R9  = regs.r9;
+				ctx.R10 = regs.r10;
+				ctx.R11 = regs.r11;
+				ctx.R12 = regs.r12;
+				ctx.R13 = regs.r13;
+				ctx.R14 = regs.r14;
+				ctx.R15 = regs.r15;
+#				else
+				ctx.Eax = regs.eax;
+				ctx.Ebx = regs.ebx;
+				ctx.Ecx = regs.ecx;
+				ctx.Edx = regs.edx;
+				ctx.Esi = regs.esi;
+				ctx.Edi = regs.edi;
+				ctx.Esp = regs.esp;
+				ctx.Ebp = regs.ebp;
+				ctx.Eip = regs.eip;
+#				endif
+#				elif LM_ARCH == LM_ARCH_ARM
+#				endif
+			}
+
+			if (SetThreadContext(hThread, &ctx))
+				ret = LM_TRUE;
+
+			CloseThread(hThread);
+		}
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+#		if LM_ARCH == LM_ARCH_X86
+		struct user_regs_struct old_regs;
+
+		if (ptrace(PTRACE_GETREGS, proc.pid, NULL, &old_regs) == -1)
+			return ret;
+		
+#		if LM_BITS == 64
+		old_regs.rax = regs.rax;
+		old_regs.rbx = regs.rbx;
+		old_regs.rcx = regs.rcx;
+		old_regs.rdx = regs.rdx;
+		old_regs.rsi = regs.rsi;
+		old_regs.rdi = regs.rdi;
+		old_regs.rsp = regs.rsp;
+		old_regs.rbp = regs.rbp;
+		old_regs.rip = regs.rip;
+		old_regs.r8  = regs.r8;
+		old_regs.r9  = regs.r9;
+		old_regs.r10 = regs.r10;
+		old_regs.r11 = regs.r11;
+		old_regs.r12 = regs.r12;
+		old_regs.r13 = regs.r13;
+		old_regs.r14 = regs.r14;
+		old_regs.r15 = regs.r15;
+#		else
+		old_regs.eax = regs.eax;
+		old_regs.ebx = regs.ebx;
+		old_regs.ecx = regs.ecx;
+		old_regs.edx = regs.edx;
+		old_regs.esi = regs.esi;
+		old_regs.edi = regs.edi;
+		old_regs.esp = regs.esp;
+		old_regs.ebp = regs.ebp;
+		old_regs.eip = regs.eip;
+#		endif
+
+		if (ptrace(PTRACE_SETREGS, proc.pid, NULL, &old_regs) != -1)
+			ret = LM_TRUE;
+#		elif LM_ARCH == LM_ARCH_ARM
+#		endif
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+#		if LM_ARCH == LM_ARCH_X86
+		struct reg old_regs;
+
+		if (ptrace(PT_GETREGS, proc.pid, (caddr_t)&old_regs, 0) == -1)
+			return ret;
+		
+#		if LM_BITS == 64
+		old_regs.r_rax = regs.rax;
+		old_regs.r_rbx = regs.rbx;
+		old_regs.r_rcx = regs.rcx;
+		old_regs.r_rdx = regs.rdx;
+		old_regs.r_rsi = regs.rsi;
+		old_regs.r_rdi = regs.rdi;
+		old_regs.r_rsp = regs.rsp;
+		old_regs.r_rbp = regs.rbp;
+		old_regs.r_rip = regs.rip;
+		old_regs.r_r8  = regs.r8;
+		old_regs.r_r9  = regs.r9;
+		old_regs.r_r10 = regs.r10;
+		old_regs.r_r11 = regs.r11;
+		old_regs.r_r12 = regs.r12;
+		old_regs.r_r13 = regs.r13;
+		old_regs.r_r14 = regs.r14;
+		old_regs.r_r15 = regs.r15;
+#		else
+		old_regs.r_eax = regs.eax;
+		old_regs.r_ebx = regs.ebx;
+		old_regs.r_ecx = regs.ecx;
+		old_regs.r_edx = regs.edx;
+		old_regs.r_esi = regs.esi;
+		old_regs.r_edi = regs.edi;
+		old_regs.r_esp = regs.esp;
+		old_regs.r_ebp = regs.ebp;
+		old_regs.r_eip = regs.eip;
+#		endif
+
+		if (ptrace(PT_SETREGS, proc.pid, (caddr_t)&old_regs, 0) != -1)
+			ret = LM_TRUE;
+#		elif LM_ARCH == LM_ARCH_ARM
+#		endif
+	}
+#	endif
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_DebugContinue(lm_process_t proc);
+
+LM_API lm_bool_t
+LM_DebugStep(lm_process_t proc);
+
+LM_API lm_bool_t
+LM_DebugWait(lm_void_t);
+
+LM_API lm_bool_t
+LM_DebugWaitProcess(lm_process_t proc);
+
 #endif

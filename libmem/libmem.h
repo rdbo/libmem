@@ -591,6 +591,45 @@ typedef struct {
 	lm_byte_t  *data;
 } lm_datio_t;
 
+typedef lm_uintptr_t lm_reg_t;
+
+typedef struct {
+	lm_reg_t holder;
+
+#	if LM_ARCH == LM_ARCH_X86
+#	if LM_BITS == 64
+	lm_reg_t rax;
+	lm_reg_t rbx;
+	lm_reg_t rcx;
+	lm_reg_t rdx;
+	lm_reg_t rsi;
+	lm_reg_t rdi;
+	lm_reg_t rsp;
+	lm_reg_t rbp;
+	lm_reg_t rip;
+	lm_reg_t r8;
+	lm_reg_t r9;
+	lm_reg_t r10;
+	lm_reg_t r11;
+	lm_reg_t r12;
+	lm_reg_t r13;
+	lm_reg_t r14;
+	lm_reg_t r15;
+#	else
+	lm_reg_t eax;
+	lm_reg_t ebx;
+	lm_reg_t ecx;
+	lm_reg_t edx;
+	lm_reg_t esi;
+	lm_reg_t edi;
+	lm_reg_t esp;
+	lm_reg_t ebp;
+	lm_reg_t eip;
+#	endif
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
+} lm_regs_t;
+
 /* libmem */
 LM_API lm_bool_t
 LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
@@ -923,6 +962,46 @@ LM_DestroyTrampoline(lm_address_t tramp);
 LM_API lm_void_t
 LM_DestroyTrampolineEx(lm_process_t proc,
 		       lm_address_t tramp);
+
+/****************************************/
+
+LM_API lm_bool_t
+LM_DebugAttach(lm_process_t proc);
+
+LM_API lm_bool_t
+LM_DebugDetach(lm_process_t proc);
+
+LM_API lm_bool_t
+LM_DebugRead(lm_process_t proc,
+	     lm_address_t src,
+	     lm_byte_t   *dst,
+	     lm_size_t    size);
+
+LM_API lm_bool_t
+LM_DebugWrite(lm_process_t proc,
+	      lm_address_t dst,
+	      lm_byte_t   *src,
+	      lm_size_t    size);
+
+LM_API lm_bool_t
+LM_DebugGetRegs(lm_process_t proc,
+		lm_regs_t   *regsbuf);
+
+LM_API lm_bool_t
+LM_DebugSetRegs(lm_process_t proc,
+		lm_regs_t    regs);
+
+LM_API lm_bool_t
+LM_DebugContinue(lm_process_t proc);
+
+LM_API lm_bool_t
+LM_DebugStep(lm_process_t proc);
+
+LM_API lm_bool_t
+LM_DebugWait(lm_void_t);
+
+LM_API lm_bool_t
+LM_DebugWaitProcess(lm_process_t proc);
 
 #if LM_LANG == LM_LANG_CPP
 }

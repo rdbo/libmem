@@ -90,6 +90,17 @@ LM_MakeTrampoline
 LM_MakeTrampolineEx
 LM_DestroyTrampoline
 LM_DestroyTrampolineEx
+
+LM_DebugAttach
+LM_DebugDetach
+LM_DebugRead
+LM_DebugWrite
+LM_DebugGetRegs
+LM_DebugSetRegs
+LM_DebugContinue
+LM_DebugStep
+LM_DebugWait
+LM_DebugWaitProcess
 ```
 
 # Projects

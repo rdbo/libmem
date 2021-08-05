@@ -359,6 +359,17 @@
 #define mem_ex_make_trampoline  LM_MakeTrampolineEx
 #define mem_in_del_trampoline   LM_DestroyTrampoline
 #define mem_ex_del_trampoline   LM_DestroyTrampolineEx
+
+#define mem_ex_dbg_attach       LM_DebugAttach
+#define mem_ex_dbg_detach       LM_DebugDetach
+#define mem_ex_dbg_read         LM_DebugRead
+#define mem_ex_dbg_write        LM_DebugWrite
+#define mem_ex_dbg_getregs      LM_DebugGetRegs
+#define mem_ex_dbg_setregs      LM_DebugSetRegs
+#define mem_ex_dbg_continue     LM_DebugContinue
+#define mem_ex_dbg_step         LM_DebugStep
+#define mem_ex_dbg_wait         LM_DebugWait
+#define mem_ex_dbg_waitprocess  LM_DebugWaitProcess
 #endif
 
 /* Others */

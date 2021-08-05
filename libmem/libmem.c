@@ -4307,6 +4307,8 @@ LM_DebugGetRegs(lm_process_t proc,
 #		endif
 	}
 #	endif
+
+	return ret;
 }
 
 LM_API lm_bool_t

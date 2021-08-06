@@ -4121,6 +4121,50 @@ LM_DebugDetach(lm_process_t proc)
 	return ret;
 }
 
+LM_API lm_int_t
+LM_DebugCheck(lm_process_t proc)
+{
+	lm_int_t state = (lm_int_t)LM_BAD;
+
+#	if LM_OS == LM_OS_WIN
+	{
+		BOOL Check;
+
+		CheckRemoteDebuggerPresent(proc.handle, &Check);
+		state = Check == TRUE ? LM_TRUE : LM_FALSE;
+	}
+#	elif LM_OS == LM_OS_LINUX
+	{
+		lm_tchar_t  status_path[64] = { 0 };
+		lm_tchar_t *status_buf;
+		lm_tchar_t *ptr;
+
+		LM_SNPRINTF(status_path, LM_ARRLEN(status_path) - 1,
+			    LM_STR("/proc/%d/status"), proc.pid);
+
+		if (!_LM_OpenFileBuf(status_path, &status_buf))
+			return state;
+		
+		ptr = LM_STRSTR(status_buf, LM_STR("TracerPid:"));
+		ptr = LM_STRCHR(ptr, LM_STR('\t'));
+		ptr = &ptr[1];
+
+		if (LM_ATOI(ptr) || !LM_STRNCMP(ptr, LM_STR("0\n"), 2))
+			state = LM_TRUE;
+		else
+			state = LM_FALSE;
+		
+		_LM_CloseFileBuf(&status_buf);
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+
+	}
+#	endif
+
+	return state;
+}
+
 LM_API lm_bool_t
 LM_DebugRead(lm_process_t proc,
 	     lm_address_t src,

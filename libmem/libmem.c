@@ -3672,6 +3672,8 @@ LM_FunctionCallEx(lm_process_t proc,
 			}
 #			endif
 		}
+
+		ret = LM_TRUE;
 	}
 #	elif LM_ARCH == LM_ARCH_ARM
 	{

@@ -565,6 +565,28 @@ enum {
 enum {
 	LM_DATLOC_INVAL = 0,
 #	if LM_ARCH == LM_ARCH_X86
+	/* x86_32 */
+	LM_DATLOC_EAX,
+	LM_DATLOC_EBX,
+	LM_DATLOC_ECX,
+	LM_DATLOC_EDX,
+	LM_DATLOC_ESI,
+	LM_DATLOC_EDI,
+	LM_DATLOC_ESP,
+	LM_DATLOC_EBP,
+	LM_DATLOC_EIP,
+	/*
+	LM_DATLOC_XMM0,
+	LM_DATLOC_XMM1,
+	LM_DATLOC_XMM2,
+	LM_DATLOC_XMM3,
+	LM_DATLOC_XMM4,
+	LM_DATLOC_XMM5,
+	LM_DATLOC_XMM6,
+	LM_DATLOC_XMM7,
+	*/
+	/* x86_64 */
+#	if LM_BITS == 64
 	LM_DATLOC_RAX,
 	LM_DATLOC_RBX,
 	LM_DATLOC_RCX,
@@ -573,6 +595,7 @@ enum {
 	LM_DATLOC_RDI,
 	LM_DATLOC_RSP,
 	LM_DATLOC_RBP,
+	LM_DATLOC_RIP,
 	LM_DATLOC_R8,
 	LM_DATLOC_R9,
 	LM_DATLOC_R10,
@@ -581,14 +604,17 @@ enum {
 	LM_DATLOC_R13,
 	LM_DATLOC_R14,
 	LM_DATLOC_R15,
-#	define LM_DATLOC_EAX LM_DATLOC_RAX
-#	define LM_DATLOC_EBX LM_DATLOC_RBX
-#	define LM_DATLOC_ECX LM_DATLOC_RCX
-#	define LM_DATLOC_EDX LM_DATLOC_RDX
-#	define LM_DATLOC_ESI LM_DATLOC_RSI
-#	define LM_DATLOC_EDI LM_DATLOC_RDI
-#	define LM_DATLOC_ESP LM_DATLOC_RSP
-#	define LM_DATLOC_EBP LM_DATLOC_RBP
+	/*
+	LM_DATLOC_XMM8,
+	LM_DATLOC_XMM9,
+	LM_DATLOC_XMM10,
+	LM_DATLOC_XMM11,
+	LM_DATLOC_XMM12,
+	LM_DATLOC_XMM13,
+	LM_DATLOC_XMM14,
+	LM_DATLOC_XMM15,
+	*/
+#	endif
 #	elif LM_ARCH == LM_ARCH_ARM
 #	endif
 	LM_DATLOC_STACK
@@ -605,39 +631,24 @@ typedef struct {
 typedef lm_uintptr_t lm_reg_t;
 
 typedef struct {
-	lm_reg_t holder;
-
-#	if LM_ARCH == LM_ARCH_X86
+#	if LM_OS == LM_OS_WIN
+	CONTEXT regs;
 #	if LM_BITS == 64
-	lm_reg_t rax;
-	lm_reg_t rbx;
-	lm_reg_t rcx;
-	lm_reg_t rdx;
-	lm_reg_t rsi;
-	lm_reg_t rdi;
-	lm_reg_t rsp;
-	lm_reg_t rbp;
-	lm_reg_t rip;
-	lm_reg_t r8;
-	lm_reg_t r9;
-	lm_reg_t r10;
-	lm_reg_t r11;
-	lm_reg_t r12;
-	lm_reg_t r13;
-	lm_reg_t r14;
-	lm_reg_t r15;
-#	else
-	lm_reg_t eax;
-	lm_reg_t ebx;
-	lm_reg_t ecx;
-	lm_reg_t edx;
-	lm_reg_t esi;
-	lm_reg_t edi;
-	lm_reg_t esp;
-	lm_reg_t ebp;
-	lm_reg_t eip;
+	WOW64_CONTEXT regs32;
 #	endif
+#	elif LM_OS == LM_OS_LINUX
+#	if LM_ARCH == LM_ARCH_X86
+	struct user_regs_struct   regs;
+	struct user_fpregs_struct fpregs;
 #	elif LM_ARCH == LM_ARCH_ARM
+	struct user regs;
+#	endif
+#	elif LM_OS == LM_OS_BSD
+#	if LM_ARCH == LM_ARCH_X86
+	struct reg   regs;
+	struct fpreg fpregs;
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
 #	endif
 } lm_regs_t;
 
@@ -1001,9 +1012,22 @@ LM_API lm_bool_t
 LM_DebugGetRegs(lm_process_t proc,
 		lm_regs_t   *regsbuf);
 
+LM_API lm_reg_t *
+LM_DebugGetReg(lm_datloc_t regid,
+	       lm_regs_t  *regs);
+
 LM_API lm_bool_t
 LM_DebugSetRegs(lm_process_t proc,
 		lm_regs_t    regs);
+
+LM_API lm_reg_t
+LM_DebugReadReg(lm_datloc_t regid,
+		lm_regs_t   regs);
+
+LM_API lm_bool_t
+LM_DebugWriteReg(lm_datloc_t regid,
+		 lm_reg_t    data,
+		 lm_regs_t  *regs);
 
 LM_API lm_bool_t
 LM_DebugContinue(lm_process_t proc);

@@ -253,104 +253,34 @@ _LM_ParseDatArgsIn(lm_process_t proc,
 		   lm_regs_t   *regsbuf)
 {
 	lm_size_t i;
+	lm_size_t bits;
+
+	bits = LM_GetProcessBitsEx(proc);
 
 	for (i = 0; i < nargs; ++i) {
 #		if LM_ARCH == LM_ARCH_X86
-#		if LM_BITS == 64
-		switch (datargs[i].datloc) {
-		case LM_DATLOC_RAX:
-			regsbuf->rax = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_RBX:
-			regsbuf->rbx = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_RCX:
-			regsbuf->rcx = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_RDX:
-			regsbuf->rdx = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_RSI:
-			regsbuf->rsi = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_RDI:
-			regsbuf->rdi = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_RSP:
-			regsbuf->rsp = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_RBP:
-			regsbuf->rbp = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R8:
-			regsbuf->r8 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R9:
-			regsbuf->r9 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R10:
-			regsbuf->r10 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R11:
-			regsbuf->r11 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R12:
-			regsbuf->r12 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R13:
-			regsbuf->r13 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R14:
-			regsbuf->r14 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_R15:
-			regsbuf->r15 = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_STACK:
-			regsbuf->rsp -= datargs[i].size;
-			regsbuf->rsp &= stack_align;
+		if (datargs[i].datloc != LM_DATLOC_STACK) {
+			lm_reg_t *reg;
 
-			LM_DebugWrite(proc, (lm_address_t)regsbuf->rsp,
-				      datargs[i].data, datargs[i].size);
-			
-			break;
-		}
-#		else
-		switch (datargs[i].datloc) {
-		case LM_DATLOC_EAX:
-			regsbuf->eax = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_EBX:
-			regsbuf->ebx = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_ECX:
-			regsbuf->ecx = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_EDX:
-			regsbuf->edx = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_ESI:
-			regsbuf->esi = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_EDI:
-			regsbuf->edi = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_ESP:
-			regsbuf->esp = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_EBP:
-			regsbuf->ebp = *(lm_reg_t *)datargs[i].data;
-			break;
-		case LM_DATLOC_STACK:
-			regsbuf->esp -= datargs[i].size;
-			regsbuf->esp &= stack_align;
+			reg = LM_DebugGetReg(datargs[i].datloc, regsbuf);
+			if (reg)
+				*reg = *(lm_reg_t *)datargs[i].data;
+		} else {
+			lm_reg_t *stack_ptr;
+#			if LM_BITS == 64
+			if (bits == 64)
+				stack_ptr = LM_DebugGetReg(LM_DATLOC_RSP, regsbuf);
+			else
+				stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, regsbuf);
+#			else
+			stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, regsbuf);
+#			endif
+			*stack_ptr -= datargs[i].size;
+			*stack_ptr &= stack_align;
 
-			LM_DebugWrite(proc, (lm_address_t)regsbuf->esp,
+			LM_DebugWrite(proc, (lm_address_t)(*stack_ptr),
 				      datargs[i].data, datargs[i].size);
-			
-			break;
 		}
-#		endif
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
 	}
@@ -364,104 +294,34 @@ _LM_ParseDatArgsOut(lm_process_t proc,
 		    lm_regs_t    regs)
 {
 	lm_size_t i;
+	lm_size_t bits;
+
+	bits = LM_GetProcessBitsEx(proc);
 
 	for (i = 0; i < nargs; ++i) {
 #		if LM_ARCH == LM_ARCH_X86
-#		if LM_BITS == 64
-		switch (datargs[i].datloc) {
-		case LM_DATLOC_RAX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rax;
-			break;
-		case LM_DATLOC_RBX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rbx;
-			break;
-		case LM_DATLOC_RCX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rcx;
-			break;
-		case LM_DATLOC_RDX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rdx;
-			break;
-		case LM_DATLOC_RSI:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rsi;
-			break;
-		case LM_DATLOC_RDI:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rdi;
-			break;
-		case LM_DATLOC_RSP:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rsp;
-			break;
-		case LM_DATLOC_RBP:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.rbp;
-			break;
-		case LM_DATLOC_R8:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r8;
-			break;
-		case LM_DATLOC_R9:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r9;
-			break;
-		case LM_DATLOC_R10:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r10;
-			break;
-		case LM_DATLOC_R11:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r11;
-			break;
-		case LM_DATLOC_R12:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r12;
-			break;
-		case LM_DATLOC_R13:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r13;
-			break;
-		case LM_DATLOC_R14:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r14;
-			break;
-		case LM_DATLOC_R15:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.r15;
-			break;
-		case LM_DATLOC_STACK:
-			LM_DebugRead(proc, (lm_address_t)regs.rsp,
+		if (datargs[i].datloc != LM_DATLOC_STACK) {
+			lm_reg_t *reg;
+
+			reg = LM_DebugGetReg(datargs[i].datloc, &regs);
+			if (reg)
+				*(lm_reg_t *)datargs[i].data = *reg;
+		} else {
+			lm_reg_t *stack_ptr;
+#			if LM_BITS == 64
+			if (bits == 64)
+				stack_ptr = LM_DebugGetReg(LM_DATLOC_RSP, &regs);
+			else
+				stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, &regs);
+#			else
+			stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, regsbuf);
+#			endif
+			LM_DebugRead(proc, (lm_address_t)(*stack_ptr),
 				     datargs[i].data, datargs[i].size);
 			
-			regs.rsp += datargs[i].size;
-			regs.rsp += datargs[i].size - (datargs[i].size & stack_align);
-			
-			break;
+			*stack_ptr += datargs[i].size;
+			*stack_ptr += datargs[i].size - (datargs[i].size & stack_align);
 		}
-#		else
-		switch (datargs[i].datloc) {
-		case LM_DATLOC_EAX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.eax;
-			break;
-		case LM_DATLOC_EBX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.ebx;
-			break;
-		case LM_DATLOC_ECX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.ecx;
-			break;
-		case LM_DATLOC_EDX:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.edx;
-			break;
-		case LM_DATLOC_ESI:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.esi;
-			break;
-		case LM_DATLOC_EDI:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.edi;
-			break;
-		case LM_DATLOC_ESP:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.esp;
-			break;
-		case LM_DATLOC_EBP:
-			*(lm_reg_t *)datargs[i].data = (lm_reg_t)regs.ebp;
-			break;
-		case LM_DATLOC_STACK:
-			LM_DebugRead(proc, (lm_address_t)regs.esp,
-				     datargs[i].data, datargs[i].size);
-			
-			regs.esp += datargs[i].size;
-			regs.esp += datargs[i].size - (datargs[i].size & stack_align);
-			
-			break;
-		}
-#		endif
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
 	}
@@ -3698,19 +3558,11 @@ LM_FunctionCallEx(lm_process_t proc,
 			0xCC                      /* int3 */
 		};
 
-#		if LM_BITS == 64
 		*(lm_uintptr_t *)&code[1] = (lm_uintptr_t)(
 			(lm_uintptr_t)fnaddr - 
-			(lm_uintptr_t)regs.rip -
+			(lm_uintptr_t)LM_DebugReadReg(LM_DATLOC_EIP, regs) -
 			5
 		);
-#		else
-		*(lm_uintptr_t *)&code[1] = (lm_uintptr_t)(
-			(lm_uintptr_t)fnaddr - 
-			(lm_uintptr_t)regs.eip -
-			5
-		);
-#		endif
 
 		LM_DebugInject(proc, code, sizeof(code),
 				regs, &post_regs);
@@ -4049,47 +3901,24 @@ LM_DebugGetRegs(lm_process_t proc,
 		tid = LM_GetThreadIdEx(proc);
 		if (tid != (lm_tid_t)LM_BAD) {
 			HANDLE  hThread;
-			CONTEXT ctx;
 
 			hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
 			if (!hThread)
 				return ret;
-			if (GetThreadContext(hThread, &ctx)) {
-#				if LM_ARCH == LM_ARCH_X86
-#				if LM_BITS == 64
-				regsbuf->rax = ctx.Rax;
-				regsbuf->rbx = ctx.Rbx;
-				regsbuf->rcx = ctx.Rcx;
-				regsbuf->rdx = ctx.Rdx;
-				regsbuf->rsi = ctx.Rsi;
-				regsbuf->rdi = ctx.Rdi;
-				regsbuf->rsp = ctx.Rsp;
-				regsbuf->rbp = ctx.Rbp;
-				regsbuf->rip = ctx.Rip;
-				regsbuf->r8  = ctx.R8;
-				regsbuf->r9  = ctx.R9;
-				regsbuf->r10 = ctx.R10;
-				regsbuf->r11 = ctx.R11;
-				regsbuf->r12 = ctx.R12;
-				regsbuf->r13 = ctx.R13;
-				regsbuf->r14 = ctx.R14;
-				regsbuf->r15 = ctx.R15;
-#				else
-				regsbuf->eax = ctx.Eax;
-				regsbuf->ebx = ctx.Ebx;
-				regsbuf->ecx = ctx.Ecx;
-				regsbuf->edx = ctx.Edx;
-				regsbuf->esi = ctx.Esi;
-				regsbuf->edi = ctx.Edi;
-				regsbuf->esp = ctx.Esp;
-				regsbuf->ebp = ctx.Ebp;
-				regsbuf->eip = ctx.Eip;
-#				endif
-#				elif LM_ARCH == LM_ARCH_ARM
-#				endif
-
-				ret = LM_TRUE;
+			
+#			if LM_BITS == 64
+			if (LM_GetProcessBitsEx(proc) == 64) {
+				if (GetThreadContext(hThread, &regsbuf->regs))
+					ret = LM_TRUE;
+			} else {
+				if (Wow64GetThreadContext(hThread,
+							  &regsbuf->regs32))
+					ret = LM_TRUE;
 			}
+#			else
+			if (GetThreadContext(hThread, &regsbuf->regs))
+				ret = LM_TRUE;
+#			endif
 
 			CloseThread(hThread);
 		}
@@ -4097,41 +3926,12 @@ LM_DebugGetRegs(lm_process_t proc,
 #	elif LM_OS == LM_OS_LINUX
 	{
 #		if LM_ARCH == LM_ARCH_X86
-		struct user_regs_struct regs;
-
-		if (ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs) == -1)
-			return ret;
+		if (ptrace(PTRACE_GETREGS, proc.pid,
+			   NULL, &regsbuf->regs) != -1 &&
+		    ptrace(PTRACE_GETFPREGS, proc.pid,
+			   NULL, &regsbuf->fpregs) != -1)
+			ret = LM_TRUE;
 		
-#		if LM_BITS == 64
-		regsbuf->rax = regs.rax;
-		regsbuf->rbx = regs.rbx;
-		regsbuf->rcx = regs.rcx;
-		regsbuf->rdx = regs.rdx;
-		regsbuf->rsi = regs.rsi;
-		regsbuf->rdi = regs.rdi;
-		regsbuf->rsp = regs.rsp;
-		regsbuf->rbp = regs.rbp;
-		regsbuf->rip = regs.rip;
-		regsbuf->r8  = regs.r8;
-		regsbuf->r9  = regs.r9;
-		regsbuf->r10 = regs.r10;
-		regsbuf->r11 = regs.r11;
-		regsbuf->r12 = regs.r12;
-		regsbuf->r13 = regs.r13;
-		regsbuf->r14 = regs.r14;
-		regsbuf->r15 = regs.r15;
-#		else
-		regsbuf->eax = regs.eax;
-		regsbuf->ebx = regs.ebx;
-		regsbuf->ecx = regs.ecx;
-		regsbuf->edx = regs.edx;
-		regsbuf->esi = regs.esi;
-		regsbuf->edi = regs.edi;
-		regsbuf->esp = regs.esp;
-		regsbuf->ebp = regs.ebp;
-		regsbuf->eip = regs.eip;
-#		endif
-
 		ret = LM_TRUE;
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
@@ -4139,48 +3939,340 @@ LM_DebugGetRegs(lm_process_t proc,
 #	elif LM_OS == LM_OS_BSD
 	{
 #		if LM_ARCH == LM_ARCH_X86
-		struct reg regs;
-
-		if (ptrace(PT_GETREGS, proc.pid, (caddr_t)&regs, 0) == -1)
-			return ret;
-		
-#		if LM_BITS == 64
-		regsbuf->rax = regs.r_rax;
-		regsbuf->rbx = regs.r_rbx;
-		regsbuf->rcx = regs.r_rcx;
-		regsbuf->rdx = regs.r_rdx;
-		regsbuf->rsi = regs.r_rsi;
-		regsbuf->rdi = regs.r_rdi;
-		regsbuf->rsp = regs.r_rsp;
-		regsbuf->rbp = regs.r_rbp;
-		regsbuf->rip = regs.r_rip;
-		regsbuf->r8  = regs.r_r8;
-		regsbuf->r9  = regs.r_r9;
-		regsbuf->r10 = regs.r_r10;
-		regsbuf->r11 = regs.r_r11;
-		regsbuf->r12 = regs.r_r12;
-		regsbuf->r13 = regs.r_r13;
-		regsbuf->r14 = regs.r_r14;
-		regsbuf->r15 = regs.r_r15;
-#		else
-		regsbuf->eax = regs.r_eax;
-		regsbuf->ebx = regs.r_ebx;
-		regsbuf->ecx = regs.r_ecx;
-		regsbuf->edx = regs.r_edx;
-		regsbuf->esi = regs.r_esi;
-		regsbuf->edi = regs.r_edi;
-		regsbuf->esp = regs.r_esp;
-		regsbuf->ebp = regs.r_ebp;
-		regsbuf->eip = regs.r_eip;
-#		endif
-
-		ret = LM_TRUE;
+		if (ptrace(PT_GETREGS, proc.pid,
+			   NULL, &regsbuf->regs) != -1 &&
+		    ptrace(PT_GETFPREGS, proc.pid,
+			   NULL, &regsbuf->fpregs) != -1)
+			ret = LM_TRUE;
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
 	}
 #	endif
 
 	return ret;
+}
+
+LM_API lm_reg_t *
+LM_DebugGetReg(lm_datloc_t regid,
+	       lm_regs_t  *regs)
+{
+	lm_reg_t *preg = (lm_reg_t *)LM_NULL;
+
+#	if LM_OS == LM_OS_WIN
+#	if LM_ARCH == LM_ARCH_X86
+#	if LM_BITS == 64
+	switch (regid) {
+	case LM_DATLOC_EAX:
+		preg = (lm_reg_t *)&regs->regs32.eax;
+		break;
+	case LM_DATLOC_EBX:
+		preg = (lm_reg_t *)&regs->regs32.ebx;
+		break;
+	case LM_DATLOC_ECX:
+		preg = (lm_reg_t *)&regs->regs32.ecx;
+		break;
+	case LM_DATLOC_EDX:
+		preg = (lm_reg_t *)&regs->regs32.edx;
+		break;
+	case LM_DATLOC_ESI:
+		preg = (lm_reg_t *)&regs->regs32.esi;
+		break;
+	case LM_DATLOC_EDI:
+		preg = (lm_reg_t *)&regs->regs32.edi;
+		break;
+	case LM_DATLOC_ESP:
+		preg = (lm_reg_t *)&regs->regs32.esp;
+		break;
+	case LM_DATLOC_EBP:
+		preg = (lm_reg_t *)&regs->regs32.ebp;
+		break;
+	case LM_DATLOC_EIP:
+		preg = (lm_reg_t *)&regs->regs32.eip;
+		break;
+	case LM_DATLOC_RAX:
+		preg = (lm_reg_t *)&regs->regs.rax;
+		break;
+	case LM_DATLOC_RBX:
+		preg = (lm_reg_t *)&regs->regs.rbx;
+		break;
+	case LM_DATLOC_RCX:
+		preg = (lm_reg_t *)&regs->regs.rcx;
+		break;
+	case LM_DATLOC_RDX:
+		preg = (lm_reg_t *)&regs->regs.rdx;
+		break;
+	case LM_DATLOC_RSI:
+		preg = (lm_reg_t *)&regs->regs.rsi;
+		break;
+	case LM_DATLOC_RDI:
+		preg = (lm_reg_t *)&regs->regs.rdi;
+		break;
+	case LM_DATLOC_RSP:
+		preg = (lm_reg_t *)&regs->regs.rsp;
+		break;
+	case LM_DATLOC_RBP:
+		preg = (lm_reg_t *)&regs->regs.rbp;
+		break;
+	case LM_DATLOC_RIP:
+		preg = (lm_reg_t *)&regs->regs.rip;
+		break;
+	case LM_DATLOC_R8:
+		preg = (lm_reg_t *)&regs->regs.r8;
+		break;
+	case LM_DATLOC_R9:
+		preg = (lm_reg_t *)&regs->regs.r9;
+		break;
+	case LM_DATLOC_R10:
+		preg = (lm_reg_t *)&regs->regs.r10;
+		break;
+	case LM_DATLOC_R11:
+		preg = (lm_reg_t *)&regs->regs.r11;
+		break;
+	case LM_DATLOC_R12:
+		preg = (lm_reg_t *)&regs->regs.r12;
+		break;
+	case LM_DATLOC_R13:
+		preg = (lm_reg_t *)&regs->regs.r13;
+		break;
+	case LM_DATLOC_R14:
+		preg = (lm_reg_t *)&regs->regs.r14;
+		break;
+	case LM_DATLOC_R15:
+		preg = (lm_reg_t *)&regs->regs.r15;
+		break;
+	}
+#	else
+	switch (regid) {
+	case LM_DATLOC_EAX:
+		preg = (lm_reg_t *)&regs->regs.eax;
+		break;
+	case LM_DATLOC_EBX:
+		preg = (lm_reg_t *)&regs->regs.ebx;
+		break;
+	case LM_DATLOC_ECX:
+		preg = (lm_reg_t *)&regs->regs.ecx;
+		break;
+	case LM_DATLOC_EDX:
+		preg = (lm_reg_t *)&regs->regs.edx;
+		break;
+	case LM_DATLOC_ESI:
+		preg = (lm_reg_t *)&regs->regs.esi;
+		break;
+	case LM_DATLOC_EDI:
+		preg = (lm_reg_t *)&regs->regs.edi;
+		break;
+	case LM_DATLOC_ESP:
+		preg = (lm_reg_t *)&regs->regs.esp;
+		break;
+	case LM_DATLOC_EBP:
+		preg = (lm_reg_t *)&regs->regs.ebp;
+		break;
+	case LM_DATLOC_EIP:
+		preg = (lm_reg_t *)&regs->regs.eip;
+		break;
+	}
+#	endif
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
+#	elif LM_OS == LM_OS_LINUX
+#	if LM_ARCH == LM_ARCH_X86
+#	if LM_BITS == 64
+	switch (regid) {
+	case LM_DATLOC_RAX:
+	case LM_DATLOC_EAX:
+		preg = (lm_reg_t *)&regs->regs.rax;
+		break;
+	case LM_DATLOC_RBX:
+	case LM_DATLOC_EBX:
+		preg = (lm_reg_t *)&regs->regs.rbx;
+		break;
+	case LM_DATLOC_RCX:
+	case LM_DATLOC_ECX:
+		preg = (lm_reg_t *)&regs->regs.rcx;
+		break;
+	case LM_DATLOC_RDX:
+	case LM_DATLOC_EDX:
+		preg = (lm_reg_t *)&regs->regs.rdx;
+		break;
+	case LM_DATLOC_RSI:
+	case LM_DATLOC_ESI:
+		preg = (lm_reg_t *)&regs->regs.rsi;
+		break;
+	case LM_DATLOC_RDI:
+	case LM_DATLOC_EDI:
+		preg = (lm_reg_t *)&regs->regs.rdi;
+		break;
+	case LM_DATLOC_RSP:
+	case LM_DATLOC_ESP:
+		preg = (lm_reg_t *)&regs->regs.rsp;
+		break;
+	case LM_DATLOC_RBP:
+	case LM_DATLOC_EBP:
+		preg = (lm_reg_t *)&regs->regs.rbp;
+		break;
+	case LM_DATLOC_RIP:
+	case LM_DATLOC_EIP:
+		preg = (lm_reg_t *)&regs->regs.rip;
+		break;
+	case LM_DATLOC_R8:
+		preg = (lm_reg_t *)&regs->regs.r8;
+		break;
+	case LM_DATLOC_R9:
+		preg = (lm_reg_t *)&regs->regs.r9;
+		break;
+	case LM_DATLOC_R10:
+		preg = (lm_reg_t *)&regs->regs.r10;
+		break;
+	case LM_DATLOC_R11:
+		preg = (lm_reg_t *)&regs->regs.r11;
+		break;
+	case LM_DATLOC_R12:
+		preg = (lm_reg_t *)&regs->regs.r12;
+		break;
+	case LM_DATLOC_R13:
+		preg = (lm_reg_t *)&regs->regs.r13;
+		break;
+	case LM_DATLOC_R14:
+		preg = (lm_reg_t *)&regs->regs.r14;
+		break;
+	case LM_DATLOC_R15:
+		preg = (lm_reg_t *)&regs->regs.r15;
+		break;
+	}
+#	else
+	switch (regid) {
+	case LM_DATLOC_EAX:
+		preg = (lm_reg_t *)&regs->regs.eax;
+		break;
+	case LM_DATLOC_EBX:
+		preg = (lm_reg_t *)&regs->regs.ebx;
+		break;
+	case LM_DATLOC_ECX:
+		preg = (lm_reg_t *)&regs->regs.ecx;
+		break;
+	case LM_DATLOC_EDX:
+		preg = (lm_reg_t *)&regs->regs.edx;
+		break;
+	case LM_DATLOC_ESI:
+		preg = (lm_reg_t *)&regs->regs.esi;
+		break;
+	case LM_DATLOC_EDI:
+		preg = (lm_reg_t *)&regs->regs.edi;
+		break;
+	case LM_DATLOC_ESP:
+		preg = (lm_reg_t *)&regs->regs.esp;
+		break;
+	case LM_DATLOC_EBP:
+		preg = (lm_reg_t *)&regs->regs.ebp;
+		break;
+	case LM_DATLOC_EIP:
+		preg = (lm_reg_t *)&regs->regs.eip;
+		break;
+	}
+#	endif
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
+#	elif LM_OS == LM_OS_BSD
+#	if LM_ARCH == LM_ARCH_X86
+#	if LM_BITS == 64
+	switch (regid) {
+	case LM_DATLOC_RAX:
+	case LM_DATLOC_EAX:
+		preg = (lm_reg_t *)&regs->regs.r_rax;
+		break;
+	case LM_DATLOC_RBX:
+	case LM_DATLOC_EBX:
+		preg = (lm_reg_t *)&regs->regs.r_rbx;
+		break;
+	case LM_DATLOC_RCX:
+	case LM_DATLOC_ECX:
+		preg = (lm_reg_t *)&regs->regs.r_rcx;
+		break;
+	case LM_DATLOC_RDX:
+	case LM_DATLOC_EDX:
+		preg = (lm_reg_t *)&regs->regs.r_rdx;
+		break;
+	case LM_DATLOC_RSI:
+	case LM_DATLOC_ESI:
+		preg = (lm_reg_t *)&regs->regs.r_rsi;
+		break;
+	case LM_DATLOC_RDI:
+	case LM_DATLOC_EDI:
+		preg = (lm_reg_t *)&regs->regs.r_rdi;
+		break;
+	case LM_DATLOC_RSP:
+	case LM_DATLOC_ESP:
+		preg = (lm_reg_t *)&regs->regs.r_rsp;
+		break;
+	case LM_DATLOC_RBP:
+	case LM_DATLOC_EBP:
+		preg = (lm_reg_t *)&regs->regs.r_rbp;
+		break;
+	case LM_DATLOC_RIP:
+	case LM_DATLOC_EIP:
+		preg = (lm_reg_t *)&regs->regs.r_rip;
+		break;
+	case LM_DATLOC_R8:
+		preg = (lm_reg_t *)&regs->regs.r_r8;
+		break;
+	case LM_DATLOC_R9:
+		preg = (lm_reg_t *)&regs->regs.r_r9;
+		break;
+	case LM_DATLOC_R10:
+		preg = (lm_reg_t *)&regs->regs.r_r10;
+		break;
+	case LM_DATLOC_R11:
+		preg = (lm_reg_t *)&regs->regs.r_r11;
+		break;
+	case LM_DATLOC_R12:
+		preg = (lm_reg_t *)&regs->regs.r_r12;
+		break;
+	case LM_DATLOC_R13:
+		preg = (lm_reg_t *)&regs->regs.r_r13;
+		break;
+	case LM_DATLOC_R14:
+		preg = (lm_reg_t *)&regs->regs.r_r14;
+		break;
+	case LM_DATLOC_R15:
+		preg = (lm_reg_t *)&regs->regs.r_r15;
+		break;
+	}
+#	else
+	switch (regid) {
+	case LM_DATLOC_EAX:
+		preg = (lm_reg_t *)&regs->regs.r_eax;
+		break;
+	case LM_DATLOC_EBX:
+		preg = (lm_reg_t *)&regs->regs.r_ebx;
+		break;
+	case LM_DATLOC_ECX:
+		preg = (lm_reg_t *)&regs->regs.r_ecx;
+		break;
+	case LM_DATLOC_EDX:
+		preg = (lm_reg_t *)&regs->regs.r_edx;
+		break;
+	case LM_DATLOC_ESI:
+		preg = (lm_reg_t *)&regs->regs.r_esi;
+		break;
+	case LM_DATLOC_EDI:
+		preg = (lm_reg_t *)&regs->regs.r_edi;
+		break;
+	case LM_DATLOC_ESP:
+		preg = (lm_reg_t *)&regs->regs.r_esp;
+		break;
+	case LM_DATLOC_EBP:
+		preg = (lm_reg_t *)&regs->regs.r_ebp;
+		break;
+	case LM_DATLOC_EIP:
+		preg = (lm_reg_t *)&regs->regs.r_eip;
+		break;
+	}
+#	endif
+#	elif LM_ARCH == LM_ARCH_ARM
+#	endif
+#	endif
+
+	return preg;
 }
 
 LM_API lm_bool_t
@@ -4196,48 +4288,24 @@ LM_DebugSetRegs(lm_process_t proc,
 		tid = LM_GetThreadIdEx(proc);
 		if (tid != (lm_tid_t)LM_BAD) {
 			HANDLE  hThread;
-			CONTEXT ctx;
 
 			hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
 			if (!hThread)
 				return ret;
-			if (GetThreadContext(hThread, &ctx)) {
-#				if LM_ARCH == LM_ARCH_X86
-#				if LM_BITS == 64
-				ctx.Rax = regs.rax;
-				ctx.Rbx = regs.rbx;
-				ctx.Rcx = regs.rcx;
-				ctx.Rdx = regs.rdx;
-				ctx.Rsi = regs.rsi;
-				ctx.Rdi = regs.rdi;
-				ctx.Rsp = regs.rsp;
-				ctx.Rbp = regs.rbp;
-				ctx.Rip = regs.rip;
-				ctx.R8  = regs.r8;
-				ctx.R9  = regs.r9;
-				ctx.R10 = regs.r10;
-				ctx.R11 = regs.r11;
-				ctx.R12 = regs.r12;
-				ctx.R13 = regs.r13;
-				ctx.R14 = regs.r14;
-				ctx.R15 = regs.r15;
-#				else
-				ctx.Eax = regs.eax;
-				ctx.Ebx = regs.ebx;
-				ctx.Ecx = regs.ecx;
-				ctx.Edx = regs.edx;
-				ctx.Esi = regs.esi;
-				ctx.Edi = regs.edi;
-				ctx.Esp = regs.esp;
-				ctx.Ebp = regs.ebp;
-				ctx.Eip = regs.eip;
-#				endif
-#				elif LM_ARCH == LM_ARCH_ARM
-#				endif
+			
+#			if LM_BITS == 64
+			if (LM_GetProcessBitsEx(proc) == 64) {
+				if (SetThreadContext(hThread, &regsbuf->regs))
+					ret = LM_TRUE;
+			} else {
+				if (Wow64SetThreadContext(hThread,
+							  &regsbuf->regs32))
+					ret = LM_TRUE;
 			}
-
-			if (SetThreadContext(hThread, &ctx))
+#			else
+			if (SetThreadContext(hThread, &regsbuf->regs))
 				ret = LM_TRUE;
+#			endif
 
 			CloseThread(hThread);
 		}
@@ -4245,42 +4313,10 @@ LM_DebugSetRegs(lm_process_t proc,
 #	elif LM_OS == LM_OS_LINUX
 	{
 #		if LM_ARCH == LM_ARCH_X86
-		struct user_regs_struct old_regs;
-
-		if (ptrace(PTRACE_GETREGS, proc.pid, NULL, &old_regs) == -1)
-			return ret;
-		
-#		if LM_BITS == 64
-		old_regs.rax = regs.rax;
-		old_regs.rbx = regs.rbx;
-		old_regs.rcx = regs.rcx;
-		old_regs.rdx = regs.rdx;
-		old_regs.rsi = regs.rsi;
-		old_regs.rdi = regs.rdi;
-		old_regs.rsp = regs.rsp;
-		old_regs.rbp = regs.rbp;
-		old_regs.rip = regs.rip;
-		old_regs.r8  = regs.r8;
-		old_regs.r9  = regs.r9;
-		old_regs.r10 = regs.r10;
-		old_regs.r11 = regs.r11;
-		old_regs.r12 = regs.r12;
-		old_regs.r13 = regs.r13;
-		old_regs.r14 = regs.r14;
-		old_regs.r15 = regs.r15;
-#		else
-		old_regs.eax = regs.eax;
-		old_regs.ebx = regs.ebx;
-		old_regs.ecx = regs.ecx;
-		old_regs.edx = regs.edx;
-		old_regs.esi = regs.esi;
-		old_regs.edi = regs.edi;
-		old_regs.esp = regs.esp;
-		old_regs.ebp = regs.ebp;
-		old_regs.eip = regs.eip;
-#		endif
-
-		if (ptrace(PTRACE_SETREGS, proc.pid, NULL, &old_regs) != -1)
+		if (ptrace(PTRACE_SETREGS, proc.pid,
+			   NULL, &regs.regs) != -1 &&
+		    ptrace(PTRACE_SETFPREGS, proc.pid,
+		    	   NULL, &regs.fpregs) != -1)
 			ret = LM_TRUE;
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
@@ -4288,47 +4324,46 @@ LM_DebugSetRegs(lm_process_t proc,
 #	elif LM_OS == LM_OS_BSD
 	{
 #		if LM_ARCH == LM_ARCH_X86
-		struct reg old_regs;
-
-		if (ptrace(PT_GETREGS, proc.pid, (caddr_t)&old_regs, 0) == -1)
-			return ret;
-		
-#		if LM_BITS == 64
-		old_regs.r_rax = regs.rax;
-		old_regs.r_rbx = regs.rbx;
-		old_regs.r_rcx = regs.rcx;
-		old_regs.r_rdx = regs.rdx;
-		old_regs.r_rsi = regs.rsi;
-		old_regs.r_rdi = regs.rdi;
-		old_regs.r_rsp = regs.rsp;
-		old_regs.r_rbp = regs.rbp;
-		old_regs.r_rip = regs.rip;
-		old_regs.r_r8  = regs.r8;
-		old_regs.r_r9  = regs.r9;
-		old_regs.r_r10 = regs.r10;
-		old_regs.r_r11 = regs.r11;
-		old_regs.r_r12 = regs.r12;
-		old_regs.r_r13 = regs.r13;
-		old_regs.r_r14 = regs.r14;
-		old_regs.r_r15 = regs.r15;
-#		else
-		old_regs.r_eax = regs.eax;
-		old_regs.r_ebx = regs.ebx;
-		old_regs.r_ecx = regs.ecx;
-		old_regs.r_edx = regs.edx;
-		old_regs.r_esi = regs.esi;
-		old_regs.r_edi = regs.edi;
-		old_regs.r_esp = regs.esp;
-		old_regs.r_ebp = regs.ebp;
-		old_regs.r_eip = regs.eip;
-#		endif
-
-		if (ptrace(PT_SETREGS, proc.pid, (caddr_t)&old_regs, 0) != -1)
+		if (ptrace(PT_SETREGS, proc.pid,
+			   NULL, &regs.regs) != -1 &&
+		    ptrace(PT_SETFPREGS, proc.pid,
+		    	   NULL, &regs.fpregs) != -1)
 			ret = LM_TRUE;
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
 	}
 #	endif
+
+	return ret;
+}
+
+LM_API lm_reg_t
+LM_DebugReadReg(lm_datloc_t regid,
+		lm_regs_t   regs)
+{
+	lm_reg_t  reg = (lm_reg_t)LM_BAD;
+	lm_reg_t *preg;
+
+	preg = LM_DebugGetReg(regid, &regs);
+	if (preg)
+		reg = *preg;
+
+	return reg;
+}
+
+LM_API lm_bool_t
+LM_DebugWriteReg(lm_datloc_t regid,
+		 lm_reg_t    data,
+		 lm_regs_t  *regs)
+{
+	lm_bool_t ret = LM_FALSE;
+	lm_reg_t *preg;
+
+	preg = LM_DebugGetReg(regid, regs);
+	if (preg) {
+		*preg = data;
+		ret = LM_TRUE;
+	}
 
 	return ret;
 }
@@ -4443,9 +4478,13 @@ LM_DebugInject(lm_process_t proc,
 
 #	if LM_ARCH == LM_ARCH_X86
 #	if LM_BITS == 64
-	inj_addr = (lm_address_t)regs.rip;
+	if (LM_GetProcessBitsEx(proc) == 64) {
+		inj_addr = (lm_address_t)LM_DebugReadReg(LM_DATLOC_RIP, regs);
+	} else {
+		inj_addr = (lm_address_t)LM_DebugReadReg(LM_DATLOC_EIP, regs);
+	}
 #	else
-	inj_addr = (lm_address_t)regs.eip;
+	inj_addr = (lm_address_t)LM_DebugReadReg(LM_DATLOC_EIP, regs);
 #	endif
 #	elif LM_ARCH == LM_ARCH_ARM
 #	endif

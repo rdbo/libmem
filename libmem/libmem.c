@@ -253,9 +253,6 @@ _LM_ParseDatArgsIn(lm_process_t proc,
 		   lm_regs_t   *regsbuf)
 {
 	lm_size_t i;
-	lm_size_t bits;
-
-	bits = LM_GetProcessBitsEx(proc);
 
 	for (i = 0; i < nargs; ++i) {
 #		if LM_ARCH == LM_ARCH_X86
@@ -265,7 +262,7 @@ _LM_ParseDatArgsIn(lm_process_t proc,
 			reg = LM_DebugPickReg(datargs[i].datloc, regsbuf);
 			if (reg) {
 #				if LM_OS == LM_OS_WIN
-				if (bits == 64) {
+				if (LM_GetProcessBitsEx(proc) == 64) {
 					*(lm_uintptr_t *)reg = (
 						*(lm_uintptr_t *)(
 							datargs[i].data
@@ -291,7 +288,7 @@ _LM_ParseDatArgsIn(lm_process_t proc,
 			lm_address_t dst;
 
 #			if LM_BITS == 64
-			if (bits == 64)
+			if (LM_GetProcessBitsEx(proc) == 64)
 				stack_ptr = LM_DebugPickReg(LM_DATLOC_RSP, regsbuf);
 			else
 				stack_ptr = LM_DebugPickReg(LM_DATLOC_ESP, regsbuf);
@@ -300,7 +297,7 @@ _LM_ParseDatArgsIn(lm_process_t proc,
 #			endif
 
 #			if LM_OS == LM_OS_WIN
-			if (bits == 64) {
+			if (LM_GetProcessBitsEx(proc) == 64) {
 				*(lm_uintptr_t *)stack_ptr -= datargs[i].size;
 				*(lm_uintptr_t *)stack_ptr &= stack_align;
 				dst = (lm_address_t)(
@@ -337,9 +334,6 @@ _LM_ParseDatArgsOut(lm_process_t proc,
 		    lm_regs_t    regs)
 {
 	lm_size_t i;
-	lm_size_t bits;
-
-	bits = LM_GetProcessBitsEx(proc);
 
 	for (i = 0; i < nargs; ++i) {
 #		if LM_ARCH == LM_ARCH_X86
@@ -349,7 +343,7 @@ _LM_ParseDatArgsOut(lm_process_t proc,
 			reg = LM_DebugPickReg(datargs[i].datloc, &regs);
 			if (reg) {
 #				if LM_OS == LM_OS_WIN
-				if (bits == 64) {
+				if (LM_GetProcessBitsEx(proc) == 64) {
 					*(lm_uintptr_t *)datargs[i].data = (
 						*(lm_uintptr_t *)reg
 					);
@@ -371,7 +365,7 @@ _LM_ParseDatArgsOut(lm_process_t proc,
 			lm_address_t src;
 
 #			if LM_BITS == 64
-			if (bits == 64)
+			if (LM_GetProcessBitsEx(proc) == 64)
 				stack_ptr = LM_DebugPickReg(LM_DATLOC_RSP, &regs);
 			else
 				stack_ptr = LM_DebugPickReg(LM_DATLOC_ESP, &regs);
@@ -380,7 +374,7 @@ _LM_ParseDatArgsOut(lm_process_t proc,
 #			endif
 
 #			if LM_OS == LM_OS_WIN
-			if (bits == 64) {
+			if (LM_GetProcessBitsEx(proc) == 64) {
 				src = (lm_address_t)(
 					*(lm_uintptr_t *)stack_ptr
 				);
@@ -2085,7 +2079,6 @@ LM_LoadModuleEx(lm_process_t proc,
 			lm_datio_t   arg1;
 			lm_address_t path_addr = (lm_address_t)LM_NULL;
 			lm_size_t    path_size;
-			lm_size_t    bits;
 			lm_uintptr_t mode = RTLD_LAZY;
 
 			path_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
@@ -2102,10 +2095,9 @@ LM_LoadModuleEx(lm_process_t proc,
 			LM_WriteMemoryEx(proc, path_addr,
 					 (lm_bstring_t)path, path_size);
 
-			bits = LM_GetProcessBitsEx(proc);
-
 #			if LM_ARCH == LM_ARCH_X86
-			if (bits == 64) {
+#			if LM_BITS == 64
+			if (LM_GetProcessBitsEx(proc) == 64) {
 				arg0.datloc = LM_DATLOC_RDI;
 				arg0.data   = (lm_byte_t *)&path_addr;
 
@@ -2118,6 +2110,13 @@ LM_LoadModuleEx(lm_process_t proc,
 				arg1.datloc = LM_DATLOC_ECX;
 				arg1.data   = (lm_byte_t *)&mode;
 			}
+#			else
+			arg0.datloc = LM_DATLOC_EBX;
+			arg0.data   = (lm_byte_t *)&path_addr;
+
+			arg1.datloc = LM_DATLOC_ECX;
+			arg1.data   = (lm_byte_t *)&mode;
+#			endif
 #			elif LM_ARCH == LM_ARCH_ARM
 #			endif
 
@@ -2995,8 +2994,6 @@ LM_AllocMemoryEx(lm_process_t proc,
 #	elif LM_OS == LM_OS_LINUX
 	{
 		lm_uintptr_t nsyscall;
-		lm_size_t    bits;
-
 		lm_datio_t   arg_nsyscall;
 
 		lm_datio_t   arg_addr;
@@ -3019,8 +3016,6 @@ LM_AllocMemoryEx(lm_process_t proc,
 
 		lm_datio_t   retval;
 		lm_uintptr_t retdat = (lm_uintptr_t)LM_BAD;
-
-		bits = LM_GetProcessBitsEx(proc);
 
 		arg_nsyscall.data = (lm_byte_t *)&nsyscall;
 		arg_nsyscall.size = 0;
@@ -3048,7 +3043,7 @@ LM_AllocMemoryEx(lm_process_t proc,
 
 #		if LM_ARCH == LM_ARCH_X86
 #		if LM_BITS == 64
-		if (bits == 64) {
+		if (LM_GetProcessBitsEx(proc) == 64) {
 			nsyscall = 9;
 			arg_nsyscall.datloc = LM_DATLOC_RAX;
 			arg_addr.datloc     = LM_DATLOC_RDI;

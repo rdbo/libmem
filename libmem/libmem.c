@@ -2858,31 +2858,243 @@ LM_AllocMemoryEx(lm_process_t proc,
 		if (!alloc)
 			alloc = (lm_address_t)LM_BAD;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX
 	{
-		lm_int_t  nsyscall;
-		lm_size_t bits;
+		lm_uintptr_t nsyscall;
+		lm_size_t    bits;
+
+		lm_datio_t   arg_nsyscall;
+
+		lm_datio_t   arg_addr;
+		lm_uintptr_t dat_addr = (lm_uintptr_t)LM_NULL;
+
+		lm_datio_t   arg_length;
+		lm_uintptr_t dat_length = (lm_uintptr_t)size;
+
+		lm_datio_t   arg_prot;
+		lm_uintptr_t dat_prot = (lm_uintptr_t)prot;
+
+		lm_datio_t   arg_flags;
+		lm_uintptr_t dat_flags = MAP_PRIVATE | MAP_ANON;
+
+		lm_datio_t   arg_fd;
+		lm_uintptr_t dat_fd = (lm_uintptr_t)-1;
+
+		lm_datio_t   arg_offset;
+		lm_uintptr_t dat_offset = 0;
+
+		lm_datio_t   retval;
+		lm_uintptr_t retdat = (lm_uintptr_t)LM_BAD;
 
 		bits = LM_GetProcessBitsEx(proc);
 
-#		if LM_OS == LM_OS_LINUX
-		if (bits == 64)
+		arg_nsyscall.data = (lm_byte_t *)&nsyscall;
+		arg_nsyscall.size = 0;
+
+		arg_addr.data   = (lm_byte_t *)&dat_addr;
+		arg_addr.size   = 0;
+
+		arg_length.data = (lm_byte_t *)&dat_length;
+		arg_length.size = 0;
+
+		arg_prot.data   = (lm_byte_t *)&dat_prot;
+		arg_prot.size   = 0;
+
+		arg_flags.data  = (lm_byte_t *)&dat_flags;
+		arg_flags.size  = 0;
+
+		arg_fd.data     = (lm_byte_t *)&dat_fd;
+		arg_fd.size     = 0;
+
+		arg_offset.data = (lm_byte_t *)&dat_offset;
+		arg_offset.size = 0;
+
+		retval.data     = (lm_byte_t *)&retdat;
+		retval.size     = 0;
+
+#		if LM_BITS == 64
+		if (bits == 64) {
 			nsyscall = 9;
-		else
+			arg_nsyscall.datloc = LM_DATLOC_RAX;
+			arg_addr.datloc   = LM_DATLOC_RDI;
+			arg_length.datloc = LM_DATLOC_RSI;
+			arg_prot.datloc   = LM_DATLOC_RDX;
+			arg_flags.datloc  = LM_DATLOC_R10;
+			arg_fd.datloc     = LM_DATLOC_R8;
+			arg_offset.datloc = LM_DATLOC_R9;
+			retval.datloc     = LM_DATLOC_RAX;
+		}
+		else {
 			nsyscall = 192;
-#		elif LM_OS == LM_OS_BSD
-		nsyscall = SYS_mmap;
+			arg_nsyscall.datloc = LM_DATLOC_EAX;
+			arg_addr.datloc   = LM_DATLOC_EBX;
+			arg_length.datloc = LM_DATLOC_ECX;
+			arg_prot.datloc   = LM_DATLOC_EDX;
+			arg_flags.datloc  = LM_DATLOC_ESI;
+			arg_fd.datloc     = LM_DATLOC_EDI;
+			arg_offset.datloc = LM_DATLOC_EBP;
+			retval.datloc     = LM_DATLOC_EAX;
+		}
+#		else
+		nsyscall = 192;
+		arg_nsyscall.datloc = LM_DATLOC_EAX;
+		arg_addr.datloc   = LM_DATLOC_EBX;
+		arg_length.datloc = LM_DATLOC_ECX;
+		arg_prot.datloc   = LM_DATLOC_EDX;
+		arg_flags.datloc  = LM_DATLOC_ESI;
+		arg_fd.datloc     = LM_DATLOC_EDI;
+		arg_offset.datloc = LM_DATLOC_EBP;
+		retval.datloc     = LM_DATLOC_EAX;
 #		endif
 
-		alloc = (lm_address_t)(
-			LM_SystemCallEx(proc, nsyscall,
-					LM_NULL,
-					size,
-					(lm_uintptr_t)prot,
-					MAP_PRIVATE | MAP_ANON,
-					(lm_uintptr_t)-1,
-					0)
-		);
+		LM_SystemCallEx(proc, -8, 7, 1,
+				arg_nsyscall,
+				arg_addr,
+				arg_length,
+				arg_prot,
+				arg_flags,
+				arg_fd,
+				arg_offset,
+				retval);
+		
+		alloc = (lm_address_t)retdat;
+		
+		if (alloc == (lm_address_t)MAP_FAILED || 
+		    alloc == (lm_address_t)(lm_uintptr_t)nsyscall ||
+		    (lm_uintptr_t)alloc >= (lm_uintptr_t)-1024 ||
+		    (lm_uintptr_t)alloc <= (lm_uintptr_t)1024)
+			alloc = (lm_address_t)LM_BAD;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		lm_uintptr_t nsyscall = SYS_mmap;
+		lm_size_t    bits;
+		lm_datio_t   retval;
+		lm_uintptr_t retdat = (lm_uintptr_t)LM_BAD;
+
+		retval.data = (lm_byte_t *)&retdat;
+		retval.size = 0;
+
+		bits = LM_GetProcessBitsEx(proc);
+#		if LM_BITS == 64
+		if (bits == 64) {
+			lm_datio_t   arg_nsyscall;
+
+			lm_datio_t   arg_addr;
+			lm_uintptr_t dat_addr = (lm_uintptr_t)LM_NULL;
+
+			lm_datio_t   arg_length;
+			lm_uintptr_t dat_length = (lm_uintptr_t)size;
+
+			lm_datio_t   arg_prot;
+			lm_uintptr_t dat_prot = (lm_uintptr_t)prot;
+
+			lm_datio_t   arg_flags;
+			lm_uintptr_t dat_flags = MAP_PRIVATE | MAP_ANON;
+
+			lm_datio_t   arg_fd;
+			lm_uintptr_t dat_fd = (lm_uintptr_t)-1;
+
+			lm_datio_t   arg_offset;
+			lm_uintptr_t dat_offset = 0;
+
+			arg_nsyscall.datloc = LM_DATLOC_RAX;
+			arg_nsyscall.data   = (lm_byte_t *)&nsyscall;
+			arg_nsyscall.size   = 0;
+
+			arg_addr.datloc   = LM_DATLOC_RDI;
+			arg_addr.data     = (lm_byte_t *)&dat_addr;
+			arg_addr.size     = 0;
+
+			arg_length.datloc = LM_DATLOC_RSI;
+			arg_length.data   = (lm_byte_t *)&dat_length;
+			arg_length.size   = 0;
+
+			arg_prot.datloc   = LM_DATLOC_RDX;
+			arg_prot.data     = (lm_byte_t *)&dat_prot;
+			arg_prot.size     = 0;
+
+			arg_flags.datloc  = LM_DATLOC_R10;
+			arg_flags.data    = (lm_byte_t *)&dat_flags;
+			arg_flags.size    = 0;
+
+			arg_fd.datloc     = LM_DATLOC_R8;
+			arg_fd.data       = (lm_byte_t *)&dat_fd;
+			arg_fd.size       = 0;
+
+			arg_offset.datloc = LM_DATLOC_R9;
+			arg_offset.data   = (lm_byte_t *)&dat_offset;
+			arg_offset.size   = 0;
+
+			retval.datloc     = LM_DATLOC_RAX;
+
+			LM_SystemCallEx(proc, -8, 7, 1,
+				arg_nsyscall,
+				arg_addr,
+				arg_length,
+				arg_prot,
+				arg_flags,
+				arg_fd,
+				arg_offset,
+				retval);
+		} else {
+			lm_datio_t   mmap_args;
+
+			struct {
+				void  *addr;
+				size_t length;
+				int    prot;
+				int    flags;
+				int    fd;
+				off_t  offset;
+			} mmap_args_dat;
+
+			mmap_args_dat.addr   = NULL;
+			mmap_args_dat.length = size;
+			mmap_args_dat.prot   = prot;
+			mmap_args_dat.flags  = MAP_PRIVATE | MAP_ANON;
+			mmap_args_dat.fd     = -1;
+			mmap_args_dat.offset = 0;
+
+			mmap_args.datloc = LM_DATLOC_STACK;
+			mmap_args.data   = (lm_byte_t *)&mmap_args_dat;
+			mmap_args.size   = sizeof(mmap_args_dat);
+
+			LM_SystemCallEx(proc, -8, 1, 1,
+					mmap_args,
+					retval);
+		}
+#		else
+		{
+			lm_datio_t   mmap_args;
+
+			struct {
+				void  *addr;
+				size_t length;
+				int    prot;
+				int    flags;
+				int    fd;
+				off_t  offset;
+			} mmap_args_dat;
+
+			mmap_args_dat.addr   = NULL;
+			mmap_args_dat.length = size;
+			mmap_args_dat.prot   = prot;
+			mmap_args_dat.flags  = MAP_PRIVATE | MAP_ANON;
+			mmap_args_dat.fd     = -1;
+			mmap_args_dat.offset = 0;
+
+			mmap_args.datloc = LM_DATLOC_STACK;
+			mmap_args.data   = (lm_byte_t *)&mmap_args_dat;
+			mmap_args.size   = sizeof(mmap_args_dat);
+
+			LM_SystemCallEx(proc, -8, 1, 1,
+					mmap_args,
+					retval);
+		}
+#		endif
+
+		alloc = (lm_address_t)retdat;
 		
 		if (alloc == (lm_address_t)MAP_FAILED || 
 		    alloc == (lm_address_t)(lm_uintptr_t)nsyscall ||
@@ -3229,358 +3441,98 @@ LM_SystemCall(lm_int_t     nsyscall,
 	return syscall_ret;
 }
 
-LM_API lm_uintptr_t
+LM_API lm_bool_t
 LM_SystemCallEx(lm_process_t proc,
-		lm_int_t     nsyscall,
-		lm_uintptr_t arg0,
-		lm_uintptr_t arg1,
-		lm_uintptr_t arg2,
-		lm_uintptr_t arg3,
-		lm_uintptr_t arg4,
-		lm_uintptr_t arg5)
+		lm_size_t    stack_align,
+		lm_size_t    nargs,
+		lm_size_t    nrets,
+		...)
 {
-	lm_uintptr_t syscall_ret = (lm_uintptr_t)LM_BAD;
+	lm_bool_t    ret = LM_FALSE;
+	lm_size_t    bits;
+	lm_bool_t    attached;
+	lm_regs_t    regs;
+	lm_regs_t    post_regs;
+	lm_datio_t  *datargs;
 
 	if (!_LM_CheckProcess(proc))
-		return syscall_ret;
+		return ret;
 
-#	if LM_OS == LM_OS_WIN
-	{
-
+	bits = LM_GetProcessBitsEx(proc);
+	if (bits > LM_GetProcessBits())
+		return ret;
+	
+	attached = LM_DebugCheck(proc);
+	if (attached != LM_TRUE) {
+		LM_DebugAttach(proc);
+		LM_DebugWait();
 	}
-#	elif LM_OS == LM_OS_LINUX
+
+	if (nargs + nrets > 0)
 	{
-		int status;
-		lm_size_t bits;
+		va_list   args;
+		lm_size_t i;
 
-		bits = LM_GetProcessBitsEx(proc);
+		datargs = LM_CALLOC(nargs + nrets, sizeof(lm_datio_t));
+		if (!datargs)
+			return ret;
 
-		if (bits > LM_GetProcessBits())
-			return syscall_ret;
+		va_start(args, nrets);
 
-#		if LM_ARCH == LM_ARCH_X86
-		{
-			struct user_regs_struct regs, old_regs;
-			lm_byte_t code[2] = { 0 };
-			lm_byte_t old_code[LM_ARRLEN(code)];
-			lm_address_t inj_addr;
-
-#			if LM_BITS == 64
-			if (bits == 64) {
-				code[0] = 0x0F;
-				code[1] = 0x05;
-				/* code:
-				 * syscall
-				 */
-			} else {
-				code[0] = 0xCD;
-				code[1] = 0x80;
-				/*
-				 * code:
-				 * int $80
-				 */
-			}
-#			else
-			code[0] = 0xCD;
-			code[1] = 0x80;
-			/*
-			 * code:
-			 * int $80
-			 */
-#			endif
-
-			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
-			wait(&status);
-			ptrace(PTRACE_GETREGS, proc.pid, NULL, &old_regs);
-			regs = old_regs;
-#			if LM_BITS == 64
-			if (bits == 64) {
-				regs.rax = (lm_uintptr_t)nsyscall;
-				regs.rdi = arg0;
-				regs.rsi = arg1;
-				regs.rdx = arg2;
-				regs.r10 = arg3;
-				regs.r8  = arg4;
-				regs.r9  = arg5;
-			} else {
-				regs.rax = (lm_uintptr_t)nsyscall;
-				regs.rbx = arg0;
-				regs.rcx = arg1;
-				regs.rdx = arg2;
-				regs.rsi = arg3;
-				regs.rdi = arg4;
-				regs.rbp = arg5;
-			}
-			inj_addr = (lm_address_t)regs.rip;
-#			else
-			regs.eax = (lm_uintptr_t)nsyscall;
-			regs.ebx = arg0;
-			regs.ecx = arg1;
-			regs.edx = arg2;
-			regs.esi = arg3;
-			regs.edi = arg4;
-			regs.ebp = arg5;
-			inj_addr = (lm_address_t)regs.eip;
-#			endif
-
-			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
-			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
-			ptrace(PTRACE_SETREGS, proc.pid, NULL, &regs);
-			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
-			waitpid(proc.pid, &status, WSTOPPED);
-			ptrace(PTRACE_GETREGS, proc.pid, NULL, &regs);
-#			if LM_BITS == 64
-			syscall_ret = (lm_uintptr_t)regs.rax;
-#			else
-			syscall_ret = (lm_uintptr_t)regs.eax;
-#			endif
-			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
-			ptrace(PTRACE_SETREGS, proc.pid, NULL, &old_regs);
-			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
+		for (i = 0; i < nargs + nrets; ++i) {
+			datargs[i] = va_arg(args, lm_datio_t);
 		}
-#		elif LM_ARCH == LM_ARCH_ARM
+
+		va_end(args);
+	}
+
+	LM_DebugGetRegs(proc, &regs);
+	_LM_ParseDatArgsIn(proc, datargs, nargs, stack_align, &regs);
+
+#	if LM_ARCH == LM_ARCH_X86
+	{
+#		if LM_BITS == 64
+		if (bits == 64) {
+			lm_byte_t code[] = {
+				0x0F, 0x05, /* syscall */
+				0xCC        /* int 3*/
+			};
+
+			LM_DebugInject(proc, code, sizeof(code), regs, &post_regs);
+		}
+		else {
+			lm_byte_t code[] = {
+				0xCD, 0x80, /* int $80 */
+				0xCC        /* int 3*/
+			};
+
+			LM_DebugInject(proc, code, sizeof(code), regs, &post_regs);
+		}
+#		else
 		{
-			struct user_regs regs, old_regs;
-			lm_byte_t code[4] = { 0 };
-			lm_byte_t old_code[LM_ARRLEN(code)];
-			lm_address_t inj_addr;
-			struct iovec pt_iovec;
+			lm_byte_t code[] = {
+				0xCD, 0x80 /* int $80 */
+			};
 
-			code[0] = 0xEF;
-			code[1] = 0x00;
-			code[2] = 0x00;
-			code[3] = 0x00;
-			/* code:
-			 * swi #0
-			 */
-
-			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
-			wait(&status);
-			pt_iovec.iov_base = (void *)&old_regs;
-			pt_iovec.iov_len = sizeof(old_regs);
-			ptrace(PTRACE_GETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			regs = old_regs;
-			regs.uregs[0] = arg0;
-			regs.uregs[1] = arg1;
-			regs.uregs[2] = arg2;
-			regs.uregs[3] = arg3;
-			regs.uregs[4] = arg4;
-			regs.uregs[5] = arg5;
-			if (bits == 64) {
-				regs.uregs[8] = (lm_uintptr_t)nsyscall;
-			} else {
-				regs.uregs[6] = 0;
-				regs.uregs[7] = (lm_uintptr_t)nsyscall;
-			}
-
-			inj_addr = (lm_address_t)regs.uregs[15];
-
-			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
-			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
-			pt_iovec.iov_base = (void *)&regs;
-			pt_iovec.iov_len = sizeof(regs);
-			ptrace(PTRACE_SETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
-			waitpid(proc.pid, &status, WSTOPPED);
-			pt_iovec.iov_base = (void *)&regs;
-			pt_iovec.iov_len = sizeof(regs);
-			ptrace(PTRACE_GETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			syscall_ret = (lm_uintptr_t)regs.uregs[0];
-			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
-			pt_iovec.iov_base = (void *)&old_regs;
-			pt_iovec.iov_len = sizeof(old_regs);
-			ptrace(PTRACE_SETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
+			LM_DebugInject(proc, code, sizeof(code), regs, &post_regs);
 		}
 #		endif
+
+		ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_BSD
+#	elif LM_ARCH == LM_ARCH_ARM
 	{
-		int status;
-		lm_size_t bits;
 
-		bits = LM_GetProcessBitsEx(proc);
-
-		if (bits > LM_GetProcessBits())
-			return syscall_ret;
-
-#		if LM_ARCH == LM_ARCH_X86
-		{
-			struct reg regs, old_regs;
-			lm_byte_t code[9] = { 0 };
-			lm_byte_t old_code[LM_ARRLEN(code)];
-			lm_address_t inj_addr;
-
-#			if LM_BITS == 64
-			if (bits == 64) {
-				code[0] = 0x0F;
-				code[1] = 0x05;
-				code[2] = 0xCC;
-				/* code:
-				 * syscall
-				 * int3
-				 */
-			} else {
-				code[0] = 0x55;
-				code[1] = 0x57;
-				code[2] = 0x56;
-				code[3] = 0x52;
-				code[4] = 0x51;
-				code[5] = 0x53;
-				code[6] = 0xCD;
-				code[7] = 0x80;
-				code[8] = 0xCC;
-				/*
-				 * code:
-				 * push ebp
-				 * push edi
-				 * push esi
-				 * push edx
-				 * push ecx
-				 * push ebx
-				 * int $80
-				 * int3
-				*/
-			}
-#			else
-			code[0] = 0x55;
-			code[1] = 0x57;
-			code[2] = 0x56;
-			code[3] = 0x52;
-			code[4] = 0x51;
-			code[5] = 0x53;
-			code[6] = 0xCD;
-			code[7] = 0x80;
-			code[8] = 0xCC;
-			/*
-			 * code:
-			 * push ebp
-			 * push edi
-			 * push esi
-			 * push edx
-			 * push ecx
-			 * push ebx
-			 * int $80
-			 * int3
-			 */
-#			endif
-
-			ptrace(PT_ATTACH, proc.pid, NULL, 0);
-			wait(&status);
-			ptrace(PT_GETREGS, proc.pid, (caddr_t)&old_regs, 0);
-			regs = old_regs;
-#			if LM_BITS == 64
-			if (bits == 64) {
-				regs.r_rax = (lm_uintptr_t)nsyscall;
-				regs.r_rdi = arg0;
-				regs.r_rsi = arg1;
-				regs.r_rdx = arg2;
-				regs.r_r10 = arg3;
-				regs.r_r8  = arg4;
-				regs.r_r9  = arg5;
-			} else {
-				regs.r_rax = (lm_uintptr_t)nsyscall;
-				regs.r_rbx = arg0;
-				regs.r_rcx = arg1;
-				regs.r_rdx = arg2;
-				regs.r_rsi = arg3;
-				regs.r_rdi = arg4;
-				regs.r_rbp = arg5;
-			}
-			inj_addr = (lm_address_t)regs.r_rip;
-#			else
-			regs.r_eax = (lm_uintptr_t)nsyscall;
-			regs.r_ebx = arg0;
-			regs.r_ecx = arg1;
-			regs.r_edx = arg2;
-			regs.r_esi = arg3;
-			regs.r_edi = arg4;
-			regs.r_ebp = arg5;
-			inj_addr = (lm_address_t)regs.r_eip;
-#			endif
-
-			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
-			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
-			ptrace(PT_SETREGS, proc.pid, (caddr_t)&regs, 0);
-			if (bits == 64)
-				ptrace(PT_STEP, proc.pid, (caddr_t)NULL, 0);
-			else
-				ptrace(PT_CONTINUE, proc.pid, (caddr_t)1, 0);
-			waitpid(proc.pid, &status, WSTOPPED);
-			ptrace(PT_GETREGS, proc.pid, (caddr_t)&regs, 0);
-#			if LM_BITS == 64
-			syscall_ret = (lm_uintptr_t)regs.r_rax;
-#			else
-			syscall_ret = (lm_uintptr_t)regs.r_eax;
-#			endif
-			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
-			ptrace(PT_SETREGS, proc.pid, (caddr_t)&old_regs, 0);
-			ptrace(PT_DETACH, proc.pid, NULL, 0);
-		}
-#		elif LM_ARCH == LM_ARCH_ARM
-		{
-			struct reg regs, old_regs;
-			lm_byte_t code[4];
-			lm_byte_t old_code[LM_ARRLEN(code)];
-			lm_address_t inj_addr;
-			struct iovec pt_iovec;
-
-			code[0] = 0xEF;
-			code[1] = 0x00;
-			code[2] = 0x00;
-			code[3] = 0x00;
-
-			ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL);
-			wait(&status);
-			pt_iovec.iov_base = (void *)&old_regs;
-			pt_iovec.iov_len = sizeof(old_regs);
-			ptrace(PTRACE_GETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			regs = old_regs;
-			regs.uregs[0] = arg0;
-			regs.uregs[1] = arg1;
-			regs.uregs[2] = arg2;
-			regs.uregs[3] = arg3;
-			regs.uregs[4] = arg4;
-			regs.uregs[5] = arg5;
-			if (bits == 64) {
-				regs.uregs[8] = (lm_uintptr_t)nsyscall;
-			} else {
-				regs.uregs[6] = 0;
-				regs.uregs[7] = (lm_uintptr_t)nsyscall;
-			}
-
-			inj_addr = (lm_address_t)regs.uregs[15];
-
-			_LM_PtraceRead(proc, inj_addr, old_code, sizeof(old_code));
-			_LM_PtraceWrite(proc, inj_addr, code, sizeof(code));
-			pt_iovec.iov_base = (void *)&regs;
-			pt_iovec.iov_len = sizeof(regs);
-			ptrace(PTRACE_SETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL);
-			waitpid(proc.pid, &status, WSTOPPED);
-			pt_iovec.iov_base = (void *)&regs;
-			pt_iovec.iov_len = sizeof(regs);
-			ptrace(PTRACE_GETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			syscall_ret = (lm_uintptr_t)regs.uregs[0];
-			_LM_PtraceWrite(proc, inj_addr, old_code, sizeof(old_code));
-			pt_iovec.iov_base = (void *)&old_regs;
-			pt_iovec.iov_len = sizeof(old_regs);
-			ptrace(PTRACE_SETREGSET, proc.pid,
-			       (void *)NT_PRSTATUS, &pt_iovec);
-			ptrace(PTRACE_DETACH, proc.pid, NULL, NULL);
-		}
-#		endif
 	}
 #	endif
 
-	return syscall_ret;
+	_LM_ParseDatArgsOut(proc, &datargs[nargs], nrets, stack_align, post_regs);
+
+	if (attached != LM_TRUE) {
+		LM_DebugDetach(proc);
+	}
+
+	return ret;
 }
 
 LM_API lm_uintptr_t

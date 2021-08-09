@@ -4637,10 +4637,23 @@ LM_DebugReadReg(lm_datloc_t regid,
 	lm_uintptr_t val = (lm_uintptr_t)LM_BAD;
 	lm_void_t   *preg;
 
-	/* TOFIX: Only read uint32_t if WOW64 */
 	preg = LM_DebugPickReg(regid, &regs);
 	if (preg) {
+#		if LM_OS == LM_OS_WIN
+#		if LM_BITS == 64
+		if (regid < LM_DATLOC_RAX) {
+			/* 32-bit register */
+
+			val = (lm_uintptr_t)(*(lm_uint32_t *))preg;
+		} else {
+			val = *(lm_uintptr_t *)preg;
+		}
+#		else
 		val = *(lm_uintptr_t *)preg;
+#		endif
+#		else
+		val = *(lm_uintptr_t *)preg;
+#		endif
 	}
 
 	return val;
@@ -4654,10 +4667,21 @@ LM_DebugWriteReg(lm_datloc_t  regid,
 	lm_bool_t    ret = LM_FALSE;
 	lm_void_t   *preg;
 
-	/* TOFIX: Only write uint32_t if WOW64 */
 	preg = LM_DebugPickReg(regid, regs);
 	if (preg) {
+#		if LM_OS == LM_OS_WIN
+#		if LM_BITS == 64
+		if (regid < LM_DATLOC_RAX)
+			*(lm_uint32_t *)preg = (lm_uint32_t)data;
+		else
+			*(lm_uintptr_t *)preg = data;
+#		else
 		*(lm_uintptr_t *)preg = data;
+#		endif
+#		else
+		*(lm_uintptr_t *)preg = data;
+#		endif
+
 		ret = LM_TRUE;
 	}
 

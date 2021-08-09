@@ -2771,39 +2771,173 @@ LM_ProtMemoryEx(lm_process_t proc,
 			ret = LM_TRUE;
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX
 	{
-		long pagesize;
-		lm_page_t page;
-		lm_int_t  nsyscall;
+		lm_datio_t   arg_nsyscall;
+		lm_uintptr_t dat_nsyscall;
+
+		lm_datio_t   arg_addr;
+		lm_uintptr_t dat_addr = (lm_uintptr_t)addr;
+
+		lm_datio_t   arg_length;
+		lm_uintptr_t dat_length = (lm_uintptr_t)size;
+
+		lm_datio_t   arg_prot;
+		lm_uintptr_t dat_prot = (lm_uintptr_t)prot;
+
+		lm_datio_t   retbuf;
+		lm_uintptr_t retdat = (lm_uintptr_t)LM_BAD;
+
+		lm_page_t    page;
+		long         pagesize;
 
 		if (oldprot) {
 			if (!LM_GetPageEx(proc, addr, &page))
 				return ret;
 		}
 
-#		if LM_OS == LM_OS_LINUX
-		if (LM_GetProcessBitsEx(proc) == 64)
-			nsyscall = 10;
-		else
-			nsyscall = 125;
-#		elif LM_OS == LM_OS_BSD
-		nsyscall = SYS_mprotect;
+		arg_nsyscall.data = (lm_byte_t *)&dat_nsyscall;
+		arg_nsyscall.size = 0;
+
+		arg_addr.data     = (lm_byte_t *)&dat_addr;
+		arg_addr.size     = 0;
+
+		arg_length.data   = (lm_byte_t *)&dat_length;
+		arg_length.size   = 0;
+
+		arg_prot.data     = (lm_byte_t *)&dat_prot;
+		arg_prot.size     = 0;
+
+		retbuf.data       = (lm_byte_t *)&retdat;
+
+#		if LM_ARCH == LM_ARCH_X86
+#		if LM_BITS == 64
+		if (LM_GetProcessBitsEx(proc) == 64) {
+			dat_nsyscall = 10;
+
+			arg_nsyscall.datloc = LM_DATLOC_RAX;
+			arg_addr.datloc     = LM_DATLOC_RDI;
+			arg_length.datloc   = LM_DATLOC_RSI;
+			arg_prot.datloc     = LM_DATLOC_RDX;
+			retbuf.datloc       = LM_DATLOC_RAX;
+		}
+		else {
+			dat_nsyscall = 125;
+
+			arg_nsyscall.datloc = LM_DATLOC_EAX;
+			arg_addr.datloc     = LM_DATLOC_EBX;
+			arg_length.datloc   = LM_DATLOC_ECX;
+			arg_prot.datloc     = LM_DATLOC_EDX;
+			retbuf.datloc       = LM_DATLOC_EAX;
+		}
+#		else
+		dat_nsyscall = 125;
+
+		arg_nsyscall.datloc = LM_DATLOC_EAX;
+		arg_addr.datloc     = LM_DATLOC_EBX;
+		arg_length.datloc   = LM_DATLOC_ECX;
+		arg_prot.datloc     = LM_DATLOC_EDX;
+		retbuf.datloc       = LM_DATLOC_EAX;
+#		endif
+#		elif LM_ARCH == LM_ARCH_ARM
 #		endif
 
 		pagesize = sysconf(_SC_PAGE_SIZE);
-		addr = (lm_address_t)(
-			(lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize)
-		);
-		if (!LM_SystemCallEx(proc, nsyscall,
-				     (lm_uintptr_t)addr,
-				     (lm_uintptr_t)size,
-				     (lm_uintptr_t)prot,
-				     LM_NULL, LM_NULL, LM_NULL))
-			ret = LM_TRUE;
+		dat_addr &= -pagesize;
+
+		LM_SystemCallEx(proc, 0, 4, 1,
+				arg_nsyscall,
+				arg_addr,
+				arg_length,
+				arg_prot,
+				retbuf);
 		
 		if (oldprot)
 			*oldprot = page.prot;
+		
+		if (!retdat)
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		lm_datio_t   arg_nsyscall;
+		lm_uintptr_t dat_nsyscall = SYS_mprotect;
+
+		lm_datio_t   arg_addr;
+		lm_uintptr_t dat_addr = (lm_uintptr_t)addr;
+
+		lm_datio_t   arg_length;
+		lm_uintptr_t dat_length = (lm_uintptr_t)size;
+
+		lm_datio_t   arg_prot;
+		lm_uintptr_t dat_prot = (lm_uintptr_t)prot;
+
+		lm_datio_t   retbuf;
+		lm_uintptr_t retdat = (lm_uintptr_t)LM_BAD;
+
+		lm_page_t    page;
+		long         pagesize;
+
+		if (oldprot) {
+			if (!LM_GetPageEx(proc, addr, &page))
+				return ret;
+		}
+
+		arg_nsyscall.data = (lm_byte_t *)&dat_nsyscall;
+		arg_nsyscall.size = 0;
+
+		arg_addr.data     = (lm_byte_t *)&dat_addr;
+		arg_addr.size     = 0;
+
+		arg_length.data   = (lm_byte_t *)&dat_length;
+		arg_length.size   = 0;
+
+		arg_prot.data     = (lm_byte_t *)&dat_prot;
+		arg_prot.size     = 0;
+
+		retbuf.data       = (lm_byte_t *)&retdat;
+
+#		if LM_ARCH == LM_ARCH_X86
+#		if LM_BITS == 64
+		if (LM_GetProcessBitsEx(proc) == 64) {
+			arg_nsyscall.datloc = LM_DATLOC_RAX;
+			arg_addr.datloc     = LM_DATLOC_RDI;
+			arg_length.datloc   = LM_DATLOC_RSI;
+			arg_prot.datloc     = LM_DATLOC_RDX;
+			retbuf.datloc       = LM_DATLOC_RAX;
+		}
+		else {
+			arg_nsyscall.datloc = LM_DATLOC_EAX;
+			arg_addr.datloc     = LM_DATLOC_STACK;
+			arg_length.datloc   = LM_DATLOC_STACK;
+			arg_prot.datloc     = LM_DATLOC_STACK;
+			retbuf.datloc       = LM_DATLOC_EAX;
+		}
+#		else
+		arg_nsyscall.datloc = LM_DATLOC_EAX;
+		arg_addr.datloc     = LM_DATLOC_STACK;
+		arg_length.datloc   = LM_DATLOC_STACK;
+		arg_prot.datloc     = LM_DATLOC_STACK;
+		retbuf.datloc       = LM_DATLOC_EAX;
+#		endif
+#		elif LM_ARCH == LM_ARCH_ARM
+#		endif
+
+		pagesize = sysconf(_SC_PAGE_SIZE);
+		dat_addr &= -pagesize;
+
+		LM_SystemCallEx(proc, 0, 4, 1,
+				arg_nsyscall,
+				arg_prot,
+				arg_length.
+				arg_addr,
+				retbuf);
+		
+		if (oldprot)
+			*oldprot = page.prot;
+		
+		if (!retdat)
+			ret = LM_TRUE;
 	}
 #	endif
 

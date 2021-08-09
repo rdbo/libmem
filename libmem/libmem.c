@@ -2912,42 +2912,45 @@ LM_AllocMemoryEx(lm_process_t proc,
 		retval.data     = (lm_byte_t *)&retdat;
 		retval.size     = 0;
 
+#		if LM_ARCH == LM_ARCH_X86
 #		if LM_BITS == 64
 		if (bits == 64) {
 			nsyscall = 9;
 			arg_nsyscall.datloc = LM_DATLOC_RAX;
-			arg_addr.datloc   = LM_DATLOC_RDI;
-			arg_length.datloc = LM_DATLOC_RSI;
-			arg_prot.datloc   = LM_DATLOC_RDX;
-			arg_flags.datloc  = LM_DATLOC_R10;
-			arg_fd.datloc     = LM_DATLOC_R8;
-			arg_offset.datloc = LM_DATLOC_R9;
-			retval.datloc     = LM_DATLOC_RAX;
+			arg_addr.datloc     = LM_DATLOC_RDI;
+			arg_length.datloc   = LM_DATLOC_RSI;
+			arg_prot.datloc     = LM_DATLOC_RDX;
+			arg_flags.datloc    = LM_DATLOC_R10;
+			arg_fd.datloc       = LM_DATLOC_R8;
+			arg_offset.datloc   = LM_DATLOC_R9;
+			retval.datloc       = LM_DATLOC_RAX;
 		}
 		else {
 			nsyscall = 192;
 			arg_nsyscall.datloc = LM_DATLOC_EAX;
-			arg_addr.datloc   = LM_DATLOC_EBX;
-			arg_length.datloc = LM_DATLOC_ECX;
-			arg_prot.datloc   = LM_DATLOC_EDX;
-			arg_flags.datloc  = LM_DATLOC_ESI;
-			arg_fd.datloc     = LM_DATLOC_EDI;
-			arg_offset.datloc = LM_DATLOC_EBP;
-			retval.datloc     = LM_DATLOC_EAX;
+			arg_addr.datloc     = LM_DATLOC_EBX;
+			arg_length.datloc   = LM_DATLOC_ECX;
+			arg_prot.datloc     = LM_DATLOC_EDX;
+			arg_flags.datloc    = LM_DATLOC_ESI;
+			arg_fd.datloc       = LM_DATLOC_EDI;
+			arg_offset.datloc   = LM_DATLOC_EBP;
+			retval.datloc       = LM_DATLOC_EAX;
 		}
 #		else
 		nsyscall = 192;
 		arg_nsyscall.datloc = LM_DATLOC_EAX;
-		arg_addr.datloc   = LM_DATLOC_EBX;
-		arg_length.datloc = LM_DATLOC_ECX;
-		arg_prot.datloc   = LM_DATLOC_EDX;
-		arg_flags.datloc  = LM_DATLOC_ESI;
-		arg_fd.datloc     = LM_DATLOC_EDI;
-		arg_offset.datloc = LM_DATLOC_EBP;
-		retval.datloc     = LM_DATLOC_EAX;
+		arg_addr.datloc     = LM_DATLOC_EBX;
+		arg_length.datloc   = LM_DATLOC_ECX;
+		arg_prot.datloc     = LM_DATLOC_EDX;
+		arg_flags.datloc    = LM_DATLOC_ESI;
+		arg_fd.datloc       = LM_DATLOC_EDI;
+		arg_offset.datloc   = LM_DATLOC_EBP;
+		retval.datloc       = LM_DATLOC_EAX;
+#		endif
+#		elif LM_ARCH == LM_ARCH_ARM
 #		endif
 
-		LM_SystemCallEx(proc, -8, 7, 1,
+		LM_SystemCallEx(proc, 0, 7, 1,
 				arg_nsyscall,
 				arg_addr,
 				arg_length,
@@ -2976,6 +2979,8 @@ LM_AllocMemoryEx(lm_process_t proc,
 		retval.size = 0;
 
 		bits = LM_GetProcessBitsEx(proc);
+
+#		if LM_ARCH == LM_ARCH_X86
 #		if LM_BITS == 64
 		if (bits == 64) {
 			lm_datio_t   arg_nsyscall;
@@ -3028,7 +3033,7 @@ LM_AllocMemoryEx(lm_process_t proc,
 
 			retval.datloc     = LM_DATLOC_RAX;
 
-			LM_SystemCallEx(proc, -8, 7, 1,
+			LM_SystemCallEx(proc, 0, 7, 1,
 				arg_nsyscall,
 				arg_addr,
 				arg_length,
@@ -3093,6 +3098,7 @@ LM_AllocMemoryEx(lm_process_t proc,
 					retval);
 		}
 #		endif
+#		endif
 
 		alloc = (lm_address_t)retdat;
 		
@@ -3143,23 +3149,135 @@ LM_FreeMemoryEx(lm_process_t proc,
 		if (VirtualFreeEx(proc.handle, alloc, 0, MEM_RELEASE))
 			ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX
 	{
-		lm_int_t nsyscall;
+		lm_datio_t   arg_nsyscall;
+		lm_uintptr_t nsyscall;
 
-#		if LM_OS == LM_OS_LINUX
-		if (LM_GetProcessBitsEx(proc) == 64)
+		lm_datio_t   arg_addr;
+		lm_uintptr_t dat_addr = (lm_uintptr_t)alloc;
+
+		lm_datio_t   arg_length;
+		lm_uintptr_t dat_length = (lm_uintptr_t)size;
+
+		lm_datio_t   retbuf;
+		lm_uintptr_t retdat = (lm_uintptr_t)LM_BAD;
+
+		arg_nsyscall.data = (lm_byte_t *)&nsyscall;
+		arg_nsyscall.size = 0;
+
+		arg_addr.data   = (lm_byte_t *)&dat_addr;
+		arg_addr.size   = 0;
+
+		arg_length.data = (lm_byte_t *)&dat_length;
+		arg_length.size = 0;
+
+		retbuf.data = (lm_byte_t *)&retdat;
+		retbuf.size = 0;
+
+#		if LM_ARCH == LM_ARCH_X86
+#		if LM_BITS == 64
+		if (LM_GetProcessBitsEx(proc) == 64) {
 			nsyscall = 11;
-		else
+
+			arg_nsyscall.datloc = LM_DATLOC_RAX;
+			arg_addr.datloc     = LM_DATLOC_RDI;
+			arg_length.datloc   = LM_DATLOC_RSI;
+			retbuf.datloc       = LM_DATLOC_RAX;
+		}
+		else {
 			nsyscall = 91;
-#		elif LM_OS == LM_OS_BSD
-		nsyscall = SYS_munmap;
+
+			arg_nsyscall.datloc = LM_DATLOC_EAX;
+			arg_addr.datloc     = LM_DATLOC_EBX;
+			arg_length.datloc   = LM_DATLOC_ECX;
+			retbuf.datloc       = LM_DATLOC_EAX;
+		}
+#		else
+		nsyscall = 91;
+
+		arg_nsyscall.datloc = LM_DATLOC_EAX;
+		arg_addr.datloc     = LM_DATLOC_EBX;
+		arg_length.datloc   = LM_DATLOC_ECX;
+		retbuf.datloc       = LM_DATLOC_EAX;
+#		endif
+#		elif LM_ARCH == LM_ARCH_ARM
 #		endif
 
-		if (!LM_SystemCallEx(proc, nsyscall,
-				     (lm_uintptr_t)alloc, size,
-				     LM_NULL, LM_NULL,
-				     LM_NULL, LM_NULL))
+		LM_SystemCallEx(proc, 0, 3, 1,
+				arg_nsyscall,
+				arg_addr,
+				arg_length,
+				retbuf);
+		
+		if (!retdat)
+			ret = LM_TRUE;
+	}
+#	elif LM_OS == LM_OS_BSD
+	{
+		lm_uintptr_t nsyscall = SYS_munmap;
+
+		lm_datio_t   arg_nsyscall;
+		lm_uintptr_t nsyscall;
+
+		lm_datio_t   arg_addr;
+		lm_uintptr_t dat_addr = (lm_uintptr_t)alloc;
+
+		lm_datio_t   arg_length;
+		lm_uintptr_t dat_length = (lm_uintptr_t)size;
+
+		lm_datio_t   retbuf;
+		lm_uintptr_t retdat = (lm_uintptr_t)LM_BAD;
+
+		arg_nsyscall.data = (lm_byte_t *)&nsyscall;
+		arg_nsyscall.size = 0;
+
+		arg_addr.data   = (lm_byte_t *)&dat_addr;
+		arg_addr.size   = 0;
+
+		arg_length.data = (lm_byte_t *)&dat_length;
+		arg_length.size = 0;
+
+		retbuf.data = (lm_byte_t *)&retdat;
+		retbuf.size = 0;
+
+#		if LM_ARCH == LM_ARCH_X86
+#		if LM_BITS == 64
+		{
+			lm_size_t bits;
+
+			bits = LM_GetProcessBitsEx(proc);
+
+			if (bits == 64) {
+				arg_nsyscall.datloc = LM_DATLOC_RAX;
+				arg_addr.datloc     = LM_DATLOC_RDI;
+				arg_length.datloc   = LM_DATLOC_RSI;
+				retbuf.datloc       = LM_DATLOC_RAX;
+			} else {
+				arg_nsyscall.datloc = LM_DATLOC_EAX;
+				arg_addr.datloc     = LM_DATLOC_STACK;
+				arg_length.datloc   = LM_DATLOC_STACK;
+				retbuf.datloc       = LM_DATLOC_EAX;
+			}
+		}
+#		else
+		{
+			arg_nsyscall.datloc = LM_DATLOC_EAX;
+			arg_addr.datloc     = LM_DATLOC_STACK;
+			arg_length.datloc   = LM_DATLOC_STACK;
+			retbuf.datloc       = LM_DATLOC_EAX;
+		}
+#		endif
+#		elif LM_ARCH == LM_ARCH_ARM
+#		endif
+
+		LM_SystemCallEx(proc, -8, 3, 1,
+				arg_nsyscall,
+				arg_length,
+				arg_addr,
+				retbuf);
+		
+		if (!retdat)
 			ret = LM_TRUE;
 	}
 #	endif

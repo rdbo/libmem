@@ -1043,6 +1043,13 @@ LM_DebugInject(lm_process_t proc,
 	       lm_regs_t    regs,
 	       lm_regs_t   *post_regs);
 
+LM_API lm_bool_t
+LM_DebugInjectSingle(lm_process_t proc,
+		     lm_bstring_t payload,
+		     lm_size_t    size,
+		     lm_regs_t    regs,
+		     lm_regs_t   *post_regs);
+
 #if LM_LANG == LM_LANG_CPP
 }
 #endif

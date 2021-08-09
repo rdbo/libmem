@@ -260,25 +260,68 @@ _LM_ParseDatArgsIn(lm_process_t proc,
 	for (i = 0; i < nargs; ++i) {
 #		if LM_ARCH == LM_ARCH_X86
 		if (datargs[i].datloc != LM_DATLOC_STACK) {
-			lm_reg_t *reg;
+			lm_void_t *reg;
 
-			reg = LM_DebugGetReg(datargs[i].datloc, regsbuf);
-			if (reg)
-				*reg = *(lm_reg_t *)datargs[i].data;
+			reg = LM_DebugPickReg(datargs[i].datloc, regsbuf);
+			if (reg) {
+#				if LM_OS == LM_OS_WIN
+				if (bits == 64) {
+					*(lm_uintptr_t *)reg = (
+						*(lm_uintptr_t *)(
+							datargs[i].data
+						)
+					);
+				} else {
+					*(lm_uint32_t *)reg = (
+						*(lm_uint32_t *)(
+							datargs[i].data
+						)
+					);
+				}
+#				else
+				*(lm_uintptr_t *)reg = (
+					*(lm_uintptr_t *)(
+						datargs[i].data
+					)
+				);
+#				endif
+			}
 		} else {
-			lm_reg_t *stack_ptr;
+			lm_void_t   *stack_ptr;
+			lm_address_t dst;
+
 #			if LM_BITS == 64
 			if (bits == 64)
-				stack_ptr = LM_DebugGetReg(LM_DATLOC_RSP, regsbuf);
+				stack_ptr = LM_DebugPickReg(LM_DATLOC_RSP, regsbuf);
 			else
-				stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, regsbuf);
+				stack_ptr = LM_DebugPickReg(LM_DATLOC_ESP, regsbuf);
 #			else
-			stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, regsbuf);
+			stack_ptr = LM_DebugPickReg(LM_DATLOC_ESP, regsbuf);
 #			endif
-			*stack_ptr -= datargs[i].size;
-			*stack_ptr &= stack_align;
 
-			LM_DebugWrite(proc, (lm_address_t)(*stack_ptr),
+#			if LM_OS == LM_OS_WIN
+			if (bits == 64) {
+				*(lm_uintptr_t *)stack_ptr -= datargs[i].size;
+				*(lm_uintptr_t *)stack_ptr &= stack_align;
+				dst = (lm_address_t)(
+					*(lm_uintptr_t *)stack_ptr
+				);
+			} else {
+				*(lm_uint32_t *)stack_ptr -= datargs[i].size;
+				*(lm_uint32_t *)stack_ptr &= stack_align;
+				dst = (lm_address_t)(
+					*(lm_uint32_t *)stack_ptr
+				);
+			}
+#			else
+			*(lm_uintptr_t *)stack_ptr -= datargs[i].size;
+			*(lm_uintptr_t *)stack_ptr &= stack_align;
+			dst = (lm_address_t)(
+				*(lm_uintptr_t *)stack_ptr
+			);
+#			endif
+
+			LM_DebugWrite(proc, dst,
 				      datargs[i].data, datargs[i].size);
 		}
 #		elif LM_ARCH == LM_ARCH_ARM
@@ -301,26 +344,77 @@ _LM_ParseDatArgsOut(lm_process_t proc,
 	for (i = 0; i < nargs; ++i) {
 #		if LM_ARCH == LM_ARCH_X86
 		if (datargs[i].datloc != LM_DATLOC_STACK) {
-			lm_reg_t *reg;
+			lm_void_t *reg;
 
-			reg = LM_DebugGetReg(datargs[i].datloc, &regs);
-			if (reg)
-				*(lm_reg_t *)datargs[i].data = *reg;
+			reg = LM_DebugPickReg(datargs[i].datloc, &regs);
+			if (reg) {
+#				if LM_OS == LM_OS_WIN
+				if (bits == 64) {
+					*(lm_uintptr_t *)datargs[i].data = (
+						*(lm_uintptr_t *)reg
+					);
+				} else {
+					*(lm_uintptr_t *)datargs[i].data = (
+						(lm_uintptr_t)(
+							*(lm_uint32_t *)reg
+						)
+					);
+				}
+#				else
+				*(lm_uintptr_t *)datargs[i].data = (
+					*(lm_uintptr_t *)reg
+				);
+#				endif
+			}
 		} else {
-			lm_reg_t *stack_ptr;
+			lm_void_t   *stack_ptr;
+			lm_address_t src;
+
 #			if LM_BITS == 64
 			if (bits == 64)
-				stack_ptr = LM_DebugGetReg(LM_DATLOC_RSP, &regs);
+				stack_ptr = LM_DebugPickReg(LM_DATLOC_RSP, &regs);
 			else
-				stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, &regs);
+				stack_ptr = LM_DebugPickReg(LM_DATLOC_ESP, &regs);
 #			else
-			stack_ptr = LM_DebugGetReg(LM_DATLOC_ESP, regsbuf);
+			stack_ptr = LM_DebugPickReg(LM_DATLOC_ESP, &regs);
 #			endif
-			LM_DebugRead(proc, (lm_address_t)(*stack_ptr),
+
+#			if LM_OS == LM_OS_WIN
+			if (bits == 64) {
+				src = (lm_address_t)(
+					*(lm_uintptr_t *)stack_ptr
+				);
+
+				*(lm_uintptr_t *)stack_ptr += datargs[i].size;
+				*(lm_uintptr_t *)stack_ptr += (
+					datargs[i].size - 
+					       (datargs[i].size & stack_align)
+				);
+			} else {
+				src = (lm_address_t)(
+					*(lm_uintptr_t *)stack_ptr
+				);
+
+				*(lm_uint32_t *)stack_ptr += datargs[i].size;
+				*(lm_uint32_t *)stack_ptr += (
+					datargs[i].size - 
+					       (datargs[i].size & stack_align)
+				);
+			}
+#			else
+			src = (lm_address_t)(
+				*(lm_uintptr_t *)stack_ptr
+			);
+
+			*(lm_uintptr_t *)stack_ptr += datargs[i].size;
+			*(lm_uintptr_t *)stack_ptr += (
+				datargs[i].size - 
+					(datargs[i].size & stack_align)
+			);
+#			endif
+
+			LM_DebugRead(proc, src,
 				     datargs[i].data, datargs[i].size);
-			
-			*stack_ptr += datargs[i].size;
-			*stack_ptr += datargs[i].size - (datargs[i].size & stack_align);
 		}
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
@@ -3952,123 +4046,123 @@ LM_DebugGetRegs(lm_process_t proc,
 	return ret;
 }
 
-LM_API lm_reg_t *
-LM_DebugGetReg(lm_datloc_t regid,
+LM_API lm_void_t *
+LM_DebugPickReg(lm_datloc_t regid,
 	       lm_regs_t  *regs)
 {
-	lm_reg_t *preg = (lm_reg_t *)LM_NULL;
+	lm_void_t *preg = (lm_void_t *)LM_NULL;
 
 #	if LM_OS == LM_OS_WIN
 #	if LM_ARCH == LM_ARCH_X86
 #	if LM_BITS == 64
 	switch (regid) {
 	case LM_DATLOC_EAX:
-		preg = (lm_reg_t *)&regs->regs32.eax;
+		preg = (lm_void_t *)&regs->regs32.Eax;
 		break;
 	case LM_DATLOC_EBX:
-		preg = (lm_reg_t *)&regs->regs32.ebx;
+		preg = (lm_void_t *)&regs->regs32.Ebx;
 		break;
 	case LM_DATLOC_ECX:
-		preg = (lm_reg_t *)&regs->regs32.ecx;
+		preg = (lm_void_t *)&regs->regs32.Ecx;
 		break;
 	case LM_DATLOC_EDX:
-		preg = (lm_reg_t *)&regs->regs32.edx;
+		preg = (lm_void_t *)&regs->regs32.Edx;
 		break;
 	case LM_DATLOC_ESI:
-		preg = (lm_reg_t *)&regs->regs32.esi;
+		preg = (lm_void_t *)&regs->regs32.Esi;
 		break;
 	case LM_DATLOC_EDI:
-		preg = (lm_reg_t *)&regs->regs32.edi;
+		preg = (lm_void_t *)&regs->regs32.Edi;
 		break;
 	case LM_DATLOC_ESP:
-		preg = (lm_reg_t *)&regs->regs32.esp;
+		preg = (lm_void_t *)&regs->regs32.Esp;
 		break;
 	case LM_DATLOC_EBP:
-		preg = (lm_reg_t *)&regs->regs32.ebp;
+		preg = (lm_void_t *)&regs->regs32.Ebp;
 		break;
 	case LM_DATLOC_EIP:
-		preg = (lm_reg_t *)&regs->regs32.eip;
+		preg = (lm_void_t *)&regs->regs32.Eip;
 		break;
 	case LM_DATLOC_RAX:
-		preg = (lm_reg_t *)&regs->regs.rax;
+		preg = (lm_void_t *)&regs->regs.Rax;
 		break;
 	case LM_DATLOC_RBX:
-		preg = (lm_reg_t *)&regs->regs.rbx;
+		preg = (lm_void_t *)&regs->regs.Rbx;
 		break;
 	case LM_DATLOC_RCX:
-		preg = (lm_reg_t *)&regs->regs.rcx;
+		preg = (lm_void_t *)&regs->regs.Rcx;
 		break;
 	case LM_DATLOC_RDX:
-		preg = (lm_reg_t *)&regs->regs.rdx;
+		preg = (lm_void_t *)&regs->regs.Rdx;
 		break;
 	case LM_DATLOC_RSI:
-		preg = (lm_reg_t *)&regs->regs.rsi;
+		preg = (lm_void_t *)&regs->regs.Rsi;
 		break;
 	case LM_DATLOC_RDI:
-		preg = (lm_reg_t *)&regs->regs.rdi;
+		preg = (lm_void_t *)&regs->regs.Rdi;
 		break;
 	case LM_DATLOC_RSP:
-		preg = (lm_reg_t *)&regs->regs.rsp;
+		preg = (lm_void_t *)&regs->regs.Rsp;
 		break;
 	case LM_DATLOC_RBP:
-		preg = (lm_reg_t *)&regs->regs.rbp;
+		preg = (lm_void_t *)&regs->regs.Rbp;
 		break;
 	case LM_DATLOC_RIP:
-		preg = (lm_reg_t *)&regs->regs.rip;
+		preg = (lm_void_t *)&regs->regs.Rip;
 		break;
 	case LM_DATLOC_R8:
-		preg = (lm_reg_t *)&regs->regs.r8;
+		preg = (lm_void_t *)&regs->regs.R8;
 		break;
 	case LM_DATLOC_R9:
-		preg = (lm_reg_t *)&regs->regs.r9;
+		preg = (lm_void_t *)&regs->regs.R9;
 		break;
 	case LM_DATLOC_R10:
-		preg = (lm_reg_t *)&regs->regs.r10;
+		preg = (lm_void_t *)&regs->regs.R10;
 		break;
 	case LM_DATLOC_R11:
-		preg = (lm_reg_t *)&regs->regs.r11;
+		preg = (lm_void_t *)&regs->regs.R11;
 		break;
 	case LM_DATLOC_R12:
-		preg = (lm_reg_t *)&regs->regs.r12;
+		preg = (lm_void_t *)&regs->regs.R12;
 		break;
 	case LM_DATLOC_R13:
-		preg = (lm_reg_t *)&regs->regs.r13;
+		preg = (lm_void_t *)&regs->regs.R13;
 		break;
 	case LM_DATLOC_R14:
-		preg = (lm_reg_t *)&regs->regs.r14;
+		preg = (lm_void_t *)&regs->regs.R14;
 		break;
 	case LM_DATLOC_R15:
-		preg = (lm_reg_t *)&regs->regs.r15;
+		preg = (lm_void_t *)&regs->regs.R15;
 		break;
 	}
 #	else
 	switch (regid) {
 	case LM_DATLOC_EAX:
-		preg = (lm_reg_t *)&regs->regs.eax;
+		preg = (lm_void_t *)&regs->regs.Eax;
 		break;
 	case LM_DATLOC_EBX:
-		preg = (lm_reg_t *)&regs->regs.ebx;
+		preg = (lm_void_t *)&regs->regs.Ebx;
 		break;
 	case LM_DATLOC_ECX:
-		preg = (lm_reg_t *)&regs->regs.ecx;
+		preg = (lm_void_t *)&regs->regs.Ecx;
 		break;
 	case LM_DATLOC_EDX:
-		preg = (lm_reg_t *)&regs->regs.edx;
+		preg = (lm_void_t *)&regs->regs.Edx;
 		break;
 	case LM_DATLOC_ESI:
-		preg = (lm_reg_t *)&regs->regs.esi;
+		preg = (lm_void_t *)&regs->regs.Esi;
 		break;
 	case LM_DATLOC_EDI:
-		preg = (lm_reg_t *)&regs->regs.edi;
+		preg = (lm_void_t *)&regs->regs.Edi;
 		break;
 	case LM_DATLOC_ESP:
-		preg = (lm_reg_t *)&regs->regs.esp;
+		preg = (lm_void_t *)&regs->regs.Esp;
 		break;
 	case LM_DATLOC_EBP:
-		preg = (lm_reg_t *)&regs->regs.ebp;
+		preg = (lm_void_t *)&regs->regs.Ebp;
 		break;
 	case LM_DATLOC_EIP:
-		preg = (lm_reg_t *)&regs->regs.eip;
+		preg = (lm_void_t *)&regs->regs.Eip;
 		break;
 	}
 #	endif
@@ -4080,93 +4174,93 @@ LM_DebugGetReg(lm_datloc_t regid,
 	switch (regid) {
 	case LM_DATLOC_RAX:
 	case LM_DATLOC_EAX:
-		preg = (lm_reg_t *)&regs->regs.rax;
+		preg = (lm_void_t *)&regs->regs.rax;
 		break;
 	case LM_DATLOC_RBX:
 	case LM_DATLOC_EBX:
-		preg = (lm_reg_t *)&regs->regs.rbx;
+		preg = (lm_void_t *)&regs->regs.rbx;
 		break;
 	case LM_DATLOC_RCX:
 	case LM_DATLOC_ECX:
-		preg = (lm_reg_t *)&regs->regs.rcx;
+		preg = (lm_void_t *)&regs->regs.rcx;
 		break;
 	case LM_DATLOC_RDX:
 	case LM_DATLOC_EDX:
-		preg = (lm_reg_t *)&regs->regs.rdx;
+		preg = (lm_void_t *)&regs->regs.rdx;
 		break;
 	case LM_DATLOC_RSI:
 	case LM_DATLOC_ESI:
-		preg = (lm_reg_t *)&regs->regs.rsi;
+		preg = (lm_void_t *)&regs->regs.rsi;
 		break;
 	case LM_DATLOC_RDI:
 	case LM_DATLOC_EDI:
-		preg = (lm_reg_t *)&regs->regs.rdi;
+		preg = (lm_void_t *)&regs->regs.rdi;
 		break;
 	case LM_DATLOC_RSP:
 	case LM_DATLOC_ESP:
-		preg = (lm_reg_t *)&regs->regs.rsp;
+		preg = (lm_void_t *)&regs->regs.rsp;
 		break;
 	case LM_DATLOC_RBP:
 	case LM_DATLOC_EBP:
-		preg = (lm_reg_t *)&regs->regs.rbp;
+		preg = (lm_void_t *)&regs->regs.rbp;
 		break;
 	case LM_DATLOC_RIP:
 	case LM_DATLOC_EIP:
-		preg = (lm_reg_t *)&regs->regs.rip;
+		preg = (lm_void_t *)&regs->regs.rip;
 		break;
 	case LM_DATLOC_R8:
-		preg = (lm_reg_t *)&regs->regs.r8;
+		preg = (lm_void_t *)&regs->regs.r8;
 		break;
 	case LM_DATLOC_R9:
-		preg = (lm_reg_t *)&regs->regs.r9;
+		preg = (lm_void_t *)&regs->regs.r9;
 		break;
 	case LM_DATLOC_R10:
-		preg = (lm_reg_t *)&regs->regs.r10;
+		preg = (lm_void_t *)&regs->regs.r10;
 		break;
 	case LM_DATLOC_R11:
-		preg = (lm_reg_t *)&regs->regs.r11;
+		preg = (lm_void_t *)&regs->regs.r11;
 		break;
 	case LM_DATLOC_R12:
-		preg = (lm_reg_t *)&regs->regs.r12;
+		preg = (lm_void_t *)&regs->regs.r12;
 		break;
 	case LM_DATLOC_R13:
-		preg = (lm_reg_t *)&regs->regs.r13;
+		preg = (lm_void_t *)&regs->regs.r13;
 		break;
 	case LM_DATLOC_R14:
-		preg = (lm_reg_t *)&regs->regs.r14;
+		preg = (lm_void_t *)&regs->regs.r14;
 		break;
 	case LM_DATLOC_R15:
-		preg = (lm_reg_t *)&regs->regs.r15;
+		preg = (lm_void_t *)&regs->regs.r15;
 		break;
 	}
 #	else
 	switch (regid) {
 	case LM_DATLOC_EAX:
-		preg = (lm_reg_t *)&regs->regs.eax;
+		preg = (lm_void_t *)&regs->regs.eax;
 		break;
 	case LM_DATLOC_EBX:
-		preg = (lm_reg_t *)&regs->regs.ebx;
+		preg = (lm_void_t *)&regs->regs.ebx;
 		break;
 	case LM_DATLOC_ECX:
-		preg = (lm_reg_t *)&regs->regs.ecx;
+		preg = (lm_void_t *)&regs->regs.ecx;
 		break;
 	case LM_DATLOC_EDX:
-		preg = (lm_reg_t *)&regs->regs.edx;
+		preg = (lm_void_t *)&regs->regs.edx;
 		break;
 	case LM_DATLOC_ESI:
-		preg = (lm_reg_t *)&regs->regs.esi;
+		preg = (lm_void_t *)&regs->regs.esi;
 		break;
 	case LM_DATLOC_EDI:
-		preg = (lm_reg_t *)&regs->regs.edi;
+		preg = (lm_void_t *)&regs->regs.edi;
 		break;
 	case LM_DATLOC_ESP:
-		preg = (lm_reg_t *)&regs->regs.esp;
+		preg = (lm_void_t *)&regs->regs.esp;
 		break;
 	case LM_DATLOC_EBP:
-		preg = (lm_reg_t *)&regs->regs.ebp;
+		preg = (lm_void_t *)&regs->regs.ebp;
 		break;
 	case LM_DATLOC_EIP:
-		preg = (lm_reg_t *)&regs->regs.eip;
+		preg = (lm_void_t *)&regs->regs.eip;
 		break;
 	}
 #	endif
@@ -4178,93 +4272,93 @@ LM_DebugGetReg(lm_datloc_t regid,
 	switch (regid) {
 	case LM_DATLOC_RAX:
 	case LM_DATLOC_EAX:
-		preg = (lm_reg_t *)&regs->regs.r_rax;
+		preg = (lm_void_t *)&regs->regs.r_rax;
 		break;
 	case LM_DATLOC_RBX:
 	case LM_DATLOC_EBX:
-		preg = (lm_reg_t *)&regs->regs.r_rbx;
+		preg = (lm_void_t *)&regs->regs.r_rbx;
 		break;
 	case LM_DATLOC_RCX:
 	case LM_DATLOC_ECX:
-		preg = (lm_reg_t *)&regs->regs.r_rcx;
+		preg = (lm_void_t *)&regs->regs.r_rcx;
 		break;
 	case LM_DATLOC_RDX:
 	case LM_DATLOC_EDX:
-		preg = (lm_reg_t *)&regs->regs.r_rdx;
+		preg = (lm_void_t *)&regs->regs.r_rdx;
 		break;
 	case LM_DATLOC_RSI:
 	case LM_DATLOC_ESI:
-		preg = (lm_reg_t *)&regs->regs.r_rsi;
+		preg = (lm_void_t *)&regs->regs.r_rsi;
 		break;
 	case LM_DATLOC_RDI:
 	case LM_DATLOC_EDI:
-		preg = (lm_reg_t *)&regs->regs.r_rdi;
+		preg = (lm_void_t *)&regs->regs.r_rdi;
 		break;
 	case LM_DATLOC_RSP:
 	case LM_DATLOC_ESP:
-		preg = (lm_reg_t *)&regs->regs.r_rsp;
+		preg = (lm_void_t *)&regs->regs.r_rsp;
 		break;
 	case LM_DATLOC_RBP:
 	case LM_DATLOC_EBP:
-		preg = (lm_reg_t *)&regs->regs.r_rbp;
+		preg = (lm_void_t *)&regs->regs.r_rbp;
 		break;
 	case LM_DATLOC_RIP:
 	case LM_DATLOC_EIP:
-		preg = (lm_reg_t *)&regs->regs.r_rip;
+		preg = (lm_void_t *)&regs->regs.r_rip;
 		break;
 	case LM_DATLOC_R8:
-		preg = (lm_reg_t *)&regs->regs.r_r8;
+		preg = (lm_void_t *)&regs->regs.r_r8;
 		break;
 	case LM_DATLOC_R9:
-		preg = (lm_reg_t *)&regs->regs.r_r9;
+		preg = (lm_void_t *)&regs->regs.r_r9;
 		break;
 	case LM_DATLOC_R10:
-		preg = (lm_reg_t *)&regs->regs.r_r10;
+		preg = (lm_void_t *)&regs->regs.r_r10;
 		break;
 	case LM_DATLOC_R11:
-		preg = (lm_reg_t *)&regs->regs.r_r11;
+		preg = (lm_void_t *)&regs->regs.r_r11;
 		break;
 	case LM_DATLOC_R12:
-		preg = (lm_reg_t *)&regs->regs.r_r12;
+		preg = (lm_void_t *)&regs->regs.r_r12;
 		break;
 	case LM_DATLOC_R13:
-		preg = (lm_reg_t *)&regs->regs.r_r13;
+		preg = (lm_void_t *)&regs->regs.r_r13;
 		break;
 	case LM_DATLOC_R14:
-		preg = (lm_reg_t *)&regs->regs.r_r14;
+		preg = (lm_void_t *)&regs->regs.r_r14;
 		break;
 	case LM_DATLOC_R15:
-		preg = (lm_reg_t *)&regs->regs.r_r15;
+		preg = (lm_void_t *)&regs->regs.r_r15;
 		break;
 	}
 #	else
 	switch (regid) {
 	case LM_DATLOC_EAX:
-		preg = (lm_reg_t *)&regs->regs.r_eax;
+		preg = (lm_void_t *)&regs->regs.r_eax;
 		break;
 	case LM_DATLOC_EBX:
-		preg = (lm_reg_t *)&regs->regs.r_ebx;
+		preg = (lm_void_t *)&regs->regs.r_ebx;
 		break;
 	case LM_DATLOC_ECX:
-		preg = (lm_reg_t *)&regs->regs.r_ecx;
+		preg = (lm_void_t *)&regs->regs.r_ecx;
 		break;
 	case LM_DATLOC_EDX:
-		preg = (lm_reg_t *)&regs->regs.r_edx;
+		preg = (lm_void_t *)&regs->regs.r_edx;
 		break;
 	case LM_DATLOC_ESI:
-		preg = (lm_reg_t *)&regs->regs.r_esi;
+		preg = (lm_void_t *)&regs->regs.r_esi;
 		break;
 	case LM_DATLOC_EDI:
-		preg = (lm_reg_t *)&regs->regs.r_edi;
+		preg = (lm_void_t *)&regs->regs.r_edi;
 		break;
 	case LM_DATLOC_ESP:
-		preg = (lm_reg_t *)&regs->regs.r_esp;
+		preg = (lm_void_t *)&regs->regs.r_esp;
 		break;
 	case LM_DATLOC_EBP:
-		preg = (lm_reg_t *)&regs->regs.r_ebp;
+		preg = (lm_void_t *)&regs->regs.r_ebp;
 		break;
 	case LM_DATLOC_EIP:
-		preg = (lm_reg_t *)&regs->regs.r_eip;
+		preg = (lm_void_t *)&regs->regs.r_eip;
 		break;
 	}
 #	endif
@@ -4337,31 +4431,34 @@ LM_DebugSetRegs(lm_process_t proc,
 	return ret;
 }
 
-LM_API lm_reg_t
+LM_API lm_uintptr_t
 LM_DebugReadReg(lm_datloc_t regid,
 		lm_regs_t   regs)
 {
-	lm_reg_t  reg = (lm_reg_t)LM_BAD;
-	lm_reg_t *preg;
+	lm_uintptr_t val = (lm_uintptr_t)LM_BAD;
+	lm_void_t   *preg;
 
-	preg = LM_DebugGetReg(regid, &regs);
-	if (preg)
-		reg = *preg;
+	/* TOFIX: Only read uint32_t if WOW64 */
+	preg = LM_DebugPickReg(regid, &regs);
+	if (preg) {
+		val = *(lm_uintptr_t *)preg;
+	}
 
-	return reg;
+	return val;
 }
 
 LM_API lm_bool_t
-LM_DebugWriteReg(lm_datloc_t regid,
-		 lm_reg_t    data,
-		 lm_regs_t  *regs)
+LM_DebugWriteReg(lm_datloc_t  regid,
+		 lm_uintptr_t data,
+		 lm_regs_t   *regs)
 {
-	lm_bool_t ret = LM_FALSE;
-	lm_reg_t *preg;
+	lm_bool_t    ret = LM_FALSE;
+	lm_void_t   *preg;
 
-	preg = LM_DebugGetReg(regid, regs);
+	/* TOFIX: Only write uint32_t if WOW64 */
+	preg = LM_DebugPickReg(regid, regs);
 	if (preg) {
-		*preg = data;
+		*(lm_uintptr_t *)preg = data;
 		ret = LM_TRUE;
 	}
 

@@ -628,8 +628,6 @@ typedef struct {
 	lm_byte_t  *data;
 } lm_datio_t;
 
-typedef lm_uintptr_t lm_reg_t;
-
 typedef struct {
 #	if LM_OS == LM_OS_WIN
 	CONTEXT regs;
@@ -1012,22 +1010,22 @@ LM_API lm_bool_t
 LM_DebugGetRegs(lm_process_t proc,
 		lm_regs_t   *regsbuf);
 
-LM_API lm_reg_t *
-LM_DebugGetReg(lm_datloc_t regid,
-	       lm_regs_t  *regs);
-
 LM_API lm_bool_t
 LM_DebugSetRegs(lm_process_t proc,
 		lm_regs_t    regs);
 
-LM_API lm_reg_t
+LM_API lm_void_t *
+LM_DebugPickReg(lm_datloc_t regid,
+		lm_regs_t  *regs);
+
+LM_API lm_uintptr_t
 LM_DebugReadReg(lm_datloc_t regid,
 		lm_regs_t   regs);
 
 LM_API lm_bool_t
-LM_DebugWriteReg(lm_datloc_t regid,
-		 lm_reg_t    data,
-		 lm_regs_t  *regs);
+LM_DebugWriteReg(lm_datloc_t  regid,
+		 lm_uintptr_t data,
+		 lm_regs_t   *regs);
 
 LM_API lm_bool_t
 LM_DebugContinue(lm_process_t proc);

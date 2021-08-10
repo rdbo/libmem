@@ -2249,28 +2249,12 @@ LM_GetSymbol(lm_module_t  mod,
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
-		lm_tchar_t *libpath;
+		lm_process_t proc;
 
-		libpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
-		if (!libpath)
-			return symaddr;
-		
-		if (LM_GetModulePath(mod, libpath, LM_PATH_MAX)) {
-			void *libhandle;
-
-			libhandle = dlopen(libpath, RTLD_NOLOAD);
-
-			if (libhandle) {
-				symaddr = (lm_address_t)dlsym(libhandle, symstr);
-
-				if (!symaddr)
-					symaddr = (lm_address_t)LM_BAD;
-
-				dlclose(libhandle);
-			}
+		if (LM_OpenProcess(&proc)) {
+			symaddr = LM_GetSymbolEx(proc, mod, symstr);
+			LM_CloseProcess(&proc);
 		}
-
-		LM_FREE(libpath);
 	}
 #	endif
 

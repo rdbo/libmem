@@ -740,15 +740,15 @@ LM_EnumModulesEx(lm_process_t proc,
 		 lm_void_t   *arg);
 
 LM_API lm_bool_t
-LM_GetModule(lm_void_t   *modarg,
-	     lm_module_t *modbuf,
-	     lm_int_t     flags);
+LM_GetModule(lm_int_t     flags,
+	     lm_void_t   *modarg,
+	     lm_module_t *modbuf);
 
 LM_API lm_bool_t
 LM_GetModuleEx(lm_process_t proc,
+	       lm_int_t     flags,
 	       lm_void_t   *modarg,
-	       lm_module_t *modbuf,
-	       lm_int_t     flags);
+	       lm_module_t *modbuf);
 
 LM_API lm_size_t
 LM_GetModulePath(lm_module_t mod,

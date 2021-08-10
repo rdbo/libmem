@@ -1863,9 +1863,9 @@ _LM_GetModuleCallback(lm_module_t  mod,
 }
 
 LM_API lm_bool_t
-LM_GetModule(lm_void_t   *modarg,
-	     lm_module_t *modbuf,
-	     lm_int_t     flags)
+LM_GetModule(lm_int_t     flags,
+	     lm_void_t   *modarg,
+	     lm_module_t *modbuf)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_mod_t arg;
@@ -1890,9 +1890,9 @@ LM_GetModule(lm_void_t   *modarg,
 
 LM_API lm_bool_t
 LM_GetModuleEx(lm_process_t proc,
+	       lm_int_t     flags,
 	       lm_void_t   *modarg,
-	       lm_module_t *modbuf,
-	       lm_int_t     flags)
+	       lm_module_t *modbuf)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_mod_t arg;
@@ -2074,7 +2074,7 @@ LM_LoadModule(lm_tstring_t path,
 	{
 		if (LoadLibrary(path)) {
 			if (!modbuf ||
-			    LM_GetModule(path, modbuf, LM_MOD_BY_STR))
+			    LM_GetModule(LM_MOD_BY_STR, path, modbuf))
 				ret = LM_TRUE;
 		}
 	}
@@ -2082,7 +2082,7 @@ LM_LoadModule(lm_tstring_t path,
 	{
 		if (dlopen(path, RTLD_LAZY)) {
 			if (!modbuf ||
-			    LM_GetModule(path, modbuf, LM_MOD_BY_STR))
+			    LM_GetModule(LM_MOD_BY_STR, path, modbuf))
 				ret = LM_TRUE;
 		}
 	}
@@ -2177,7 +2177,7 @@ LM_LoadModuleEx(lm_process_t proc,
 #	endif
 
 	if (modbuf && ret == LM_TRUE) {
-		ret = LM_GetModuleEx(proc, path, modbuf, LM_MOD_BY_STR);
+		ret = LM_GetModuleEx(proc, LM_MOD_BY_STR, path, modbuf);
 	}
 
 	return ret;

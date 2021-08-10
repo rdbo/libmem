@@ -2960,7 +2960,7 @@ LM_ProtMemoryEx(lm_process_t proc,
 		LM_SystemCallEx(proc, 0, 4, 1,
 				arg_nsyscall,
 				arg_prot,
-				arg_length.
+				arg_length,
 				arg_addr,
 				retbuf);
 		
@@ -3376,10 +3376,8 @@ LM_FreeMemoryEx(lm_process_t proc,
 	}
 #	elif LM_OS == LM_OS_BSD
 	{
-		lm_uintptr_t nsyscall = SYS_munmap;
-
 		lm_datio_t   arg_nsyscall;
-		lm_uintptr_t nsyscall;
+		lm_uintptr_t nsyscall = SYS_munmap;
 
 		lm_datio_t   arg_addr;
 		lm_uintptr_t dat_addr = (lm_uintptr_t)alloc;
@@ -4263,9 +4261,9 @@ LM_DebugGetRegs(lm_process_t proc,
 	{
 #		if LM_ARCH == LM_ARCH_X86
 		if (ptrace(PT_GETREGS, proc.pid,
-			   NULL, &regsbuf->regs) != -1 &&
+			   (caddr_t)&regsbuf->regs, 0) != -1 &&
 		    ptrace(PT_GETFPREGS, proc.pid,
-			   NULL, &regsbuf->fpregs) != -1)
+			   (caddr_t)&regsbuf->fpregs, 0) != -1)
 			ret = LM_TRUE;
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif
@@ -4648,9 +4646,9 @@ LM_DebugSetRegs(lm_process_t proc,
 	{
 #		if LM_ARCH == LM_ARCH_X86
 		if (ptrace(PT_SETREGS, proc.pid,
-			   NULL, &regs.regs) != -1 &&
+			   (caddr_t)&regs.regs, 0) != -1 &&
 		    ptrace(PT_SETFPREGS, proc.pid,
-		    	   NULL, &regs.fpregs) != -1)
+		    	   (caddr_t)&regs.fpregs, 0) != -1)
 			ret = LM_TRUE;
 #		elif LM_ARCH == LM_ARCH_ARM
 #		endif

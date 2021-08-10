@@ -1574,7 +1574,10 @@ LM_EnumThreadsEx(lm_process_t proc,
 	}
 #	elif LM_OS == LM_OS_BSD
 	{
+		/* NOTE: Improve thread enumeration */
 
+		callback((lm_tid_t)proc.pid, arg);
+		ret = LM_TRUE;
 	}
 #	endif
 

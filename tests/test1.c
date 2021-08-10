@@ -32,6 +32,9 @@ main()
 	lm_address_t data_scan;
 	lm_address_t pattern_scan;
 	lm_address_t sig_scan;
+	lm_address_t alloc;
+	lm_prot_t    alloc_prot;
+	lm_prot_t    alloc_oldprot;
 
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
@@ -87,6 +90,11 @@ main()
 	data_scan = LM_DataScan(scanme, sizeof(scanme), (lm_address_t)&scanme[-10], (lm_address_t)&scanme[10]);
 	pattern_scan = LM_PatternScan(scanme, mask, (lm_address_t)&scanme[-10], (lm_address_t)&scanme[10]);
 	sig_scan = LM_SigScan(signature, (lm_address_t)&scanme[-10], (lm_address_t)&scanme[10]);
+	alloc = LM_AllocMemory(1, LM_PROT_RW);
+	LM_ProtMemory(alloc, 1, LM_PROT_XRW, &alloc_oldprot);
+	LM_GetPage(alloc, &page);
+	alloc_prot = page.prot;
+	LM_FreeMemory(alloc, 1);
 
 	LM_PRINTF(LM_STR("[*] Read Value:    %li\n"), rdbuf);
 	LM_PRINTF(LM_STR("[*] Written Value: %li\n"), wrbuf);
@@ -95,6 +103,9 @@ main()
 	LM_PRINTF(LM_STR("[*] Data Scan:    %p\n"), data_scan);
 	LM_PRINTF(LM_STR("[*] Pattern Scan: %p\n"), pattern_scan);
 	LM_PRINTF(LM_STR("[*] Sig Scan:     %p\n"), sig_scan);
+	LM_PRINTF(LM_STR("[*] Alloc:    %p\n"), alloc);
+	LM_PRINTF(LM_STR("[*] Prot:     %d\n"), alloc_prot);
+	LM_PRINTF(LM_STR("[*] Old Prot: %d\n"), alloc_oldprot);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[-] Test 1\n"));

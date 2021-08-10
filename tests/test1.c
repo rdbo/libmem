@@ -27,8 +27,8 @@ main()
 	lm_uintptr_t rdbuf;
 	lm_uintptr_t wrbuf = 1337;
 	lm_byte_t    scanme[] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0 };
-	lm_tchar_t   mask[] = "xxxxxxxxxx";
-	lm_tchar_t   signature[] = "10 20 30 40 50 60 70 80 90 A0";
+	lm_tchar_t   mask[] = LM_STR("xxxxxxxxxx");
+	lm_tchar_t   signature[] = LM_STR("10 20 30 40 50 60 70 80 90 A0");
 	lm_address_t data_scan;
 	lm_address_t pattern_scan;
 	lm_address_t sig_scan;
@@ -66,7 +66,7 @@ main()
 	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), main_sym);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	LM_LoadModule(LIBTEST_PATH, &libtest_mod);
+	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);
 	LM_GetModuleName(libtest_mod, libtest_modname, LM_ARRLEN(libtest_modname));
 	LM_GetModulePath(libtest_mod, libtest_modpath, LM_ARRLEN(libtest_modpath));
 	LM_UnloadModule(libtest_mod);

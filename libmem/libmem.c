@@ -1272,7 +1272,6 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 #	if LM_OS == LM_OS_WIN
 	{
 		lm_tchar_t *path;
-		lm_size_t   pathlen;
 
 		path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 
@@ -1434,7 +1433,6 @@ LM_GetProcessBitsEx(lm_process_t proc)
 #	if LM_OS == LM_OS_WIN
 	{
 		BOOL IsWow64;
-		BOOL Check;
 		lm_size_t sysbits;
 
 		if (!IsWow64Process(proc.handle, &IsWow64))
@@ -4244,7 +4242,7 @@ LM_DebugGetRegs(lm_process_t proc,
 				ret = LM_TRUE;
 #			endif
 
-			CloseThread(hThread);
+			CloseHandle(hThread);
 		}
 	}
 #	elif LM_OS == LM_OS_LINUX
@@ -4619,19 +4617,19 @@ LM_DebugSetRegs(lm_process_t proc,
 			
 #			if LM_BITS == 64
 			if (LM_GetProcessBitsEx(proc) == 64) {
-				if (SetThreadContext(hThread, &regsbuf->regs))
+				if (SetThreadContext(hThread, &regs.regs))
 					ret = LM_TRUE;
 			} else {
 				if (Wow64SetThreadContext(hThread,
-							  &regsbuf->regs32))
+							  &regs.regs32))
 					ret = LM_TRUE;
 			}
 #			else
-			if (SetThreadContext(hThread, &regsbuf->regs))
+			if (SetThreadContext(hThread, &regs.regs))
 				ret = LM_TRUE;
 #			endif
 
-			CloseThread(hThread);
+			CloseHandle(hThread);
 		}
 	}
 #	elif LM_OS == LM_OS_LINUX

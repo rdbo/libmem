@@ -2108,15 +2108,15 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				pread(fd, shstr, sizeof(shstr),
 				      shstrtab_off + shdr.sh_name);
 				
-				if (!LM_STRCMP(shstr, LM_STR(".strtab"))) {
+				if (!LM_CSTRCMP(shstr, LM_CSTR(".strtab"))) {
 					strtab_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynstr"))) {
+				} else if (!LM_CSTRCMP(shstr, LM_CSTR(".dynstr"))) {
 					dynstr_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".symtab"))) {
+				} else if (!LM_CSTRCMP(shstr, LM_CSTR(".symtab"))) {
 					symtab_off = shdr.sh_offset;
 					symtab_entsize = shdr.sh_entsize;
 					symtab_num = shdr.sh_size;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynsym"))) {
+				} else if (!LM_CSTRCMP(shstr, LM_CSTR(".dynsym"))) {
 					dynsym_off = shdr.sh_offset;
 					dynsym_entsize = shdr.sh_entsize;
 					dynsym_num = shdr.sh_size;
@@ -2126,25 +2126,25 @@ LM_EnumSymbolsEx(lm_process_t proc,
 			lseek(fd, symtab_off, SEEK_SET);
 			for (i = 0; i < symtab_num; ++i) {
 				Elf64_Sym    sym;
-				lm_tchar_t   c;
+				lm_char_t    c;
 				lm_size_t    j = 0;
-				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_char_t   *symstr = (lm_tchar_t *)LM_NULL;
 				lm_address_t addr;
 				lm_bool_t    cbret;
 
 				read(fd, &sym, symtab_entsize);
 
 				do {
-					lm_tchar_t *old_symstr = symstr;
+					lm_char_t *old_symstr = symstr;
 					
 					symstr = LM_CALLOC(j + 1,
-							   sizeof(lm_tchar_t));
+							   sizeof(lm_char_t));
 
 					if (old_symstr) {
 						if (symstr) {
-							LM_STRNCPY(symstr,
-								   old_symstr,
-								   j);
+							LM_CSTRNCPY(symstr,
+								    old_symstr,
+								    j);
 						}
 
 						LM_FREE(old_symstr);
@@ -2159,7 +2159,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 					symstr[j] = c;
 
 					++j;
-				} while (c != LM_STR('\x00'));
+				} while (c != LM_CSTR('\x00'));
 
 				if (ehdr.e_type != ET_EXEC) {
 					addr = (lm_address_t)(
@@ -2184,25 +2184,25 @@ LM_EnumSymbolsEx(lm_process_t proc,
 			lseek(fd, dynsym_off, SEEK_SET);
 			for (i = 0; i < dynsym_num; ++i) {
 				Elf64_Sym    sym;
-				lm_tchar_t   c;
+				lm_char_t    c;
 				lm_size_t    j = 0;
-				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_char_t   *symstr = (lm_tchar_t *)LM_NULL;
 				lm_address_t addr;
 				lm_bool_t    cbret;
 
 				read(fd, &sym, dynsym_entsize);
 
 				do {
-					lm_tchar_t *old_symstr = symstr;
+					lm_char_t *old_symstr = symstr;
 					
 					symstr = LM_CALLOC(j + 1,
 							   sizeof(lm_tchar_t));
 
 					if (old_symstr) {
 						if (symstr) {
-							LM_STRNCPY(symstr,
-								   old_symstr,
-								   j);
+							LM_CSTRNCPY(symstr,
+								    old_symstr,
+								    j);
 						}
 
 						LM_FREE(old_symstr);
@@ -2217,7 +2217,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 					symstr[j] = c;
 
 					++j;
-				} while (c != LM_STR('\x00'));
+				} while (c != LM_CSTR('\x00'));
 
 				if (ehdr.e_type != ET_EXEC) {
 					addr = (lm_address_t)(
@@ -2272,15 +2272,15 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				pread(fd, shstr, sizeof(shstr),
 				      shstrtab_off + shdr.sh_name);
 				
-				if (!LM_STRCMP(shstr, LM_STR(".strtab"))) {
+				if (!LM_CSTRCMP(shstr, LM_CSTR(".strtab"))) {
 					strtab_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynstr"))) {
+				} else if (!LM_CSTRCMP(shstr, LM_CSTR(".dynstr"))) {
 					dynstr_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".symtab"))) {
+				} else if (!LM_CSTRCMP(shstr, LM_CSTR(".symtab"))) {
 					symtab_off = shdr.sh_offset;
 					symtab_entsize = shdr.sh_entsize;
 					symtab_num = shdr.sh_size;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynsym"))) {
+				} else if (!LM_CSTRCMP(shstr, LM_CSTR(".dynsym"))) {
 					dynsym_off = shdr.sh_offset;
 					dynsym_entsize = shdr.sh_entsize;
 					dynsym_num = shdr.sh_size;
@@ -2290,25 +2290,25 @@ LM_EnumSymbolsEx(lm_process_t proc,
 			lseek(fd, symtab_off, SEEK_SET);
 			for (i = 0; i < symtab_num; ++i) {
 				Elf32_Sym    sym;
-				lm_tchar_t   c;
+				lm_char_t    c;
 				lm_size_t    j = 0;
-				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_char_t   *symstr = (lm_tchar_t *)LM_NULL;
 				lm_address_t addr;
 				lm_bool_t    cbret;
 
 				read(fd, &sym, symtab_entsize);
 
 				do {
-					lm_tchar_t *old_symstr = symstr;
+					lm_char_t *old_symstr = symstr;
 					
 					symstr = LM_CALLOC(j + 1,
-							   sizeof(lm_tchar_t));
+							   sizeof(lm_char_t));
 
 					if (old_symstr) {
 						if (symstr) {
-							LM_STRNCPY(symstr,
-								   old_symstr,
-								   j);
+							LM_CSTRNCPY(symstr,
+								    old_symstr,
+								    j);
 						}
 
 						LM_FREE(old_symstr);
@@ -2323,7 +2323,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 					symstr[j] = c;
 
 					++j;
-				} while (c != LM_STR('\x00'));
+				} while (c != LM_CSTR('\x00'));
 
 				if (ehdr.e_type != ET_EXEC) {
 					addr = (lm_address_t)(
@@ -2348,25 +2348,25 @@ LM_EnumSymbolsEx(lm_process_t proc,
 			lseek(fd, dynsym_off, SEEK_SET);
 			for (i = 0; i < dynsym_num; ++i) {
 				Elf32_Sym    sym;
-				lm_tchar_t   c;
+				lm_char_t    c;
 				lm_size_t    j = 0;
-				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_char_t   *symstr = (lm_tchar_t *)LM_NULL;
 				lm_address_t addr;
 				lm_bool_t    cbret;
 
 				read(fd, &sym, dynsym_entsize);
 
 				do {
-					lm_tchar_t *old_symstr = symstr;
+					lm_char_t *old_symstr = symstr;
 					
 					symstr = LM_CALLOC(j + 1,
 							   sizeof(lm_tchar_t));
 
 					if (old_symstr) {
 						if (symstr) {
-							LM_STRNCPY(symstr,
-								   old_symstr,
-								   j);
+							LM_CSTRNCPY(symstr,
+								    old_symstr,
+								    j);
 						}
 
 						LM_FREE(old_symstr);
@@ -2381,7 +2381,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 					symstr[j] = c;
 
 					++j;
-				} while (c != LM_STR('\x00'));
+				} while (c != LM_CSTR('\x00'));
 
 				if (ehdr.e_type != ET_EXEC) {
 					addr = (lm_address_t)(
@@ -2401,7 +2401,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 
 				if (!cbret)
 					goto _GOOD_RET;
-			}
+			}	
 		}
 
 	_GOOD_RET:

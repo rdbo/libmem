@@ -132,30 +132,55 @@
 #define LM_CALLOC   calloc
 #define LM_FREE     free
 #define LM_MEMCPY   memcpy
+
+#define LM_CSTR(str) str
+#define LM_CSTRCMP   strcmp
+#define LM_CSTRNCMP  strncmp
+#define LM_CSTRCPY   strcpy
+#define LM_CSTRNCPY  strncpy
+#define LM_CSTRLEN   strlen
+#define LM_CSTRCHR   strchr
+#define LM_CSTRSTR   strstr
+#define LM_CSNPRINTF snprintf
+#define LM_CSTRTOP   strtoul
+#define LM_CATOI     atoi
+
+#define LM_WSTR(str) L##str
+#define LM_WSTRCMP   wcscmp
+#define LM_WSTRNCMP  wcsncmp
+#define LM_WSTRCPY   wcscpy
+#define LM_WSTRNCPY  wcsncpy
+#define LM_WSTRLEN   wcslen
+#define LM_WSTRCHR   wcschr
+#define LM_WSTRSTR   wcsstr
+#define LM_WSNPRINTF snwprintf
+#define LM_WSTRTOP   wcstoul
+#define LM_WATOI     wtoi
+
 #if LM_CHARSET == LM_CHARSET_UC
-#define LM_STR(str) L##str
-#define LM_STRCMP   wcscmp
-#define LM_STRNCMP  wcsncmp
-#define LM_STRCPY   wcscpy
-#define LM_STRNCPY  wcsncpy
-#define LM_STRLEN   wcslen
-#define LM_STRCHR   wcschr
-#define LM_STRSTR   wcsstr
-#define LM_SNPRINTF snwprintf
-#define LM_STRTOP   wcstoul
-#define LM_ATOI     wtoi
+#define LM_STR      LM_WSTR
+#define LM_STRCMP   LM_WSTRCMP
+#define LM_STRNCMP  LM_WSTRNCMP
+#define LM_STRCPY   LM_WSTRCPY
+#define LM_STRNCPY  LM_WSTRNCPY
+#define LM_STRLEN   LM_WSTRLEN
+#define LM_STRCHR   LM_WSTRCHR
+#define LM_STRSTR   LM_WSTRSTR
+#define LM_SNPRINTF LM_WSNPRINTF
+#define LM_STRTOP   LM_WSTRTOP
+#define LM_ATOI     LM_WATOI
 #else
-#define LM_STR(str) str
-#define LM_STRCMP   strcmp
-#define LM_STRNCMP  strncmp
-#define LM_STRCPY   strcpy
-#define LM_STRNCPY  strncpy
-#define LM_STRLEN   strlen
-#define LM_STRCHR   strchr
-#define LM_STRSTR   strstr
-#define LM_SNPRINTF snprintf
-#define LM_STRTOP   strtoul
-#define LM_ATOI     atoi
+#define LM_STR      LM_CSTR
+#define LM_STRCMP   LM_CSTRCMP
+#define LM_STRNCMP  LM_CSTRNCMP
+#define LM_STRCPY   LM_CSTRCPY
+#define LM_STRNCPY  LM_CSTRNCPY
+#define LM_STRLEN   LM_CSTRLEN
+#define LM_STRCHR   LM_CSTRCHR
+#define LM_STRSTR   LM_CSTRSTR
+#define LM_SNPRINTF LM_CSNPRINTF
+#define LM_STRTOP   LM_CSTRTOP
+#define LM_ATOI     LM_CATOI
 #endif
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
 #define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)

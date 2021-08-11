@@ -34,6 +34,11 @@ typedef struct {
 	lm_page_t   *pagebuf;
 } _lm_get_page_t;
 
+typedef struct {
+	lm_cstring_t symbol;
+	lm_address_t addr;
+} _lm_get_symbol_t;
+
 /* Helpers */
 static lm_bool_t
 _LM_CheckProcess(lm_process_t proc)
@@ -515,225 +520,6 @@ _LM_CloseFileBuf(lm_tchar_t **pfilebuf)
 		LM_FREE(*pfilebuf);
 		*pfilebuf = (lm_tchar_t *)LM_NULL;
 	}
-}
-
-static lm_address_t
-_LM_GetElfSymOffset(lm_tstring_t path,
-		    lm_cstring_t symstr,
-		    lm_uint_t   *type)
-{
-	lm_address_t offset = (lm_address_t)LM_BAD;
-	int          fd;
-	lm_size_t    bits = 0;
-	lm_size_t    symlen;
-	lm_char_t   *symstrbuf;
-
-	fd = open(path, O_RDONLY);
-	if (fd == -1)
-		return offset;
-
-	symlen = LM_STRLEN(symstr);
-	symstrbuf = LM_CALLOC(symlen + 1, sizeof(lm_char_t));
-	if (!symstrbuf)
-		goto _CLOSE_RET;
-	symstrbuf[symlen] = LM_STR('\x00');
-
-	{
-		unsigned char elf_num;
-		lseek(fd, EI_MAG3 + 1, SEEK_SET);
-		if (read(fd, &elf_num, sizeof(elf_num)) > 0 &&
-		    (elf_num == 1 || elf_num == 2))
-			bits = elf_num * 32;
-	}
-
-	switch (bits) {
-	case 64:
-		{
-			Elf64_Ehdr ehdr;
-			Elf64_Off  shstrtab_off;
-			Elf64_Shdr shstrtab;
-			Elf64_Off  symtab_off = 0;
-			Elf64_Half symtab_entsize = 0;
-			Elf64_Half symtab_num = 0;
-			Elf64_Off  dynsym_off = 0;
-			Elf64_Half dynsym_entsize = 0;
-			Elf64_Half dynsym_num = 0;
-			Elf64_Off  strtab_off = 0;
-			Elf64_Off  dynstr_off = 0;
-			Elf64_Half i;
-
-			lseek(fd, 0, SEEK_SET);
-			read(fd, &ehdr, sizeof(ehdr));
-
-			if (type)
-				*type = (lm_uint_t)ehdr.e_type;
-			
-			shstrtab_off = ehdr.e_shoff + 
-				       (ehdr.e_shstrndx * ehdr.e_shentsize);
-			
-			lseek(fd, shstrtab_off, SEEK_SET);
-			read(fd, &shstrtab, ehdr.e_shentsize);
-			shstrtab_off = shstrtab.sh_offset;
-			lseek(fd, ehdr.e_shoff, SEEK_SET);
-			for (i = 0; i < ehdr.e_shnum; ++i) {
-				Elf64_Shdr shdr;
-				lm_char_t  shstr[64] = { 0 };
-
-				read(fd, &shdr, ehdr.e_shentsize);
-				pread(fd, shstr, sizeof(shstr), shstrtab_off + shdr.sh_name);
-
-				if (!LM_STRCMP(shstr, LM_STR(".strtab"))) {
-					strtab_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynstr"))) {
-					dynstr_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".symtab"))) {
-					symtab_off = shdr.sh_offset;
-					symtab_entsize = shdr.sh_entsize;
-					symtab_num = shdr.sh_size;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynsym"))) {
-					dynsym_off = shdr.sh_offset;
-					dynsym_entsize = shdr.sh_entsize;
-					dynsym_num = shdr.sh_size;
-				}
-			}
-
-			lseek(fd, symtab_off, SEEK_SET);
-			for (i = 0; i < symtab_num; ++i) {
-				Elf64_Sym sym;
-
-				read(fd, &sym, symtab_entsize);
-				pread(fd,
-				      symstrbuf,
-				      symlen * sizeof(lm_tchar_t),
-				      strtab_off + sym.st_name);
-				
-				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)(
-						(lm_uintptr_t)sym.st_value
-					);
-					goto _CLEAN_RET;
-				}
-			}
-
-			lseek(fd, dynsym_off, SEEK_SET);
-			for (i = 0; i < dynsym_num; ++i) {
-				Elf64_Sym sym;
-
-				read(fd, &sym, dynsym_entsize);
-				pread(fd,
-				      symstrbuf,
-				      symlen * sizeof(lm_tchar_t),
-				      dynstr_off + sym.st_name);
-				
-				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)(
-						(lm_uintptr_t)sym.st_value
-					);
-					goto _CLEAN_RET;
-				}
-			}
-			
-
-			break;
-		}
-	
-	case 32:
-		{
-			Elf32_Ehdr ehdr;
-			Elf32_Off  shstrtab_off;
-			Elf32_Shdr shstrtab;
-			Elf32_Off  symtab_off = 0;
-			Elf32_Half symtab_entsize = 0;
-			Elf32_Half symtab_num = 0;
-			Elf32_Off  dynsym_off = 0;
-			Elf32_Half dynsym_entsize = 0;
-			Elf32_Half dynsym_num = 0;
-			Elf32_Off  strtab_off = 0;
-			Elf32_Off  dynstr_off = 0;
-			Elf32_Half i;
-
-			lseek(fd, 0, SEEK_SET);
-			read(fd, &ehdr, sizeof(ehdr));
-
-			if (type)
-				*type = (lm_uint_t)ehdr.e_type;
-			
-			shstrtab_off = ehdr.e_shoff + 
-				       (ehdr.e_shstrndx * ehdr.e_shentsize);
-			
-			lseek(fd, shstrtab_off, SEEK_SET);
-			read(fd, &shstrtab, ehdr.e_shentsize);
-			shstrtab_off = shstrtab.sh_offset;
-			lseek(fd, ehdr.e_shoff, SEEK_SET);
-			for (i = 0; i < ehdr.e_shnum; ++i) {
-				Elf32_Shdr shdr;
-				lm_char_t  shstr[64] = { 0 };
-
-				read(fd, &shdr, ehdr.e_shentsize);
-				pread(fd, shstr, sizeof(shstr), shstrtab_off + shdr.sh_name);
-
-				if (!LM_STRCMP(shstr, LM_STR(".strtab"))) {
-					strtab_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynstr"))) {
-					dynstr_off = shdr.sh_offset;
-				} else if (!LM_STRCMP(shstr, LM_STR(".symtab"))) {
-					symtab_off = shdr.sh_offset;
-					symtab_entsize = shdr.sh_entsize;
-					symtab_num = shdr.sh_size;
-				} else if (!LM_STRCMP(shstr, LM_STR(".dynsym"))) {
-					dynsym_off = shdr.sh_offset;
-					dynsym_entsize = shdr.sh_entsize;
-					dynsym_num = shdr.sh_size;
-				}
-			}
-
-			lseek(fd, symtab_off, SEEK_SET);
-			for (i = 0; i < symtab_num; ++i) {
-				Elf32_Sym sym;
-
-				read(fd, &sym, symtab_entsize);
-				pread(fd,
-				      symstrbuf,
-				      symlen * sizeof(lm_tchar_t),
-				      strtab_off + sym.st_name);
-				
-				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)(
-						(lm_uintptr_t)sym.st_value
-					);
-					goto _CLEAN_RET;
-				}
-			}
-
-			lseek(fd, dynsym_off, SEEK_SET);
-			for (i = 0; i < dynsym_num; ++i) {
-				Elf32_Sym sym;
-
-				read(fd, &sym, dynsym_entsize);
-				pread(fd,
-				      symstrbuf,
-				      symlen * sizeof(lm_tchar_t),
-				      dynstr_off + sym.st_name);
-				
-				if (!LM_STRCMP(symstr, symstrbuf)) {
-					offset = (lm_address_t)(
-						(lm_uintptr_t)sym.st_value
-					);
-					goto _CLEAN_RET;
-				}
-			}
-			
-
-			break;
-		}
-	}
-
-_CLEAN_RET:
-	LM_FREE(symstrbuf);
-_CLOSE_RET:
-	close(fd);
-
-	return offset;
 }
 
 static lm_bool_t
@@ -2230,6 +2016,421 @@ LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t proc,
 		  lm_module_t  mod);
 
+/****************************************/
+
+LM_API lm_bool_t
+LM_EnumSymbols(lm_module_t mod,
+	       lm_bool_t (*callback)(lm_cstring_t symbol,
+	       			     lm_address_t addr,
+	       			     lm_void_t   *arg),
+	       lm_void_t *arg)
+{
+	lm_bool_t    ret = LM_FALSE;
+	lm_process_t proc;
+
+	if (LM_OpenProcess(&proc)) {
+		ret = LM_EnumSymbolsEx(proc, mod, callback, arg);
+		LM_CloseProcess(&proc);
+	}
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_EnumSymbolsEx(lm_process_t proc,
+		 lm_module_t  mod,
+	         lm_bool_t  (*callback)(lm_cstring_t symbol,
+		 			lm_address_t addr,
+					lm_void_t   *arg),
+		 lm_void_t *arg)
+{
+	lm_bool_t ret = LM_FALSE;
+
+	if (!_LM_CheckProcess(proc) || !callback)
+		return ret;
+
+#	if LM_OS == LM_OS_WIN
+	{
+
+	}
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+	{
+		int         fd;
+		lm_tchar_t *modpath;
+		lm_size_t   bits;
+
+		modpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		if (!modpath)
+			return ret;
+
+		if (!LM_GetModulePathEx(proc, mod,
+					modpath, LM_PATH_MAX))
+			goto _CLEAN_RET;
+		
+
+		fd = open(modpath, O_RDONLY);
+		if (fd == -1)
+			goto _CLEAN_RET;
+		
+		bits = LM_GetProcessBitsEx(proc);
+
+		if (bits == 64) {
+			Elf64_Ehdr ehdr;
+			Elf64_Off  shstrtab_off = 0;
+			Elf64_Shdr shstrtab;
+			Elf64_Off  symtab_off = 0;
+			Elf64_Half symtab_entsize = 0;
+			Elf64_Half symtab_num = 0;
+			Elf64_Off  dynsym_off = 0;
+			Elf64_Half dynsym_entsize = 0;
+			Elf64_Half dynsym_num = 0;
+			Elf64_Off  strtab_off = 0;
+			Elf64_Off  dynstr_off = 0;
+			Elf64_Half i;
+
+			lseek(fd, 0, SEEK_SET);
+			read(fd, &ehdr, sizeof(ehdr));
+
+			shstrtab_off = ehdr.e_shoff + (
+				ehdr.e_shstrndx * ehdr.e_shentsize
+			);
+
+			lseek(fd, shstrtab_off, SEEK_SET);
+			read(fd, &shstrtab, ehdr.e_shentsize);
+			shstrtab_off = shstrtab.sh_offset;
+
+			lseek(fd, ehdr.e_shoff, SEEK_SET);
+			for (i = 0; i < ehdr.e_shnum; ++i) {
+				Elf64_Shdr shdr;
+				lm_char_t  shstr[16] = { 0 };
+
+				read(fd, &shdr, ehdr.e_shentsize);
+				pread(fd, shstr, sizeof(shstr),
+				      shstrtab_off + shdr.sh_name);
+				
+				if (!LM_STRCMP(shstr, LM_STR(".strtab"))) {
+					strtab_off = shdr.sh_offset;
+				} else if (!LM_STRCMP(shstr, LM_STR(".dynstr"))) {
+					dynstr_off = shdr.sh_offset;
+				} else if (!LM_STRCMP(shstr, LM_STR(".symtab"))) {
+					symtab_off = shdr.sh_offset;
+					symtab_entsize = shdr.sh_entsize;
+					symtab_num = shdr.sh_size;
+				} else if (!LM_STRCMP(shstr, LM_STR(".dynsym"))) {
+					dynsym_off = shdr.sh_offset;
+					dynsym_entsize = shdr.sh_entsize;
+					dynsym_num = shdr.sh_size;
+				}
+			}
+
+			lseek(fd, symtab_off, SEEK_SET);
+			for (i = 0; i < symtab_num; ++i) {
+				Elf64_Sym    sym;
+				lm_tchar_t   c;
+				lm_size_t    j = 0;
+				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_address_t addr;
+				lm_bool_t    cbret;
+
+				read(fd, &sym, symtab_entsize);
+
+				do {
+					lm_tchar_t *old_symstr = symstr;
+					
+					symstr = LM_CALLOC(j + 1,
+							   sizeof(lm_tchar_t));
+
+					if (old_symstr) {
+						if (symstr) {
+							LM_STRNCPY(symstr,
+								   old_symstr,
+								   j);
+						}
+
+						LM_FREE(old_symstr);
+					}
+
+					if (!symstr)
+						goto _CLEAN_RET;
+					
+					pread(fd, &c, sizeof(c),
+					      strtab_off + sym.st_name + j);
+					
+					symstr[j] = c;
+
+					++j;
+				} while (c != LM_STR('\x00'));
+
+				if (ehdr.e_type != ET_EXEC) {
+					addr = (lm_address_t)(
+						&((lm_byte_t *)mod.base)[
+							sym.st_value
+						]
+					);
+				} else {
+					addr = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
+				}
+
+				cbret = callback(symstr, addr, arg);
+				
+				LM_FREE(symstr);
+
+				if (!cbret)
+					goto _GOOD_RET;
+			}
+
+			lseek(fd, dynsym_off, SEEK_SET);
+			for (i = 0; i < dynsym_num; ++i) {
+				Elf64_Sym    sym;
+				lm_tchar_t   c;
+				lm_size_t    j = 0;
+				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_address_t addr;
+				lm_bool_t    cbret;
+
+				read(fd, &sym, dynsym_entsize);
+
+				do {
+					lm_tchar_t *old_symstr = symstr;
+					
+					symstr = LM_CALLOC(j + 1,
+							   sizeof(lm_tchar_t));
+
+					if (old_symstr) {
+						if (symstr) {
+							LM_STRNCPY(symstr,
+								   old_symstr,
+								   j);
+						}
+
+						LM_FREE(old_symstr);
+					}
+
+					if (!symstr)
+						goto _CLEAN_RET;
+					
+					pread(fd, &c, sizeof(c),
+					      dynstr_off + sym.st_name + j);
+					
+					symstr[j] = c;
+
+					++j;
+				} while (c != LM_STR('\x00'));
+
+				if (ehdr.e_type != ET_EXEC) {
+					addr = (lm_address_t)(
+						&((lm_byte_t *)mod.base)[
+							sym.st_value
+						]
+					);
+				} else {
+					addr = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
+				}
+
+				cbret = callback(symstr, addr, arg);
+				
+				LM_FREE(symstr);
+
+				if (!cbret)
+					goto _GOOD_RET;
+			}
+		} else {
+			Elf32_Ehdr ehdr;
+			Elf32_Off  shstrtab_off = 0;
+			Elf32_Shdr shstrtab;
+			Elf32_Off  symtab_off = 0;
+			Elf32_Half symtab_entsize = 0;
+			Elf32_Half symtab_num = 0;
+			Elf32_Off  dynsym_off = 0;
+			Elf32_Half dynsym_entsize = 0;
+			Elf32_Half dynsym_num = 0;
+			Elf32_Off  strtab_off = 0;
+			Elf32_Off  dynstr_off = 0;
+			Elf32_Half i;
+
+			lseek(fd, 0, SEEK_SET);
+			read(fd, &ehdr, sizeof(ehdr));
+
+			shstrtab_off = ehdr.e_shoff + (
+				ehdr.e_shstrndx * ehdr.e_shentsize
+			);
+
+			lseek(fd, shstrtab_off, SEEK_SET);
+			read(fd, &shstrtab, ehdr.e_shentsize);
+			shstrtab_off = shstrtab.sh_offset;
+
+			lseek(fd, ehdr.e_shoff, SEEK_SET);
+			for (i = 0; i < ehdr.e_shnum; ++i) {
+				Elf32_Shdr shdr;
+				lm_char_t  shstr[16] = { 0 };
+
+				read(fd, &shdr, ehdr.e_shentsize);
+				pread(fd, shstr, sizeof(shstr),
+				      shstrtab_off + shdr.sh_name);
+				
+				if (!LM_STRCMP(shstr, LM_STR(".strtab"))) {
+					strtab_off = shdr.sh_offset;
+				} else if (!LM_STRCMP(shstr, LM_STR(".dynstr"))) {
+					dynstr_off = shdr.sh_offset;
+				} else if (!LM_STRCMP(shstr, LM_STR(".symtab"))) {
+					symtab_off = shdr.sh_offset;
+					symtab_entsize = shdr.sh_entsize;
+					symtab_num = shdr.sh_size;
+				} else if (!LM_STRCMP(shstr, LM_STR(".dynsym"))) {
+					dynsym_off = shdr.sh_offset;
+					dynsym_entsize = shdr.sh_entsize;
+					dynsym_num = shdr.sh_size;
+				}
+			}
+
+			lseek(fd, symtab_off, SEEK_SET);
+			for (i = 0; i < symtab_num; ++i) {
+				Elf32_Sym    sym;
+				lm_tchar_t   c;
+				lm_size_t    j = 0;
+				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_address_t addr;
+				lm_bool_t    cbret;
+
+				read(fd, &sym, symtab_entsize);
+
+				do {
+					lm_tchar_t *old_symstr = symstr;
+					
+					symstr = LM_CALLOC(j + 1,
+							   sizeof(lm_tchar_t));
+
+					if (old_symstr) {
+						if (symstr) {
+							LM_STRNCPY(symstr,
+								   old_symstr,
+								   j);
+						}
+
+						LM_FREE(old_symstr);
+					}
+
+					if (!symstr)
+						goto _CLEAN_RET;
+					
+					pread(fd, &c, sizeof(c),
+					      strtab_off + sym.st_name + j);
+					
+					symstr[j] = c;
+
+					++j;
+				} while (c != LM_STR('\x00'));
+
+				if (ehdr.e_type != ET_EXEC) {
+					addr = (lm_address_t)(
+						&((lm_byte_t *)mod.base)[
+							sym.st_value
+						]
+					);
+				} else {
+					addr = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
+				}
+
+				cbret = callback(symstr, addr, arg);
+				
+				LM_FREE(symstr);
+
+				if (!cbret)
+					goto _GOOD_RET;
+			}
+
+			lseek(fd, dynsym_off, SEEK_SET);
+			for (i = 0; i < dynsym_num; ++i) {
+				Elf32_Sym    sym;
+				lm_tchar_t   c;
+				lm_size_t    j = 0;
+				lm_tchar_t  *symstr = (lm_tchar_t *)LM_NULL;
+				lm_address_t addr;
+				lm_bool_t    cbret;
+
+				read(fd, &sym, dynsym_entsize);
+
+				do {
+					lm_tchar_t *old_symstr = symstr;
+					
+					symstr = LM_CALLOC(j + 1,
+							   sizeof(lm_tchar_t));
+
+					if (old_symstr) {
+						if (symstr) {
+							LM_STRNCPY(symstr,
+								   old_symstr,
+								   j);
+						}
+
+						LM_FREE(old_symstr);
+					}
+
+					if (!symstr)
+						goto _CLEAN_RET;
+					
+					pread(fd, &c, sizeof(c),
+					      dynstr_off + sym.st_name + j);
+					
+					symstr[j] = c;
+
+					++j;
+				} while (c != LM_STR('\x00'));
+
+				if (ehdr.e_type != ET_EXEC) {
+					addr = (lm_address_t)(
+						&((lm_byte_t *)mod.base)[
+							sym.st_value
+						]
+					);
+				} else {
+					addr = (lm_address_t)(
+						(lm_uintptr_t)sym.st_value
+					);
+				}
+
+				cbret = callback(symstr, addr, arg);
+				
+				LM_FREE(symstr);
+
+				if (!cbret)
+					goto _GOOD_RET;
+			}
+		}
+
+	_GOOD_RET:
+		ret = LM_TRUE;
+
+	_CLEAN_RET:
+		LM_FREE(modpath);
+		close(fd);
+	}
+#	endif
+
+	return ret;
+}
+
+static lm_bool_t
+_LM_GetSymbolCallback(lm_cstring_t symbol,
+		      lm_address_t addr,
+		      lm_void_t   *arg)
+{
+	_lm_get_symbol_t *parg = (_lm_get_symbol_t *)arg;
+	
+	if (!LM_STRCMP(symbol, parg->symbol)) {
+		parg->addr = addr;
+		return LM_FALSE;
+	}
+
+	return LM_TRUE;
+}
+
 LM_API lm_address_t
 LM_GetSymbol(lm_module_t  mod,
 	     lm_cstring_t symstr)
@@ -2267,46 +2468,16 @@ LM_GetSymbolEx(lm_process_t proc,
 	       lm_module_t  mod,
 	       lm_cstring_t symstr)
 {
-	lm_address_t symaddr = (lm_address_t)LM_BAD;
+	_lm_get_symbol_t arg;
+	arg.symbol = symstr;
+	arg.addr   = (lm_address_t)LM_BAD;
 
 	if (!_LM_CheckProcess(proc) || !symstr)
-		return symaddr;
+		return arg.addr;
+	
+	LM_EnumSymbolsEx(proc, mod, _LM_GetSymbolCallback, (lm_void_t *)&arg);
 
-#	if LM_OS == LM_OS_WIN
-	{
-
-	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
-	{
-		lm_tchar_t  *path;
-
-		path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
-		if (!path)
-			return symaddr;
-		
-		if (LM_GetModulePathEx(proc, mod, path, LM_PATH_MAX)) {
-			lm_address_t offset;
-			lm_uint_t    type;
-
-			offset = _LM_GetElfSymOffset(path, symstr, &type);
-			if (offset != (lm_address_t)LM_BAD) {
-				if (type != ET_EXEC) {
-					symaddr = (lm_address_t)(
-						&((lm_byte_t *)mod.base)[
-							(lm_uintptr_t)offset
-						]
-					);
-				} else {
-					symaddr = offset;
-				}
-			}
-		}
-
-		LM_FREE(path);
-	}
-#	endif
-
-	return symaddr;
+	return arg.addr;
 }
 
 /****************************************/

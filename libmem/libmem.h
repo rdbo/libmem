@@ -790,6 +790,23 @@ LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t proc,
 		  lm_module_t  mod);
 
+/****************************************/
+
+LM_API lm_bool_t
+LM_EnumSymbols(lm_module_t mod,
+	       lm_bool_t (*callback)(lm_cstring_t symbol,
+	       			     lm_address_t addr,
+	       			     lm_void_t   *arg),
+	       lm_void_t *arg);
+
+LM_API lm_bool_t
+LM_EnumSymbolsEx(lm_process_t proc,
+		 lm_module_t  mod,
+	         lm_bool_t  (*callback)(lm_cstring_t symbol,
+		 			lm_address_t addr,
+					lm_void_t   *arg),
+		 lm_void_t *arg);
+
 LM_API lm_address_t
 LM_GetSymbol(lm_module_t  mod,
 	     lm_cstring_t symstr);

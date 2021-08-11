@@ -312,11 +312,11 @@
 #define mem_detour_t  lm_detour_t
 #define mem_argloc_t  lm_datloc_t
 #define mem_datio_t   lm_datio_t
+#define mem_regs_t    lm_regs_t
 
 #define mem_process_t lm_process_t
 #define mem_module_t  lm_module_t
 #define mem_page_t    lm_page_t
-#define mem_regs_t    lm_regs_t
 
 #define mem_ex_enum_processes    LM_EnumProcesses
 #define mem_in_get_pid           LM_GetProcessId
@@ -347,6 +347,8 @@
 #define mem_ex_load_module       LM_LoadModuleEx
 #define mem_in_unload_module     LM_UnloadModule
 #define mem_ex_unload_module     LM_UnloadModuleEx
+#define mem_in_enum_symbols      LM_EnumSymbols
+#define mem_ex_enum_symbols      LM_EnumSymbolsEx
 #define mem_in_get_symbol        LM_GetSymbol
 #define mem_ex_get_symbol        LM_GetSymbolEx
 

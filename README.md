@@ -32,7 +32,6 @@ LM_GetParentIdEx
 LM_OpenProcess
 LM_OpenProcessEx
 LM_CloseProcess
-LM_CloseProcess
 LM_GetProcessPath
 LM_GetProcessPathEx
 LM_GetProcessName
@@ -40,6 +39,11 @@ LM_GetProcessNameEx
 LM_GetSystemBits
 LM_GetProcessBits
 LM_GetProcessBitsEx
+
+LM_EnumThreads
+LM_EnumThreadsEx
+LM_GetThreadId
+LM_GetThreadIdEx
 
 LM_EnumModules
 LM_EnumModulesEx
@@ -53,6 +57,9 @@ LM_LoadModule
 LM_LoadModuleEx
 LM_UnloadModule
 LM_UnloadModuleEx
+
+LM_EnumSymbols
+LM_EnumSymbolsEx
 LM_GetSymbol
 LM_GetSymbolEx
 
@@ -98,11 +105,15 @@ LM_DebugRead
 LM_DebugWrite
 LM_DebugGetRegs
 LM_DebugSetRegs
+LM_DebugPickReg
+LM_DebugReadReg
+LM_DebugWriteReg
 LM_DebugContinue
 LM_DebugStep
 LM_DebugWait
 LM_DebugWaitProcess
 LM_DebugInject
+LM_DebugInjectSingle
 ```
 
 ## Projects

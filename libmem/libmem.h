@@ -418,7 +418,7 @@
 #elif LM_OS == LM_OS_LINUX
 #define LM_PATH_MAX PATH_MAX
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
 #endif
 #define LM_PROCFS LM_STR("/proc")
 #elif LM_OS == LM_OS_BSD

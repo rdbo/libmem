@@ -1,4 +1,4 @@
 from libmem import *
 
 pid = LM_GetProcessId()
-print(f"[*] PID: {pid}")
+print(f"[*] PID: {pid.pid}")

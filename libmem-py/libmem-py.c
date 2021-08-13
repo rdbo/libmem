@@ -73,6 +73,27 @@ py_LM_GetProcessId(PyObject *self,
 }
 
 static PyObject *
+py_LM_GetProcessIdEx(PyObject *self,
+		     PyObject *args)
+{
+	py_lm_pid_obj *pypid;
+	lm_tchar_t    *procstr;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "u", &procstr))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "s", &procstr))
+		return NULL;
+#	endif
+
+	pypid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
+	pypid->pid = LM_GetProcessIdEx(procstr);
+
+	return (PyObject *)pypid;
+}
+
+static PyObject *
 py_LM_OpenProcess(PyObject *self,
 		  PyObject *args)
 {
@@ -119,6 +140,7 @@ py_LM_CloseProcess(PyObject *self,
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_GetProcessId", py_LM_GetProcessId, METH_NOARGS, "" },
+	{ "LM_GetProcessIdEx", py_LM_GetProcessIdEx, METH_VARARGS, "" },
 	{ "LM_OpenProcess", py_LM_OpenProcess, METH_NOARGS, "" },
 	{ "LM_OpenProcessEx", py_LM_OpenProcessEx, METH_VARARGS, "" },
 	{ "LM_CloseProcess", py_LM_CloseProcess, METH_VARARGS, "" },

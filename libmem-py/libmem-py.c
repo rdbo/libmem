@@ -12,6 +12,16 @@ static PyMemberDef py_lm_pid_members[] = {
 	{ "pid", T_INT, offsetof(py_lm_pid_obj, pid), 0, "" }
 };
 
+static PyObject *
+py_lm_pid_int(py_lm_pid_obj *self)
+{
+	return PyLong_FromPid(self->pid);
+}
+
+static PyNumberMethods lm_pid_number_methods = {
+	.nb_int = (unaryfunc)py_lm_pid_int
+};
+
 static PyTypeObject py_lm_pid_t = {
 	PyVarObject_HEAD_INIT(NULL, 0)
 	.tp_name = "libmem.lm_pid_t",
@@ -20,7 +30,8 @@ static PyTypeObject py_lm_pid_t = {
 	.tp_itemsize = 0,
 	.tp_flags = Py_TPFLAGS_DEFAULT,
 	.tp_new = PyType_GenericNew,
-	.tp_members = py_lm_pid_members
+	.tp_members = py_lm_pid_members,
+	.tp_as_number = &lm_pid_number_methods
 };
 
 /****************************************/

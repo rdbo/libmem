@@ -2065,12 +2065,12 @@ LM_EnumSymbolsEx(lm_process_t proc,
 
 		if (!LM_GetModulePathEx(proc, mod,
 					modpath, LM_PATH_MAX))
-			goto _CLEAN_RET;
+			goto _FREE_RET;
 		
 
 		fd = open(modpath, O_RDONLY);
 		if (fd == -1)
-			goto _CLEAN_RET;
+			goto _FREE_RET;
 		
 		bits = LM_GetProcessBitsEx(proc);
 
@@ -2406,10 +2406,10 @@ LM_EnumSymbolsEx(lm_process_t proc,
 
 	_GOOD_RET:
 		ret = LM_TRUE;
-
 	_CLEAN_RET:
-		LM_FREE(modpath);
 		close(fd);
+	_FREE_RET:
+		LM_FREE(modpath);
 	}
 #	endif
 
@@ -3902,7 +3902,7 @@ LM_SystemCallEx(lm_process_t proc,
 	lm_bool_t    attached;
 	lm_regs_t    regs;
 	lm_regs_t    post_regs;
-	lm_datio_t  *datargs;
+	lm_datio_t  *datargs = (lm_datio_t *)LM_NULL;
 
 	if (!_LM_CheckProcess(proc))
 		return ret;
@@ -3936,7 +3936,8 @@ LM_SystemCallEx(lm_process_t proc,
 	}
 
 	LM_DebugGetRegs(proc, &regs);
-	_LM_ParseDatArgsIn(proc, datargs, nargs, stack_align, &regs);
+	if (datargs)
+		_LM_ParseDatArgsIn(proc, datargs, nargs, stack_align, &regs);
 
 #	if LM_ARCH == LM_ARCH_X86
 	{
@@ -3973,7 +3974,8 @@ LM_SystemCallEx(lm_process_t proc,
 	}
 #	endif
 
-	_LM_ParseDatArgsOut(proc, &datargs[nargs], nrets, stack_align, post_regs);
+	if (datargs)
+		_LM_ParseDatArgsOut(proc, &datargs[nargs], nrets, stack_align, post_regs);
 
 	if (attached != LM_TRUE) {
 		LM_DebugDetach(proc);

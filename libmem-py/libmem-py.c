@@ -9,7 +9,7 @@ typedef struct {
 } py_lm_pid_obj;
 
 static PyMemberDef py_lm_pid_members[] = {
-	{ "pid", T_INT, offsetof(py_lm_pid_obj, pid), 0, ""}
+	{ "pid", T_INT, offsetof(py_lm_pid_obj, pid), 0, "" }
 };
 
 static PyTypeObject py_lm_pid_t = {
@@ -28,7 +28,9 @@ static PyObject *
 py_LM_GetProcessId(PyObject *self,
 		  PyObject *args)
 {
-	py_lm_pid_obj *pid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
+	py_lm_pid_obj *pid;
+	
+	pid = (py_lm_pid_obj *)(PyObject_CallNoArgs((PyObject *)&py_lm_pid_t));
 	pid->pid = LM_GetProcessId();
 	return (PyObject *)pid;
 }
@@ -60,7 +62,8 @@ PyInit_libmem(void)
 		return NULL;
 	
 	Py_INCREF(&py_lm_pid_t);
-	if (PyModule_AddObject(pymod, "lm_pid_t", (PyObject *)&py_lm_pid_t) < 0) {
+	if (PyModule_AddObject(pymod, "lm_pid_t",
+			       (PyObject *)&py_lm_pid_t) < 0) {
 		Py_DECREF(&py_lm_pid_t);
 		Py_DECREF(pymod);
 		return NULL;

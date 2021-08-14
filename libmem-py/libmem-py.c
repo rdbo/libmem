@@ -675,6 +675,65 @@ py_LM_GetModuleEx(PyObject *self,
 	return (PyObject *)pymod;
 }
 
+static PyObject *
+py_LM_GetModulePath(PyObject *self,
+		    PyObject *args)
+{
+	PyUnicodeObject  *pymodpath = (PyUnicodeObject *)NULL;
+	py_lm_module_obj *pymod;
+	lm_tchar_t       *modpath;
+
+	if (!PyArg_ParseTuple(args, "O!", &py_lm_module_t, &pymod))
+		return NULL;
+	
+	modpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!modpath)
+		return NULL;
+	
+	if (LM_GetModulePath(pymod->mod, modpath, LM_PATH_MAX)) {
+#		if LM_CHARSET == LM_CHARSET_UC
+		pymodpath = (PyUnicodeObject *)PyUnicode_FromUnicode(modpath);
+#		else
+		pymodpath = (PyUnicodeObject *)PyUnicode_FromString(modpath);
+#		endif
+	}
+
+	LM_FREE(modpath);
+
+	return (PyObject *)pymodpath;
+}
+
+static PyObject *
+py_LM_GetModulePathEx(PyObject *self,
+		      PyObject *args)
+{
+	PyUnicodeObject   *pymodpath = (PyUnicodeObject *)NULL;
+	py_lm_process_obj *pyproc;
+	py_lm_module_obj  *pymod;
+	lm_tchar_t        *modpath;
+
+	if (!PyArg_ParseTuple(args, "O!|O!", &py_lm_process_t, &pyproc,
+			      &py_lm_module_t, &pymod))
+		return NULL;
+	
+	modpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!modpath)
+		return NULL;
+	
+	if (LM_GetModulePathEx(pyproc->proc, pymod->mod,
+			       modpath, LM_PATH_MAX)) {
+#		if LM_CHARSET == LM_CHARSET_UC
+		pymodpath = (PyUnicodeObject *)PyUnicode_FromUnicode(modpath);
+#		else
+		pymodpath = (PyUnicodeObject *)PyUnicode_FromString(modpath);
+#		endif
+	}
+
+	LM_FREE(modpath);
+
+	return (PyObject *)pymodpath;
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -702,6 +761,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumModulesEx", py_LM_EnumModulesEx, METH_VARARGS, "" },
 	{ "LM_GetModule", py_LM_GetModule, METH_VARARGS, "" },
 	{ "LM_GetModuleEx", py_LM_GetModuleEx, METH_VARARGS, "" },
+	{ "LM_GetModulePath", py_LM_GetModulePath, METH_VARARGS, "" },
+	{ "LM_GetModulePathEx", py_LM_GetModulePathEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

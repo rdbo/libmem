@@ -2014,7 +2014,10 @@ LM_UnloadModule(lm_module_t mod)
 
 LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t proc,
-		  lm_module_t  mod);
+		  lm_module_t  mod)
+{
+	
+}
 
 /****************************************/
 

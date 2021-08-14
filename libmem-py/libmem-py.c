@@ -386,7 +386,7 @@ py_LM_EnumThreadsEx(PyObject *self,
 	py_lm_process_obj   *pyproc;
 	py_lm_enum_threads_t arg;
 
-	if (!PyArg_ParseTuple(args, "O!|O|O", &py_lm_process_t, &pyproc,
+	if (!PyArg_ParseTuple(args, "O!O|O", &py_lm_process_t, &pyproc,
 			      &arg.callback, &arg.arg))
 		return NULL;
 	
@@ -482,7 +482,7 @@ py_LM_EnumModulesEx(PyObject *self,
 	py_lm_process_obj   *pyproc;
 	py_lm_enum_modules_t arg;
 
-	if (!PyArg_ParseTuple(args, "O!|O|O", &py_lm_process_t, &pyproc,
+	if (!PyArg_ParseTuple(args, "O!O|O", &py_lm_process_t, &pyproc,
 			      &arg.callback, &arg.arg))
 		return NULL;
 	
@@ -502,7 +502,7 @@ py_LM_GetModule(PyObject *self,
 	PyObject         *pymodarg;
 	lm_int_t          flags;
 
-	if (!PyArg_ParseTuple(args, "O!|O", &PyLong_Type, &pyflags, &pymodarg))
+	if (!PyArg_ParseTuple(args, "O!O", &PyLong_Type, &pyflags, &pymodarg))
 		return NULL;
 	
 	pymod = (py_lm_module_obj *)(
@@ -550,7 +550,7 @@ py_LM_GetModuleEx(PyObject *self,
 	PyObject          *pymodarg;
 	lm_int_t           flags;
 
-	if (!PyArg_ParseTuple(args, "O!|O!|O", &py_lm_process_t, &pyproc,
+	if (!PyArg_ParseTuple(args, "O!O!O", &py_lm_process_t, &pyproc,
 			      &PyLong_Type, &pyflags, &pymodarg))
 		return NULL;
 	
@@ -627,7 +627,7 @@ py_LM_GetModulePathEx(PyObject *self,
 	py_lm_module_obj  *pymod;
 	lm_tchar_t        *modpath;
 
-	if (!PyArg_ParseTuple(args, "O!|O!", &py_lm_process_t, &pyproc,
+	if (!PyArg_ParseTuple(args, "O!O!", &py_lm_process_t, &pyproc,
 			      &py_lm_module_t, &pymod))
 		return NULL;
 	
@@ -686,7 +686,7 @@ py_LM_GetModuleNameEx(PyObject *self,
 	py_lm_module_obj  *pymod;
 	lm_tchar_t        *modname;
 
-	if (!PyArg_ParseTuple(args, "O!|O!", &py_lm_process_t, &pyproc,
+	if (!PyArg_ParseTuple(args, "O!O!", &py_lm_process_t, &pyproc,
 			      &py_lm_module_t, &pymod))
 		return NULL;
 	
@@ -706,6 +706,89 @@ py_LM_GetModuleNameEx(PyObject *self,
 	LM_FREE(modname);
 
 	return (PyObject *)pymodname;
+}
+
+static PyObject *
+py_LM_LoadModule(PyObject *self,
+		 PyObject *args)
+{
+	PyObject         *ret;
+	lm_tchar_t       *modpath;
+	py_lm_module_obj *pymodbuf;
+	lm_module_t       modbuf;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "u|O!", &modpath,
+			      &py_lm_module_t, &pymodbuf))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "s|O!", &modpath,
+			      &py_lm_module_t, &pymodbuf))
+		return NULL;
+#	endif
+
+	ret = PyLong_FromLong(LM_LoadModule(modpath, &modbuf));
+
+	if (pymodbuf)
+		pymodbuf->mod = modbuf;
+
+	return ret;
+}
+
+static PyObject *
+py_LM_LoadModuleEx(PyObject *self,
+		   PyObject *args)
+{
+	PyObject          *ret;
+	lm_tchar_t        *modpath;
+	py_lm_module_obj  *pymodbuf;
+	py_lm_process_obj *pyproc;
+	lm_module_t        modbuf;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "O!u|O!", &modpath,
+			      &py_lm_process_t, &pyproc,
+			      &py_lm_module_t, &pymodbuf))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "O!s|O!", &modpath,
+			      &py_lm_process_t, &pyproc,
+			      &py_lm_module_t, &pymodbuf))
+		return NULL;
+#	endif
+
+	ret = PyLong_FromLong(LM_LoadModuleEx(pyproc->proc, modpath, &modbuf));
+
+	if (pymodbuf)
+		pymodbuf->mod = modbuf;
+
+	return ret;
+}
+
+static PyObject *
+py_LM_UnloadModule(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_module_obj *pymod;
+
+	if (!PyArg_ParseTuple(args, "O!", &py_lm_module_t, &pymod))
+		return NULL;
+	
+	return PyLong_FromLong(LM_UnloadModule(pymod->mod));
+}
+
+static PyObject *
+py_LM_UnloadModuleEx(PyObject *self,
+		     PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	py_lm_module_obj  *pymod;
+
+	if (!PyArg_ParseTuple(args, "O!O!", &py_lm_process_t, &pyproc,
+			      &py_lm_module_t, &pymod))
+		return NULL;
+	
+	return PyLong_FromLong(LM_UnloadModuleEx(pyproc->proc, pymod->mod));
 }
 
 /* Python Module */
@@ -739,6 +822,10 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetModulePathEx", py_LM_GetModulePathEx, METH_VARARGS, "" },
 	{ "LM_GetModuleName", py_LM_GetModuleName, METH_VARARGS, "" },
 	{ "LM_GetModuleNameEx", py_LM_GetModuleNameEx, METH_VARARGS, "" },
+	{ "LM_LoadModule", py_LM_LoadModule, METH_VARARGS, "" },
+	{ "LM_LoadModuleEx", py_LM_LoadModuleEx, METH_VARARGS, "" },
+	{ "LM_UnloadModule", py_LM_UnloadModule, METH_VARARGS, "" },
+	{ "LM_UnloadModuleEx", py_LM_UnloadModuleEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

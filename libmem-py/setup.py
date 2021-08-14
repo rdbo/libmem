@@ -1,12 +1,26 @@
 from distutils.core import setup, Extension
 from sysconfig import get_paths
+from sys import platform
 import os
 
 libmem_dir = f"{os.pardir}{os.sep}libmem"
+libs = []
+
+if platform == "win32":
+	libs.append("user32")
+	libs.append("psapi")
+elif platform.startswith("linux"):
+	libs.append("dl")
+elif platform.find("bsd") != -1:
+	libs.append("dl")
+	libs.append("kvm")
+	libs.append("procstat")
+	libs.append("elf")
 
 libmem = Extension(name = "libmem",
 		   include_dirs = [ libmem_dir ],
-		   sources = [ "libmem-py.c", f"{libmem_dir}{os.sep}libmem.c" ])
+		   sources = [ "libmem-py.c", f"{libmem_dir}{os.sep}libmem.c" ],
+		   libraries = libs)
 
 setup(name = "libmem",
       version = "4.0",

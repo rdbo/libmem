@@ -2,6 +2,13 @@
 #include <Python.h>
 #include <structmember.h>
 
+#define DECL_GLOBAL(mod, name, val) { \
+	PyObject *global; \
+	global = PyLong_FromLong(val); \
+	PyObject_SetAttrString(mod, name, global); \
+	Py_DECREF(global); \
+}
+
 /* Python Types */
 typedef struct {
 	PyObject_HEAD
@@ -628,6 +635,11 @@ PyInit_libmem(void)
 	if (!pymod)
 		goto _ERR_MOD;
 	
+	/* Global Variables */
+	DECL_GLOBAL(pymod, "LM_FALSE", LM_FALSE);
+	DECL_GLOBAL(pymod, "LM_TRUE", LM_TRUE);
+	
+	/* Types */
 	Py_INCREF(&py_lm_pid_t);
 	if (PyModule_AddObject(pymod, "lm_pid_t",
 			       (PyObject *)&py_lm_pid_t) < 0)

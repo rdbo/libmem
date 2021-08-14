@@ -2,11 +2,11 @@ from libmem import *
 
 def enum_processes_callback(pid : lm_pid_t, arg) -> int:
 	print(f"[*] CurPID: {int(pid)}")
-	return 1
+	return LM_TRUE
 
 def enum_threads_callback(tid : lm_tid_t, arg) -> int:
 	print(f"[*] CurTID: {int(tid)}")
-	return 1
+	return LM_TRUE
 
 def enum_modules_callback(mod : lm_module_t, path : str, arg) -> int:
 	print(f"[*] ModBase: {hex(mod.base)}")
@@ -14,7 +14,7 @@ def enum_modules_callback(mod : lm_module_t, path : str, arg) -> int:
 	print(f"[*] ModEnd:  {hex(mod.end)}")
 	print(f"[*] ModPath: {path}")
 	print("====================")
-	return 1
+	return LM_TRUE
 
 pid = LM_GetProcessIdEx("test1")
 ppid = LM_GetParentIdEx(pid)

@@ -27,9 +27,6 @@ def counter_callback_mod(mod : lm_module_t, path : str, arg) -> int:
 
 def counter_callback_sym(symbol : str, addr : int, arg):
 	arg.inc()
-	if (len(symbol) > 0):
-		print(f"[*] Symbol Name: {symbol}")
-		print(f"[*] Symbol Addr: {hex(addr)}")
 	return LM_TRUE
 
 print("[+] PyTest 1")
@@ -82,6 +79,11 @@ print("====================")
 nsyms = counter()
 LM_EnumSymbols(mod, counter_callback_sym, nsyms)
 print(f"[*] Symbols: {nsyms.val()}")
+
+main_addr = LM_GetSymbol(mod, "Py_BytesMain")
+print(f"[*] PyBytesMain Addr: {hex(main_addr)}")
+
+print("====================")
 
 LM_CloseProcess(proc)
 print("[-] PyTest 1")

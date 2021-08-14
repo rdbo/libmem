@@ -839,6 +839,62 @@ py_LM_EnumSymbols(PyObject *self,
 	);
 }
 
+static PyObject *
+py_LM_EnumSymbolsEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_enum_symbols_t arg;
+	py_lm_process_obj   *pyproc;
+	py_lm_module_obj    *pymod;
+
+	if (!PyArg_ParseTuple(args, "O!O!O|O", &py_lm_process_t, &pyproc,
+			      &py_lm_module_t, &pymod,
+			      &arg.callback,
+			      &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumSymbolsEx(pyproc->proc,
+				 pymod->mod,
+				 py_LM_EnumSymbolsCallback,
+				 (lm_void_t *)&arg)
+	);
+}
+
+static PyObject *
+py_LM_GetSymbol(PyObject *self,
+		PyObject *args)
+{
+	py_lm_module_obj *pymod;
+	lm_cstring_t      symstr;
+
+	if (!PyArg_ParseTuple(args, "O!s", &py_lm_module_t, &pymod,
+			      &symstr))
+		return NULL;
+	
+	return PyLong_FromVoidPtr(LM_GetSymbol(pymod->mod, symstr));
+}
+
+static PyObject *
+py_LM_GetSymbolEx(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	py_lm_module_obj  *pymod;
+	lm_cstring_t       symstr;
+
+	if (!PyArg_ParseTuple(args, "O!O!s", &py_lm_process_t, &pyproc,
+			      &py_lm_module_t, &pymod,
+			      &symstr))
+		return NULL;
+	
+	return PyLong_FromVoidPtr(
+		LM_GetSymbolEx(pyproc->proc, pymod->mod, symstr)
+	);
+}
+
+/****************************************/
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -876,6 +932,10 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_UnloadModuleEx", py_LM_UnloadModuleEx, METH_VARARGS, "" },
 	/****************************************/
 	{ "LM_EnumSymbols", py_LM_EnumSymbols, METH_VARARGS, "" },
+	{ "LM_EnumSymbolsEx", py_LM_EnumSymbolsEx, METH_VARARGS, "" },
+	{ "LM_GetSymbol", py_LM_GetSymbol, METH_VARARGS, "" },
+	{ "LM_GetSymbolEx", py_LM_GetSymbolEx, METH_VARARGS, "" },
+	/****************************************/
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

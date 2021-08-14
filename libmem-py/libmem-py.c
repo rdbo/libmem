@@ -94,6 +94,34 @@ py_LM_GetProcessIdEx(PyObject *self,
 }
 
 static PyObject *
+py_LM_GetParentId(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_pid_obj *pyppid;
+
+	pyppid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
+	pyppid->pid = LM_GetParentId();
+
+	return (PyObject *)pyppid;
+}
+
+static PyObject *
+py_LM_GetParentIdEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_pid_obj *pyppid;
+	py_lm_pid_obj *pypid;
+
+	if (!PyArg_ParseTuple(args, "O!", &py_lm_pid_t, &pypid))
+		return NULL;
+	
+	pyppid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
+	pyppid->pid = LM_GetParentIdEx(pypid->pid);
+
+	return (PyObject *)pyppid;
+}
+
+static PyObject *
 py_LM_OpenProcess(PyObject *self,
 		  PyObject *args)
 {
@@ -283,6 +311,8 @@ py_LM_GetProcessBitsEx(PyObject *self,
 static PyMethodDef libmem_methods[] = {
 	{ "LM_GetProcessId", py_LM_GetProcessId, METH_NOARGS, "" },
 	{ "LM_GetProcessIdEx", py_LM_GetProcessIdEx, METH_VARARGS, "" },
+	{ "LM_GetParentId", py_LM_GetParentId, METH_NOARGS, "" },
+	{ "LM_GetParentIdEx", py_LM_GetParentIdEx, METH_VARARGS, "" },
 	{ "LM_OpenProcess", py_LM_OpenProcess, METH_NOARGS, "" },
 	{ "LM_OpenProcessEx", py_LM_OpenProcessEx, METH_VARARGS, "" },
 	{ "LM_CloseProcess", py_LM_CloseProcess, METH_VARARGS, "" },

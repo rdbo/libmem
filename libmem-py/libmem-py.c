@@ -38,6 +38,39 @@ static PyTypeObject py_lm_pid_t = {
 
 typedef struct {
 	PyObject_HEAD
+	lm_tid_t tid;
+} py_lm_tid_obj;
+
+static PyMemberDef py_lm_tid_members[] = {
+	{ "tid", T_INT, offsetof(py_lm_tid_obj, tid), 0, "" }
+};
+
+static PyObject *
+py_lm_tid_int(py_lm_tid_obj *self)
+{
+	return PyLong_FromLong(self->tid);
+}
+
+static PyNumberMethods lm_tid_number_methods = {
+	.nb_int = (unaryfunc)py_lm_tid_int
+};
+
+static PyTypeObject py_lm_tid_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_tid_t",
+	.tp_doc = "",
+	.tp_basicsize = sizeof(py_lm_tid_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_tid_members,
+	.tp_as_number = &lm_tid_number_methods
+};
+
+/****************************************/
+
+typedef struct {
+	PyObject_HEAD
 	lm_process_t proc;
 } py_lm_process_obj;
 
@@ -82,7 +115,7 @@ py_LM_EnumProcessesCallback(lm_pid_t   pid,
 					     parg->arg)
 	);
 
-	return pyret->ob_digit[0] ? LM_TRUE : LM_FALSE;
+	return PyLong_AsLong((PyObject *)pyret) ? LM_TRUE : LM_FALSE;
 }
 
 static PyObject *
@@ -349,6 +382,96 @@ py_LM_GetProcessBitsEx(PyObject *self,
 	return PyLong_FromLong(LM_GetProcessBitsEx(pyproc->proc));
 }
 
+/****************************************/
+
+typedef struct {
+	PyObject *callback;
+	PyObject *arg;
+} py_lm_enum_threads_t;
+
+static lm_bool_t
+py_LM_EnumThreadsCallback(lm_tid_t   tid,
+			  lm_void_t *arg)
+{
+	PyLongObject         *pyret;
+	py_lm_tid_obj        *pytid;
+	py_lm_enum_threads_t *parg = (py_lm_enum_threads_t *)arg;
+
+	pytid = (py_lm_tid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_tid_t);
+	pytid->tid = tid;
+
+	pyret = (PyLongObject *)(
+		PyObject_CallFunctionObjArgs(parg->callback,
+					     pytid,
+					     parg->arg)
+	);
+
+	return PyLong_AsLong((PyObject *)pyret) ? LM_TRUE : LM_FALSE;
+}
+
+static PyObject *
+py_LM_EnumThreads(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_enum_threads_t arg;
+
+	if (!PyArg_ParseTuple(args, "O|O", &arg.callback, &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumThreads(py_LM_EnumThreadsCallback,
+			       (lm_void_t *)&arg)
+	);
+}
+
+static PyObject *
+py_LM_EnumThreadsEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj   *pyproc;
+	py_lm_enum_threads_t arg;
+
+	if (!PyArg_ParseTuple(args, "O!|O|O", &py_lm_process_t, &pyproc,
+			      &arg.callback, &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumThreadsEx(pyproc->proc,
+				 py_LM_EnumThreadsCallback,
+				 (lm_void_t *)&arg)
+	);
+}
+
+static PyObject *
+py_LM_GetThreadId(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_tid_obj *pytid;
+
+	pytid = (py_lm_tid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_tid_t);
+	pytid->tid = LM_GetThreadId();
+
+	return (PyObject *)pytid;
+}
+
+static PyObject *
+py_LM_GetThreadIdEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_tid_obj     *pytid;
+	py_lm_process_obj *pyproc;
+
+	if (!PyArg_ParseTuple(args, "O!", &py_lm_process_t, &pyproc))
+		return NULL;
+
+	pytid = (py_lm_tid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_tid_t);
+	pytid->tid = LM_GetThreadIdEx(pyproc->proc);
+
+	return (PyObject *)pytid;
+}
+
+/****************************************/
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -366,6 +489,12 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetSystemBits", py_LM_GetSystemBits, METH_NOARGS, "" },
 	{ "LM_GetProcessBits", py_LM_GetProcessBits, METH_NOARGS, "" },
 	{ "LM_GetProcessBitsEx", py_LM_GetProcessBitsEx, METH_VARARGS, "" },
+	/****************************************/
+	{ "LM_EnumThreads", py_LM_EnumThreads, METH_VARARGS, "" },
+	{ "LM_EnumThreadsEx", py_LM_EnumThreadsEx, METH_VARARGS, "" },
+	{ "LM_GetThreadId", py_LM_GetThreadId, METH_NOARGS, "" },
+	{ "LM_GetThreadIdEx", py_LM_GetThreadIdEx, METH_VARARGS, "" },
+	/****************************************/
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 
@@ -385,6 +514,9 @@ PyInit_libmem(void)
 	if (PyType_Ready(&py_lm_pid_t) < 0)
 		goto _ERR_MOD;
 	
+	if (PyType_Ready(&py_lm_tid_t) < 0)
+		goto _ERR_MOD;
+	
 	if (PyType_Ready(&py_lm_process_t) < 0)
 		goto _ERR_MOD;
 
@@ -397,6 +529,11 @@ PyInit_libmem(void)
 			       (PyObject *)&py_lm_pid_t) < 0)
 		goto _ERR_PID;
 	
+	Py_INCREF(&py_lm_tid_t);
+	if (PyModule_AddObject(pymod, "lm_tid_t",
+			       (PyObject *)&py_lm_tid_t) < 0)
+		goto _ERR_TID;
+	
 	Py_INCREF(&py_lm_process_t);
 	if (PyModule_AddObject(pymod, "lm_process_t",
 			       (PyObject *)&py_lm_process_t) < 0)
@@ -405,6 +542,9 @@ PyInit_libmem(void)
 	goto _RET; /* No Type Errors */
 _ERR_PROCESS:
 	Py_DECREF(&py_lm_process_t);
+	Py_DECREF(pymod);
+_ERR_TID:
+	Py_DECREF(&py_lm_tid_t);
 	Py_DECREF(pymod);
 _ERR_PID:
 	Py_DECREF(&py_lm_pid_t);

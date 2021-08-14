@@ -92,6 +92,30 @@ static PyTypeObject py_lm_process_t = {
 	.tp_members = py_lm_process_members
 };
 
+/****************************************/
+
+typedef struct {
+	PyObject_HEAD
+	lm_module_t mod;
+} py_lm_module_obj;
+
+static PyMemberDef py_lm_module_members[] = {
+	{ "base", T_ULONG, offsetof(py_lm_module_obj, mod.base), 0, "" },
+	{ "end", T_ULONG, offsetof(py_lm_module_obj, mod.end), 0, "" },
+	{ "size", T_ULONG, offsetof(py_lm_module_obj, mod.size), 0, "" }
+};
+
+static PyTypeObject py_lm_module_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_module_t",
+	.tp_doc = "",
+	.tp_basicsize = sizeof(py_lm_module_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_module_members
+};
+
 /* Python Functions */
 typedef struct {
 	PyObject *callback;
@@ -112,7 +136,8 @@ py_LM_EnumProcessesCallback(lm_pid_t   pid,
 	pyret = (PyLongObject *)(
 		PyObject_CallFunctionObjArgs(parg->callback,
 					     pypid,
-					     parg->arg)
+					     parg->arg,
+					     NULL)
 	);
 
 	return PyLong_AsLong((PyObject *)pyret) ? LM_TRUE : LM_FALSE;
@@ -403,7 +428,8 @@ py_LM_EnumThreadsCallback(lm_tid_t   tid,
 	pyret = (PyLongObject *)(
 		PyObject_CallFunctionObjArgs(parg->callback,
 					     pytid,
-					     parg->arg)
+					     parg->arg,
+					     NULL)
 	);
 
 	return PyLong_AsLong((PyObject *)pyret) ? LM_TRUE : LM_FALSE;
@@ -472,6 +498,79 @@ py_LM_GetThreadIdEx(PyObject *self,
 
 /****************************************/
 
+typedef struct {
+	PyObject *callback;
+	PyObject *arg;
+} py_lm_enum_modules_t;
+
+static lm_bool_t
+py_LM_EnumModulesCallback(lm_module_t  mod,
+			  lm_tstring_t path,
+			  lm_void_t   *arg)
+{
+	PyLongObject         *pyret;
+	PyUnicodeObject      *pypath;
+	py_lm_module_obj     *pymod;
+	py_lm_enum_modules_t *parg = (py_lm_enum_modules_t *)arg;
+
+	pymod = (py_lm_module_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+	);
+	pymod->mod = mod;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	pypath = (PyUnicodeObject *)PyUnicode_FromUnicode(path,
+							  LM_STRLEN(path));
+#	else
+	pypath = (PyUnicodeObject *)PyUnicode_FromString(path);
+#	endif
+
+	pyret = (PyLongObject *)(
+		PyObject_CallFunctionObjArgs(parg->callback,
+					     pymod,
+					     pypath,
+					     parg->arg,
+					     NULL)
+	);
+
+	return PyLong_AsLong((PyObject *)pyret) ? LM_TRUE : LM_FALSE;
+
+	return LM_TRUE;
+}
+
+static PyObject *
+py_LM_EnumModules(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_enum_modules_t arg;
+
+	if (!PyArg_ParseTuple(args, "O|O", &arg.callback, &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumModules(py_LM_EnumModulesCallback,
+			       (lm_void_t *)&arg)
+	);
+}
+
+static PyObject *
+py_LM_EnumModulesEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj   *pyproc;
+	py_lm_enum_modules_t arg;
+
+	if (!PyArg_ParseTuple(args, "O!|O|O", &py_lm_process_t, &pyproc,
+			      &arg.callback, &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumModulesEx(pyproc->proc,
+				 py_LM_EnumModulesCallback,
+				 (lm_void_t *)&arg)
+	);
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -495,6 +594,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetThreadId", py_LM_GetThreadId, METH_NOARGS, "" },
 	{ "LM_GetThreadIdEx", py_LM_GetThreadIdEx, METH_VARARGS, "" },
 	/****************************************/
+	{ "LM_EnumModules", py_LM_EnumModules, METH_VARARGS, "" },
+	{ "LM_EnumModulesEx", py_LM_EnumModulesEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 
@@ -519,6 +620,9 @@ PyInit_libmem(void)
 	
 	if (PyType_Ready(&py_lm_process_t) < 0)
 		goto _ERR_MOD;
+	
+	if (PyType_Ready(&py_lm_module_t) < 0)
+		goto _ERR_MOD;
 
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
@@ -538,8 +642,16 @@ PyInit_libmem(void)
 	if (PyModule_AddObject(pymod, "lm_process_t",
 			       (PyObject *)&py_lm_process_t) < 0)
 		goto _ERR_PROCESS;
+	
+	Py_INCREF(&py_lm_module_t);
+	if (PyModule_AddObject(pymod, "lm_module_t",
+			       (PyObject *)&py_lm_module_t) < 0)
+		goto _ERR_MODULE;
 
 	goto _RET; /* No Type Errors */
+_ERR_MODULE:
+	Py_DECREF(&py_lm_module_t);
+	Py_DECREF(pymod);
 _ERR_PROCESS:
 	Py_DECREF(&py_lm_process_t);
 	Py_DECREF(pymod);

@@ -1,11 +1,19 @@
 from libmem import *
 
-def enum_processes_callback(pid : lm_pid_t, arg):
+def enum_processes_callback(pid : lm_pid_t, arg) -> int:
 	print(f"[*] CurPID: {int(pid)}")
 	return 1
 
-def enum_threads_callback(tid : lm_tid_t, arg):
+def enum_threads_callback(tid : lm_tid_t, arg) -> int:
 	print(f"[*] CurTID: {int(tid)}")
+	return 1
+
+def enum_modules_callback(mod : lm_module_t, path : str, arg) -> int:
+	print(f"[*] ModBase: {hex(mod.base)}")
+	print(f"[*] ModSize: {hex(mod.size)}")
+	print(f"[*] ModEnd:  {hex(mod.end)}")
+	print(f"[*] ModPath: {path}")
+	print("====================")
 	return 1
 
 pid = LM_GetProcessIdEx("test1")
@@ -25,4 +33,5 @@ print(f"[*] Process Bits: {procbits}")
 print(f"[*] System Bits: {sysbits}")
 print(f"[*] Thread: {int(tid)}")
 LM_EnumThreadsEx(proc, enum_threads_callback, None)
+LM_EnumModulesEx(proc, enum_modules_callback, None)
 LM_CloseProcess(proc)

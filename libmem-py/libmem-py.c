@@ -60,6 +60,48 @@ static PyTypeObject py_lm_process_t = {
 };
 
 /* Python Functions */
+typedef struct {
+	PyObject *callback;
+	PyObject *arg;
+} py_lm_enum_processes_t;
+
+static lm_bool_t
+py_LM_EnumProcessesCallback(lm_pid_t   pid,
+			    lm_void_t *arg)
+{
+	py_lm_enum_processes_t *parg = (py_lm_enum_processes_t *)arg;
+	py_lm_pid_obj *pypid;
+	PyLongObject *pyret;
+
+	pypid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
+	pypid->pid = pid;
+	
+	pyret = (PyLongObject *)(
+		PyObject_CallFunctionObjArgs(parg->callback,
+					     pypid,
+					     parg->arg)
+	);
+
+	return pyret->ob_digit[0] ? LM_TRUE : LM_FALSE;
+}
+
+static PyObject *
+py_LM_EnumProcesses(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_enum_processes_t arg;
+
+	if (!PyArg_ParseTuple(args, "O|O", &arg.callback, &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumProcesses(
+			py_LM_EnumProcessesCallback,
+			(lm_void_t *)&arg
+		)
+	);
+}
+
 static PyObject *
 py_LM_GetProcessId(PyObject *self,
 		   PyObject *args)
@@ -309,6 +351,7 @@ py_LM_GetProcessBitsEx(PyObject *self,
 
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
+	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
 	{ "LM_GetProcessId", py_LM_GetProcessId, METH_NOARGS, "" },
 	{ "LM_GetProcessIdEx", py_LM_GetProcessIdEx, METH_VARARGS, "" },
 	{ "LM_GetParentId", py_LM_GetParentId, METH_NOARGS, "" },

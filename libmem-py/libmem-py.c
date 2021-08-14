@@ -65,6 +65,32 @@ static PyTypeObject py_lm_module_t = {
 	.tp_members = py_lm_module_members
 };
 
+/****************************************/
+
+typedef struct {
+	PyObject_HEAD
+	lm_page_t page;
+} py_lm_page_obj;
+
+static PyMemberDef py_lm_page_members[] = {
+	{ "base", T_ULONG, offsetof(py_lm_page_obj, page.base), 0, "" },
+	{ "end", T_ULONG, offsetof(py_lm_page_obj, page.end), 0, "" },
+	{ "size", T_ULONG, offsetof(py_lm_page_obj, page.size), 0, "" },
+	{ "prot", T_INT, offsetof(py_lm_page_obj, page.prot), 0, "" },
+	{ "flags", T_INT, offsetof(py_lm_page_obj, page.flags), 0, "" }
+};
+
+static PyTypeObject py_lm_page_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_page_t",
+	.tp_doc = "",
+	.tp_basicsize = sizeof(py_lm_page_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_page_members
+};
+
 /* Python Functions */
 typedef struct {
 	PyObject *callback;
@@ -895,6 +921,106 @@ py_LM_GetSymbolEx(PyObject *self,
 
 /****************************************/
 
+typedef struct {
+	PyObject *callback;
+	PyObject *arg;
+} py_lm_enum_pages_t;
+
+static lm_bool_t
+py_LM_EnumPagesCallback(lm_page_t  page,
+			lm_void_t *arg)
+{
+	py_lm_enum_pages_t *parg = (py_lm_enum_pages_t *)arg;
+	py_lm_page_obj     *pypage;
+	PyObject           *pyret;
+
+	pypage = (py_lm_page_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
+	);
+	pypage->page = page;
+
+	pyret = PyObject_CallFunctionObjArgs(parg->callback,
+					     pypage,
+					     parg->arg);
+	
+	return PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+}
+
+static PyObject *
+py_LM_EnumPages(PyObject *self,
+		PyObject *args)
+{
+	py_lm_enum_pages_t arg;
+
+	if (!PyArg_ParseTuple(args, "O|O", &arg.callback,
+			      &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumPages(py_LM_EnumPagesCallback,
+			     (lm_void_t *)&arg)
+	);
+}
+
+static PyObject *
+py_LM_EnumPagesEx(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_enum_pages_t arg;
+	py_lm_process_obj *pyproc;
+
+	if (!PyArg_ParseTuple(args, "O!O|O", &py_lm_process_t, &pyproc,
+			      &arg.callback,
+			      &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumPagesEx(pyproc->proc,
+			       py_LM_EnumPagesCallback,
+			       (lm_void_t *)&arg)
+	);
+}
+
+static PyObject *
+py_LM_GetPage(PyObject *self,
+	      PyObject *args)
+{
+	py_lm_page_obj *pypage;
+	unsigned long   addr;
+
+	if (!PyArg_ParseTuple(args, "k", &addr))
+		return NULL;
+	
+	pypage = (py_lm_page_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
+	);
+	LM_GetPage((lm_address_t)(lm_uintptr_t)addr, &pypage->page);
+
+	return (PyObject *)pypage;
+}
+
+static PyObject *
+py_LM_GetPageEx(PyObject *self,
+		PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	py_lm_page_obj    *pypage;
+	unsigned long      addr;
+
+	if (!PyArg_ParseTuple(args, "O!k", &py_lm_process_t, &pyproc,
+			      &addr))
+		return NULL;
+	
+	pypage = (py_lm_page_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
+	);
+	LM_GetPageEx(pyproc->proc,
+		     (lm_address_t)(lm_uintptr_t)addr,
+		     &pypage->page);
+
+	return (PyObject *)pypage;
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -936,6 +1062,10 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetSymbol", py_LM_GetSymbol, METH_VARARGS, "" },
 	{ "LM_GetSymbolEx", py_LM_GetSymbolEx, METH_VARARGS, "" },
 	/****************************************/
+	{ "LM_EnumPages", py_LM_EnumPages, METH_VARARGS, "" },
+	{ "LM_EnumPagesEx", py_LM_EnumPagesEx, METH_VARARGS, "" },
+	{ "LM_GetPage", py_LM_GetPage, METH_VARARGS, "" },
+	{ "LM_GetPageEx", py_LM_GetPageEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 
@@ -957,10 +1087,29 @@ PyInit_libmem(void)
 	
 	if (PyType_Ready(&py_lm_module_t) < 0)
 		goto _ERR_PYMOD;
+	
+	if (PyType_Ready(&py_lm_page_t) < 0)
+		goto _ERR_PYMOD;
 
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
 		goto _ERR_PYMOD;
+	
+	/* Types */
+	Py_INCREF(&py_lm_process_t);
+	if (PyModule_AddObject(pymod, "lm_process_t",
+			       (PyObject *)&py_lm_process_t) < 0)
+		goto _ERR_PROCESS;
+	
+	Py_INCREF(&py_lm_module_t);
+	if (PyModule_AddObject(pymod, "lm_module_t",
+			       (PyObject *)&py_lm_module_t) < 0)
+		goto _ERR_MODULE;
+	
+	Py_INCREF(&py_lm_page_t);
+	if (PyModule_AddObject(pymod, "lm_page_t",
+			       (PyObject *)&py_lm_page_t) < 0)
+		goto _ERR_PAGE;
 	
 	/* Global Variables */
 	DECL_GLOBAL(pymod, "LM_OS_WIN", LM_OS_WIN);
@@ -1002,19 +1151,11 @@ PyInit_libmem(void)
 	DECL_GLOBAL(pymod, "LM_PATH_MAX", LM_PATH_MAX);
 	DECL_GLOBAL(pymod, "LM_MOD_BY_STR", LM_MOD_BY_STR);
 	DECL_GLOBAL(pymod, "LM_MOD_BY_ADDR", LM_MOD_BY_ADDR);
-	
-	/* Types */
-	Py_INCREF(&py_lm_process_t);
-	if (PyModule_AddObject(pymod, "lm_process_t",
-			       (PyObject *)&py_lm_process_t) < 0)
-		goto _ERR_PROCESS;
-	
-	Py_INCREF(&py_lm_module_t);
-	if (PyModule_AddObject(pymod, "lm_module_t",
-			       (PyObject *)&py_lm_module_t) < 0)
-		goto _ERR_MODULE;
 
 	goto _RET; /* No Type Errors */
+_ERR_PAGE:
+	Py_DECREF(&py_lm_page_t);
+	Py_DECREF(pymod);
 _ERR_MODULE:
 	Py_DECREF(&py_lm_module_t);
 	Py_DECREF(pymod);

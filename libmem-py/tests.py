@@ -29,6 +29,10 @@ def counter_callback_sym(symbol : str, addr : int, arg):
 	arg.inc()
 	return LM_TRUE
 
+def counter_callback_page(page : lm_page_t, arg):
+	arg.inc()
+	return LM_TRUE
+
 print("[+] PyTest 1")
 nprocs = counter()
 LM_EnumProcesses(counter_callback_pid, nprocs)
@@ -82,6 +86,20 @@ print(f"[*] Symbols: {nsyms.val()}")
 
 main_addr = LM_GetSymbol(mod, "Py_BytesMain")
 print(f"[*] PyBytesMain Addr: {hex(main_addr)}")
+
+print("====================")
+
+npages = counter()
+LM_EnumPages(counter_callback_page, npages)
+
+print(f"[*] Pages: {npages.val()}")
+
+page = LM_GetPage(mod.base)
+print(f"[*] Page Base:  {hex(page.base)}")
+print(f"[*] Page End:   {hex(page.end)}")
+print(f"[*] Page Size:  {hex(page.size)}")
+print(f"[*] Page Prot:  {page.prot}")
+print(f"[*] Page Flags: {page.flags}")
 
 print("====================")
 

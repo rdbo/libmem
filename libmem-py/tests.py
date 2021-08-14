@@ -25,6 +25,13 @@ def counter_callback_mod(mod : lm_module_t, path : str, arg) -> int:
 	arg.inc()
 	return LM_TRUE
 
+def counter_callback_sym(symbol : str, addr : int, arg):
+	arg.inc()
+	if (len(symbol) > 0):
+		print(f"[*] Symbol Name: {symbol}")
+		print(f"[*] Symbol Addr: {hex(addr)}")
+	return LM_TRUE
+
 print("[+] PyTest 1")
 nprocs = counter()
 LM_EnumProcesses(counter_callback_pid, nprocs)
@@ -69,6 +76,12 @@ print(f"[*] Module End:  {hex(mod.end)}")
 print(f"[*] Module Size: {hex(mod.size)}")
 print(f"[*] Module Path: {modpath}")
 print(f"[*] Module Name: {modname}")
+
+print("====================")
+
+nsyms = counter()
+LM_EnumSymbols(mod, counter_callback_sym, nsyms)
+print(f"[*] Symbols: {nsyms.val()}")
 
 LM_CloseProcess(proc)
 print("[-] PyTest 1")

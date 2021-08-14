@@ -791,6 +791,54 @@ py_LM_UnloadModuleEx(PyObject *self,
 	return PyLong_FromLong(LM_UnloadModuleEx(pyproc->proc, pymod->mod));
 }
 
+/****************************************/
+
+typedef struct {
+	PyObject *callback;
+	PyObject *arg;
+} py_lm_enum_symbols_t;
+
+static lm_bool_t py_LM_EnumSymbolsCallback(lm_cstring_t symbol,
+					   lm_address_t addr,
+					   lm_void_t   *arg)
+{
+	py_lm_enum_symbols_t *parg = (py_lm_enum_symbols_t *)arg;
+	PyUnicodeObject      *pysymbol;
+	PyLongObject         *pyaddr;
+	PyObject             *pyret;
+
+	pysymbol = (PyUnicodeObject *)PyUnicode_FromString(symbol);
+	pyaddr = (PyLongObject *)PyLong_FromVoidPtr(addr);
+
+	pyret = PyObject_CallFunctionObjArgs(parg->callback,
+					     pysymbol,
+					     pyaddr,
+					     parg->arg,
+					     NULL);
+
+	return PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+}
+
+
+static PyObject *
+py_LM_EnumSymbols(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_enum_symbols_t arg;
+	py_lm_module_obj    *pymod;
+
+	if (!PyArg_ParseTuple(args, "O!O|O", &py_lm_module_t, &pymod,
+			      &arg.callback,
+			      &arg.arg))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_EnumSymbols(pymod->mod,
+			       py_LM_EnumSymbolsCallback,
+			       (lm_void_t *)&arg)
+	);
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -826,6 +874,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_LoadModuleEx", py_LM_LoadModuleEx, METH_VARARGS, "" },
 	{ "LM_UnloadModule", py_LM_UnloadModule, METH_VARARGS, "" },
 	{ "LM_UnloadModuleEx", py_LM_UnloadModuleEx, METH_VARARGS, "" },
+	/****************************************/
+	{ "LM_EnumSymbols", py_LM_EnumSymbols, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

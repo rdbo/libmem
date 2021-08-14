@@ -1,45 +1,74 @@
 from libmem import *
 
-def enum_processes_callback(pid : lm_pid_t, arg) -> int:
-	print(f"[*] CurPID: {int(pid)}")
+class counter:
+	def __init__(self):
+		self.value = 0
+	
+	def inc(self):
+		self.value += 1
+	
+	def dec(self):
+		self.value -= 1
+	
+	def val(self):
+		return self.value
+
+def counter_callback_pid(pid : lm_pid_t, arg) -> int:
+	arg.inc()
 	return LM_TRUE
 
-def enum_threads_callback(tid : lm_tid_t, arg) -> int:
-	print(f"[*] CurTID: {int(tid)}")
+def counter_callback_tid(tid : lm_tid_t, arg) -> int:
+	arg.inc()
 	return LM_TRUE
 
-def enum_modules_callback(mod : lm_module_t, path : str, arg) -> int:
-	print(f"[*] ModBase: {hex(mod.base)}")
-	print(f"[*] ModSize: {hex(mod.size)}")
-	print(f"[*] ModEnd:  {hex(mod.end)}")
-	print(f"[*] ModPath: {path}")
-	print("====================")
+def counter_callback_mod(mod : lm_module_t, path : str, arg) -> int:
+	arg.inc()
 	return LM_TRUE
 
-pid = LM_GetProcessIdEx("test1")
-ppid = LM_GetParentIdEx(pid)
-proc = LM_OpenProcessEx(pid)
-procpath = LM_GetProcessPathEx(proc)
-procname = LM_GetProcessNameEx(proc)
-procbits = LM_GetProcessBitsEx(proc)
-sysbits = LM_GetSystemBits()
-tid = LM_GetThreadIdEx(proc)
-#LM_EnumProcesses(enum_processes_callback, None)
-print(f"[*] PID: {proc.pid}")
+print("[+] PyTest 1")
+nprocs = counter()
+LM_EnumProcesses(counter_callback_pid, nprocs)
+print(f"[*] Processes: {nprocs.val()}")
+
+pid = LM_GetProcessId()
+ppid = LM_GetParentId()
+print(f"[*] PID: {int(pid)}")
 print(f"[*] PPID: {int(ppid)}")
+
+nthreads = counter()
+LM_EnumThreads(counter_callback_tid, nthreads)
+print(f"[*] Threads: {nthreads.val()}")
+
+tid = LM_GetThreadId()
+print(f"[*] TID: {int(tid)}")
+
+proc = LM_OpenProcess()
+procpath = LM_GetProcessPath()
+procname = LM_GetProcessName()
+procbits = LM_GetProcessBits()
+print(f"[*] Process ID: {proc.pid}")
 print(f"[*] Process Path: {procpath}")
 print(f"[*] Process Name: {procname}")
 print(f"[*] Process Bits: {procbits}")
+
+sysbits = LM_GetSystemBits()
 print(f"[*] System Bits: {sysbits}")
-print(f"[*] Thread: {int(tid)}")
-#LM_EnumThreadsEx(proc, enum_threads_callback, None)
-#LM_EnumModulesEx(proc, enum_modules_callback, None)
-mod = LM_GetModuleEx(proc, LM_MOD_BY_STR, procpath)
-mod = LM_GetModuleEx(proc, LM_MOD_BY_ADDR, mod.base)
-modpath = LM_GetModulePathEx(proc, mod)
-#mod = LM_GetModule(LM_MOD_BY_ADDR, mod.base)
+
+print(f"====================")
+
+nmods = counter()
+LM_EnumModules(counter_callback_mod, nmods)
+print(f"[*] Modules: {nmods.val()}")
+
+mod = LM_GetModule(LM_MOD_BY_STR, procpath)
+mod = LM_GetModule(LM_MOD_BY_ADDR, mod.base)
+modpath = LM_GetModulePath(mod)
+modname = LM_GetModuleName(mod)
 print(f"[*] Module Base: {hex(mod.base)}")
 print(f"[*] Module End:  {hex(mod.end)}")
 print(f"[*] Module Size: {hex(mod.size)}")
 print(f"[*] Module Path: {modpath}")
+print(f"[*] Module Name: {modname}")
+
 LM_CloseProcess(proc)
+print("[-] PyTest 1")

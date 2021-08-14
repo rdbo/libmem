@@ -4,7 +4,7 @@
 
 #define DECL_GLOBAL(mod, name, val) { \
 	PyObject *global; \
-	global = PyLong_FromLong(val); \
+	global = PyLong_FromLong((long)val); \
 	PyObject_SetAttrString(mod, name, global); \
 	Py_DECREF(global); \
 }
@@ -578,6 +578,103 @@ py_LM_EnumModulesEx(PyObject *self,
 	);
 }
 
+static PyObject *
+py_LM_GetModule(PyObject *self,
+		PyObject *args)
+{
+	py_lm_module_obj *pymod;
+	PyLongObject     *pyflags;
+	PyObject         *pymodarg;
+	lm_int_t          flags;
+
+	if (!PyArg_ParseTuple(args, "O!|O", &PyLong_Type, &pyflags, &pymodarg))
+		return NULL;
+	
+	pymod = (py_lm_module_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+	);
+	flags = (lm_int_t)PyLong_AsLong((PyObject *)pyflags);
+
+	if (flags == LM_MOD_BY_STR) {
+		PyUnicodeObject *pymodstr = (PyUnicodeObject *)pymodarg;
+		lm_tchar_t      *modstr;
+
+#		if LM_CHARSET == LM_CHARSET_UC
+		modstr = (lm_tchar_t *)(
+			PyUnicode_AsUnicode((PyObject *)pymodstr)
+		);
+#		else
+		modstr = (lm_tchar_t *)(
+			PyUnicode_AsUTF8((PyObject *)pymodstr)
+		);
+#		endif
+
+		LM_GetModule(flags, modstr, &pymod->mod);
+	} else if (flags == LM_MOD_BY_ADDR) {
+		PyLongObject *modaddr = (PyLongObject *)pymodarg;
+		
+		LM_GetModule(flags,
+			     (lm_void_t *)PyLong_AsLong((PyObject *)modaddr),
+			     &pymod->mod);
+	} else {
+		pymod->mod.base = (lm_address_t)LM_BAD;
+		pymod->mod.size = 0;
+		pymod->mod.end = pymod->mod.base;
+	}
+
+	return (PyObject *)pymod;
+}
+
+static PyObject *
+py_LM_GetModuleEx(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_module_obj  *pymod;
+	py_lm_process_obj *pyproc;
+	PyLongObject      *pyflags;
+	PyObject          *pymodarg;
+	lm_int_t           flags;
+
+	if (!PyArg_ParseTuple(args, "O!|O!|O", &py_lm_process_t, &pyproc,
+			      &PyLong_Type, &pyflags, &pymodarg))
+		return NULL;
+	
+	pymod = (py_lm_module_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+	);
+	flags = (lm_int_t)PyLong_AsLong((PyObject *)pyflags);
+
+	if (flags == LM_MOD_BY_STR) {
+		PyUnicodeObject *pymodstr = (PyUnicodeObject *)pymodarg;
+		lm_tchar_t      *modstr;
+
+#		if LM_CHARSET == LM_CHARSET_UC
+		modstr = (lm_tchar_t *)(
+			PyUnicode_AsUnicode((PyObject *)pymodstr)
+		);
+#		else
+		modstr = (lm_tchar_t *)(
+			PyUnicode_AsUTF8((PyObject *)pymodstr)
+		);
+#		endif
+
+		LM_GetModuleEx(pyproc->proc, flags, modstr, &pymod->mod);
+	} else if (flags == LM_MOD_BY_ADDR) {
+		PyLongObject *modaddr = (PyLongObject *)pymodarg;
+		
+		LM_GetModuleEx(pyproc->proc,
+			       flags,
+			       (lm_void_t *)PyLong_AsLong((PyObject *)modaddr),
+			       &pymod->mod);
+	} else {
+		pymod->mod.base = (lm_address_t)LM_BAD;
+		pymod->mod.size = 0;
+		pymod->mod.end = pymod->mod.base;
+	}
+
+	return (PyObject *)pymod;
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -603,6 +700,8 @@ static PyMethodDef libmem_methods[] = {
 	/****************************************/
 	{ "LM_EnumModules", py_LM_EnumModules, METH_VARARGS, "" },
 	{ "LM_EnumModulesEx", py_LM_EnumModulesEx, METH_VARARGS, "" },
+	{ "LM_GetModule", py_LM_GetModule, METH_VARARGS, "" },
+	{ "LM_GetModuleEx", py_LM_GetModuleEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

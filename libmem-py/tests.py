@@ -13,11 +13,11 @@ class counter:
 	def val(self):
 		return self.value
 
-def counter_callback_pid(pid : lm_pid_t, arg) -> int:
+def counter_callback_pid(pid, arg) -> int:
 	arg.inc()
 	return LM_TRUE
 
-def counter_callback_tid(tid : lm_tid_t, arg) -> int:
+def counter_callback_tid(tid, arg) -> int:
 	arg.inc()
 	return LM_TRUE
 
@@ -32,15 +32,15 @@ print(f"[*] Processes: {nprocs.val()}")
 
 pid = LM_GetProcessId()
 ppid = LM_GetParentId()
-print(f"[*] PID: {int(pid)}")
-print(f"[*] PPID: {int(ppid)}")
+print(f"[*] PID: {pid}")
+print(f"[*] PPID: {ppid}")
 
 nthreads = counter()
 LM_EnumThreads(counter_callback_tid, nthreads)
 print(f"[*] Threads: {nthreads.val()}")
 
 tid = LM_GetThreadId()
-print(f"[*] TID: {int(tid)}")
+print(f"[*] TID: {tid}")
 
 proc = LM_OpenProcess()
 procpath = LM_GetProcessPath()

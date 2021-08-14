@@ -17,71 +17,6 @@
 }
 
 /* Python Types */
-typedef struct {
-	PyObject_HEAD
-	lm_pid_t pid;
-} py_lm_pid_obj;
-
-static PyMemberDef py_lm_pid_members[] = {
-	{ "pid", T_INT, offsetof(py_lm_pid_obj, pid), 0, "" }
-};
-
-static PyObject *
-py_lm_pid_int(py_lm_pid_obj *self)
-{
-	return PyLong_FromPid(self->pid);
-}
-
-static PyNumberMethods lm_pid_number_methods = {
-	.nb_int = (unaryfunc)py_lm_pid_int
-};
-
-static PyTypeObject py_lm_pid_t = {
-	PyVarObject_HEAD_INIT(NULL, 0)
-	.tp_name = "libmem.lm_pid_t",
-	.tp_doc = "",
-	.tp_basicsize = sizeof(py_lm_pid_obj),
-	.tp_itemsize = 0,
-	.tp_flags = Py_TPFLAGS_DEFAULT,
-	.tp_new = PyType_GenericNew,
-	.tp_members = py_lm_pid_members,
-	.tp_as_number = &lm_pid_number_methods
-};
-
-/****************************************/
-
-typedef struct {
-	PyObject_HEAD
-	lm_tid_t tid;
-} py_lm_tid_obj;
-
-static PyMemberDef py_lm_tid_members[] = {
-	{ "tid", T_INT, offsetof(py_lm_tid_obj, tid), 0, "" }
-};
-
-static PyObject *
-py_lm_tid_int(py_lm_tid_obj *self)
-{
-	return PyLong_FromLong(self->tid);
-}
-
-static PyNumberMethods lm_tid_number_methods = {
-	.nb_int = (unaryfunc)py_lm_tid_int
-};
-
-static PyTypeObject py_lm_tid_t = {
-	PyVarObject_HEAD_INIT(NULL, 0)
-	.tp_name = "libmem.lm_tid_t",
-	.tp_doc = "",
-	.tp_basicsize = sizeof(py_lm_tid_obj),
-	.tp_itemsize = 0,
-	.tp_flags = Py_TPFLAGS_DEFAULT,
-	.tp_new = PyType_GenericNew,
-	.tp_members = py_lm_tid_members,
-	.tp_as_number = &lm_tid_number_methods
-};
-
-/****************************************/
 
 typedef struct {
 	PyObject_HEAD
@@ -141,11 +76,10 @@ py_LM_EnumProcessesCallback(lm_pid_t   pid,
 			    lm_void_t *arg)
 {
 	py_lm_enum_processes_t *parg = (py_lm_enum_processes_t *)arg;
-	py_lm_pid_obj *pypid;
-	PyLongObject *pyret;
+	PyLongObject           *pypid;
+	PyLongObject           *pyret;
 
-	pypid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
-	pypid->pid = pid;
+	pypid = (PyLongObject *)PyLong_FromPid(pid);
 	
 	pyret = (PyLongObject *)(
 		PyObject_CallFunctionObjArgs(parg->callback,
@@ -178,19 +112,13 @@ static PyObject *
 py_LM_GetProcessId(PyObject *self,
 		   PyObject *args)
 {
-	py_lm_pid_obj *pypid;
-	
-	pypid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
-	pypid->pid = LM_GetProcessId();
-
-	return (PyObject *)pypid;
+	return (PyObject *)PyLong_FromPid(LM_GetProcessId());
 }
 
 static PyObject *
 py_LM_GetProcessIdEx(PyObject *self,
 		     PyObject *args)
 {
-	py_lm_pid_obj *pypid;
 	lm_tchar_t    *procstr;
 
 #	if LM_CHARSET == LM_CHARSET_UC
@@ -201,38 +129,26 @@ py_LM_GetProcessIdEx(PyObject *self,
 		return NULL;
 #	endif
 
-	pypid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
-	pypid->pid = LM_GetProcessIdEx(procstr);
-
-	return (PyObject *)pypid;
+	return (PyObject *)PyLong_FromPid(LM_GetProcessIdEx(procstr));
 }
 
 static PyObject *
 py_LM_GetParentId(PyObject *self,
 		  PyObject *args)
 {
-	py_lm_pid_obj *pyppid;
-
-	pyppid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
-	pyppid->pid = LM_GetParentId();
-
-	return (PyObject *)pyppid;
+	return (PyObject *)PyLong_FromPid(LM_GetParentId());
 }
 
 static PyObject *
 py_LM_GetParentIdEx(PyObject *self,
 		    PyObject *args)
 {
-	py_lm_pid_obj *pyppid;
-	py_lm_pid_obj *pypid;
+	long pypid;
 
-	if (!PyArg_ParseTuple(args, "O!", &py_lm_pid_t, &pypid))
+	if (!PyArg_ParseTuple(args, "l", &pypid))
 		return NULL;
-	
-	pyppid = (py_lm_pid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_pid_t);
-	pyppid->pid = LM_GetParentIdEx(pypid->pid);
 
-	return (PyObject *)pyppid;
+	return (PyObject *)PyLong_FromPid(LM_GetParentIdEx((lm_pid_t)pypid));
 }
 
 static PyObject *
@@ -253,14 +169,14 @@ py_LM_OpenProcessEx(PyObject *self,
 		    PyObject *args)
 {
 	py_lm_process_obj *pyproc;
-	py_lm_pid_obj     *pypid;
+	long               pypid;
 
-	if (!PyArg_ParseTuple(args, "O!", &py_lm_pid_t, &pypid))
+	if (!PyArg_ParseTuple(args, "l", &pypid))
 		return NULL;
 
 	pyproc = (py_lm_process_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_process_t);
 
-	LM_OpenProcessEx(pypid->pid, &pyproc->proc);
+	LM_OpenProcessEx((lm_pid_t)pypid, &pyproc->proc);
 	
 	return (PyObject *)pyproc;
 }
@@ -433,11 +349,10 @@ py_LM_EnumThreadsCallback(lm_tid_t   tid,
 			  lm_void_t *arg)
 {
 	PyLongObject         *pyret;
-	py_lm_tid_obj        *pytid;
+	PyLongObject         *pytid;
 	py_lm_enum_threads_t *parg = (py_lm_enum_threads_t *)arg;
 
-	pytid = (py_lm_tid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_tid_t);
-	pytid->tid = tid;
+	pytid = (PyLongObject *)PyLong_FromLong((long)tid);
 
 	pyret = (PyLongObject *)(
 		PyObject_CallFunctionObjArgs(parg->callback,
@@ -486,28 +401,21 @@ static PyObject *
 py_LM_GetThreadId(PyObject *self,
 		  PyObject *args)
 {
-	py_lm_tid_obj *pytid;
-
-	pytid = (py_lm_tid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_tid_t);
-	pytid->tid = LM_GetThreadId();
-
-	return (PyObject *)pytid;
+	return (PyObject *)PyLong_FromLong((long)LM_GetThreadId());
 }
 
 static PyObject *
 py_LM_GetThreadIdEx(PyObject *self,
 		    PyObject *args)
 {
-	py_lm_tid_obj     *pytid;
 	py_lm_process_obj *pyproc;
 
 	if (!PyArg_ParseTuple(args, "O!", &py_lm_process_t, &pyproc))
 		return NULL;
 
-	pytid = (py_lm_tid_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_tid_t);
-	pytid->tid = LM_GetThreadIdEx(pyproc->proc);
-
-	return (PyObject *)pytid;
+	return (PyObject *)(
+		PyLong_FromLong((long)LM_GetThreadIdEx(pyproc->proc))
+	);
 }
 
 /****************************************/
@@ -847,21 +755,15 @@ PyInit_libmem(void)
 {
 	PyObject *pymod;
 
-	if (PyType_Ready(&py_lm_pid_t) < 0)
-		goto _ERR_MOD;
-	
-	if (PyType_Ready(&py_lm_tid_t) < 0)
-		goto _ERR_MOD;
-	
 	if (PyType_Ready(&py_lm_process_t) < 0)
-		goto _ERR_MOD;
+		goto _ERR_PYMOD;
 	
 	if (PyType_Ready(&py_lm_module_t) < 0)
-		goto _ERR_MOD;
+		goto _ERR_PYMOD;
 
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
-		goto _ERR_MOD;
+		goto _ERR_PYMOD;
 	
 	/* Global Variables */
 	DECL_GLOBAL(pymod, "LM_OS_WIN", LM_OS_WIN);
@@ -905,16 +807,6 @@ PyInit_libmem(void)
 	DECL_GLOBAL(pymod, "LM_MOD_BY_ADDR", LM_MOD_BY_ADDR);
 	
 	/* Types */
-	Py_INCREF(&py_lm_pid_t);
-	if (PyModule_AddObject(pymod, "lm_pid_t",
-			       (PyObject *)&py_lm_pid_t) < 0)
-		goto _ERR_PID;
-	
-	Py_INCREF(&py_lm_tid_t);
-	if (PyModule_AddObject(pymod, "lm_tid_t",
-			       (PyObject *)&py_lm_tid_t) < 0)
-		goto _ERR_TID;
-	
 	Py_INCREF(&py_lm_process_t);
 	if (PyModule_AddObject(pymod, "lm_process_t",
 			       (PyObject *)&py_lm_process_t) < 0)
@@ -932,13 +824,7 @@ _ERR_MODULE:
 _ERR_PROCESS:
 	Py_DECREF(&py_lm_process_t);
 	Py_DECREF(pymod);
-_ERR_TID:
-	Py_DECREF(&py_lm_tid_t);
-	Py_DECREF(pymod);
-_ERR_PID:
-	Py_DECREF(&py_lm_pid_t);
-	Py_DECREF(pymod);
-_ERR_MOD:
+_ERR_PYMOD:
 	pymod = (PyObject *)NULL;
 _RET:
 	return pymod;

@@ -195,6 +195,90 @@ _FREE_RET:
 	return (PyObject *)pystr;
 }
 
+static PyObject *
+py_LM_GetProcessName(PyObject *self,
+		     PyObject *args)
+{
+	PyUnicodeObject *pystr = (PyUnicodeObject *)NULL;
+	lm_tchar_t      *namebuf;
+	lm_size_t        length;
+
+	namebuf = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!namebuf)
+		return NULL;
+	
+	length = LM_GetProcessName(namebuf, LM_PATH_MAX);
+	if (!length)
+		goto _FREE_RET;
+	
+#	if LM_CHARSET == LM_CHARSET_UC
+	pystr = (PyUnicodeObject *)PyUnicode_FromUnicode(namebuf, length);
+#	else
+	pystr = (PyUnicodeObject *)PyUnicode_FromString(namebuf);
+#	endif
+
+_FREE_RET:
+	LM_FREE(namebuf);
+	return (PyObject *)pystr;
+}
+
+static PyObject *
+py_LM_GetProcessNameEx(PyObject *self,
+		       PyObject *args)
+{
+	PyUnicodeObject   *pystr = (PyUnicodeObject *)NULL;
+	py_lm_process_obj *pyproc;
+	lm_tchar_t        *namebuf;
+	lm_size_t          length;
+
+	if (!PyArg_ParseTuple(args, "O!", &py_lm_process_t, &pyproc))
+		return NULL;
+
+	namebuf = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!namebuf)
+		return NULL;
+	
+	length = LM_GetProcessNameEx(pyproc->proc, namebuf, LM_PATH_MAX);
+	if (!length)
+		goto _FREE_RET;
+	
+#	if LM_CHARSET == LM_CHARSET_UC
+	pystr = (PyUnicodeObject *)PyUnicode_FromUnicode(namebuf, length);
+#	else
+	pystr = (PyUnicodeObject *)PyUnicode_FromString(namebuf);
+#	endif
+
+_FREE_RET:
+	LM_FREE(namebuf);
+	return (PyObject *)pystr;
+}
+
+static PyObject *
+py_LM_GetSystemBits(PyObject *self,
+		    PyObject *args)
+{
+	return PyLong_FromLong(LM_GetSystemBits());
+}
+
+static PyObject *
+py_LM_GetProcessBits(PyObject *self,
+		     PyObject *args)
+{
+	return PyLong_FromLong(LM_GetProcessBits());
+}
+
+static PyObject *
+py_LM_GetProcessBitsEx(PyObject *self,
+		       PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+
+	if (!PyArg_ParseTuple(args, "O!", &py_lm_process_t, &pyproc))
+		return NULL;
+	
+	return PyLong_FromLong(LM_GetProcessBitsEx(pyproc->proc));
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_GetProcessId", py_LM_GetProcessId, METH_NOARGS, "" },
@@ -204,6 +288,11 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_CloseProcess", py_LM_CloseProcess, METH_VARARGS, "" },
 	{ "LM_GetProcessPath", py_LM_GetProcessPath, METH_NOARGS, "" },
 	{ "LM_GetProcessPathEx", py_LM_GetProcessPathEx, METH_VARARGS, "" },
+	{ "LM_GetProcessName", py_LM_GetProcessName, METH_NOARGS, "" },
+	{ "LM_GetProcessNameEx", py_LM_GetProcessNameEx, METH_VARARGS, "" },
+	{ "LM_GetSystemBits", py_LM_GetSystemBits, METH_NOARGS, "" },
+	{ "LM_GetProcessBits", py_LM_GetProcessBits, METH_NOARGS, "" },
+	{ "LM_GetProcessBitsEx", py_LM_GetProcessBitsEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

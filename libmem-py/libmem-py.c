@@ -734,6 +734,65 @@ py_LM_GetModulePathEx(PyObject *self,
 	return (PyObject *)pymodpath;
 }
 
+static PyObject *
+py_LM_GetModuleName(PyObject *self,
+		    PyObject *args)
+{
+	PyUnicodeObject  *pymodname = (PyUnicodeObject *)NULL;
+	py_lm_module_obj *pymod;
+	lm_tchar_t       *modname;
+
+	if (!PyArg_ParseTuple(args, "O!", &py_lm_module_t, &pymod))
+		return NULL;
+	
+	modname = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!modname)
+		return NULL;
+	
+	if (LM_GetModuleName(pymod->mod, modname, LM_PATH_MAX)) {
+#		if LM_CHARSET == LM_CHARSET_UC
+		pymodname = (PyUnicodeObject *)PyUnicode_FromUnicode(modname);
+#		else
+		pymodname = (PyUnicodeObject *)PyUnicode_FromString(modname);
+#		endif
+	}
+
+	LM_FREE(modname);
+
+	return (PyObject *)pymodname;
+}
+
+static PyObject *
+py_LM_GetModuleNameEx(PyObject *self,
+		      PyObject *args)
+{
+	PyUnicodeObject   *pymodname = (PyUnicodeObject *)NULL;
+	py_lm_process_obj *pyproc;
+	py_lm_module_obj  *pymod;
+	lm_tchar_t        *modname;
+
+	if (!PyArg_ParseTuple(args, "O!|O!", &py_lm_process_t, &pyproc,
+			      &py_lm_module_t, &pymod))
+		return NULL;
+	
+	modname = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!modname)
+		return NULL;
+	
+	if (LM_GetModuleNameEx(pyproc->proc, pymod->mod,
+			       modname, LM_PATH_MAX)) {
+#		if LM_CHARSET == LM_CHARSET_UC
+		pymodname = (PyUnicodeObject *)PyUnicode_FromUnicode(modname);
+#		else
+		pymodname = (PyUnicodeObject *)PyUnicode_FromString(modname);
+#		endif
+	}
+
+	LM_FREE(modname);
+
+	return (PyObject *)pymodname;
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -763,6 +822,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetModuleEx", py_LM_GetModuleEx, METH_VARARGS, "" },
 	{ "LM_GetModulePath", py_LM_GetModulePath, METH_VARARGS, "" },
 	{ "LM_GetModulePathEx", py_LM_GetModulePathEx, METH_VARARGS, "" },
+	{ "LM_GetModuleName", py_LM_GetModuleName, METH_VARARGS, "" },
+	{ "LM_GetModuleNameEx", py_LM_GetModuleNameEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

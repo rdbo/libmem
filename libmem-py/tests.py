@@ -54,7 +54,7 @@ print(f"[*] Process Bits: {procbits}")
 sysbits = LM_GetSystemBits()
 print(f"[*] System Bits: {sysbits}")
 
-print(f"====================")
+print("====================")
 
 nmods = counter()
 LM_EnumModules(counter_callback_mod, nmods)

@@ -137,6 +137,33 @@ py_LM_CloseProcess(PyObject *self,
 	return PyLong_FromLong(0);
 }
 
+static PyObject *
+py_LM_GetProcessPath(PyObject *self,
+		     PyObject *args)
+{
+	PyUnicodeObject *pystr = (PyUnicodeObject *)NULL;
+	lm_tchar_t      *pathbuf;
+	lm_size_t        length;
+
+	pathbuf = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!pathbuf)
+		return NULL;
+	
+	length = LM_GetProcessPath(pathbuf, LM_PATH_MAX);
+	if (!length)
+		goto _FREE_RET;
+	
+#	if LM_CHARSET == LM_CHARSET_UC
+	pystr = (PyUnicodeObject *)PyUnicode_FromUnicode(pathbuf, length);
+#	else
+	pystr = (PyUnicodeObject *)PyUnicode_FromString(pathbuf);
+#	endif
+
+_FREE_RET:
+	LM_FREE(pathbuf);
+	return (PyObject *)pystr;
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_GetProcessId", py_LM_GetProcessId, METH_NOARGS, "" },
@@ -144,6 +171,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_OpenProcess", py_LM_OpenProcess, METH_NOARGS, "" },
 	{ "LM_OpenProcessEx", py_LM_OpenProcessEx, METH_VARARGS, "" },
 	{ "LM_CloseProcess", py_LM_CloseProcess, METH_VARARGS, "" },
+	{ "LM_GetProcessPath", py_LM_GetProcessPath, METH_NOARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

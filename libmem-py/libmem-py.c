@@ -1,3 +1,10 @@
+/*
+ *  ----------------------------------
+ * |         libmem - by rdbo         |
+ * |      Memory Hacking Library      |
+ *  ----------------------------------
+ */
+
 #include <libmem.h>
 #include <Python.h>
 #include <structmember.h>

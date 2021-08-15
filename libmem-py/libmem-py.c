@@ -1086,21 +1086,27 @@ py_LM_ReadMemory(PyObject *self,
 {
 	unsigned long src;
 	unsigned long size;
-	char         *buffer;
+	char         *dst;
 	PyObject     *ret;
 
 	if (!PyArg_ParseTuple(args, "kk", &src, &size))
 		return NULL;
 	
-	buffer = LM_MALLOC(size);
-	if (!buffer)
-		return NULL;
+	dst = LM_MALLOC(size);
+	if (!dst)
+		return PyErr_libmem_nomem();
 
-	LM_ReadMemory((lm_address_t)src, (lm_byte_t *)buffer, (lm_size_t)size);
+	if (LM_ReadMemory((lm_address_t)src,
+			  (lm_byte_t *)dst,
+			  (lm_size_t)size) != (lm_size_t)size) {
+		ret = PyErr_libmem();
+		goto _FREE_RET;
+	}
 
-	ret = PyByteArray_FromStringAndSize(buffer, size);
+	ret = PyByteArray_FromStringAndSize(dst, size);
 
-	LM_FREE(buffer);
+_FREE_RET:
+	LM_FREE(dst);
 
 	return ret;
 }
@@ -1121,12 +1127,19 @@ py_LM_ReadMemoryEx(PyObject *self,
 	
 	dst = LM_MALLOC(size);
 	if (!dst)
-		return NULL;
+		return PyErr_libmem_nomem();
 
-	LM_ReadMemory((lm_address_t)src, (lm_byte_t *)dst, (lm_size_t)size);
+	if (LM_ReadMemoryEx(pyproc->proc,
+			    (lm_address_t)src,
+			    (lm_byte_t *)dst,
+			    (lm_size_t)size) != (lm_size_t)size) {
+		ret = PyErr_libmem();
+		goto _FREE_RET;
+	}
 
 	ret = PyByteArray_FromStringAndSize(dst, size);
 
+_FREE_RET:
 	LM_FREE(dst);
 
 	return ret;
@@ -1142,11 +1155,12 @@ py_LM_WriteMemory(PyObject *self,
 	if (!PyArg_ParseTuple(args, "ks*", &dst, &buf))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_WriteMemory((lm_address_t)dst,
-			       (lm_bstring_t)buf.buf,
-			       (lm_size_t)buf.len)
-	);
+	if (LM_WriteMemory((lm_address_t)dst,
+			   (lm_bstring_t)buf.buf,
+			   (lm_size_t)buf.len) != (lm_size_t)buf.len)
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1161,12 +1175,13 @@ py_LM_WriteMemoryEx(PyObject *self,
 			      &dst, &buf))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_WriteMemoryEx(pyproc->proc,
-				 (lm_address_t)dst,
-				 (lm_bstring_t)buf.buf,
-				 (lm_size_t)buf.len)
-	);
+	if (LM_WriteMemoryEx(pyproc->proc,
+			     (lm_address_t)dst,
+			     (lm_bstring_t)buf.buf,
+			     (lm_size_t)buf.len) != (lm_size_t)buf.len)
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1180,11 +1195,12 @@ py_LM_SetMemory(PyObject *self,
 	if (!PyArg_ParseTuple(args, "kck", &dst, &byte, &size))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_SetMemory((lm_byte_t *)dst,
-			     (lm_byte_t)byte,
-			     (lm_size_t)size)
-	);
+	if (LM_SetMemory((lm_byte_t *)dst,
+			 (lm_byte_t)byte,
+			 (lm_size_t)size) != (lm_size_t)size)
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1200,12 +1216,13 @@ py_LM_SetMemoryEx(PyObject *self,
 			      &dst, &byte, &size))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_SetMemoryEx(pyproc->proc,
-			       (lm_byte_t *)dst,
-			       (lm_byte_t)byte,
-			       (lm_size_t)size)
-	);
+	if (LM_SetMemoryEx(pyproc->proc,
+			   (lm_byte_t *)dst,
+			   (lm_byte_t)byte,
+			   (lm_size_t)size) != (lm_size_t)size)
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1220,10 +1237,11 @@ py_LM_ProtMemory(PyObject *self,
 	if (!PyArg_ParseTuple(args, "kkl", &addr, &size, &prot))
 		return NULL;
 	
-	LM_ProtMemory((lm_address_t)addr,
-		      (lm_size_t)size,
-		      (lm_prot_t)prot,
-		      &old_prot);
+	if (!LM_ProtMemory((lm_address_t)addr,
+			   (lm_size_t)size,
+			   (lm_prot_t)prot,
+			   &old_prot))
+		return PyErr_libmem();
 	
 	return PyLong_FromLong(old_prot);
 }
@@ -1242,11 +1260,12 @@ py_LM_ProtMemoryEx(PyObject *self,
 			      &addr, &size, &prot))
 		return NULL;
 	
-	LM_ProtMemoryEx(pyproc->proc,
-			(lm_address_t)addr,
-			(lm_size_t)size,
-			(lm_prot_t)prot,
-			&old_prot);
+	if (!LM_ProtMemoryEx(pyproc->proc,
+			     (lm_address_t)addr,
+			     (lm_size_t)size,
+			     (lm_prot_t)prot,
+			     &old_prot))
+		return PyErr_libmem();
 	
 	return PyLong_FromLong(old_prot);
 }
@@ -1257,13 +1276,16 @@ py_LM_AllocMemory(PyObject *self,
 {
 	unsigned long size;
 	long          prot;
+	lm_address_t  alloc;
 
 	if (!PyArg_ParseTuple(args, "kl", &size, &prot))
 		return NULL;
 	
-	return PyLong_FromVoidPtr(
-		LM_AllocMemory((lm_size_t)size, (lm_prot_t)prot)
-	);
+	alloc = LM_AllocMemory((lm_size_t)size, (lm_prot_t)prot);
+	if (alloc == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+
+	return PyLong_FromVoidPtr(alloc);
 }
 
 static PyObject *
@@ -1273,16 +1295,20 @@ py_LM_AllocMemoryEx(PyObject *self,
 	py_lm_process_obj *pyproc;
 	unsigned long      size;
 	long               prot;
+	lm_address_t       alloc;
 
 	if (!PyArg_ParseTuple(args, "O!kl", &py_lm_process_t, &pyproc,
 			      &size, &prot))
 		return NULL;
-	
-	return PyLong_FromVoidPtr(
-		LM_AllocMemoryEx(pyproc->proc,
+
+	alloc = LM_AllocMemoryEx(pyproc->proc,
 				 (lm_size_t)size,
-				 (lm_prot_t)prot)
-	);
+				 (lm_prot_t)prot);
+	
+	if (alloc == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+	
+	return PyLong_FromVoidPtr(alloc);
 }
 
 static PyObject *
@@ -1295,9 +1321,10 @@ py_LM_FreeMemory(PyObject *self,
 	if (!PyArg_ParseTuple(args, "kk", &alloc, &size))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_FreeMemory((lm_address_t)alloc, (lm_size_t)size)
-	);
+	if (!LM_FreeMemory((lm_address_t)alloc, (lm_size_t)size))
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1312,11 +1339,12 @@ py_LM_FreeMemoryEx(PyObject *self,
 			      &alloc, &size))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_FreeMemoryEx(pyproc->proc,
-				(lm_address_t)alloc,
-				(lm_size_t)size)
-	);
+	if (!LM_FreeMemoryEx(pyproc->proc,
+			     (lm_address_t)alloc,
+			     (lm_size_t)size))
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1326,16 +1354,20 @@ py_LM_DataScan(PyObject *self,
 	Py_buffer     buf;
 	unsigned long start;
 	unsigned long stop;
+	lm_address_t  scan;
 
 	if (!PyArg_ParseTuple(args, "s*kk", &buf, &start, &stop))
 		return NULL;
 	
-	return PyLong_FromVoidPtr(
-		LM_DataScan((lm_bstring_t)buf.buf,
-			    (lm_size_t)buf.len,
-			    (lm_address_t)start,
-			    (lm_address_t)stop)
-	);
+	scan = LM_DataScan((lm_bstring_t)buf.buf,
+			   (lm_size_t)buf.len,
+			   (lm_address_t)start,
+			   (lm_address_t)stop);
+
+	if (scan == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+
+	return PyLong_FromVoidPtr(scan);
 }
 
 static PyObject *
@@ -1346,18 +1378,22 @@ py_LM_DataScanEx(PyObject *self,
 	Py_buffer          buf;
 	unsigned long      start;
 	unsigned long      stop;
+	lm_address_t       scan;
 
-	if (!PyArg_ParseTuple(args, "s*O|O", &py_lm_process_t, &pyproc,
+	if (!PyArg_ParseTuple(args, "O!s*kk", &py_lm_process_t, &pyproc,
 			      &buf, &start, &stop))
 		return NULL;
 	
-	return PyLong_FromVoidPtr(
-		LM_DataScanEx(pyproc->proc,
-			      (lm_bstring_t)buf.buf,
-			      (lm_size_t)buf.len,
-			      (lm_address_t)start,
-			      (lm_address_t)stop)
-	);
+	scan = LM_DataScanEx(pyproc->proc,
+			     (lm_bstring_t)buf.buf,
+			     (lm_size_t)buf.len,
+			     (lm_address_t)start,
+			     (lm_address_t)stop);
+
+	if (scan == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+
+	return PyLong_FromVoidPtr(scan);
 }
 
 static PyObject *
@@ -1368,6 +1404,7 @@ py_LM_PatternScan(PyObject *self,
 	lm_tstring_t  mask;
 	unsigned long start;
 	unsigned long stop;
+	lm_address_t  scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
 	if (!PyArg_ParseTuple(args, "s*ukk", &pattern, &mask, &start, &stop))
@@ -1377,12 +1414,15 @@ py_LM_PatternScan(PyObject *self,
 		return NULL;
 #	endif
 
-	return PyLong_FromVoidPtr(
-		LM_PatternScan((lm_bstring_t)pattern.buf,
+	scan = LM_PatternScan((lm_bstring_t)pattern.buf,
 			       mask,
 			       (lm_address_t)start,
-			       (lm_address_t)stop)
-	);
+			       (lm_address_t)stop);
+
+	if (scan == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+
+	return PyLong_FromVoidPtr(scan);
 }
 
 static PyObject *
@@ -1394,6 +1434,7 @@ py_LM_PatternScanEx(PyObject *self,
 	lm_tstring_t       mask;
 	unsigned long      start;
 	unsigned long      stop;
+	lm_address_t       scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
 	if (!PyArg_ParseTuple(args, "O!s*ukk", &py_lm_process_t, &pyproc,
@@ -1405,13 +1446,16 @@ py_LM_PatternScanEx(PyObject *self,
 		return NULL;
 #	endif
 
-	return PyLong_FromVoidPtr(
-		LM_PatternScanEx(pyproc->proc,
+	scan = LM_PatternScanEx(pyproc->proc,
 				 (lm_bstring_t)pattern.buf,
 				 mask,
 				 (lm_address_t)start,
-				 (lm_address_t)stop)
-	);
+				 (lm_address_t)stop);
+
+	if (scan == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+
+	return PyLong_FromVoidPtr(scan);
 }
 
 static PyObject *
@@ -1421,6 +1465,7 @@ py_LM_SigScan(PyObject *self,
 	lm_tstring_t  sig;
 	unsigned long start;
 	unsigned long stop;
+	lm_address_t  scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
 	if (!PyArg_ParseTuple(args, "ukk", &sig, &start, &stop))
@@ -1430,9 +1475,11 @@ py_LM_SigScan(PyObject *self,
 		return NULL;
 #	endif
 
-	return PyLong_FromVoidPtr(
-		LM_SigScan(sig, (lm_address_t)start, (lm_address_t)stop)
-	);
+	scan = LM_SigScan(sig, (lm_address_t)start, (lm_address_t)stop);
+	if (scan == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+
+	return PyLong_FromVoidPtr(scan);
 }
 
 static PyObject *
@@ -1443,6 +1490,7 @@ py_LM_SigScanEx(PyObject *self,
 	lm_tstring_t       sig;
 	unsigned long      start;
 	unsigned long      stop;
+	lm_address_t       scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
 	if (!PyArg_ParseTuple(args, "O!ukk", &py_lm_process_t, &pyproc,
@@ -1454,12 +1502,15 @@ py_LM_SigScanEx(PyObject *self,
 		return NULL;
 #	endif
 
-	return PyLong_FromVoidPtr(
-		LM_SigScanEx(pyproc->proc,
+	scan = LM_SigScanEx(pyproc->proc,
 			     sig,
 			     (lm_address_t)start,
-			     (lm_address_t)stop)
-	);
+			     (lm_address_t)stop);
+	
+	if (scan == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+
+	return PyLong_FromVoidPtr(scan);
 }
 
 /* Python Module */

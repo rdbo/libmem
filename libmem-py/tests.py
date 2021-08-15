@@ -115,5 +115,13 @@ wrbuf = struct.pack("@i", 1337)
 LM_WriteMemory(val_addr, wrbuf)
 print(f"[*] Written Value: {val.value}")
 
+setbuf = ctypes.c_buffer(b"NotSet")
+setbuf_addr = ctypes.addressof(setbuf)
+
+print(f"[*] Setbuf:         {setbuf.value} ")
+
+LM_SetMemory(setbuf_addr, b"A", ctypes.sizeof(setbuf))
+print(f"[*] Written Setbuf: {setbuf.value} ")
+
 LM_CloseProcess(proc)
 print("[-] PyTest 1")

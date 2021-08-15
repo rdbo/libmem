@@ -1112,6 +1112,45 @@ py_LM_WriteMemoryEx(PyObject *self,
 	);
 }
 
+static PyObject *
+py_LM_SetMemory(PyObject *self,
+		PyObject *args)
+{
+	unsigned long dst;
+	char          byte;
+	unsigned long size;
+
+	if (!PyArg_ParseTuple(args, "kck", &dst, &byte, &size))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_SetMemory((lm_byte_t *)dst,
+			     (lm_byte_t)byte,
+			     (lm_size_t)size)
+	);
+}
+
+static PyObject *
+py_LM_SetMemoryEx(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	unsigned long      dst;
+	char               byte;
+	unsigned long      size;
+
+	if (!PyArg_ParseTuple(args, "O!kck", &py_lm_process_t, &pyproc,
+			      &dst, &byte, &size))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_SetMemoryEx(pyproc->proc,
+			       (lm_byte_t *)dst,
+			       (lm_byte_t)byte,
+			       (lm_size_t)size)
+	);
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -1162,6 +1201,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_ReadMemoryEx", py_LM_ReadMemoryEx, METH_VARARGS, "" },
 	{ "LM_WriteMemory", py_LM_WriteMemory, METH_VARARGS, "" },
 	{ "LM_WriteMemoryEx", py_LM_WriteMemoryEx, METH_VARARGS, "" },
+	{ "LM_SetMemory", py_LM_SetMemory, METH_VARARGS, "" },
+	{ "LM_SetMemoryEx", py_LM_SetMemoryEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

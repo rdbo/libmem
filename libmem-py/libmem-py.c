@@ -130,12 +130,11 @@ py_LM_EnumProcesses(PyObject *self,
 	if (!PyArg_ParseTuple(args, "O|O", &arg.callback, &arg.arg))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_EnumProcesses(
-			py_LM_EnumProcessesCallback,
-			(lm_void_t *)&arg
-		)
-	);
+	if (!LM_EnumProcesses(py_LM_EnumProcessesCallback,
+			      (lm_void_t *)&arg))
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -169,10 +168,8 @@ py_LM_GetProcessIdEx(PyObject *self,
 #	endif
 
 	pid = LM_GetProcessIdEx(procstr);
-	if (pid == (lm_pid_t)LM_BAD) {
-		PyErr_libmem();
-		return NULL;
-	}
+	if (pid == (lm_pid_t)LM_BAD)
+		return PyErr_libmem();
 
 	return (PyObject *)PyLong_FromPid(pid);
 }
@@ -181,7 +178,7 @@ static PyObject *
 py_LM_GetParentId(PyObject *self,
 		  PyObject *args)
 {
-	return (PyObject *)PyLong_FromPid(LM_GetParentId());
+	return PyLong_FromPid(LM_GetParentId());
 }
 
 static PyObject *
@@ -193,7 +190,7 @@ py_LM_GetParentIdEx(PyObject *self,
 	if (!PyArg_ParseTuple(args, "l", &pypid))
 		return NULL;
 
-	return (PyObject *)PyLong_FromPid(LM_GetParentIdEx((lm_pid_t)pypid));
+	return PyLong_FromPid(LM_GetParentIdEx((lm_pid_t)pypid));
 }
 
 static PyObject *
@@ -243,7 +240,7 @@ py_LM_CloseProcess(PyObject *self,
 
 	LM_CloseProcess(&pyproc->proc);
 
-	return PyLong_FromLong(0);
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -837,7 +834,10 @@ py_LM_UnloadModule(PyObject *self,
 	if (!PyArg_ParseTuple(args, "O!", &py_lm_module_t, &pymod))
 		return NULL;
 	
-	return PyLong_FromLong(LM_UnloadModule(pymod->mod));
+	if (!LM_UnloadModule(pymod->mod))
+		return PyErr_libmem();
+	
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -869,12 +869,12 @@ static lm_bool_t py_LM_EnumSymbolsCallback(lm_cstring_t symbol,
 					   lm_void_t   *arg)
 {
 	py_lm_enum_symbols_t *parg = (py_lm_enum_symbols_t *)arg;
-	PyUnicodeObject      *pysymbol;
-	PyLongObject         *pyaddr;
+	PyObject             *pysymbol;
+	PyObject             *pyaddr;
 	PyObject             *pyret;
 
-	pysymbol = (PyUnicodeObject *)PyUnicode_FromString(symbol);
-	pyaddr = (PyLongObject *)PyLong_FromVoidPtr(addr);
+	pysymbol = PyUnicode_FromString(symbol);
+	pyaddr = PyLong_FromVoidPtr(addr);
 
 	pyret = PyObject_CallFunctionObjArgs(parg->callback,
 					     pysymbol,
@@ -898,11 +898,12 @@ py_LM_EnumSymbols(PyObject *self,
 			      &arg.arg))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_EnumSymbols(pymod->mod,
-			       py_LM_EnumSymbolsCallback,
-			       (lm_void_t *)&arg)
-	);
+	if (!LM_EnumSymbols(pymod->mod,
+			    py_LM_EnumSymbolsCallback,
+			    (lm_void_t *)&arg))
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -919,12 +920,12 @@ py_LM_EnumSymbolsEx(PyObject *self,
 			      &arg.arg))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_EnumSymbolsEx(pyproc->proc,
-				 pymod->mod,
-				 py_LM_EnumSymbolsCallback,
-				 (lm_void_t *)&arg)
-	);
+	if (!LM_EnumSymbolsEx(pyproc->proc, pymod->mod,
+			      py_LM_EnumSymbolsCallback,
+			      (lm_void_t *)&arg))
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -933,12 +934,17 @@ py_LM_GetSymbol(PyObject *self,
 {
 	py_lm_module_obj *pymod;
 	lm_cstring_t      symstr;
+	lm_address_t      symaddr;
 
 	if (!PyArg_ParseTuple(args, "O!s", &py_lm_module_t, &pymod,
 			      &symstr))
 		return NULL;
 	
-	return PyLong_FromVoidPtr(LM_GetSymbol(pymod->mod, symstr));
+	symaddr = LM_GetSymbol(pymod->mod, symstr);
+	if (symaddr == (lm_address_t)LM_BAD)
+		return PyErr_libmem();
+	
+	return PyLong_FromVoidPtr(symaddr);
 }
 
 static PyObject *
@@ -948,15 +954,16 @@ py_LM_GetSymbolEx(PyObject *self,
 	py_lm_process_obj *pyproc;
 	py_lm_module_obj  *pymod;
 	lm_cstring_t       symstr;
+	lm_address_t       symaddr;
 
 	if (!PyArg_ParseTuple(args, "O!O!s", &py_lm_process_t, &pyproc,
 			      &py_lm_module_t, &pymod,
 			      &symstr))
 		return NULL;
 	
-	return PyLong_FromVoidPtr(
-		LM_GetSymbolEx(pyproc->proc, pymod->mod, symstr)
-	);
+	symaddr = LM_GetSymbolEx(pyproc->proc, pymod->mod, symstr);
+	
+	return PyLong_FromVoidPtr(symaddr);
 }
 
 /****************************************/
@@ -996,10 +1003,11 @@ py_LM_EnumPages(PyObject *self,
 			      &arg.arg))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_EnumPages(py_LM_EnumPagesCallback,
-			     (lm_void_t *)&arg)
-	);
+	if (!LM_EnumPages(py_LM_EnumPagesCallback,
+			  (lm_void_t *)&arg))
+		return PyErr_libmem();
+	
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1014,11 +1022,12 @@ py_LM_EnumPagesEx(PyObject *self,
 			      &arg.arg))
 		return NULL;
 	
-	return PyLong_FromLong(
-		LM_EnumPagesEx(pyproc->proc,
-			       py_LM_EnumPagesCallback,
-			       (lm_void_t *)&arg)
-	);
+	if (!LM_EnumPagesEx(pyproc->proc,
+			    py_LM_EnumPagesCallback,
+			    (lm_void_t *)&arg))
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1026,15 +1035,19 @@ py_LM_GetPage(PyObject *self,
 	      PyObject *args)
 {
 	py_lm_page_obj *pypage;
+	lm_page_t       page;
 	unsigned long   addr;
 
 	if (!PyArg_ParseTuple(args, "k", &addr))
 		return NULL;
 	
+	if (!LM_GetPage((lm_address_t)(lm_uintptr_t)addr, &page))
+		return PyErr_libmem();
+	
 	pypage = (py_lm_page_obj *)(
 		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
 	);
-	LM_GetPage((lm_address_t)(lm_uintptr_t)addr, &pypage->page);
+	pypage->page = page;
 
 	return (PyObject *)pypage;
 }
@@ -1045,18 +1058,22 @@ py_LM_GetPageEx(PyObject *self,
 {
 	py_lm_process_obj *pyproc;
 	py_lm_page_obj    *pypage;
+	lm_page_t          page;
 	unsigned long      addr;
 
 	if (!PyArg_ParseTuple(args, "O!k", &py_lm_process_t, &pyproc,
 			      &addr))
 		return NULL;
 	
+	if (!LM_GetPageEx(pyproc->proc,
+			  (lm_address_t)(lm_uintptr_t)addr,
+			  &page))
+		return PyErr_libmem();
+	
 	pypage = (py_lm_page_obj *)(
 		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
 	);
-	LM_GetPageEx(pyproc->proc,
-		     (lm_address_t)(lm_uintptr_t)addr,
-		     &pypage->page);
+	pypage->page = page;
 
 	return (PyObject *)pypage;
 }

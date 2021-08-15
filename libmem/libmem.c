@@ -688,6 +688,8 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 					break;
 			}
 		}
+
+		ret = LM_TRUE;
 		
 		closedir(dir);
 	}

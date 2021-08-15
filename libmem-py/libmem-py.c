@@ -1262,6 +1262,149 @@ py_LM_FreeMemoryEx(PyObject *self,
 	);
 }
 
+static PyObject *
+py_LM_DataScan(PyObject *self,
+	       PyObject *args)
+{
+	Py_buffer     buf;
+	unsigned long start;
+	unsigned long stop;
+
+	if (!PyArg_ParseTuple(args, "s*kk", &buf, &start, &stop))
+		return NULL;
+	
+	return PyLong_FromVoidPtr(
+		LM_DataScan((lm_bstring_t)buf.buf,
+			    (lm_size_t)buf.len,
+			    (lm_address_t)start,
+			    (lm_address_t)stop)
+	);
+}
+
+static PyObject *
+py_LM_DataScanEx(PyObject *self,
+		 PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	Py_buffer          buf;
+	unsigned long      start;
+	unsigned long      stop;
+
+	if (!PyArg_ParseTuple(args, "s*O|O", &py_lm_process_t, &pyproc,
+			      &buf, &start, &stop))
+		return NULL;
+	
+	return PyLong_FromVoidPtr(
+		LM_DataScanEx(pyproc->proc,
+			      (lm_bstring_t)buf.buf,
+			      (lm_size_t)buf.len,
+			      (lm_address_t)start,
+			      (lm_address_t)stop)
+	);
+}
+
+static PyObject *
+py_LM_PatternScan(PyObject *self,
+		  PyObject *args)
+{
+	Py_buffer     pattern;
+	lm_tstring_t  mask;
+	unsigned long start;
+	unsigned long stop;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "s*ukk", &pattern, &mask, &start, &stop))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "s*skk", &pattern, &mask, &start, &stop))
+		return NULL;
+#	endif
+
+	return PyLong_FromVoidPtr(
+		LM_PatternScan((lm_bstring_t)pattern.buf,
+			       mask,
+			       (lm_address_t)start,
+			       (lm_address_t)stop)
+	);
+}
+
+static PyObject *
+py_LM_PatternScanEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	Py_buffer          pattern;
+	lm_tstring_t       mask;
+	unsigned long      start;
+	unsigned long      stop;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "O!s*ukk", &py_lm_process_t, &pyproc,
+			      &pattern, &mask, &start, &stop))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "O!s*skk", &py_lm_process_t, &pyproc,
+			      &pattern, &mask, &start, &stop))
+		return NULL;
+#	endif
+
+	return PyLong_FromVoidPtr(
+		LM_PatternScanEx(pyproc->proc,
+				 (lm_bstring_t)pattern.buf,
+				 mask,
+				 (lm_address_t)start,
+				 (lm_address_t)stop)
+	);
+}
+
+static PyObject *
+py_LM_SigScan(PyObject *self,
+	      PyObject *args)
+{
+	lm_tstring_t  sig;
+	unsigned long start;
+	unsigned long stop;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "ukk", &sig, &start, &stop))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "skk", &sig, &start, &stop))
+		return NULL;
+#	endif
+
+	return PyLong_FromVoidPtr(
+		LM_SigScan(sig, (lm_address_t)start, (lm_address_t)stop)
+	);
+}
+
+static PyObject *
+py_LM_SigScanEx(PyObject *self,
+		PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_tstring_t       sig;
+	unsigned long      start;
+	unsigned long      stop;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "O!ukk", &py_lm_process_t, &pyproc,
+			      &sig, &start, &stop))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "O!skk", &py_lm_process_t, &pyproc,
+			      &sig, &start, &stop))
+		return NULL;
+#	endif
+
+	return PyLong_FromVoidPtr(
+		LM_SigScanEx(pyproc->proc,
+			     sig,
+			     (lm_address_t)start,
+			     (lm_address_t)stop)
+	);
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -1320,6 +1463,12 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_AllocMemoryEx", py_LM_AllocMemoryEx, METH_VARARGS, "" },
 	{ "LM_FreeMemory", py_LM_FreeMemory, METH_VARARGS, "" },
 	{ "LM_FreeMemoryEx", py_LM_FreeMemoryEx, METH_VARARGS, "" },
+	{ "LM_DataScan", py_LM_DataScan, METH_VARARGS, "" },
+	{ "LM_DataScanEx", py_LM_DataScanEx, METH_VARARGS, "" },
+	{ "LM_PatternScan", py_LM_PatternScan, METH_VARARGS, "" },
+	{ "LM_PatternScanEx", py_LM_PatternScanEx, METH_VARARGS, "" },
+	{ "LM_SigScan", py_LM_SigScan, METH_VARARGS, "" },
+	{ "LM_SigScanEx", py_LM_SigScanEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

@@ -133,6 +133,18 @@ print(f"[*] Old Prot: {old_prot}")
 
 LM_FreeMemory(alloc, 10)
 
+data_scan = LM_DataScan(setbuf.value, setbuf_addr - 10, setbuf_addr + 10)
+print(f"[*] SetBuf Addr:  {hex(setbuf_addr)}")
+print(f"[*] Data Scan:    {hex(data_scan)}")
+
+pattern_scan = LM_PatternScan(setbuf.value, "x" * ctypes.sizeof(setbuf),
+			      setbuf_addr - 10, setbuf_addr + 10)
+print(f"[*] Pattern Scan: {hex(pattern_scan)}")
+
+sig = " ".join(["{:02X}".format(i) for i in setbuf.value]).replace("0x", "")
+sig_scan = LM_SigScan(sig, setbuf_addr - 10, setbuf_addr + 10)
+print(f"[*] Sig Scan:     {hex(sig_scan)}")
+
 LM_CloseProcess(proc)
 
 print("====================")

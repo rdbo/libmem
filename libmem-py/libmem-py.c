@@ -1021,6 +1021,97 @@ py_LM_GetPageEx(PyObject *self,
 	return (PyObject *)pypage;
 }
 
+/****************************************/
+
+static PyObject *
+py_LM_ReadMemory(PyObject *self,
+		 PyObject *args)
+{
+	unsigned long src;
+	unsigned long size;
+	char         *buffer;
+	PyObject     *ret;
+
+	if (!PyArg_ParseTuple(args, "kk", &src, &size))
+		return NULL;
+	
+	buffer = LM_MALLOC(size);
+	if (!buffer)
+		return NULL;
+
+	LM_ReadMemory((lm_address_t)src, (lm_byte_t *)buffer, (lm_size_t)size);
+
+	ret = PyByteArray_FromStringAndSize(buffer, size);
+
+	LM_FREE(buffer);
+
+	return ret;
+}
+
+static PyObject *
+py_LM_ReadMemoryEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	unsigned long      src;
+	unsigned long      size;
+	char              *dst;
+	PyObject          *ret;
+
+	if (!PyArg_ParseTuple(args, "O!kk", &py_lm_process_t, &pyproc,
+			      &src, &size))
+		return NULL;
+	
+	dst = LM_MALLOC(size);
+	if (!dst)
+		return NULL;
+
+	LM_ReadMemory((lm_address_t)src, (lm_byte_t *)dst, (lm_size_t)size);
+
+	ret = PyByteArray_FromStringAndSize(dst, size);
+
+	LM_FREE(dst);
+
+	return ret;
+}
+
+static PyObject *
+py_LM_WriteMemory(PyObject *self,
+		  PyObject *args)
+{
+	unsigned long dst;
+	Py_buffer     buf;
+
+	if (!PyArg_ParseTuple(args, "ks*", &dst, &buf))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_WriteMemory((lm_address_t)dst,
+			       (lm_bstring_t)buf.buf,
+			       (lm_size_t)buf.len)
+	);
+}
+
+static PyObject *
+py_LM_WriteMemoryEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	unsigned long      dst;
+	Py_buffer          buf;
+
+	if (!PyArg_ParseTuple(args, "O!ks*", &py_lm_process_t, &pyproc,
+			      &dst, &buf))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_WriteMemoryEx(pyproc->proc,
+				 (lm_address_t)dst,
+				 (lm_bstring_t)buf.buf,
+				 (lm_size_t)buf.len)
+	);
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -1066,6 +1157,11 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumPagesEx", py_LM_EnumPagesEx, METH_VARARGS, "" },
 	{ "LM_GetPage", py_LM_GetPage, METH_VARARGS, "" },
 	{ "LM_GetPageEx", py_LM_GetPageEx, METH_VARARGS, "" },
+	/****************************************/
+	{ "LM_ReadMemory", py_LM_ReadMemory, METH_VARARGS, "" },
+	{ "LM_ReadMemoryEx", py_LM_ReadMemoryEx, METH_VARARGS, "" },
+	{ "LM_WriteMemory", py_LM_WriteMemory, METH_VARARGS, "" },
+	{ "LM_WriteMemoryEx", py_LM_WriteMemoryEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

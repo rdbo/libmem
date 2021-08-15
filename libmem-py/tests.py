@@ -1,4 +1,6 @@
 from libmem import *
+import ctypes
+import struct
 
 class counter:
 	def __init__(self):
@@ -102,6 +104,16 @@ print(f"[*] Page Prot:  {page.prot}")
 print(f"[*] Page Flags: {page.flags}")
 
 print("====================")
+
+val = ctypes.c_int(10)
+val_addr = ctypes.addressof(val)
+rdbuf = LM_ReadMemory(val_addr, ctypes.sizeof(val))
+rdval = struct.unpack("@i", rdbuf)[0]
+print(f"[*] Read Value:    {rdval}")
+
+wrbuf = struct.pack("@i", 1337)
+LM_WriteMemory(val_addr, wrbuf)
+print(f"[*] Written Value: {val.value}")
 
 LM_CloseProcess(proc)
 print("[-] PyTest 1")

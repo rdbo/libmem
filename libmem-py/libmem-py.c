@@ -642,7 +642,7 @@ static PyObject *
 py_LM_GetModulePath(PyObject *self,
 		    PyObject *args)
 {
-	PyUnicodeObject  *pymodpath = (PyUnicodeObject *)NULL;
+	PyObject         *pymodpath;
 	py_lm_module_obj *pymod;
 	lm_tchar_t       *modpath;
 
@@ -651,26 +651,30 @@ py_LM_GetModulePath(PyObject *self,
 	
 	modpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 	if (!modpath)
-		return NULL;
+		return PyErr_libmem_nomem();
 	
-	if (LM_GetModulePath(pymod->mod, modpath, LM_PATH_MAX)) {
-#		if LM_CHARSET == LM_CHARSET_UC
-		pymodpath = (PyUnicodeObject *)PyUnicode_FromUnicode(modpath);
-#		else
-		pymodpath = (PyUnicodeObject *)PyUnicode_FromString(modpath);
-#		endif
+	if (!LM_GetModulePath(pymod->mod, modpath, LM_PATH_MAX)) {
+		pymodpath = PyErr_libmem();
+		goto _FREE_RET;
 	}
 
+#	if LM_CHARSET == LM_CHARSET_UC
+	pymodpath = PyUnicode_FromUnicode(modpath);
+#	else
+	pymodpath = PyUnicode_FromString(modpath);
+#	endif
+
+_FREE_RET:
 	LM_FREE(modpath);
 
-	return (PyObject *)pymodpath;
+	return pymodpath;
 }
 
 static PyObject *
 py_LM_GetModulePathEx(PyObject *self,
 		      PyObject *args)
 {
-	PyUnicodeObject   *pymodpath = (PyUnicodeObject *)NULL;
+	PyObject          *pymodpath;
 	py_lm_process_obj *pyproc;
 	py_lm_module_obj  *pymod;
 	lm_tchar_t        *modpath;
@@ -681,27 +685,31 @@ py_LM_GetModulePathEx(PyObject *self,
 	
 	modpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 	if (!modpath)
-		return NULL;
+		return PyErr_libmem_nomem();
 	
-	if (LM_GetModulePathEx(pyproc->proc, pymod->mod,
-			       modpath, LM_PATH_MAX)) {
-#		if LM_CHARSET == LM_CHARSET_UC
-		pymodpath = (PyUnicodeObject *)PyUnicode_FromUnicode(modpath);
-#		else
-		pymodpath = (PyUnicodeObject *)PyUnicode_FromString(modpath);
-#		endif
+	if (!LM_GetModulePathEx(pyproc->proc, pymod->mod,
+				modpath, LM_PATH_MAX)) {
+		pymodpath = PyErr_libmem();
+		goto _FREE_RET;
 	}
 
+#	if LM_CHARSET == LM_CHARSET_UC
+	pymodpath = PyUnicode_FromUnicode(modpath);
+#	else
+	pymodpath = PyUnicode_FromString(modpath);
+#	endif
+
+_FREE_RET:
 	LM_FREE(modpath);
 
-	return (PyObject *)pymodpath;
+	return pymodpath;
 }
 
 static PyObject *
 py_LM_GetModuleName(PyObject *self,
 		    PyObject *args)
 {
-	PyUnicodeObject  *pymodname = (PyUnicodeObject *)NULL;
+	PyObject         *pymodname;
 	py_lm_module_obj *pymod;
 	lm_tchar_t       *modname;
 
@@ -710,26 +718,30 @@ py_LM_GetModuleName(PyObject *self,
 	
 	modname = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 	if (!modname)
-		return NULL;
+		return PyErr_libmem_nomem();
 	
-	if (LM_GetModuleName(pymod->mod, modname, LM_PATH_MAX)) {
-#		if LM_CHARSET == LM_CHARSET_UC
-		pymodname = (PyUnicodeObject *)PyUnicode_FromUnicode(modname);
-#		else
-		pymodname = (PyUnicodeObject *)PyUnicode_FromString(modname);
-#		endif
+	if (!LM_GetModuleName(pymod->mod, modname, LM_PATH_MAX)) {
+		pymodname = PyErr_libmem();
+		goto _FREE_RET;
 	}
 
+#	if LM_CHARSET == LM_CHARSET_UC
+	pymodname = PyUnicode_FromUnicode(modname);
+#	else
+	pymodname = PyUnicode_FromString(modname);
+#	endif
+
+_FREE_RET:
 	LM_FREE(modname);
 
-	return (PyObject *)pymodname;
+	return pymodname;
 }
 
 static PyObject *
 py_LM_GetModuleNameEx(PyObject *self,
 		      PyObject *args)
 {
-	PyUnicodeObject   *pymodname = (PyUnicodeObject *)NULL;
+	PyObject          *pymodname;
 	py_lm_process_obj *pyproc;
 	py_lm_module_obj  *pymod;
 	lm_tchar_t        *modname;
@@ -740,77 +752,80 @@ py_LM_GetModuleNameEx(PyObject *self,
 	
 	modname = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 	if (!modname)
-		return NULL;
+		return PyErr_libmem_nomem();
 	
-	if (LM_GetModuleNameEx(pyproc->proc, pymod->mod,
-			       modname, LM_PATH_MAX)) {
-#		if LM_CHARSET == LM_CHARSET_UC
-		pymodname = (PyUnicodeObject *)PyUnicode_FromUnicode(modname);
-#		else
-		pymodname = (PyUnicodeObject *)PyUnicode_FromString(modname);
-#		endif
+	if (!LM_GetModuleNameEx(pyproc->proc, pymod->mod,
+				modname, LM_PATH_MAX)) {
+		pymodname = PyErr_libmem();
+		goto _FREE_RET;
 	}
 
+#	if LM_CHARSET == LM_CHARSET_UC
+	pymodname = PyUnicode_FromUnicode(modname);
+#	else
+	pymodname = PyUnicode_FromString(modname);
+#	endif
+
+_FREE_RET:
 	LM_FREE(modname);
 
-	return (PyObject *)pymodname;
+	return pymodname;
 }
 
 static PyObject *
 py_LM_LoadModule(PyObject *self,
 		 PyObject *args)
 {
-	PyObject         *ret;
 	lm_tchar_t       *modpath;
-	py_lm_module_obj *pymodbuf;
+	py_lm_module_obj *pymod;
 	lm_module_t       modbuf;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "u|O!", &modpath,
-			      &py_lm_module_t, &pymodbuf))
-			return NULL;
+	if (!PyArg_ParseTuple(args, "u", &modpath))
+		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "s|O!", &modpath,
-			      &py_lm_module_t, &pymodbuf))
+	if (!PyArg_ParseTuple(args, "s", &modpath))
 		return NULL;
 #	endif
 
-	ret = PyLong_FromLong(LM_LoadModule(modpath, &modbuf));
+	if (!LM_LoadModule(modpath, &modbuf)) 
+		return PyErr_libmem();
 
-	if (pymodbuf)
-		pymodbuf->mod = modbuf;
+	pymod = (py_lm_module_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+	);
+	pymod->mod = modbuf;
 
-	return ret;
+	return (PyObject *)pymod;
 }
 
 static PyObject *
 py_LM_LoadModuleEx(PyObject *self,
 		   PyObject *args)
 {
-	PyObject          *ret;
 	lm_tchar_t        *modpath;
-	py_lm_module_obj  *pymodbuf;
 	py_lm_process_obj *pyproc;
+	py_lm_module_obj  *pymod;
 	lm_module_t        modbuf;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "O!u|O!", &modpath,
-			      &py_lm_process_t, &pyproc,
-			      &py_lm_module_t, &pymodbuf))
-			return NULL;
+	if (!PyArg_ParseTuple(args, "u", &modpath))
+		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "O!s|O!", &modpath,
-			      &py_lm_process_t, &pyproc,
-			      &py_lm_module_t, &pymodbuf))
+	if (!PyArg_ParseTuple(args, "O!s", &py_lm_process_t, &pyproc,
+			      &modpath))
 		return NULL;
 #	endif
 
-	ret = PyLong_FromLong(LM_LoadModuleEx(pyproc->proc, modpath, &modbuf));
+	if (!LM_LoadModuleEx(pyproc->proc, modpath, &modbuf)) 
+		return PyErr_libmem();
 
-	if (pymodbuf)
-		pymodbuf->mod = modbuf;
+	pymod = (py_lm_module_obj *)(
+		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+	);
+	pymod->mod = modbuf;
 
-	return ret;
+	return (PyObject *)pymod;
 }
 
 static PyObject *
@@ -836,7 +851,10 @@ py_LM_UnloadModuleEx(PyObject *self,
 			      &py_lm_module_t, &pymod))
 		return NULL;
 	
-	return PyLong_FromLong(LM_UnloadModuleEx(pyproc->proc, pymod->mod));
+	if (!LM_UnloadModuleEx(pyproc->proc, pymod->mod))
+		return PyErr_libmem();
+
+	return PyLong_FromLong(LM_TRUE);
 }
 
 /****************************************/

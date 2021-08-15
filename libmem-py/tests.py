@@ -123,5 +123,18 @@ print(f"[*] Setbuf:         {setbuf.value} ")
 LM_SetMemory(setbuf_addr, b"A", ctypes.sizeof(setbuf))
 print(f"[*] Written Setbuf: {setbuf.value} ")
 
+alloc = LM_AllocMemory(10, LM_PROT_RW)
+print(f"[*] Alloc:    {hex(alloc)}")
+
+old_prot = LM_ProtMemory(mod.base, mod.size, LM_PROT_XRW)
+cur_prot = LM_GetPage(mod.base).prot
+print(f"[*] Prot:     {cur_prot}")
+print(f"[*] Old Prot: {old_prot}")
+
+LM_FreeMemory(alloc, 10)
+
 LM_CloseProcess(proc)
+
+print("====================")
+
 print("[-] PyTest 1")

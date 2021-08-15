@@ -1151,6 +1151,117 @@ py_LM_SetMemoryEx(PyObject *self,
 	);
 }
 
+static PyObject *
+py_LM_ProtMemory(PyObject *self,
+		 PyObject *args)
+{
+	unsigned long addr;
+	unsigned long size;
+	long          prot;
+	lm_prot_t     old_prot = 0;
+
+	if (!PyArg_ParseTuple(args, "kkl", &addr, &size, &prot))
+		return NULL;
+	
+	LM_ProtMemory((lm_address_t)addr,
+		      (lm_size_t)size,
+		      (lm_prot_t)prot,
+		      &old_prot);
+	
+	return PyLong_FromLong(old_prot);
+}
+
+static PyObject *
+py_LM_ProtMemoryEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	unsigned long      addr;
+	unsigned long      size;
+	long               prot;
+	lm_prot_t          old_prot = 0;
+
+	if (!PyArg_ParseTuple(args, "O!kkl", &py_lm_process_t, &pyproc,
+			      &addr, &size, &prot))
+		return NULL;
+	
+	LM_ProtMemoryEx(pyproc->proc,
+			(lm_address_t)addr,
+			(lm_size_t)size,
+			(lm_prot_t)prot,
+			&old_prot);
+	
+	return PyLong_FromLong(old_prot);
+}
+
+static PyObject *
+py_LM_AllocMemory(PyObject *self,
+		  PyObject *args)
+{
+	unsigned long size;
+	long          prot;
+
+	if (!PyArg_ParseTuple(args, "kl", &size, &prot))
+		return NULL;
+	
+	return PyLong_FromVoidPtr(
+		LM_AllocMemory((lm_size_t)size, (lm_prot_t)prot)
+	);
+}
+
+static PyObject *
+py_LM_AllocMemoryEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	unsigned long      size;
+	long               prot;
+
+	if (!PyArg_ParseTuple(args, "O!kl", &py_lm_process_t, &pyproc,
+			      &size, &prot))
+		return NULL;
+	
+	return PyLong_FromVoidPtr(
+		LM_AllocMemoryEx(pyproc->proc,
+				 (lm_size_t)size,
+				 (lm_prot_t)prot)
+	);
+}
+
+static PyObject *
+py_LM_FreeMemory(PyObject *self,
+		 PyObject *args)
+{
+	unsigned long alloc;
+	unsigned long size;
+
+	if (!PyArg_ParseTuple(args, "kk", &alloc, &size))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_FreeMemory((lm_address_t)alloc, (lm_size_t)size)
+	);
+}
+
+static PyObject *
+py_LM_FreeMemoryEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	unsigned long      alloc;
+	unsigned long      size;
+
+	if (!PyArg_ParseTuple(args, "O!kk", &py_lm_process_t, &pyproc,
+			      &alloc, &size))
+		return NULL;
+	
+	return PyLong_FromLong(
+		LM_FreeMemoryEx(pyproc->proc,
+				(lm_address_t)alloc,
+				(lm_size_t)size)
+	);
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -1203,6 +1314,12 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_WriteMemoryEx", py_LM_WriteMemoryEx, METH_VARARGS, "" },
 	{ "LM_SetMemory", py_LM_SetMemory, METH_VARARGS, "" },
 	{ "LM_SetMemoryEx", py_LM_SetMemoryEx, METH_VARARGS, "" },
+	{ "LM_ProtMemory", py_LM_ProtMemory, METH_VARARGS, "" },
+	{ "LM_ProtMemoryEx", py_LM_ProtMemoryEx, METH_VARARGS, "" },
+	{ "LM_AllocMemory", py_LM_AllocMemory, METH_VARARGS, "" },
+	{ "LM_AllocMemoryEx", py_LM_AllocMemoryEx, METH_VARARGS, "" },
+	{ "LM_FreeMemory", py_LM_FreeMemory, METH_VARARGS, "" },
+	{ "LM_FreeMemoryEx", py_LM_FreeMemoryEx, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

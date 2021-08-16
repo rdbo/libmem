@@ -133,8 +133,9 @@ print(f"[*] Old Prot: {old_prot}")
 
 LM_FreeMemory(alloc, 10)
 
-data_scan = LM_DataScan(setbuf.value, setbuf_addr - 10, setbuf_addr + 10)
 print(f"[*] SetBuf Addr:  {hex(setbuf_addr)}")
+
+data_scan = LM_DataScan(setbuf.value, setbuf_addr - 10, setbuf_addr + 10)
 print(f"[*] Data Scan:    {hex(data_scan)}")
 
 pattern_scan = LM_PatternScan(setbuf.value, "x" * ctypes.sizeof(setbuf),
@@ -150,3 +151,130 @@ LM_CloseProcess(proc)
 print("====================")
 
 print("[-] PyTest 1")
+print("********************")
+print("[+] PyTest 2")
+
+pid = 0
+
+try:
+	if LM_OS == LM_OS_WIN:
+		pid = LM_GetProcessIdEx("test1.exe")
+	else:
+		pid = LM_GetProcessIdEx("test1")
+except:
+	print("[!] test1 not running")
+	print("[-] PyTest 2")
+	exit()
+
+ppid = LM_GetParentIdEx(pid)
+print(f"[*] PID: {pid}")
+print(f"[*] PPID: {ppid}")
+
+proc = LM_OpenProcessEx(pid)
+
+nthreads = counter()
+LM_EnumThreadsEx(proc, counter_callback_tid, nthreads)
+print(f"[*] Threads: {nthreads.val()}")
+
+tid = LM_GetThreadIdEx(proc)
+print(f"[*] TID: {tid}")
+
+procpath = LM_GetProcessPathEx(proc)
+procname = LM_GetProcessNameEx(proc)
+procbits = LM_GetProcessBitsEx(proc)
+print(f"[*] Process ID: {proc.pid}")
+print(f"[*] Process Path: {procpath}")
+print(f"[*] Process Name: {procname}")
+print(f"[*] Process Bits: {procbits}")
+
+sysbits = LM_GetSystemBits()
+print(f"[*] System Bits: {sysbits}")
+
+print("====================")
+
+nmods = counter()
+LM_EnumModulesEx(proc, counter_callback_mod, nmods)
+print(f"[*] Modules: {nmods.val()}")
+
+mod = LM_GetModuleEx(proc, LM_MOD_BY_STR, procpath)
+mod = LM_GetModuleEx(proc, LM_MOD_BY_ADDR, mod.base)
+modpath = LM_GetModulePathEx(proc, mod)
+modname = LM_GetModuleNameEx(proc, mod)
+print(f"[*] Module Base: {hex(mod.base)}")
+print(f"[*] Module End:  {hex(mod.end)}")
+print(f"[*] Module Size: {hex(mod.size)}")
+print(f"[*] Module Path: {modpath}")
+print(f"[*] Module Name: {modname}")
+
+print("====================")
+
+nsyms = counter()
+# LM_EnumSymbolsEx(proc, mod, counter_callback_sym, nsyms) #TOFIX
+print(f"[*] Symbols: {nsyms.val()}")
+
+main_addr = LM_GetSymbolEx(proc, mod, "main")
+val_addr  = LM_GetSymbolEx(proc, mod, "val")
+print(f"[*] Main Addr: {hex(main_addr)}")
+print(f"[*] Val Addr: {hex(val_addr)}")
+
+print("====================")
+
+npages = counter()
+LM_EnumPagesEx(proc, counter_callback_page, npages)
+
+print(f"[*] Pages: {npages.val()}")
+
+page = LM_GetPageEx(proc, mod.base)
+print(f"[*] Page Base:  {hex(page.base)}")
+print(f"[*] Page End:   {hex(page.end)}")
+print(f"[*] Page Size:  {hex(page.size)}")
+print(f"[*] Page Prot:  {hex(page.prot)}")
+print(f"[*] Page Flags: {hex(page.flags)}")
+
+print("====================")
+
+rdbuf = LM_ReadMemoryEx(proc, val_addr, 4)
+rdval = struct.unpack("@i", rdbuf)[0]
+print(f"[*] Read Value:    {rdval}")
+
+wrbuf = struct.pack("@i", 69420)
+LM_WriteMemoryEx(proc, val_addr, wrbuf)
+rdbuf = LM_ReadMemoryEx(proc, val_addr, 4)
+rdval = struct.unpack("@i", rdbuf)[0]
+print(f"[*] Written Value: {rdval}")
+
+setbuf_str = b"NotSet"
+alloc = LM_AllocMemoryEx(proc, len(setbuf_str), LM_PROT_RW)
+LM_WriteMemoryEx(proc, alloc, setbuf)
+
+print(f"[*] SetBuf:         {setbuf_str}")
+LM_SetMemoryEx(proc, alloc, b"A", len(setbuf_str))
+setbuf_str = LM_ReadMemoryEx(proc, alloc, len(setbuf_str))
+print(f"[*] Written SetBuf: {setbuf_str}")
+
+print(f"[*] Alloc: {hex(alloc)}")
+old_prot = LM_ProtMemoryEx(proc, mod.base, mod.size, LM_PROT_XRW)
+cur_prot = LM_GetPageEx(proc, mod.base).prot
+
+print(f"[*] SetBuf Addr:  {hex(alloc)}")
+
+data_scan = LM_DataScanEx(proc, setbuf_str, alloc - 10, alloc + 10)
+print(f"[*] Data Scan:    {hex(data_scan)}")
+
+pattern_scan = LM_PatternScanEx(proc, setbuf_str, "x" * len(setbuf_str), alloc - 10, alloc + 10)
+print(f"[*] Pattern Scan:    {hex(pattern_scan)}")
+
+sig = " ".join(["{:02X}".format(i) for i in setbuf_str]).replace("0x", "")
+sig_scan = LM_SigScanEx(proc, sig, alloc - 10, alloc + 10)
+print(f"[*] Sig Scan:    {hex(sig_scan)}")
+
+LM_FreeMemoryEx(proc, alloc, len(setbuf_str))
+
+print(f"[*] Prot:     {cur_prot}")
+print(f"[*] Old Prot: {old_prot}")
+
+LM_CloseProcess(proc)
+
+print("====================")
+
+print("[-] PyTest 2")

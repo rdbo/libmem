@@ -26,4 +26,5 @@ setup(name = "libmem",
       version = "4.0",
       description = "Process and Memory Hacking Library",
       author = "rdbo",
-      ext_modules = [libmem])
+      ext_modules = [libmem],
+      python_requires = ">=3.7")

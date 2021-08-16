@@ -262,11 +262,11 @@ data_scan = LM_DataScanEx(proc, setbuf_str, alloc - 10, alloc + 10)
 print(f"[*] Data Scan:    {hex(data_scan)}")
 
 pattern_scan = LM_PatternScanEx(proc, setbuf_str, "x" * len(setbuf_str), alloc - 10, alloc + 10)
-print(f"[*] Pattern Scan:    {hex(pattern_scan)}")
+print(f"[*] Pattern Scan: {hex(pattern_scan)}")
 
 sig = " ".join(["{:02X}".format(i) for i in setbuf_str]).replace("0x", "")
 sig_scan = LM_SigScanEx(proc, sig, alloc - 10, alloc + 10)
-print(f"[*] Sig Scan:    {hex(sig_scan)}")
+print(f"[*] Sig Scan:     {hex(sig_scan)}")
 
 LM_FreeMemoryEx(proc, alloc, len(setbuf_str))
 

@@ -4851,7 +4851,7 @@ LM_DebugReadReg(lm_datloc_t regid,
 		if (regid < LM_DATLOC_RAX) {
 			/* 32-bit register */
 
-			val = (lm_uintptr_t)(*(lm_uint32_t *))preg;
+			val = (lm_uintptr_t)(*(lm_uint32_t *)preg);
 		} else {
 			val = *(lm_uintptr_t *)preg;
 		}

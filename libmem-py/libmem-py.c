@@ -30,7 +30,7 @@ typedef struct {
 static PyMemberDef py_lm_process_members[] = {
 	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), 0, "" }
 #	if LM_OS == LM_OS_WIN
-	{ "handle", T_INT, offsetof(py_lm_process_obj, proc.handle), 0, "" }
+	, { "handle", T_INT, offsetof(py_lm_process_obj, proc.handle), 0, "" }
 #	endif
 };
 
@@ -203,7 +203,7 @@ py_LM_OpenProcess(PyObject *self,
 	if (!LM_OpenProcess(&proc))
 		PyErr_libmem();
 
-	pyproc = (py_lm_process_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_process_t);
+	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
 	pyproc->proc = proc;
 	
 	return (PyObject *)pyproc;
@@ -223,7 +223,7 @@ py_LM_OpenProcessEx(PyObject *self,
 	if (!LM_OpenProcessEx((lm_pid_t)pypid, &proc))
 		return PyErr_libmem();
 
-	pyproc = (py_lm_process_obj *)PyObject_CallNoArgs((PyObject *)&py_lm_process_t);
+	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
 	pyproc->proc = proc;
 	
 	return (PyObject *)pyproc;
@@ -506,7 +506,7 @@ py_LM_EnumModulesCallback(lm_module_t  mod,
 	py_lm_enum_modules_t *parg = (py_lm_enum_modules_t *)arg;
 
 	pymod = (py_lm_module_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
 	);
 	pymod->mod = mod;
 
@@ -588,7 +588,7 @@ py_LM_GetModule(PyObject *self,
 		return PyErr_libmem();
 	
 	pymod = (py_lm_module_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
 	);
 
 	pymod->mod = mod;
@@ -627,7 +627,7 @@ py_LM_GetModuleEx(PyObject *self,
 		return PyErr_libmem();
 	
 	pymod = (py_lm_module_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
 	);
 
 	pymod->mod = mod;
@@ -789,7 +789,7 @@ py_LM_LoadModule(PyObject *self,
 		return PyErr_libmem();
 
 	pymod = (py_lm_module_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
 	);
 	pymod->mod = modbuf;
 
@@ -818,7 +818,7 @@ py_LM_LoadModuleEx(PyObject *self,
 		return PyErr_libmem();
 
 	pymod = (py_lm_module_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_module_t)
+		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
 	);
 	pymod->mod = modbuf;
 
@@ -982,7 +982,7 @@ py_LM_EnumPagesCallback(lm_page_t  page,
 	PyObject           *pyret;
 
 	pypage = (py_lm_page_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
+		PyObject_CallObject((PyObject *)&py_lm_page_t, NULL)
 	);
 	pypage->page = page;
 
@@ -1045,7 +1045,7 @@ py_LM_GetPage(PyObject *self,
 		return PyErr_libmem();
 	
 	pypage = (py_lm_page_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
+		PyObject_CallObject((PyObject *)&py_lm_page_t, NULL)
 	);
 	pypage->page = page;
 
@@ -1071,7 +1071,7 @@ py_LM_GetPageEx(PyObject *self,
 		return PyErr_libmem();
 	
 	pypage = (py_lm_page_obj *)(
-		PyObject_CallNoArgs((PyObject *)&py_lm_page_t)
+		PyObject_CallObject((PyObject *)&py_lm_page_t, NULL)
 	);
 	pypage->page = page;
 

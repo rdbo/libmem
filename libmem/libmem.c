@@ -1593,10 +1593,14 @@ LM_EnumModulesEx(lm_process_t proc,
 			mod.base = (lm_address_t)LM_STRTOP(holder, NULL, 16);
 
 			holder = ptr;
-			for (tmp = maps_buf;
-			     (tmp = LM_STRSTR(tmp, path));
-			     tmp = &tmp[1])
+			for (tmp = ptr;
+			     (tmp = LM_STRCHR(tmp, LM_STR('\n'))) &&
+			     (tmp = LM_STRCHR(tmp, LM_STR('/')));
+			     tmp = &tmp[1]) {
+				if (LM_STRNCMP(tmp, path, pathlen))
+					break;
 				holder = tmp;
+			}
 			
 			ptr = holder;
 

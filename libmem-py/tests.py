@@ -27,11 +27,11 @@ def counter_callback_mod(mod : lm_module_t, path : str, arg) -> int:
 	arg.inc()
 	return LM_TRUE
 
-def counter_callback_sym(symbol : str, addr : int, arg):
+def counter_callback_sym(symbol : str, addr : int, arg) -> int:
 	arg.inc()
 	return LM_TRUE
 
-def counter_callback_page(page : lm_page_t, arg):
+def counter_callback_page(page : lm_page_t, arg) -> int:
 	arg.inc()
 	return LM_TRUE
 

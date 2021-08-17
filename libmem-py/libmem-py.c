@@ -134,7 +134,7 @@ py_LM_EnumProcesses(PyObject *self,
 			      (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -194,6 +194,18 @@ py_LM_GetParentIdEx(PyObject *self,
 }
 
 static PyObject *
+py_LM_CheckProcess(PyObject *self,
+		   PyObject *args)
+{
+	long pid;
+
+	if (!PyArg_ParseTuple(args, "l", &pid))
+		return NULL;
+	
+	return PyBool_FromLong(LM_CheckProcess((lm_pid_t)pid));
+}
+
+static PyObject *
 py_LM_OpenProcess(PyObject *self,
 		  PyObject *args)
 {
@@ -240,7 +252,7 @@ py_LM_CloseProcess(PyObject *self,
 
 	LM_CloseProcess(&pyproc->proc);
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -436,7 +448,7 @@ py_LM_EnumThreads(PyObject *self,
 			    (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -455,7 +467,7 @@ py_LM_EnumThreadsEx(PyObject *self,
 			      (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -537,7 +549,7 @@ py_LM_EnumModules(PyObject *self,
 	if (!LM_EnumModules(py_LM_EnumModulesCallback, (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -556,7 +568,7 @@ py_LM_EnumModulesEx(PyObject *self,
 			      (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -837,7 +849,7 @@ py_LM_UnloadModule(PyObject *self,
 	if (!LM_UnloadModule(pymod->mod))
 		return PyErr_libmem();
 	
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -854,7 +866,7 @@ py_LM_UnloadModuleEx(PyObject *self,
 	if (!LM_UnloadModuleEx(pyproc->proc, pymod->mod))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 /****************************************/
@@ -909,7 +921,7 @@ py_LM_EnumSymbols(PyObject *self,
 			    (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -931,7 +943,7 @@ py_LM_EnumSymbolsEx(PyObject *self,
 			      (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1013,7 +1025,7 @@ py_LM_EnumPages(PyObject *self,
 			  (lm_void_t *)&arg))
 		return PyErr_libmem();
 	
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1033,7 +1045,7 @@ py_LM_EnumPagesEx(PyObject *self,
 			    (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1166,7 +1178,7 @@ py_LM_WriteMemory(PyObject *self,
 			   (lm_size_t)buf.len) != (lm_size_t)buf.len)
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1187,7 +1199,7 @@ py_LM_WriteMemoryEx(PyObject *self,
 			     (lm_size_t)buf.len) != (lm_size_t)buf.len)
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1206,7 +1218,7 @@ py_LM_SetMemory(PyObject *self,
 			 (lm_size_t)size) != (lm_size_t)size)
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1228,7 +1240,7 @@ py_LM_SetMemoryEx(PyObject *self,
 			   (lm_size_t)size) != (lm_size_t)size)
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1330,7 +1342,7 @@ py_LM_FreeMemory(PyObject *self,
 	if (!LM_FreeMemory((lm_address_t)alloc, (lm_size_t)size))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1350,7 +1362,7 @@ py_LM_FreeMemoryEx(PyObject *self,
 			     (lm_size_t)size))
 		return PyErr_libmem();
 
-	return PyLong_FromLong(LM_TRUE);
+	return PyBool_FromLong(LM_TRUE);
 }
 
 static PyObject *
@@ -1526,6 +1538,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetProcessIdEx", py_LM_GetProcessIdEx, METH_VARARGS, "" },
 	{ "LM_GetParentId", py_LM_GetParentId, METH_NOARGS, "" },
 	{ "LM_GetParentIdEx", py_LM_GetParentIdEx, METH_VARARGS, "" },
+	{ "LM_CheckProcess", py_LM_CheckProcess, METH_VARARGS, "" },
 	{ "LM_OpenProcess", py_LM_OpenProcess, METH_NOARGS, "" },
 	{ "LM_OpenProcessEx", py_LM_OpenProcessEx, METH_VARARGS, "" },
 	{ "LM_CloseProcess", py_LM_CloseProcess, METH_VARARGS, "" },

@@ -698,6 +698,9 @@ LM_API lm_pid_t
 LM_GetParentIdEx(lm_pid_t pid);
 
 LM_API lm_bool_t
+LM_CheckProcess(lm_pid_t pid);
+
+LM_API lm_bool_t
 LM_OpenProcess(lm_process_t *procbuf);
 
 LM_API lm_bool_t

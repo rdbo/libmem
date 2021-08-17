@@ -39,9 +39,14 @@ typedef struct {
 	lm_address_t addr;
 } _lm_get_symbol_t;
 
+typedef struct {
+	lm_pid_t  pid;
+	lm_bool_t check;
+} _lm_check_process_t;
+
 /* Helpers */
 static lm_bool_t
-_LM_CheckProcess(lm_process_t proc)
+_LM_ValidProcess(lm_process_t proc)
 {
 	lm_bool_t ret = LM_FALSE;
 
@@ -877,6 +882,32 @@ LM_GetParentIdEx(lm_pid_t pid)
 	return ppid;
 }
 
+static lm_bool_t
+_LM_CheckProcessCallback(lm_pid_t   pid,
+			 lm_void_t *arg)
+{
+	_lm_check_process_t *parg = (_lm_check_process_t *)arg;
+
+	if (parg->pid == pid) {
+		parg->check = LM_TRUE;
+		return LM_FALSE;
+	}
+
+	return LM_TRUE;
+}
+
+LM_API lm_bool_t
+LM_CheckProcess(lm_pid_t pid)
+{
+	_lm_check_process_t arg;
+	arg.pid   = pid;
+	arg.check = LM_FALSE;
+
+	LM_EnumProcesses(_LM_CheckProcessCallback, (lm_void_t *)&arg);
+
+	return arg.check;
+}
+
 LM_API lm_bool_t
 LM_OpenProcess(lm_process_t *procbuf)
 {
@@ -929,7 +960,8 @@ LM_OpenProcessEx(lm_pid_t      pid,
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
-		
+		if (!LM_CheckProcess(pid))
+			return ret;
 	}
 #	endif
 
@@ -1002,7 +1034,7 @@ LM_GetProcessPathEx(lm_process_t proc,
 {
 	lm_size_t len = 0;
 
-	if (!_LM_CheckProcess(proc) || !pathbuf || !maxlen)
+	if (!_LM_ValidProcess(proc) || !pathbuf || !maxlen)
 		return len;
 	
 #	if LM_OS == LM_OS_WIN
@@ -1108,7 +1140,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 {
 	lm_size_t len = 0;
 
-	if (!_LM_CheckProcess(proc) || !namebuf || !maxlen)
+	if (!_LM_ValidProcess(proc) || !namebuf || !maxlen)
 		return len;
 
 #	if LM_OS == LM_OS_WIN
@@ -1215,7 +1247,7 @@ LM_GetProcessBitsEx(lm_process_t proc)
 {
 	lm_size_t bits = 0;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return bits;
 
 #	if LM_OS == LM_OS_WIN
@@ -1296,7 +1328,7 @@ LM_EnumThreadsEx(lm_process_t proc,
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc) || !callback)
+	if (!_LM_ValidProcess(proc) || !callback)
 		return ret;
 
 #	if LM_OS == LM_OS_WIN
@@ -1405,7 +1437,7 @@ LM_GetThreadIdEx(lm_process_t proc)
 {
 	lm_tid_t tid = (lm_tid_t)LM_BAD;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return tid;
 
 	LM_EnumThreadsEx(proc, _LM_GetThreadIdCallback, (lm_void_t *)&tid);
@@ -1443,7 +1475,7 @@ LM_EnumModulesEx(lm_process_t proc,
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc) || !callback)
+	if (!_LM_ValidProcess(proc) || !callback)
 		return ret;
 
 #	if LM_OS == LM_OS_WIN
@@ -1887,7 +1919,7 @@ LM_LoadModuleEx(lm_process_t proc,
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc) || !path)
+	if (!_LM_ValidProcess(proc) || !path)
 		return ret;
 
 #	if LM_OS == LM_OS_WIN
@@ -2055,7 +2087,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc) || !callback)
+	if (!_LM_ValidProcess(proc) || !callback)
 		return ret;
 
 #	if LM_OS == LM_OS_WIN
@@ -2481,7 +2513,7 @@ LM_GetSymbolEx(lm_process_t proc,
 	arg.symbol = symstr;
 	arg.addr   = (lm_address_t)LM_BAD;
 
-	if (!_LM_CheckProcess(proc) || !symstr)
+	if (!_LM_ValidProcess(proc) || !symstr)
 		return arg.addr;
 	
 	LM_EnumSymbolsEx(proc, mod, _LM_GetSymbolCallback, (lm_void_t *)&arg);
@@ -2549,7 +2581,7 @@ LM_EnumPagesEx(lm_process_t proc,
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc) || !callback)
+	if (!_LM_ValidProcess(proc) || !callback)
 		return ret;
 
 #	if LM_OS == LM_OS_WIN
@@ -2733,7 +2765,7 @@ LM_GetPageEx(lm_process_t proc,
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
 
-	if (!_LM_CheckProcess(proc) || !addr || !page)
+	if (!_LM_ValidProcess(proc) || !addr || !page)
 		return ret;
 
 	arg.addr = addr;
@@ -2771,7 +2803,7 @@ LM_ReadMemoryEx(lm_process_t proc,
 {
 	lm_size_t rdsize = 0;
 
-	if (!_LM_CheckProcess(proc) || !src || !dst || !size)
+	if (!_LM_ValidProcess(proc) || !src || !dst || !size)
 		return rdsize;
 	
 #	if LM_OS == LM_OS_WIN
@@ -2837,7 +2869,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 {
 	lm_size_t wrsize = 0;
 
-	if (!_LM_CheckProcess(proc) || !dst || !src || !size)
+	if (!_LM_ValidProcess(proc) || !dst || !src || !size)
 		return wrsize;
 
 #	if LM_OS == LM_OS_WIN
@@ -2969,7 +3001,7 @@ LM_ProtMemoryEx(lm_process_t proc,
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return ret;
 
 #	if LM_OS == LM_OS_WIN
@@ -3190,7 +3222,7 @@ LM_AllocMemoryEx(lm_process_t proc,
 {
 	lm_address_t alloc = (lm_address_t)LM_BAD;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return alloc;
 
 #	if LM_OS == LM_OS_WIN
@@ -3483,7 +3515,7 @@ LM_FreeMemoryEx(lm_process_t proc,
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return ret;
 
 #	if LM_OS == LM_OS_WIN
@@ -3678,7 +3710,7 @@ LM_DataScanEx(lm_process_t proc,
 	lm_prot_t    oldprot;
 	lm_size_t    scansize;
 
-	if (!_LM_CheckProcess(proc) || !data || !size || !start || !stop ||
+	if (!_LM_ValidProcess(proc) || !data || !size || !start || !stop ||
 	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
 		return match;
 	
@@ -3778,7 +3810,7 @@ LM_PatternScanEx(lm_process_t proc,
 	lm_prot_t    oldprot;
 	lm_byte_t   *ptr;
 
-	if (!_LM_CheckProcess(proc) || !pattern || !mask || !start || !stop ||
+	if (!_LM_ValidProcess(proc) || !pattern || !mask || !start || !stop ||
 	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
 		return match;
 
@@ -3856,7 +3888,7 @@ LM_SigScanEx(lm_process_t proc,
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
 	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
 
-	if (!_LM_CheckProcess(proc) || !sig || !start || !stop ||
+	if (!_LM_ValidProcess(proc) || !sig || !start || !stop ||
 	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
 		return match;
 	
@@ -3913,7 +3945,7 @@ LM_SystemCallEx(lm_process_t proc,
 	lm_regs_t    post_regs;
 	lm_datio_t  *datargs = (lm_datio_t *)LM_NULL;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return ret;
 
 	bits = LM_GetProcessBitsEx(proc);
@@ -4013,7 +4045,7 @@ LM_FunctionCallEx(lm_process_t proc,
 	lm_regs_t   post_regs;
 	lm_int_t    attached;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return ret;
 	
 	bits = LM_GetProcessBitsEx(proc);
@@ -4255,7 +4287,7 @@ LM_DebugAttach(lm_process_t proc)
 {
 	lm_bool_t ret = LM_FALSE;
 
-	if (!_LM_CheckProcess(proc))
+	if (!_LM_ValidProcess(proc))
 		return ret;
 
 #	if LM_OS == LM_OS_WIN

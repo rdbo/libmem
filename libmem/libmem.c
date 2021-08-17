@@ -1941,23 +1941,27 @@ LM_LoadModuleEx(lm_process_t proc,
 				arg1.datloc = LM_DATLOC_RSI;
 				arg1.data   = (lm_byte_t *)&mode;
 			} else {
-				arg0.datloc = LM_DATLOC_EBX;
+				arg0.datloc = LM_DATLOC_STACK;
 				arg0.data   = (lm_byte_t *)&path_addr;
+				arg0.size   = path_size;
 
-				arg1.datloc = LM_DATLOC_ECX;
+				arg1.datloc = LM_DATLOC_STACK;
 				arg1.data   = (lm_byte_t *)&mode;
+				arg1.size   = sizeof(mode);
 			}
 #			else
-			arg0.datloc = LM_DATLOC_EBX;
+			arg0.datloc = LM_DATLOC_STACK;
 			arg0.data   = (lm_byte_t *)&path_addr;
+			arg0.size   = path_size;
 
-			arg1.datloc = LM_DATLOC_ECX;
+			arg1.datloc = LM_DATLOC_STACK;
 			arg1.data   = (lm_byte_t *)&mode;
+			arg1.size   = sizeof(mode);
 #			endif
 #			elif LM_ARCH == LM_ARCH_ARM
 #			endif
 
-			ret = LM_FunctionCallEx(proc, 0, dlopen_addr, 2, 0,
+			ret = LM_FunctionCallEx(proc, -8, dlopen_addr, 2, 0,
 						arg1, arg0);
 			
 			LM_FreeMemoryEx(proc, path_addr, path_size);

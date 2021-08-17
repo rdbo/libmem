@@ -209,7 +209,7 @@ print(f"[*] Module Name: {modname}")
 print("====================")
 
 nsyms = counter()
-# LM_EnumSymbolsEx(proc, mod, counter_callback_sym, nsyms) #TOFIX
+LM_EnumSymbolsEx(proc, mod, counter_callback_sym, nsyms)
 print(f"[*] Symbols: {nsyms.val()}")
 
 main_addr = LM_GetSymbolEx(proc, mod, "main")

@@ -876,6 +876,12 @@ static lm_bool_t py_LM_EnumSymbolsCallback(lm_cstring_t symbol,
 	pysymbol = PyUnicode_FromString(symbol);
 	pyaddr = PyLong_FromVoidPtr(addr);
 
+	if (!pysymbol) {
+		/* UTF-8 Decoding Failed */
+		PyErr_Clear();
+		return LM_TRUE;
+	}
+
 	pyret = PyObject_CallFunctionObjArgs(parg->callback,
 					     pysymbol,
 					     pyaddr,

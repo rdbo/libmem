@@ -28,10 +28,11 @@ typedef struct {
 } py_lm_process_obj;
 
 static PyMemberDef py_lm_process_members[] = {
-	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), 0, "" }
+	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), 0, "" },
 #	if LM_OS == LM_OS_WIN
-	, { "handle", T_INT, offsetof(py_lm_process_obj, proc.handle), 0, "" }
+	{ "handle", T_INT, offsetof(py_lm_process_obj, proc.handle), 0, "" },
 #	endif
+	{ NULL }
 };
 
 static PyTypeObject py_lm_process_t = {
@@ -55,7 +56,8 @@ typedef struct {
 static PyMemberDef py_lm_module_members[] = {
 	{ "base", T_ULONG, offsetof(py_lm_module_obj, mod.base), 0, "" },
 	{ "end", T_ULONG, offsetof(py_lm_module_obj, mod.end), 0, "" },
-	{ "size", T_ULONG, offsetof(py_lm_module_obj, mod.size), 0, "" }
+	{ "size", T_ULONG, offsetof(py_lm_module_obj, mod.size), 0, "" },
+	{ NULL }
 };
 
 static PyTypeObject py_lm_module_t = {
@@ -81,7 +83,8 @@ static PyMemberDef py_lm_page_members[] = {
 	{ "end", T_ULONG, offsetof(py_lm_page_obj, page.end), 0, "" },
 	{ "size", T_ULONG, offsetof(py_lm_page_obj, page.size), 0, "" },
 	{ "prot", T_INT, offsetof(py_lm_page_obj, page.prot), 0, "" },
-	{ "flags", T_INT, offsetof(py_lm_page_obj, page.flags), 0, "" }
+	{ "flags", T_INT, offsetof(py_lm_page_obj, page.flags), 0, "" },
+	{ NULL }
 };
 
 static PyTypeObject py_lm_page_t = {

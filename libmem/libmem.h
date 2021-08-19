@@ -10,9 +10,10 @@
 #define LIBMEM_H
 
 /* Operating System */
-#define LM_OS_WIN   0
-#define LM_OS_LINUX 1
-#define LM_OS_BSD   2
+#define LM_OS_WIN     0
+#define LM_OS_LINUX   1
+#define LM_OS_BSD     2
+#define LM_OS_ANDROID 3
 
 #if defined(LM_FORCE_OS_WIN)
 #define LM_OS LM_OS_WIN
@@ -20,12 +21,16 @@
 #define LM_OS LM_OS_LINUX
 #elif defined(LM_FORCE_OS_BSD)
 #define LM_OS LM_OS_BSD
+#elif defined(LM_FORCE_OS_ANDROID)
+#define LM_OS LM_OS_ANDROID
 #endif
 
 #ifndef LM_OS
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32)) \
 	&& !defined(__CYGWIN__) && !defined(linux)
 #define LM_OS LM_OS_WIN
+#elif defined(__ANDROID__)
+#define LM_OS LM_OS_ANDROID
 #elif defined(linux) || defined(__linux__)
 #define LM_OS LM_OS_LINUX
 #elif defined(BSD) || defined(__FreeBSD__) \
@@ -197,7 +202,7 @@
 #define LM_PROT_XR  (PAGE_EXECUTE_READ)
 #define LM_PROT_XRW (PAGE_EXECUTE_READWRITE)
 #define LM_PROCESS_ACCESS (PROCESS_ALL_ACCESS)
-#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 #define LM_PROT_R   (PROT_READ)
 #define LM_PROT_W   (PROT_WRITE)
 #define LM_PROT_X   (PROT_EXEC)
@@ -416,7 +421,7 @@
 #define LM_MASK_UNKNOWN2 LM_STR('*')
 #if LM_OS == LM_OS_WIN
 #define LM_PATH_MAX MAX_PATH
-#elif LM_OS == LM_OS_LINUX
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 #define LM_PATH_MAX PATH_MAX
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
@@ -446,7 +451,7 @@
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <Psapi.h>
-#elif LM_OS == LM_OS_LINUX
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -458,7 +463,9 @@
 #include <sys/user.h>
 #include <sys/syscall.h>
 #include <sys/utsname.h>
+#if LM_OS != LM_OS_ANDROID
 #include <sys/io.h>
+#endif
 #include <sys/uio.h>
 #include <dlfcn.h>
 #include <link.h>
@@ -544,7 +551,7 @@ typedef DWORD          lm_pid_t;
 typedef DWORD          lm_prot_t;
 typedef DWORD          lm_flags_t;
 typedef DWORD          lm_tid_t;
-#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 typedef pid_t          lm_pid_t;
 typedef lm_pid_t       lm_tid_t;
 typedef int            lm_prot_t;
@@ -664,7 +671,7 @@ typedef struct {
 #	if LM_BITS == 64
 	WOW64_CONTEXT regs32;
 #	endif
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 #	if LM_ARCH == LM_ARCH_X86
 	struct user_regs_struct   regs;
 	struct user_fpregs_struct fpregs;

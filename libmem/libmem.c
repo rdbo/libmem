@@ -58,7 +58,7 @@ _LM_ValidProcess(lm_process_t proc)
 		if (proc.pid != LM_GetProcessId() && !proc.handle)
 			return ret;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		
 	}
@@ -574,7 +574,7 @@ _LM_EnumSymbolsPE(lm_size_t    bits,
 	return ret;
 }
 
-#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 static lm_size_t
 _LM_OpenFileBuf(lm_tstring_t path, 
 		lm_tchar_t **pfilebuf)
@@ -639,7 +639,7 @@ _LM_PtraceRead(lm_process_t proc,
 	if (!dst || !size)
 		return ret;
 
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	for (i = 0; i < size; ++i) {
 		dst[i] = (lm_byte_t)ptrace(PTRACE_PEEKDATA,
 					   proc.pid,
@@ -688,7 +688,7 @@ _LM_PtraceWrite(lm_process_t proc,
 	_LM_PtraceRead(proc, dst, buf, aligned_size);
 	LM_MEMCPY(buf, src, size);
 
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
 		ptrace(PTRACE_POKEDATA,
 		       proc.pid,
@@ -774,7 +774,7 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 
 		CloseHandle(hSnap);
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		struct dirent *pdirent;
 		DIR *dir;
@@ -879,7 +879,7 @@ LM_GetProcessId(lm_void_t)
 	{
 		pid = GetCurrentProcessId();
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		pid = getpid();
 	}
@@ -910,7 +910,7 @@ LM_GetParentId(lm_void_t)
 	{
 		ppid = LM_GetParentIdEx(LM_GetProcessId());
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		ppid = getppid();
 	}
@@ -955,7 +955,7 @@ LM_GetParentIdEx(lm_pid_t pid)
 
 		CloseHandle(hSnap);
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t *status_buf;
 		lm_tchar_t  status_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
@@ -1022,7 +1022,7 @@ LM_OpenProcess(lm_process_t *procbuf)
 	{
 		procbuf->handle = GetCurrentProcess();
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		
 	}
@@ -1058,7 +1058,7 @@ LM_OpenProcessEx(lm_pid_t      pid,
 			procbuf->handle = GetCurrentProcess();
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		if (!LM_CheckProcess(pid))
 			return ret;
@@ -1084,7 +1084,7 @@ LM_CloseProcess(lm_process_t *procbuf)
 			procbuf->handle = (HANDLE)NULL;
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 
 	}
@@ -1110,7 +1110,7 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 
 		len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen - 1);
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_process_t proc;
 
@@ -1142,7 +1142,7 @@ LM_GetProcessPathEx(lm_process_t proc,
 		len = (lm_size_t)GetModuleFileNameEx(proc.handle, NULL,
 						     pathbuf, maxlen - 1);
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t exe_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 		LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path) - 1,
@@ -1220,7 +1220,7 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 
 		LM_FREE(path);
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_process_t proc;
 		if (LM_OpenProcess(&proc)) {
@@ -1249,7 +1249,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 		if (len)
 			namebuf[len] = LM_STR('\x00');
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t *filebuf;
 		lm_tchar_t comm_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
@@ -1319,7 +1319,7 @@ LM_GetSystemBits(lm_void_t)
 			break;
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		struct utsname utsbuf;
 
@@ -1365,7 +1365,7 @@ LM_GetProcessBitsEx(lm_process_t proc)
 		else if (sysbits == 64)
 			bits = 64;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t *path;
 
@@ -1464,7 +1464,7 @@ LM_EnumThreadsEx(lm_process_t proc,
 			CloseHandle(hSnap);
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		DIR *pdir;
 		struct dirent *pdirent;
@@ -1519,7 +1519,7 @@ LM_GetThreadId(lm_void_t)
 	{
 		tid = (lm_tid_t)GetCurrentThreadId();
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		/* tid = (lm_tid_t)gettid(); */
 		tid = (lm_tid_t)getpid();
@@ -1620,13 +1620,13 @@ LM_EnumModulesEx(lm_process_t proc,
 			CloseHandle(hSnap);
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t *maps_buf;
 		lm_tchar_t *ptr;
 		lm_tchar_t maps_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
-#		if LM_OS == LM_OS_LINUX
+#		if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
 			    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
 #		elif LM_OS == LM_OS_BSD
@@ -1713,7 +1713,7 @@ LM_EnumModulesEx(lm_process_t proc,
 			     tmp = &tmp[1])
 				holder = &tmp[1];
 
-#			if LM_OS == LM_OS_LINUX
+#			if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 			holder = LM_STRCHR(holder, LM_STR('-'));
 #			elif LM_OS == LM_OS_BSD
 			holder = LM_STRSTR(holder, LM_STR(" 0x"));
@@ -1922,7 +1922,7 @@ LM_GetModuleName(lm_module_t mod,
 
 #		if LM_OS == LM_OS_WIN
 		sep = LM_STR('\\');
-#		elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#		elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 		sep = LM_STR('/');
 #		endif
 
@@ -1966,7 +1966,7 @@ LM_GetModuleNameEx(lm_process_t proc,
 
 #		if LM_OS == LM_OS_WIN
 		sep = LM_STR('\\');
-#		elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#		elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 		sep = LM_STR('/');
 #		endif
 
@@ -2004,7 +2004,7 @@ LM_LoadModule(lm_tstring_t path,
 				ret = LM_TRUE;
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		if (dlopen(path, RTLD_LAZY)) {
 			if (!modbuf ||
@@ -2031,7 +2031,7 @@ LM_LoadModuleEx(lm_process_t proc,
 	{
 
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_address_t dlopen_addr = (lm_address_t)LM_NULL;
 		lm_module_t  libc_mod = { 0 };
@@ -2041,7 +2041,7 @@ LM_LoadModuleEx(lm_process_t proc,
 		if (!libc_mod.size)
 			return ret;
 		
-#		if LM_OS == LM_OS_LINUX
+#		if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 		dlopen_addr = LM_GetSymbolEx(proc, libc_mod,
 					     "__libc_dlopen_mode");
 #		else
@@ -2127,7 +2127,7 @@ LM_UnloadModule(lm_module_t mod)
 		if (hModule && FreeLibrary(hModule))
 			ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t *libpath;
 
@@ -2221,7 +2221,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 
 		LM_FreeMemory(alloc, mod.size);
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		int         fd;
 		lm_tchar_t *modpath;
@@ -2617,7 +2617,7 @@ LM_GetSymbol(lm_module_t  mod,
 				symaddr = (lm_address_t)LM_BAD;
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_process_t proc;
 
@@ -2686,7 +2686,7 @@ LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 
 		ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_process_t proc;
 
@@ -2737,13 +2737,13 @@ LM_EnumPagesEx(lm_process_t proc,
 
 		ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t *maps_buf;
 		lm_tchar_t *ptr;
 		lm_tchar_t maps_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
-#		if LM_OS == LM_OS_LINUX
+#		if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
 			    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
 #		elif LM_OS == LM_OS_BSD
@@ -2764,7 +2764,7 @@ LM_EnumPagesEx(lm_process_t proc,
 			
 			page.base = (lm_address_t)LM_STRTOP(ptr, NULL, 16);
 
-#			if LM_OS == LM_OS_LINUX
+#			if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 			ptr = LM_STRCHR(ptr, LM_STR('-'));
 #			elif LM_OS == LM_OS_BSD
 			ptr = LM_STRSTR(ptr, LM_STR(" 0x"));
@@ -2784,7 +2784,7 @@ LM_EnumPagesEx(lm_process_t proc,
 			page.prot  = 0;
 			page.flags = 0;
 
-#			if LM_OS == LM_OS_LINUX
+#			if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 			{
 				lm_size_t i;
 
@@ -2938,7 +2938,7 @@ LM_ReadMemoryEx(lm_process_t proc,
 		rdsize = (lm_size_t)ReadProcessMemory(proc.handle, src, dst,
 						      size, NULL);
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		struct iovec iosrc = { 0 };
 		struct iovec iodst = { 0 };
@@ -3004,7 +3004,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 		wrsize = (lm_size_t)WriteProcessMemory(proc.handle, dst, src,
 						       size, NULL);
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		struct iovec iosrc = { 0 };
 		struct iovec iodst = { 0 };
@@ -3094,7 +3094,7 @@ LM_ProtMemory(lm_address_t addr,
 			ret = LM_TRUE;
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		long pagesize;
 		lm_page_t page;
@@ -3142,7 +3142,7 @@ LM_ProtMemoryEx(lm_process_t proc,
 			ret = LM_TRUE;
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		lm_datio_t   arg_nsyscall;
 		lm_uintptr_t dat_nsyscall;
@@ -3331,7 +3331,7 @@ LM_AllocMemory(lm_size_t size,
 		if (!alloc)
 			alloc = (lm_address_t)LM_BAD;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		alloc = mmap(NULL, size, prot, MAP_PRIVATE | MAP_ANON, -1, 0);
 		if (alloc == (lm_address_t)MAP_FAILED)
@@ -3363,7 +3363,7 @@ LM_AllocMemoryEx(lm_process_t proc,
 		if (!alloc)
 			alloc = (lm_address_t)LM_BAD;
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		lm_uintptr_t nsyscall;
 		lm_datio_t   arg_nsyscall;
@@ -3625,7 +3625,7 @@ LM_FreeMemory(lm_address_t alloc,
 		if (VirtualFree(alloc, 0, MEM_RELEASE))
 			ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		if (!munmap(alloc, size))
 			ret = LM_TRUE;
@@ -3650,7 +3650,7 @@ LM_FreeMemoryEx(lm_process_t proc,
 		if (VirtualFreeEx(proc.handle, alloc, 0, MEM_RELEASE))
 			ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		lm_datio_t   arg_nsyscall;
 		lm_uintptr_t nsyscall;
@@ -4047,7 +4047,7 @@ LM_SystemCall(lm_int_t     nsyscall,
 	{
 		
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		syscall_ret = (lm_uintptr_t)syscall(nsyscall,
 						    arg0, arg1, arg2,
@@ -4422,7 +4422,7 @@ LM_DebugAttach(lm_process_t proc)
 		if (DebugActiveProcess(proc.pid))
 			ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		if (ptrace(PTRACE_ATTACH, proc.pid, NULL, NULL) != -1)
 			ret = LM_TRUE;
@@ -4447,7 +4447,7 @@ LM_DebugDetach(lm_process_t proc)
 		if (DebugActiveProcessStop(proc.pid))
 			ret = LM_TRUE;
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		if (ptrace(PTRACE_DETACH, proc.pid, NULL, NULL) != -1)
 			ret = LM_TRUE;
@@ -4474,7 +4474,7 @@ LM_DebugCheck(lm_process_t proc)
 		CheckRemoteDebuggerPresent(proc.handle, &Check);
 		state = Check == TRUE ? LM_TRUE : LM_FALSE;
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t  status_path[64] = { 0 };
 		lm_tchar_t *status_buf;
@@ -4518,7 +4518,7 @@ LM_DebugRead(lm_process_t proc,
 	{
 		ret = LM_ReadMemoryEx(proc, src, dst, size);
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		ret = _LM_PtraceRead(proc, src, dst, size);
 	}
@@ -4539,7 +4539,7 @@ LM_DebugWrite(lm_process_t proc,
 	{
 		ret = LM_ReadMemoryEx(proc, src, dst, size);
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		ret = _LM_PtraceWrite(proc, dst, src, size);
 	}
@@ -4586,7 +4586,7 @@ LM_DebugGetRegs(lm_process_t proc,
 			CloseHandle(hThread);
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 #		if LM_ARCH == LM_ARCH_X86
 		if (ptrace(PTRACE_GETREGS, proc.pid,
@@ -4737,7 +4737,7 @@ LM_DebugPickReg(lm_datloc_t regid,
 #	endif
 #	elif LM_ARCH == LM_ARCH_ARM
 #	endif
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 #	if LM_ARCH == LM_ARCH_X86
 #	if LM_BITS == 64
 	switch (regid) {
@@ -4973,7 +4973,7 @@ LM_DebugSetRegs(lm_process_t proc,
 			CloseHandle(hThread);
 		}
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 #		if LM_ARCH == LM_ARCH_X86
 		if (ptrace(PTRACE_SETREGS, proc.pid,
@@ -5067,7 +5067,7 @@ LM_DebugContinue(lm_process_t proc)
 	{
 
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		if (ptrace(PTRACE_CONT, proc.pid, NULL, NULL) != -1)
 			ret = LM_TRUE;
@@ -5091,7 +5091,7 @@ LM_DebugStep(lm_process_t proc)
 	{
 		
 	}
-#	elif LM_OS == LM_OS_LINUX
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		if (ptrace(PTRACE_SINGLESTEP, proc.pid, NULL, NULL) != -1)
 			ret = LM_TRUE;
@@ -5115,7 +5115,7 @@ LM_DebugWait(lm_void_t)
 	{
 		
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		int status;
 
@@ -5136,7 +5136,7 @@ LM_DebugWaitProcess(lm_process_t proc)
 	{
 
 	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
+#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		int status;
 

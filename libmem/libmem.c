@@ -1521,7 +1521,8 @@ LM_GetThreadId(lm_void_t)
 	}
 #	elif LM_OS == LM_OS_LINUX
 	{
-		tid = (lm_tid_t)gettid();
+		/* tid = (lm_tid_t)gettid(); */
+		tid = (lm_tid_t)getpid();
 	}
 #	elif LM_OS == LM_OS_BSD
 	{

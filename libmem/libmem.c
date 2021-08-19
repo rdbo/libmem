@@ -2205,7 +2205,20 @@ LM_EnumSymbolsEx(lm_process_t proc,
 
 #	if LM_OS == LM_OS_WIN
 	{
+		lm_address_t alloc;
 
+		alloc = LM_AllocMemory(LM_PROT_RW, mod.size);
+		if (alloc == (lm_address_t)LM_BAD)
+			return ret;
+		
+		if (LM_ReadMemoryEx(proc, alloc, mod.base, mod.size)) {
+			ret = _LM_EnumSymbolsPE(LM_GetProcessBitsEx(proc),
+						alloc,
+						callback,
+						arg);
+		}
+
+		LM_FreeMemory(alloc, mod.size);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD
 	{
@@ -3310,7 +3323,7 @@ LM_AllocMemory(lm_size_t size,
 #	if LM_OS == LM_OS_WIN
 	{
 		alloc = VirtualAlloc(NULL,
-				     size, 
+				     size,
 				     MEM_COMMIT | MEM_RESERVE,
 				     prot);
 		

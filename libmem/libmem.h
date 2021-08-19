@@ -186,6 +186,7 @@
 #define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)
 #define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
 #define LM_CHKADDR(addr) ((lm_address_t)addr != (lm_address_t)LM_BAD)
+#define LM_OFFSET(base, offset) (&((lm_byte_t *)base)[offset])
 
 /* Flags */
 #if LM_OS == LM_OS_WIN

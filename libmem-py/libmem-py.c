@@ -111,6 +111,7 @@ py_LM_EnumProcessesCallback(lm_pid_t   pid,
 	py_lm_enum_processes_t *parg = (py_lm_enum_processes_t *)arg;
 	PyLongObject           *pypid;
 	PyLongObject           *pyret;
+	lm_bool_t               ret;
 
 	pypid = (PyLongObject *)PyLong_FromPid(pid);
 	
@@ -121,7 +122,12 @@ py_LM_EnumProcessesCallback(lm_pid_t   pid,
 					     NULL)
 	);
 
-	return PyLong_AsLong((PyObject *)pyret) ? LM_TRUE : LM_FALSE;
+	ret = PyLong_AsLong((PyObject *)pyret) ? LM_TRUE : LM_FALSE;
+
+	Py_DECREF(pypid);
+	Py_DECREF(pyret);
+
+	return ret;
 }
 
 static PyObject *
@@ -427,6 +433,7 @@ py_LM_EnumThreadsCallback(lm_tid_t   tid,
 	PyObject             *pyret;
 	PyObject             *pytid;
 	py_lm_enum_threads_t *parg = (py_lm_enum_threads_t *)arg;
+	lm_bool_t             ret;
 
 	pytid = PyLong_FromLong((long)tid);
 
@@ -434,8 +441,13 @@ py_LM_EnumThreadsCallback(lm_tid_t   tid,
 					     pytid,
 					     parg->arg,
 					     NULL);
+	
+	ret = PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
 
-	return PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+	Py_DECREF(pytid);
+	Py_DECREF(pyret);
+
+	return ret;
 }
 
 static PyObject *
@@ -519,6 +531,7 @@ py_LM_EnumModulesCallback(lm_module_t  mod,
 	PyObject             *pypath;
 	py_lm_module_obj     *pymod;
 	py_lm_enum_modules_t *parg = (py_lm_enum_modules_t *)arg;
+	lm_bool_t             ret;
 
 	pymod = (py_lm_module_obj *)(
 		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
@@ -536,8 +549,13 @@ py_LM_EnumModulesCallback(lm_module_t  mod,
 					     pypath,
 					     parg->arg,
 					     NULL);
+	
+	ret = PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
 
-	return PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+	Py_DECREF(pymod);
+	Py_DECREF(pyret);
+
+	return ret;
 }
 
 static PyObject *
@@ -887,9 +905,9 @@ static lm_bool_t py_LM_EnumSymbolsCallback(lm_cstring_t symbol,
 	PyObject             *pysymbol;
 	PyObject             *pyaddr;
 	PyObject             *pyret;
+	lm_bool_t             ret;
 
 	pysymbol = PyUnicode_FromString(symbol);
-	pyaddr = PyLong_FromVoidPtr(addr);
 
 	if (!pysymbol) {
 		/* UTF-8 Decoding Failed */
@@ -897,13 +915,21 @@ static lm_bool_t py_LM_EnumSymbolsCallback(lm_cstring_t symbol,
 		return LM_TRUE;
 	}
 
+	pyaddr = PyLong_FromVoidPtr(addr);
+
 	pyret = PyObject_CallFunctionObjArgs(parg->callback,
 					     pysymbol,
 					     pyaddr,
 					     parg->arg,
 					     NULL);
 
-	return PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+	ret = PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+
+	Py_DECREF(pysymbol);
+	Py_DECREF(pyaddr);
+	Py_DECREF(pyret);
+
+	return ret;
 }
 
 
@@ -1001,6 +1027,7 @@ py_LM_EnumPagesCallback(lm_page_t  page,
 	py_lm_enum_pages_t *parg = (py_lm_enum_pages_t *)arg;
 	py_lm_page_obj     *pypage;
 	PyObject           *pyret;
+	lm_bool_t           ret;
 
 	pypage = (py_lm_page_obj *)(
 		PyObject_CallObject((PyObject *)&py_lm_page_t, NULL)
@@ -1011,7 +1038,12 @@ py_LM_EnumPagesCallback(lm_page_t  page,
 					     pypage,
 					     parg->arg);
 	
-	return PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+	ret = PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
+
+	Py_DECREF(pypage);
+	Py_DECREF(pyret);
+
+	return ret;
 }
 
 static PyObject *

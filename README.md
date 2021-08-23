@@ -26,7 +26,7 @@ from libmem import *
 Windows:  
 - Windows SDK (-luser32, -lpsapi)  
   
-Linux:  
+Linux/Android:  
 - libdl (-ldl)  
   
 BSD:  

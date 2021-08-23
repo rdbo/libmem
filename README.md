@@ -6,7 +6,7 @@ Include `libmem/libmem.h` (C/C++) or both `libmem/libmem.h` and `libmem/libmem.h
 Compile `libmem/libmem.c` along with your project.  
 
 ## Usage (Python)
-Make sure to have Python >= 3.6 active
+Make sure to have Python >= 3.6 active  
 Either install the `libmem` package from PyPi by running the following command:  
 ```
 pip install --upgrade libmem

@@ -1,5 +1,4 @@
-from distutils.core import setup, Extension
-from sysconfig import get_paths
+from setuptools import setup, Extension
 from sys import platform
 import os
 

@@ -1,10 +1,26 @@
 ![libmem-logo](LOGO.png)  
 #  
 
-## Usage
-Copy the `libmem` folder to your project directory.  
-Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  
+## Usage (C/C++)
+Include `libmem/libmem.h` (C/C++) or both `libmem/libmem.h` and `libmem/libmem.hpp` (C++) in your project.  
 Compile `libmem/libmem.c` along with your project.  
+
+## Usage (Python)
+Make sure to have Python >= 3.6 active
+Either install the `libmem` package from PyPi by running the following command:  
+```
+pip install --upgrade libmem
+```
+Or build and install it yourself by running the following commands:
+```
+cd ./libmem-py
+python configure.py
+python setup.py install
+```
+Now to import libmem, just do the following in your Python code:
+```py
+from libmem import *
+```
 
 ## Dependencies
 Windows:  

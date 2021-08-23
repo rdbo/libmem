@@ -2,7 +2,7 @@
 #  
 
 ## Usage (C/C++)
-Include `libmem/libmem.h` (C/C++) or both `libmem/libmem.h` and `libmem/libmem.hpp` (C++) in your project.  
+Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  
 Compile `libmem/libmem.c` along with your project.  
 
 ## Usage (Python)

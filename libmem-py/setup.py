@@ -4,6 +4,11 @@ import os
 
 src_dir = f"src{os.sep}libmem-py"
 libs = []
+readme = ""
+
+with open("README.md", "r") as f:
+	readme = f.read()
+	f.close()
 
 if platform == "win32":
 	libs.append("user32")
@@ -19,12 +24,12 @@ elif platform.find("bsd") != -1:
 libmem = Extension(name = "libmem",
 		   include_dirs = [ src_dir ],
 		   sources = [ f"{src_dir}{os.sep}libmem-py.c", f"{src_dir}{os.sep}libmem.c" ],
-		   headers = [ f"{src_dir}{os.sep}libmem.h" ],
 		   libraries = libs)
 
 setup(name = "libmem",
       version = "0.1",
       description = "Process and Memory Hacking Library",
+      long_description = readme,
       author = "rdbo",
       url = "https://github.com/rdbo/libmem",
       project_urls = { "Bug Tracker" : "https://github.com/rdbo/libmem/issues" },

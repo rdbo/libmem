@@ -19,6 +19,7 @@ elif platform.find("bsd") != -1:
 libmem = Extension(name = "libmem",
 		   include_dirs = [ src_dir ],
 		   sources = [ f"{src_dir}{os.sep}libmem-py.c", f"{src_dir}{os.sep}libmem.c" ],
+		   headers = [ f"{src_dir}{os.sep}libmem.h" ],
 		   libraries = libs)
 
 setup(name = "libmem",

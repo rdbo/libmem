@@ -21,20 +21,27 @@ elif platform.find("bsd") != -1:
 	libs.append("procstat")
 	libs.append("elf")
 
-libmem = Extension(name = "libmem",
-		   include_dirs = [ src_dir ],
-		   sources = [ f"{src_dir}{os.sep}libmem-py.c", f"{src_dir}{os.sep}libmem.c" ],
-		   libraries = libs)
+libmem = Extension(
+	name = "libmem",
+	include_dirs = [ src_dir ],
+	sources = [ f"{src_dir}{os.sep}libmem-py.c", f"{src_dir}{os.sep}libmem.c" ],
+	libraries = libs
+)
 
-setup(name = "libmem",
-      version = "0.1.1",
-      description = "Process and Memory Hacking Library",
-      long_description = readme,
-      long_description_content_type = "text/markdown",
-      author = "rdbo",
-      url = "https://github.com/rdbo/libmem",
-      project_urls = { "Bug Tracker" : "https://github.com/rdbo/libmem/issues" },
-      package_dir = { "" : "src" },
-      packages = find_packages(where="src"),
-      python_requires = ">=3.6",
-      ext_modules = [libmem])
+setup(
+	name = "libmem",
+	version = "0.1.2",
+	description = "Process and Memory Hacking Library",
+	long_description = readme,
+	long_description_content_type = "text/markdown",
+	author = "rdbo",
+	url = "https://github.com/rdbo/libmem",
+	project_urls = {
+		"Discord Server" : "https://discord.com/invite/Qw8jsPD99X"
+		"Bug Tracker" : "https://github.com/rdbo/libmem/issues"
+	},
+	package_dir = { "libmem" : "src" },
+	packages = find_packages(where="src"),
+	python_requires = ">=3.6",
+	ext_modules = [libmem]
+)

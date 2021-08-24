@@ -40,7 +40,7 @@ setup(
 		"Bug Tracker" : "https://github.com/rdbo/libmem/issues",
 		"Discord Server" : "https://discord.com/invite/Qw8jsPD99X"
 	},
-	package_dir = { "libmem" : "src" },
+	package_dir = { "" : "src" },
 	packages = find_packages(where="src"),
 	python_requires = ">=3.6",
 	ext_modules = [libmem]

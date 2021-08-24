@@ -37,8 +37,8 @@ setup(
 	author = "rdbo",
 	url = "https://github.com/rdbo/libmem",
 	project_urls = {
+		"Bug Tracker" : "https://github.com/rdbo/libmem/issues",
 		"Discord Server" : "https://discord.com/invite/Qw8jsPD99X"
-		"Bug Tracker" : "https://github.com/rdbo/libmem/issues"
 	},
 	package_dir = { "libmem" : "src" },
 	packages = find_packages(where="src"),

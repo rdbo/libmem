@@ -12,7 +12,6 @@ project_files = {
 	# (src_dir : dst_dir) [ files ]
 	(root_dir, project_dir) : [
 		"README.md",
-		"LOGO.png",
 		"LICENSE"
 	],
 

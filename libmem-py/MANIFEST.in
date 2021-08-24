@@ -1,1 +1,2 @@
+include LOGO.png
 recursive-include src/libmem-py libmem.h

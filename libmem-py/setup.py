@@ -30,7 +30,7 @@ libmem = Extension(
 
 setup(
 	name = "libmem",
-	version = "0.1.2",
+	version = "0.1.3",
 	description = "Process and Memory Hacking Library",
 	long_description = readme,
 	long_description_content_type = "text/markdown",

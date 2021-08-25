@@ -1455,22 +1455,22 @@ py_LM_PatternScan(PyObject *self,
 {
 	Py_buffer     pattern;
 	lm_tstring_t  mask;
-	unsigned long start;
-	unsigned long stop;
+	unsigned long addr;
+	unsigned long scansize;
 	lm_address_t  scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "s*ukk", &pattern, &mask, &start, &stop))
+	if (!PyArg_ParseTuple(args, "s*ukk", &pattern, &mask, &addr, &scansize))
 		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "s*skk", &pattern, &mask, &start, &stop))
+	if (!PyArg_ParseTuple(args, "s*skk", &pattern, &mask, &addr, &scansize))
 		return NULL;
 #	endif
 
 	scan = LM_PatternScan((lm_bstring_t)pattern.buf,
 			       mask,
-			       (lm_address_t)start,
-			       (lm_address_t)stop);
+			       (lm_address_t)addr,
+			       (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
 		return PyErr_libmem();
@@ -1485,25 +1485,25 @@ py_LM_PatternScanEx(PyObject *self,
 	py_lm_process_obj *pyproc;
 	Py_buffer          pattern;
 	lm_tstring_t       mask;
-	unsigned long      start;
-	unsigned long      stop;
+	unsigned long      addr;
+	unsigned long      scansize;
 	lm_address_t       scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
 	if (!PyArg_ParseTuple(args, "O!s*ukk", &py_lm_process_t, &pyproc,
-			      &pattern, &mask, &start, &stop))
+			      &pattern, &mask, &addr, &scansize))
 		return NULL;
 #	else
 	if (!PyArg_ParseTuple(args, "O!s*skk", &py_lm_process_t, &pyproc,
-			      &pattern, &mask, &start, &stop))
+			      &pattern, &mask, &addr, &scansize))
 		return NULL;
 #	endif
 
 	scan = LM_PatternScanEx(pyproc->proc,
 				 (lm_bstring_t)pattern.buf,
 				 mask,
-				 (lm_address_t)start,
-				 (lm_address_t)stop);
+				 (lm_address_t)addr,
+				 (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
 		return PyErr_libmem();
@@ -1516,19 +1516,19 @@ py_LM_SigScan(PyObject *self,
 	      PyObject *args)
 {
 	lm_tstring_t  sig;
-	unsigned long start;
-	unsigned long stop;
+	unsigned long addr;
+	unsigned long scansize;
 	lm_address_t  scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "ukk", &sig, &start, &stop))
+	if (!PyArg_ParseTuple(args, "ukk", &sig, &addr, &scansize))
 		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "skk", &sig, &start, &stop))
+	if (!PyArg_ParseTuple(args, "skk", &sig, &addr, &scansize))
 		return NULL;
 #	endif
 
-	scan = LM_SigScan(sig, (lm_address_t)start, (lm_address_t)stop);
+	scan = LM_SigScan(sig, (lm_address_t)addr, (lm_size_t)scansize);
 	if (scan == (lm_address_t)LM_BAD)
 		return PyErr_libmem();
 
@@ -1541,24 +1541,24 @@ py_LM_SigScanEx(PyObject *self,
 {
 	py_lm_process_obj *pyproc;
 	lm_tstring_t       sig;
-	unsigned long      start;
-	unsigned long      stop;
+	unsigned long      addr;
+	unsigned long      scansize;
 	lm_address_t       scan;
 
 #	if LM_CHARSET == LM_CHARSET_UC
 	if (!PyArg_ParseTuple(args, "O!ukk", &py_lm_process_t, &pyproc,
-			      &sig, &start, &stop))
+			      &sig, &addr, &scansize))
 		return NULL;
 #	else
 	if (!PyArg_ParseTuple(args, "O!skk", &py_lm_process_t, &pyproc,
-			      &sig, &start, &stop))
+			      &sig, &addr, &scansize))
 		return NULL;
 #	endif
 
 	scan = LM_SigScanEx(pyproc->proc,
 			     sig,
-			     (lm_address_t)start,
-			     (lm_address_t)stop);
+			     (lm_address_t)addr,
+			     (lm_size_t)scansize);
 	
 	if (scan == (lm_address_t)LM_BAD)
 		return PyErr_libmem();

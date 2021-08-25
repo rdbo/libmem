@@ -94,9 +94,9 @@ main()
 
 	LM_ReadMemory((lm_address_t)&val, (lm_byte_t *)&rdbuf, sizeof(rdbuf));
 	LM_WriteMemory((lm_address_t)&val, (lm_bstring_t)&wrbuf, sizeof(wrbuf));
-	data_scan = LM_DataScan(scanme, sizeof(scanme), (lm_address_t)&scanme[-10], (lm_address_t)&scanme[10]);
-	pattern_scan = LM_PatternScan(scanme, mask, (lm_address_t)&scanme[-10], (lm_address_t)&scanme[10]);
-	sig_scan = LM_SigScan(signature, (lm_address_t)&scanme[-10], (lm_address_t)&scanme[10]);
+	data_scan = LM_DataScan(scanme, sizeof(scanme), (lm_address_t)&scanme[-10], sizeof(scanme) + 10);
+	pattern_scan = LM_PatternScan(scanme, mask, (lm_address_t)&scanme[-10], sizeof(scanme) + 10);
+	sig_scan = LM_SigScan(signature, (lm_address_t)&scanme[-10], sizeof(scanme) + 10);
 	alloc = LM_AllocMemory(1, LM_PROT_RW);
 	LM_ProtMemory(alloc, 1, LM_PROT_XRW, &alloc_oldprot);
 	LM_GetPage(alloc, &page);

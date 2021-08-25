@@ -945,39 +945,39 @@ LM_FreeMemoryEx(lm_process_t proc,
 LM_API lm_address_t
 LM_DataScan(lm_bstring_t data,
 	    lm_size_t    size,
-	    lm_address_t start,
-	    lm_address_t stop);
+	    lm_address_t addr,
+	    lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_DataScanEx(lm_process_t proc,
 	      lm_bstring_t data,
 	      lm_size_t    size,
-	      lm_address_t start,
-	      lm_address_t stop);
+	      lm_address_t addr,
+	      lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_PatternScan(lm_bstring_t pattern,
 	       lm_tstring_t mask,
-	       lm_address_t start,
-	       lm_address_t stop);
+	       lm_address_t addr,
+	       lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_PatternScanEx(lm_process_t proc,
 		 lm_bstring_t pattern,
 		 lm_tstring_t mask,
-		 lm_address_t start,
-		 lm_address_t stop);
+		 lm_address_t addr,
+		 lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_SigScan(lm_tstring_t sig,
-	   lm_address_t start,
-	   lm_address_t stop);
+	   lm_address_t addr,
+	   lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_SigScanEx(lm_process_t proc,
 	     lm_tstring_t sig,
-	     lm_address_t start,
-	     lm_address_t stop);
+	     lm_address_t addr,
+	     lm_size_t    scansize);
 
 /****************************************/
 

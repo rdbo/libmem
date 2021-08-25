@@ -3787,25 +3787,21 @@ LM_FreeMemoryEx(lm_process_t proc,
 LM_API lm_address_t
 LM_DataScan(lm_bstring_t data,
 	    lm_size_t    size,
-	    lm_address_t start,
-	    lm_address_t stop)
+	    lm_address_t addr,
+	    lm_size_t    scansize)
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_byte_t   *ptr;
 	lm_prot_t    oldprot;
-	lm_size_t    scansize;
 
-	if (!data || !size || !start || !stop || 
-	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+	if (!data || !size || !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
-
-	scansize = (lm_uintptr_t)stop - (lm_uintptr_t)start;
 	
-	if (!LM_ProtMemory(start, scansize, LM_PROT_XRW, &oldprot))
+	if (!LM_ProtMemory(addr, scansize, LM_PROT_XRW, &oldprot))
 		return match;
 
-	for (ptr = (lm_byte_t *)start;
-	     ptr != (lm_byte_t *)stop;
+	for (ptr = (lm_byte_t *)addr;
+	     ptr != &((lm_byte_t *)addr)[scansize];
 	     ptr = &ptr[1]) {
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
@@ -3820,7 +3816,7 @@ LM_DataScan(lm_bstring_t data,
 		break;
 	}
 
-	LM_ProtMemory(start, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemory(addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }
@@ -3829,25 +3825,22 @@ LM_API lm_address_t
 LM_DataScanEx(lm_process_t proc,
 	      lm_bstring_t data,
 	      lm_size_t    size,
-	      lm_address_t start,
-	      lm_address_t stop)
+	      lm_address_t addr,
+	      lm_size_t    scansize)
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_byte_t   *ptr;
 	lm_prot_t    oldprot;
-	lm_size_t    scansize;
 
-	if (!_LM_ValidProcess(proc) || !data || !size || !start || !stop ||
-	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
-		return match;
-	
-	scansize = (lm_uintptr_t)stop - (lm_uintptr_t)start;
-
-	if (!LM_ProtMemoryEx(proc, start, scansize, LM_PROT_XRW, &oldprot))
+	if (!_LM_ValidProcess(proc) || !data || !size ||
+	    !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
 
-	for (ptr = (lm_byte_t *)start;
-	     ptr != (lm_byte_t *)stop;
+	if (!LM_ProtMemoryEx(proc, addr, scansize, LM_PROT_XRW, &oldprot))
+		return match;
+
+	for (ptr = (lm_byte_t *)addr;
+	     ptr != &((lm_byte_t *)addr)[scansize];
 	     ptr = &ptr[1]) {
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
@@ -3871,7 +3864,7 @@ LM_DataScanEx(lm_process_t proc,
 		break;
 	}
 
-	LM_ProtMemory(start, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemoryEx(proc, addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }
@@ -3879,30 +3872,26 @@ LM_DataScanEx(lm_process_t proc,
 LM_API lm_address_t
 LM_PatternScan(lm_bstring_t pattern,
 	       lm_tstring_t mask,
-	       lm_address_t start,
-	       lm_address_t stop)
+	       lm_address_t addr,
+	       lm_size_t    scansize)
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_size_t    size;
-	lm_size_t    scansize;
 	lm_prot_t    oldprot;
 	lm_byte_t   *ptr;
 
-	if (!pattern || !mask || !start || !stop ||
-	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+	if (!pattern || !mask || !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
 
 	size = LM_STRLEN(mask);
 	if (!size)
 		return match;
 	
-	scansize = (lm_uintptr_t)stop - (lm_uintptr_t)start;
-	
-	if (!LM_ProtMemory(start, scansize, LM_PROT_XRW, &oldprot))
+	if (!LM_ProtMemory(addr, scansize, LM_PROT_XRW, &oldprot))
 		return match;
 	
-	for (ptr = (lm_byte_t *)start;
-	     ptr != (lm_byte_t *)stop;
+	for (ptr = (lm_byte_t *)addr;
+	     ptr != &((lm_byte_t *)addr)[scansize];
 	     ptr = &ptr[1]) {
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
@@ -3919,7 +3908,7 @@ LM_PatternScan(lm_bstring_t pattern,
 		break;
 	}
 	
-	LM_ProtMemory(start, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemory(addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }
@@ -3928,30 +3917,27 @@ LM_API lm_address_t
 LM_PatternScanEx(lm_process_t proc,
 		 lm_bstring_t pattern,
 		 lm_tstring_t mask,
-		 lm_address_t start,
-		 lm_address_t stop)
+		 lm_address_t addr,
+		 lm_size_t    scansize)
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_size_t    size;
-	lm_size_t    scansize;
 	lm_prot_t    oldprot;
 	lm_byte_t   *ptr;
 
-	if (!_LM_ValidProcess(proc) || !pattern || !mask || !start || !stop ||
-	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+	if (!_LM_ValidProcess(proc) || !pattern || !mask ||
+	    !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
 
 	size = LM_STRLEN(mask);
 	if (!size)
 		return match;
 	
-	scansize = (lm_uintptr_t)stop - (lm_uintptr_t)start;
-	
-	if (!LM_ProtMemoryEx(proc, start, scansize, LM_PROT_XRW, &oldprot))
+	if (!LM_ProtMemoryEx(proc, addr, scansize, LM_PROT_XRW, &oldprot))
 		return match;
 	
-	for (ptr = (lm_byte_t *)start;
-	     ptr != (lm_byte_t *)stop;
+	for (ptr = (lm_byte_t *)addr;
+	     ptr != &((lm_byte_t *)addr)[scansize];
 	     ptr = &ptr[1]) {
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
@@ -3976,28 +3962,27 @@ LM_PatternScanEx(lm_process_t proc,
 		break;
 	}
 	
-	LM_ProtMemoryEx(proc, start, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemoryEx(proc, addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }
 
 LM_API lm_address_t
 LM_SigScan(lm_tstring_t sig,
-	   lm_address_t start,
-	   lm_address_t stop)
+	   lm_address_t addr,
+	   lm_size_t    scansize)
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_bstring_t pattern = (lm_byte_t *)LM_NULL;
 	lm_tstring_t mask = (lm_tchar_t *)LM_NULL;
 	
-	if (!sig || !start || !stop ||
-	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+	if (!sig || !addr || addr == (lm_address_t)LM_BAD)
 		return match;
 
 	if (!_LM_ParseSig(sig, &pattern, &mask))
 		return match;
 	
-	match = LM_PatternScan(pattern, mask, start, stop);
+	match = LM_PatternScan(pattern, mask, addr, scansize);
 
 	LM_FREE(pattern);
 	LM_FREE(mask);
@@ -4008,21 +3993,21 @@ LM_SigScan(lm_tstring_t sig,
 LM_API lm_address_t
 LM_SigScanEx(lm_process_t proc,
 	     lm_tstring_t sig,
-	     lm_address_t start,
-	     lm_address_t stop)
+	     lm_address_t addr,
+	     lm_size_t    scansize)
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
 	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
 
-	if (!_LM_ValidProcess(proc) || !sig || !start || !stop ||
-	    (lm_uintptr_t)start >= (lm_uintptr_t)stop)
+	if (!_LM_ValidProcess(proc) || !sig ||
+	    !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
 	
 	if (!_LM_ParseSig(sig, &pattern, &mask))
 		return match;
 	
-	match = LM_PatternScanEx(proc, pattern, mask, start, stop);
+	match = LM_PatternScanEx(proc, pattern, mask, addr, scansize);
 
 	LM_FREE(pattern);
 	LM_FREE(mask);

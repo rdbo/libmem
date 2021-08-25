@@ -17,23 +17,23 @@ class counter:
 
 def counter_callback_pid(pid, arg) -> int:
 	arg.inc()
-	return LM_TRUE
+	return True
 
 def counter_callback_tid(tid, arg) -> int:
 	arg.inc()
-	return LM_TRUE
+	return True
 
 def counter_callback_mod(mod : lm_module_t, path : str, arg) -> int:
 	arg.inc()
-	return LM_TRUE
+	return True
 
 def counter_callback_sym(symbol : str, addr : int, arg) -> int:
 	arg.inc()
-	return LM_TRUE
+	return True
 
 def counter_callback_page(page : lm_page_t, arg) -> int:
 	arg.inc()
-	return LM_TRUE
+	return True
 
 print("[+] PyTest 1")
 nprocs = counter()
@@ -135,15 +135,15 @@ LM_FreeMemory(alloc, 10)
 
 print(f"[*] SetBuf Addr:  {hex(setbuf_addr)}")
 
-data_scan = LM_DataScan(setbuf.value, setbuf_addr - 10, setbuf_addr + 10)
+data_scan = LM_DataScan(setbuf.value, setbuf_addr - 10, ctypes.sizeof(setbuf) + 10)
 print(f"[*] Data Scan:    {hex(data_scan)}")
 
 pattern_scan = LM_PatternScan(setbuf.value, "x" * ctypes.sizeof(setbuf),
-			      setbuf_addr - 10, setbuf_addr + 10)
+			      setbuf_addr - 10, ctypes.sizeof(setbuf) + 10)
 print(f"[*] Pattern Scan: {hex(pattern_scan)}")
 
 sig = " ".join(["{:02X}".format(i) for i in setbuf.value]).replace("0x", "")
-sig_scan = LM_SigScan(sig, setbuf_addr - 10, setbuf_addr + 10)
+sig_scan = LM_SigScan(sig, setbuf_addr - 10, ctypes.sizeof(setbuf) + 10)
 print(f"[*] Sig Scan:     {hex(sig_scan)}")
 
 LM_CloseProcess(proc)

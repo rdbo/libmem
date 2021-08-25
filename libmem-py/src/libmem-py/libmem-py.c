@@ -1405,17 +1405,17 @@ py_LM_DataScan(PyObject *self,
 	       PyObject *args)
 {
 	Py_buffer     buf;
-	unsigned long start;
-	unsigned long stop;
+	unsigned long addr;
+	unsigned long scansize;
 	lm_address_t  scan;
 
-	if (!PyArg_ParseTuple(args, "s*kk", &buf, &start, &stop))
+	if (!PyArg_ParseTuple(args, "s*kk", &buf, &addr, &scansize))
 		return NULL;
 	
 	scan = LM_DataScan((lm_bstring_t)buf.buf,
 			   (lm_size_t)buf.len,
-			   (lm_address_t)start,
-			   (lm_address_t)stop);
+			   (lm_address_t)addr,
+			   (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
 		return PyErr_libmem();
@@ -1429,19 +1429,19 @@ py_LM_DataScanEx(PyObject *self,
 {
 	py_lm_process_obj *pyproc;
 	Py_buffer          buf;
-	unsigned long      start;
-	unsigned long      stop;
+	unsigned long      addr;
+	unsigned long      scansize;
 	lm_address_t       scan;
 
 	if (!PyArg_ParseTuple(args, "O!s*kk", &py_lm_process_t, &pyproc,
-			      &buf, &start, &stop))
+			      &buf, &addr, &scansize))
 		return NULL;
 	
 	scan = LM_DataScanEx(pyproc->proc,
 			     (lm_bstring_t)buf.buf,
 			     (lm_size_t)buf.len,
-			     (lm_address_t)start,
-			     (lm_address_t)stop);
+			     (lm_address_t)addr,
+			     (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
 		return PyErr_libmem();

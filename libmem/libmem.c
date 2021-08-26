@@ -86,7 +86,7 @@ _LM_ParseSig(lm_tstring_t  sig,
 		lm_byte_t   curbyte = 0;
 		lm_tchar_t  curchar = LM_MASK_UNKNOWN;
 
-		pattern = LM_CALLOC(len + 1, sizeof(lm_byte_t));
+		pattern = (lm_byte_t *)LM_CALLOC(len + 1, sizeof(lm_byte_t));
 		if (old_pattern) {
 			if (pattern)
 				LM_MEMCPY(pattern, old_pattern, len * sizeof(lm_byte_t));
@@ -99,7 +99,7 @@ _LM_ParseSig(lm_tstring_t  sig,
 			return ret;
 		}
 
-		mask = LM_CALLOC(len + 2, sizeof(lm_tchar_t));
+		mask = (lm_tchar_t *)LM_CALLOC(len + 2, sizeof(lm_tchar_t));
 		if (old_mask) {
 			if (mask)
 				LM_STRNCPY(mask, old_mask, len);
@@ -158,7 +158,7 @@ _LM_DetourPayload(lm_address_t src,
 			(lm_uintptr_t)dst - (lm_uintptr_t)src - size
 		);
 
-		*buf = LM_MALLOC(size);
+		*buf = (lm_byte_t *)LM_MALLOC(size);
 		LM_MEMCPY(*buf, payload, size);
 		break;
 	}
@@ -174,7 +174,7 @@ _LM_DetourPayload(lm_address_t src,
 
 			*(lm_uintptr_t *)&payload[6] = (lm_uintptr_t)dst;
 
-			*buf = LM_MALLOC(size);
+			*buf = (lm_byte_t *)LM_MALLOC(size);
 			LM_MEMCPY(*buf, payload, size);	
 		} else {
 			lm_byte_t payload[] = {
@@ -188,7 +188,7 @@ _LM_DetourPayload(lm_address_t src,
 				(lm_uintptr_t)dst
 			);
 
-			*buf = LM_MALLOC(size);
+			*buf = (lm_byte_t *)LM_MALLOC(size);
 			LM_MEMCPY(*buf, payload, size);	
 		}
 		break;
@@ -205,7 +205,7 @@ _LM_DetourPayload(lm_address_t src,
 			(lm_uintptr_t)dst - (lm_uintptr_t)src - size
 		);
 
-		*buf = LM_MALLOC(size);
+		*buf = (lm_byte_t *)LM_MALLOC(size);
 		LM_MEMCPY(*buf, payload, size);
 		break;
 	}
@@ -221,7 +221,7 @@ _LM_DetourPayload(lm_address_t src,
 
 			*(lm_uintptr_t *)&payload[6] = (lm_uintptr_t)dst;
 
-			*buf = LM_MALLOC(size);
+			*buf = (lm_byte_t *)LM_MALLOC(size);
 			LM_MEMCPY(*buf, payload, size);	
 		} else {
 			lm_byte_t payload[] = {
@@ -235,7 +235,7 @@ _LM_DetourPayload(lm_address_t src,
 				(lm_uintptr_t)dst
 			);
 
-			*buf = LM_MALLOC(size);
+			*buf = (lm_byte_t *)LM_MALLOC(size);
 			LM_MEMCPY(*buf, payload, size);	
 		}
 		break;
@@ -843,7 +843,7 @@ _LM_GetProcessIdCallback(lm_pid_t   pid,
 	_lm_get_pid_t *parg = (_lm_get_pid_t *)arg;
 	lm_tchar_t    *path;
 
-	path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	path = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 
 	if (!path)
 		return LM_FALSE;
@@ -1193,7 +1193,8 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 	{
 		lm_tchar_t *path;
 
-		path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		path = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX,
+					       sizeof(lm_tchar_t));
 
 		if (!path)
 			return len;
@@ -1911,7 +1912,7 @@ LM_GetModuleName(lm_module_t mod,
 	if (!namebuf || !maxlen)
 		return len;
 
-	path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	path = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 	if (!path)
 		return len;
 
@@ -1955,7 +1956,7 @@ LM_GetModuleNameEx(lm_process_t proc,
 	if (!namebuf || !maxlen)
 		return len;
 
-	path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	path = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
 	if (!path)
 		return len;
 
@@ -2212,7 +2213,8 @@ LM_EnumSymbolsEx(lm_process_t proc,
 		if (alloc == (lm_address_t)LM_BAD)
 			return ret;
 		
-		if (LM_ReadMemoryEx(proc, alloc, mod.base, mod.size)) {
+		if (LM_ReadMemoryEx(proc, mod.base,
+				    (lm_byte_t *)alloc, mod.size)) {
 			ret = _LM_EnumSymbolsPE(LM_GetProcessBitsEx(proc),
 						alloc,
 						callback,
@@ -3063,7 +3065,7 @@ LM_SetMemoryEx(lm_process_t proc,
 	lm_size_t  wrsize = 0;
 	lm_byte_t *data;
 
-	data = LM_MALLOC(size);
+	data = (lm_byte_t *)LM_MALLOC(size);
 	if (!data)
 		return wrsize;
 
@@ -4075,7 +4077,8 @@ LM_SystemCallEx(lm_process_t proc,
 		va_list   args;
 		lm_size_t i;
 
-		datargs = LM_CALLOC(nargs + nrets, sizeof(lm_datio_t));
+		datargs = (lm_datio_t *)LM_CALLOC(nargs + nrets,
+						  sizeof(lm_datio_t));
 		if (!datargs)
 			return ret;
 
@@ -4167,7 +4170,8 @@ LM_FunctionCallEx(lm_process_t proc,
 		va_list   args;
 		lm_size_t i;
 
-		datargs = LM_CALLOC(nargs + nrets, sizeof(lm_datio_t));
+		datargs = (lm_datio_t *)LM_CALLOC(nargs + nrets,
+						  sizeof(lm_datio_t));
 		if (!datargs)
 			return ret;
 		
@@ -4254,7 +4258,7 @@ LM_DetourCode(lm_address_t src,
 		goto _FREE_EXIT;
 
 	ret = LM_WriteMemory(src, buf, size) == size ? LM_TRUE : ret;
-	LM_ProtMemory(src, size, old_prot, LM_NULLPTR);
+	LM_ProtMemory(src, size, old_prot, (lm_prot_t *)LM_NULLPTR);
 _FREE_EXIT:
 	LM_FREE(buf);
 
@@ -4316,7 +4320,7 @@ LM_MakeTrampoline(lm_address_t src,
 		if (!tramp)
 			goto _FREE_PAYLOAD;
 		
-		LM_WriteMemory(tramp, src, size);
+		LM_WriteMemory(tramp, (lm_bstring_t)src, size);
 		LM_WriteMemory((lm_address_t)(&((lm_byte_t *)tramp)[size]),
 			       payload,
 			       payload_size);
@@ -4326,7 +4330,7 @@ LM_MakeTrampoline(lm_address_t src,
 #	elif LM_ARCH == LM_ARCH_ARM
 #	endif
 
-	LM_ProtMemory(src, size, old_prot, LM_NULLPTR);
+	LM_ProtMemory(src, size, old_prot, (lm_prot_t *)LM_NULLPTR);
 
 	return tramp;
 }
@@ -4361,7 +4365,7 @@ LM_MakeTrampolineEx(lm_process_t proc,
 		if (!tramp)
 			goto _FREE_PAYLOAD;
 		
-		LM_WriteMemoryEx(proc, tramp, src, size);
+		LM_WriteMemoryEx(proc, tramp, (lm_bstring_t)src, size);
 		LM_WriteMemoryEx(proc,
 				 (lm_address_t)(&((lm_byte_t *)tramp)[size]),
 				 payload,
@@ -4372,7 +4376,7 @@ LM_MakeTrampolineEx(lm_process_t proc,
 #	elif LM_ARCH == LM_ARCH_ARM
 #	endif
 
-	LM_ProtMemoryEx(proc, src, size, old_prot, LM_NULLPTR);
+	LM_ProtMemoryEx(proc, src, size, old_prot, (lm_prot_t *)LM_NULLPTR);
 
 	return tramp;
 }
@@ -4522,7 +4526,7 @@ LM_DebugWrite(lm_process_t proc,
 
 #	if LM_OS == LM_OS_WIN
 	{
-		ret = LM_ReadMemoryEx(proc, src, dst, size);
+		ret = LM_WriteMemoryEx(proc, src, dst, size);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{

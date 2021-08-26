@@ -1203,7 +1203,7 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 			lm_tchar_t *ptr = (lm_tchar_t *)LM_NULL;
 
 			for (tmp = path;
-			     tmp = LM_STRCHR(tmp, LM_STR('\\'));
+			     (tmp = LM_STRCHR(tmp, LM_STR('\\')));
 			     tmp = &tmp[1])
 				ptr = tmp;
 			
@@ -1554,7 +1554,7 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 				    lm_void_t   *arg),
 	       lm_void_t *arg)
 {
-	lm_byte_t ret = LM_FALSE;
+	lm_bool_t ret = LM_FALSE;
 	lm_process_t proc;
 
 	if (!callback)

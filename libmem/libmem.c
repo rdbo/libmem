@@ -593,7 +593,7 @@ _LM_OpenFileBuf(lm_tstring_t path,
 		lm_tchar_t *old_filebuf;
 
 		old_filebuf = filebuf;
-		filebuf = LM_CALLOC(total + 2, sizeof(c));
+		filebuf = (lm_tchar_t *)LM_CALLOC(total + 2, sizeof(c));
 		if (old_filebuf) {
 			if (filebuf)
 				LM_STRNCPY(filebuf, old_filebuf, total);
@@ -681,7 +681,7 @@ _LM_PtraceWrite(lm_process_t proc,
 		aligned_size % sizeof(lm_uintptr_t) :
 		sizeof(lm_uintptr_t) - aligned_size;
 	
-	buf = LM_CALLOC(aligned_size, sizeof(lm_byte_t));
+	buf = (lm_byte_t *)LM_CALLOC(aligned_size, sizeof(lm_byte_t));
 	if (!buf)
 		return ret;
 	
@@ -1370,7 +1370,8 @@ LM_GetProcessBitsEx(lm_process_t proc)
 	{
 		lm_tchar_t *path;
 
-		path = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		path = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX,
+					       sizeof(lm_tchar_t));
 		if (!path)
 			return bits;
 		
@@ -1675,7 +1676,8 @@ LM_EnumModulesEx(lm_process_t proc,
 				sizeof(tmp[0])
 			);
 			
-			path = LM_CALLOC(pathlen + 1, sizeof(lm_tchar_t));
+			path = (lm_tchar_t *)LM_CALLOC(pathlen + 1,
+						       sizeof(lm_tchar_t));
 			if (!path) {
 				ret = LM_FALSE;
 				break;
@@ -2132,7 +2134,8 @@ LM_UnloadModule(lm_module_t mod)
 	{
 		lm_tchar_t *libpath;
 
-		libpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		libpath = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX,
+						  sizeof(lm_tchar_t));
 		if (!libpath)
 			return ret;
 		
@@ -2229,7 +2232,8 @@ LM_EnumSymbolsEx(lm_process_t proc,
 		lm_tchar_t *modpath;
 		lm_size_t   bits;
 
-		modpath = LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+		modpath = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX,
+						  sizeof(lm_tchar_t));
 		if (!modpath)
 			return ret;
 
@@ -2298,7 +2302,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				Elf64_Sym    sym;
 				lm_char_t    c;
 				lm_size_t    j = 0;
-				lm_char_t   *symstr = (lm_tchar_t *)LM_NULL;
+				lm_char_t   *symstr = (lm_char_t *)LM_NULL;
 				lm_address_t addr;
 				lm_bool_t    cbret;
 
@@ -2307,8 +2311,10 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				do {
 					lm_char_t *old_symstr = symstr;
 					
-					symstr = LM_CALLOC(j + 1,
-							   sizeof(lm_char_t));
+					symstr = (lm_char_t *)(
+						LM_CALLOC(j + 1,
+							  sizeof(lm_char_t))
+					);
 
 					if (old_symstr) {
 						if (symstr) {
@@ -2356,7 +2362,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				Elf64_Sym    sym;
 				lm_char_t    c;
 				lm_size_t    j = 0;
-				lm_char_t   *symstr = (lm_tchar_t *)LM_NULL;
+				lm_char_t   *symstr = (lm_char_t *)LM_NULL;
 				lm_address_t addr;
 				lm_bool_t    cbret;
 
@@ -2365,8 +2371,10 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				do {
 					lm_char_t *old_symstr = symstr;
 					
-					symstr = LM_CALLOC(j + 1,
-							   sizeof(lm_tchar_t));
+					symstr = (lm_char_t *)(
+						LM_CALLOC(j + 1,
+							  sizeof(lm_char_t))
+					);
 
 					if (old_symstr) {
 						if (symstr) {
@@ -2471,8 +2479,10 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				do {
 					lm_char_t *old_symstr = symstr;
 					
-					symstr = LM_CALLOC(j + 1,
-							   sizeof(lm_char_t));
+					symstr = (lm_char_t *)(
+						LM_CALLOC(j + 1,
+							  sizeof(lm_char_t))
+					);
 
 					if (old_symstr) {
 						if (symstr) {
@@ -2520,7 +2530,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				Elf32_Sym    sym;
 				lm_char_t    c;
 				lm_size_t    j = 0;
-				lm_char_t   *symstr = (lm_tchar_t *)LM_NULL;
+				lm_char_t   *symstr = (lm_char_t *)LM_NULL;
 				lm_address_t addr;
 				lm_bool_t    cbret;
 
@@ -2529,8 +2539,10 @@ LM_EnumSymbolsEx(lm_process_t proc,
 				do {
 					lm_char_t *old_symstr = symstr;
 					
-					symstr = LM_CALLOC(j + 1,
-							   sizeof(lm_tchar_t));
+					symstr = (lm_char_t *)(
+						LM_CALLOC(j + 1,
+							   sizeof(lm_char_t))
+					);
 
 					if (old_symstr) {
 						if (symstr) {
@@ -4285,7 +4297,7 @@ LM_DetourCodeEx(lm_process_t proc,
 		goto _FREE_EXIT;
 
 	ret = LM_WriteMemoryEx(proc, src, buf, size) == size ? LM_TRUE : ret;
-	LM_ProtMemoryEx(proc, src, size, old_prot, LM_NULLPTR);
+	LM_ProtMemoryEx(proc, src, size, old_prot, (lm_prot_t *)LM_NULLPTR);
 _FREE_EXIT:
 	LM_FREE(buf);
 

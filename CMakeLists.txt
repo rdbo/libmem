@@ -19,6 +19,8 @@ if(NOT MSVC)
 endif()
 
 add_library(libmem SHARED ${LIBMEM_SRC})
+target_include_directories(libmem PUBLIC ${PROJECT_SOURCE_DIR})
+
 set_target_properties(libmem PROPERTIES PREFIX "")
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
 

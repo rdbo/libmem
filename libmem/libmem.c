@@ -2032,7 +2032,56 @@ LM_LoadModuleEx(lm_process_t proc,
 
 #	if LM_OS == LM_OS_WIN
 	{
+		lm_module_t  ntdll_mod;
+		lm_cstring_t load_lib_str;
+		lm_address_t load_lib_addr;
+		lm_address_t path_alloc;
+		lm_size_t    path_size;
+		lm_datio_t   arg_path;
 
+#		if LM_CHARSET == LM_CHARSET_UC
+		load_lib_str = (lm_cstring_t)"LoadLibraryW";
+#		else
+		load_lib_str = (lm_cstring_t)"LoadLibraryA";
+#		endif
+
+		if (!LM_GetModuleEx(proc, LM_MOD_BY_STR,
+				    LM_STR("ntdll.dll"), &ntdll_mod))
+			return ret;
+		
+		load_lib_addr = LM_GetSymbolEx(proc, ntdll_mod, load_lib_str);
+		if (load_lib_addr == (lm_address_t)LM_BAD)
+			return ret;
+
+		path_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
+		path_alloc = LM_AllocMemoryEx(proc, path_size, LM_PROT_RW);
+		if (path_alloc == (lm_address_t)LM_BAD)
+			return ret;
+		
+		LM_WriteMemoryEx(proc, path_alloc, path, path_size);
+
+#		if LM_BITS == 64
+		if (LM_GetProcessBitsEx(proc) == 64) {
+			/* __fastcall */
+			arg_path.datloc = LM_DATLOC_RCX;
+			arg_path.data   = (lm_byte_t *)&path_alloc;
+		} else {
+			/* __cdecl */
+			arg_path.datloc = LM_DATLOC_STACK;
+			arg_path.data   = (lm_byte_t *)&path_alloc;
+			arg_path.size   = sizeof(path_alloc);
+		}
+#		else
+		/* __cdecl */
+		arg_path.datloc = LM_DATLOC_STACK;
+		arg_path.data   = (lm_byte_t *)&path_alloc;
+		arg_path.size   = sizeof(path_alloc);
+#		endif
+
+		if (LM_FunctionCallEx(proc, -8, load_lib_addr, 1, 0, arg_path))
+			ret = LM_TRUE;
+
+		LM_FreeMemoryEx(path_alloc, path_size);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{

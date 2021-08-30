@@ -7,10 +7,9 @@ message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_SRC "${LIBMEM_DIR}/libmem.c")
 
+set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
 set(TEST1_SRC "${TESTS_DIR}/test1.c")
 set(TEST2_SRC "${TESTS_DIR}/test2.c")
-
-set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
 
 option(LIBMEM_BUILD_TESTS OFF)
 

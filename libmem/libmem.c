@@ -317,7 +317,9 @@ _LM_ParseDatArgsIn(lm_process_t proc,
 				*(lm_uint32_t *)stack_ptr -= datargs[i].size;
 				*(lm_uint32_t *)stack_ptr &= stack_align;
 				dst = (lm_address_t)(
-					*(lm_uint32_t *)stack_ptr
+					(lm_uintptr_t)(
+						*(lm_uint32_t *)stack_ptr
+					)
 				);
 			}
 #			else
@@ -2046,7 +2048,8 @@ LM_LoadModuleEx(lm_process_t proc,
 #		endif
 
 		if (!LM_GetModuleEx(proc, LM_MOD_BY_STR,
-				    LM_STR("ntdll.dll"), &ntdll_mod))
+				    (lm_void_t *)LM_STR("ntdll.dll"),
+				    &ntdll_mod))
 			return ret;
 		
 		load_lib_addr = LM_GetSymbolEx(proc, ntdll_mod, load_lib_str);
@@ -2058,7 +2061,8 @@ LM_LoadModuleEx(lm_process_t proc,
 		if (path_alloc == (lm_address_t)LM_BAD)
 			return ret;
 		
-		LM_WriteMemoryEx(proc, path_alloc, path, path_size);
+		LM_WriteMemoryEx(proc, path_alloc,
+				 (lm_bstring_t)path, path_size);
 
 #		if LM_BITS == 64
 		if (LM_GetProcessBitsEx(proc) == 64) {
@@ -2081,7 +2085,7 @@ LM_LoadModuleEx(lm_process_t proc,
 		if (LM_FunctionCallEx(proc, -8, load_lib_addr, 1, 0, arg_path))
 			ret = LM_TRUE;
 
-		LM_FreeMemoryEx(path_alloc, path_size);
+		LM_FreeMemoryEx(proc, path_alloc, path_size);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
@@ -4587,7 +4591,7 @@ LM_DebugWrite(lm_process_t proc,
 
 #	if LM_OS == LM_OS_WIN
 	{
-		ret = LM_WriteMemoryEx(proc, src, dst, size);
+		ret = LM_WriteMemoryEx(proc, dst, src, size);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{

@@ -62,8 +62,10 @@
 #endif
 
 /* Bits */
-#if defined(LM_FORCE_BITS)
-#define LM_BITS (sizeof(void *) * 8)
+#if defined(LM_FORCE_BITS_64)
+#define LM_BITS 64
+#elif defined(LM_FORCE_BITS_32)
+#define LM_BITS 32
 #endif
 
 #ifndef LM_BITS
@@ -500,62 +502,72 @@ extern "C" {
 #endif
 
 /* Types/Enums */
-typedef char           lm_char_t;
-typedef unsigned char  lm_uchar_t;
-typedef int            lm_int_t;
-typedef unsigned int   lm_uint_t;
-typedef short          lm_short_t;
-typedef unsigned short lm_ushort_t;
-typedef long           lm_long_t;
-typedef unsigned long  lm_ulong_t;
-typedef wchar_t        lm_wchar_t;
-typedef void           lm_void_t;
-typedef lm_int_t       lm_bool_t;
+typedef char               lm_char_t;
+typedef unsigned char      lm_uchar_t;
+typedef int                lm_int_t;
+typedef unsigned int       lm_uint_t;
+typedef short              lm_short_t;
+typedef unsigned short     lm_ushort_t;
+typedef long               lm_long_t;
+typedef unsigned long      lm_ulong_t;
+typedef long long          lm_llong_t;
+typedef unsigned long long lm_ullong_t;
+typedef wchar_t            lm_wchar_t;
+typedef void               lm_void_t;
+typedef lm_int_t           lm_bool_t;
 
-typedef char           lm_int8_t;
-typedef short          lm_int16_t;
-typedef int            lm_int32_t;
-typedef long           lm_int64_t;
-
-typedef unsigned char  lm_uint8_t;
-typedef unsigned short lm_uint16_t;
-typedef unsigned int   lm_uint32_t;
-typedef unsigned long  lm_uint64_t;
-
-typedef lm_uint8_t     lm_byte_t;
-typedef lm_uint16_t    lm_word_t;
-typedef lm_uint32_t    lm_dword_t;
-typedef lm_uint64_t    lm_qword_t;
-
-typedef lm_long_t      lm_intptr_t;
-typedef lm_ulong_t     lm_uintptr_t;
-typedef lm_void_t     *lm_voidptr_t;
-
-typedef lm_voidptr_t   lm_address_t;
-typedef lm_ulong_t     lm_size_t;
-
-#if LM_CHARSET == LM_CHARSET_UC
-typedef lm_wchar_t     lm_tchar_t;
+#if LM_BITS == 64
+typedef lm_llong_t         lm_intmax_t;
+typedef lm_ullong_t        lm_uintmax_t;
 #else
-typedef lm_char_t      lm_tchar_t;
+typedef lm_long_t          lm_intmax_t;
+typedef lm_ulong_t         lm_uintmax_t;
 #endif
 
-typedef lm_byte_t     *lm_bstring_t;
-typedef lm_char_t     *lm_cstring_t;
-typedef lm_wchar_t    *lm_wstring_t;
-typedef lm_tchar_t    *lm_tstring_t;
-typedef lm_tstring_t   lm_string_t;
+typedef lm_char_t          lm_int8_t;
+typedef lm_short_t         lm_int16_t;
+typedef lm_int_t           lm_int32_t;
+typedef lm_intmax_t        lm_int64_t;
+
+typedef lm_uchar_t         lm_uint8_t;
+typedef lm_ushort_t        lm_uint16_t;
+typedef lm_uint_t          lm_uint32_t;
+typedef lm_uintmax_t       lm_uint64_t;
+
+typedef lm_uint8_t         lm_byte_t;
+typedef lm_uint16_t        lm_word_t;
+typedef lm_uint32_t        lm_dword_t;
+typedef lm_uint64_t        lm_qword_t;
+
+typedef lm_intmax_t        lm_intptr_t;
+typedef lm_uintmax_t       lm_uintptr_t;
+typedef lm_void_t         *lm_voidptr_t;
+
+typedef lm_voidptr_t       lm_address_t;
+typedef lm_uintmax_t       lm_size_t;
+
+#if LM_CHARSET == LM_CHARSET_UC
+typedef lm_wchar_t         lm_tchar_t;
+#else
+typedef lm_char_t          lm_tchar_t;
+#endif
+
+typedef lm_byte_t         *lm_bstring_t;
+typedef lm_char_t         *lm_cstring_t;
+typedef lm_wchar_t        *lm_wstring_t;
+typedef lm_tchar_t        *lm_tstring_t;
+typedef lm_tstring_t       lm_string_t;
 
 #if LM_OS == LM_OS_WIN
-typedef DWORD          lm_pid_t;
-typedef DWORD          lm_prot_t;
-typedef DWORD          lm_flags_t;
-typedef DWORD          lm_tid_t;
+typedef DWORD              lm_pid_t;
+typedef DWORD              lm_prot_t;
+typedef DWORD              lm_flags_t;
+typedef DWORD              lm_tid_t;
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
-typedef pid_t          lm_pid_t;
-typedef lm_pid_t       lm_tid_t;
-typedef int            lm_prot_t;
-typedef int            lm_flags_t;
+typedef pid_t              lm_pid_t;
+typedef lm_pid_t           lm_tid_t;
+typedef int                lm_prot_t;
+typedef int                lm_flags_t;
 #endif
 
 typedef struct {
@@ -686,6 +698,16 @@ typedef struct {
 #	endif
 #	endif
 } lm_regs_t;
+
+/* Imports */
+#if LM_OS == LM_OS_WIN && LM_COMPILER == LM_COMPILER_CC && LM_BITS == 64
+extern BOOL
+Wow64SetThreadContext(HANDLE	       hThread,
+		      const WOW64_CONTEXT *lpContext);
+extern BOOL
+Wow64GetThreadContext(HANDLE	       hThread,
+		      const WOW64_CONTEXT *lpContext);
+#endif
 
 /* libmem */
 LM_API lm_bool_t

@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
+set(CMAKE_C_STANDARD 89)
 
 project(libmem C)
 
@@ -11,13 +12,19 @@ set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
 set(TEST1_SRC "${TESTS_DIR}/test1.c")
 set(TEST2_SRC "${TESTS_DIR}/test2.c")
 
-option(LIBMEM_BUILD_TESTS OFF)
+option(LIBMEM_BUILD_TESTS OFF) # builds the optional libmem test libraries.
+option(LIBMEM_BUILD_STATIC ON) # builds libmem as a static library.
 
 if(NOT MSVC)
 	add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-add_library(libmem SHARED ${LIBMEM_SRC})
+if (LIBMEM_BUILD_STATIC)
+	add_library(libmem STATIC ${LIBMEM_SRC})
+else()
+	add_library(libmem SHARED ${LIBMEM_SRC})
+endif()
+
 target_include_directories(libmem PUBLIC ${PROJECT_SOURCE_DIR})
 
 set_target_properties(libmem PROPERTIES PREFIX "")

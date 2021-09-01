@@ -16,7 +16,7 @@ pip install --upgrade libmem
 ```
 Or build and install it yourself by running the following commands:
 ```
-cd ./libmem-py
+cd libmem-py
 python configure.py
 python setup.py install
 ```

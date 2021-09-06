@@ -4036,7 +4036,8 @@ LM_PatternScanEx(lm_process_t proc,
 	lm_page_t    oldpage;
 	lm_byte_t   *ptr;
 
-	if (!pattern || !mask || !scansize || addr == (lm_address_t)LM_BAD)
+	if (!_LM_ValidProcess(proc) || !pattern || !mask ||
+	    !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
 
 	size = LM_STRLEN(mask);

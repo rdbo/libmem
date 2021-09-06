@@ -15,23 +15,23 @@ class counter:
 	def val(self):
 		return self.value
 
-def counter_callback_pid(pid, arg) -> int:
+def counter_callback_pid(pid, arg) -> bool:
 	arg.inc()
 	return True
 
-def counter_callback_tid(tid, arg) -> int:
+def counter_callback_tid(tid, arg) -> bool:
 	arg.inc()
 	return True
 
-def counter_callback_mod(mod : lm_module_t, path : str, arg) -> int:
+def counter_callback_mod(mod : lm_module_t, path : str, arg) -> bool:
 	arg.inc()
 	return True
 
-def counter_callback_sym(symbol : str, addr : int, arg) -> int:
+def counter_callback_sym(symbol : str, addr : int, arg) -> bool:
 	arg.inc()
 	return True
 
-def counter_callback_page(page : lm_page_t, arg) -> int:
+def counter_callback_page(page : lm_page_t, arg) -> bool:
 	arg.inc()
 	return True
 

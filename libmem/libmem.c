@@ -3859,13 +3859,16 @@ LM_DataScan(lm_bstring_t data,
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_byte_t   *ptr;
-	lm_prot_t    oldprot;
+	lm_page_t    oldpage;
 
 	if (!data || !size || !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
 	
-	if (!LM_ProtMemory(addr, scansize, LM_PROT_XRW, &oldprot))
+	if (!LM_GetPage(addr, &oldpage))
 		return match;
+	
+	LM_ProtMemory(oldpage.base, oldpage.size,
+		      LM_PROT_XRW, (lm_prot_t *)LM_NULL);
 
 	for (ptr = (lm_byte_t *)addr;
 	     ptr != &((lm_byte_t *)addr)[scansize];
@@ -3873,8 +3876,21 @@ LM_DataScan(lm_bstring_t data,
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
 
-		for (i = 0; check && i < size; ++i)
-			check = (ptr[i] == data[i]) ? check : LM_FALSE;
+		if ((lm_uintptr_t)ptr >= (lm_uintptr_t)oldpage.end) {
+			LM_ProtMemory(oldpage.base, oldpage.size,
+				      oldpage.prot, (lm_prot_t *)LM_NULL);
+
+			if (!LM_GetPage(ptr, &oldpage))
+				break;
+			
+			LM_ProtMemory(oldpage.base, oldpage.size,
+				      LM_PROT_XRW, (lm_prot_t *)LM_NULL);
+		}
+
+		for (i = 0; check && i < size; ++i) {
+			if (ptr[i] != data[i])
+				check = LM_FALSE;
+		}
 		
 		if (!check)
 			continue;
@@ -3883,7 +3899,8 @@ LM_DataScan(lm_bstring_t data,
 		break;
 	}
 
-	LM_ProtMemory(addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemory(oldpage.base, oldpage.size,
+		      oldpage.prot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }
@@ -3897,14 +3914,17 @@ LM_DataScanEx(lm_process_t proc,
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_byte_t   *ptr;
-	lm_prot_t    oldprot;
+	lm_page_t    oldpage;
 
 	if (!_LM_ValidProcess(proc) || !data || !size ||
 	    !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
-
-	if (!LM_ProtMemoryEx(proc, addr, scansize, LM_PROT_XRW, &oldprot))
+	
+	if (!LM_GetPageEx(proc, addr, &oldpage))
 		return match;
+	
+	LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+			LM_PROT_XRW, (lm_prot_t *)LM_NULL);
 
 	for (ptr = (lm_byte_t *)addr;
 	     ptr != &((lm_byte_t *)addr)[scansize];
@@ -3912,16 +3932,24 @@ LM_DataScanEx(lm_process_t proc,
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
 
-		for (i = 0; check && i < size; ++i) {
-			lm_byte_t curbyte = 0;
+		if ((lm_uintptr_t)ptr >= (lm_uintptr_t)oldpage.end) {
+			LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+					oldpage.prot, (lm_prot_t *)LM_NULL);
 
-			if (!LM_ReadMemoryEx(proc, (lm_address_t)(&ptr[i]),
-					     &curbyte, sizeof(curbyte))) {
-				check = LM_FALSE;
+			if (!LM_GetPageEx(proc, ptr, &oldpage))
 				break;
-			}
 			
-			check = (curbyte == data[i]) ? check : LM_FALSE;
+			LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+					LM_PROT_XRW, (lm_prot_t *)LM_NULL);
+		}
+
+		for (i = 0; check && i < size; ++i) {
+			lm_byte_t b;
+
+			LM_ReadMemoryEx(proc, (lm_address_t)&ptr[i], &b, sizeof(b));
+
+			if (b != data[i])
+				check = LM_FALSE;
 		}
 		
 		if (!check)
@@ -3931,7 +3959,8 @@ LM_DataScanEx(lm_process_t proc,
 		break;
 	}
 
-	LM_ProtMemoryEx(proc, addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+			oldpage.prot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }
@@ -3944,7 +3973,7 @@ LM_PatternScan(lm_bstring_t pattern,
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_size_t    size;
-	lm_prot_t    oldprot;
+	lm_page_t    oldpage;
 	lm_byte_t   *ptr;
 
 	if (!pattern || !mask || !scansize || addr == (lm_address_t)LM_BAD)
@@ -3954,14 +3983,28 @@ LM_PatternScan(lm_bstring_t pattern,
 	if (!size)
 		return match;
 	
-	if (!LM_ProtMemory(addr, scansize, LM_PROT_XRW, &oldprot))
+	if (!LM_GetPage(addr, &oldpage))
 		return match;
+	
+	LM_ProtMemory(oldpage.base, oldpage.size,
+		      LM_PROT_XRW, (lm_prot_t *)LM_NULL);
 	
 	for (ptr = (lm_byte_t *)addr;
 	     ptr != &((lm_byte_t *)addr)[scansize];
 	     ptr = &ptr[1]) {
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
+
+		if ((lm_uintptr_t)ptr >= (lm_uintptr_t)oldpage.end) {
+			LM_ProtMemory(oldpage.base, oldpage.size,
+				      oldpage.prot, (lm_prot_t *)LM_NULL);
+
+			if (!LM_GetPage(ptr, &oldpage))
+				break;
+			
+			LM_ProtMemory(oldpage.base, oldpage.size,
+				      LM_PROT_XRW, (lm_prot_t *)LM_NULL);
+		}
 
 		for (i = 0; check && i < size; ++i) {
 			if (LM_CHKMASK(mask[i]) && ptr[i] != pattern[i])
@@ -3975,7 +4018,8 @@ LM_PatternScan(lm_bstring_t pattern,
 		break;
 	}
 	
-	LM_ProtMemory(addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemory(oldpage.base, oldpage.size,
+		      oldpage.prot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }
@@ -3989,19 +4033,21 @@ LM_PatternScanEx(lm_process_t proc,
 {
 	lm_address_t match = (lm_address_t)LM_BAD;
 	lm_size_t    size;
-	lm_prot_t    oldprot;
+	lm_page_t    oldpage;
 	lm_byte_t   *ptr;
 
-	if (!_LM_ValidProcess(proc) || !pattern || !mask ||
-	    !scansize || addr == (lm_address_t)LM_BAD)
+	if (!pattern || !mask || !scansize || addr == (lm_address_t)LM_BAD)
 		return match;
 
 	size = LM_STRLEN(mask);
 	if (!size)
 		return match;
 	
-	if (!LM_ProtMemoryEx(proc, addr, scansize, LM_PROT_XRW, &oldprot))
+	if (!LM_GetPageEx(proc, addr, &oldpage))
 		return match;
+	
+	LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+			LM_PROT_XRW, (lm_prot_t *)LM_NULL);
 	
 	for (ptr = (lm_byte_t *)addr;
 	     ptr != &((lm_byte_t *)addr)[scansize];
@@ -4009,16 +4055,23 @@ LM_PatternScanEx(lm_process_t proc,
 		lm_size_t i;
 		lm_bool_t check = LM_TRUE;
 
-		for (i = 0; check && i < size; ++i) {
-			lm_byte_t curbyte;
+		if ((lm_uintptr_t)ptr >= (lm_uintptr_t)oldpage.end) {
+			LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+					oldpage.prot, (lm_prot_t *)LM_NULL);
 
-			if (!LM_ReadMemoryEx(proc, (lm_address_t)&ptr[i],
-					     &curbyte, sizeof(curbyte))) {
-				check = LM_FALSE;
+			if (!LM_GetPageEx(proc, ptr, &oldpage))
 				break;
-			}
+			
+			LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+					LM_PROT_XRW, (lm_prot_t *)LM_NULL);
+		}
 
-			if (LM_CHKMASK(mask[i]) && curbyte != pattern[i])
+		for (i = 0; check && i < size; ++i) {
+			lm_byte_t b;
+
+			LM_ReadMemoryEx(proc, &ptr[i], &b, sizeof(b));
+
+			if (LM_CHKMASK(mask[i]) && b != pattern[i])
 				check = LM_FALSE;
 		}
 		
@@ -4029,7 +4082,8 @@ LM_PatternScanEx(lm_process_t proc,
 		break;
 	}
 	
-	LM_ProtMemoryEx(proc, addr, scansize, oldprot, (lm_prot_t *)LM_NULL);
+	LM_ProtMemoryEx(proc, oldpage.base, oldpage.size,
+			oldpage.prot, (lm_prot_t *)LM_NULL);
 
 	return match;
 }

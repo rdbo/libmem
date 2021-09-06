@@ -1036,7 +1036,8 @@ py_LM_EnumPagesCallback(lm_page_t  page,
 
 	pyret = PyObject_CallFunctionObjArgs(parg->callback,
 					     pypage,
-					     parg->arg);
+					     parg->arg,
+					     NULL);
 	
 	ret = PyLong_AsLong(pyret) ? LM_TRUE : LM_FALSE;
 

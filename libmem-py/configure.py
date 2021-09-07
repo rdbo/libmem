@@ -1,11 +1,33 @@
 import os
 import shutil
+import json
 
 root_dir = os.pardir
 libmem_dir = f"{root_dir}{os.sep}libmem"
 project_dir = os.curdir
 project_src_dir = f"{project_dir}{os.sep}src/libmem-py"
+clean_script = "clean.py"
 
+print(f"[+] Creating '{clean_script}'...")
+
+keep_dirs = []
+keep_files = []
+
+for (path, dirs, files) in os.walk(os.curdir):
+	keep_dirs.append(path)
+	keep_files.extend([f"{path}{os.sep}{f}" for f in files])
+
+json_dict = {
+	"dirs" : keep_dirs,
+	"files" : keep_files
+}
+
+json_data = json.dumps(json_dict)
+with open("tree.json", "w") as tree_file:
+	tree_file.write(json_data)
+	tree_file.close()
+
+print(f"[-] Creation complete")
 print("[+] Configuring files...")
 
 project_files = {

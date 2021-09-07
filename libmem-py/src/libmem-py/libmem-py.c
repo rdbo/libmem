@@ -600,24 +600,26 @@ py_LM_GetModule(PyObject *self,
 	lm_module_t       mod;
 	PyObject         *pymodarg;
 	lm_void_t        *modarg;
-	long              flags;
+	lm_int_t          flags;
 
-	if (!PyArg_ParseTuple(args, "lO", &flags, &pymodarg))
+	if (!PyArg_ParseTuple(args, "O", &pymodarg))
 		return NULL;
-
-	if (flags == (long)LM_MOD_BY_STR) {
+	
+	if (PyObject_TypeCheck(pymodarg, &PyUnicode_Type)) {
+		flags = LM_MOD_BY_STR;
 #		if LM_CHARSET == LM_CHARSET_UC
 		modarg = (lm_void_t *)(PyUnicode_AsUnicode(pymodarg));
 #		else
 		modarg = (lm_void_t *)(PyUnicode_AsUTF8(pymodarg));
-#		endif
-	} else if (flags == (long)LM_MOD_BY_ADDR) {
+#		endif		
+	} else if (PyObject_TypeCheck(pymodarg, &PyLong_Type)) {
+		flags = LM_MOD_BY_ADDR;
 		modarg = (lm_void_t *)PyLong_AsLong(pymodarg);
 	} else {
 		return PyErr_libmem_arg();
 	}
 
-	if (!LM_GetModule((lm_int_t)flags, modarg, &mod))
+	if (!LM_GetModule(flags, modarg, &mod))
 		return PyErr_libmem();
 	
 	pymod = (py_lm_module_obj *)(
@@ -638,25 +640,27 @@ py_LM_GetModuleEx(PyObject *self,
 	py_lm_process_obj *pyproc;
 	PyObject          *pymodarg;
 	lm_void_t         *modarg;
-	long               flags;
+	lm_int_t           flags;
 
-	if (!PyArg_ParseTuple(args, "O!lO", &py_lm_process_t, &pyproc,
-			      &flags, &pymodarg))
+	if (!PyArg_ParseTuple(args, "O!O", &py_lm_process_t, &pyproc,
+			      &pymodarg))
 		return NULL;
 
-	if (flags == (long)LM_MOD_BY_STR) {
+	if (PyObject_TypeCheck(pymodarg, &PyUnicode_Type)) {
+		flags = LM_MOD_BY_STR;
 #		if LM_CHARSET == LM_CHARSET_UC
 		modarg = (lm_void_t *)(PyUnicode_AsUnicode(pymodarg));
 #		else
 		modarg = (lm_void_t *)(PyUnicode_AsUTF8(pymodarg));
-#		endif
-	} else if (flags == (long)LM_MOD_BY_ADDR) {
+#		endif		
+	} else if (PyObject_TypeCheck(pymodarg, &PyLong_Type)) {
+		flags = LM_MOD_BY_ADDR;
 		modarg = (lm_void_t *)PyLong_AsLong(pymodarg);
 	} else {
 		return PyErr_libmem_arg();
 	}
 
-	if (!LM_GetModuleEx(pyproc->proc, (lm_int_t)flags, modarg, &mod))
+	if (!LM_GetModuleEx(pyproc->proc, flags, modarg, &mod))
 		return PyErr_libmem();
 	
 	pymod = (py_lm_module_obj *)(

@@ -154,14 +154,12 @@ print("[-] PyTest 1")
 print("********************")
 print("[+] PyTest 2")
 
-pid = 0
+if LM_OS == LM_OS_WIN:
+	pid = LM_GetProcessIdEx("test1.exe")
+else:
+	pid = LM_GetProcessIdEx("test1")
 
-try:
-	if LM_OS == LM_OS_WIN:
-		pid = LM_GetProcessIdEx("test1.exe")
-	else:
-		pid = LM_GetProcessIdEx("test1")
-except:
+if pid is None:
 	print("[!] test1 not running")
 	print("[-] PyTest 2")
 	exit()
@@ -246,28 +244,29 @@ rdval = struct.unpack("@i", rdbuf)[0]
 print(f"[*] Written Value: {rdval}")
 
 setbuf_str = b"NotSet"
-alloc = LM_AllocMemoryEx(proc, len(setbuf_str), LM_PROT_RW)
-LM_WriteMemoryEx(proc, alloc, setbuf)
+alloc = LM_AllocMemoryEx(proc, 10 + len(setbuf_str) + 10, LM_PROT_RW)
+setbuf_addr = alloc + 10
+LM_WriteMemoryEx(proc, setbuf_addr, setbuf)
 
 print(f"[*] SetBuf:         {setbuf_str}")
-LM_SetMemoryEx(proc, alloc, b"A", len(setbuf_str))
-setbuf_str = LM_ReadMemoryEx(proc, alloc, len(setbuf_str))
+LM_SetMemoryEx(proc, setbuf_addr, b"A", len(setbuf_str))
+setbuf_str = LM_ReadMemoryEx(proc, setbuf_addr, len(setbuf_str))
 print(f"[*] Written SetBuf: {setbuf_str}")
 
 print(f"[*] Alloc: {hex(alloc)}")
 old_prot = LM_ProtMemoryEx(proc, mod.base, mod.size, LM_PROT_XRW)
 cur_prot = LM_GetPageEx(proc, mod.base).prot
 
-print(f"[*] SetBuf Addr:  {hex(alloc)}")
+print(f"[*] SetBuf Addr:  {hex(setbuf_addr)}")
 
-data_scan = LM_DataScanEx(proc, setbuf_str, alloc - 10, len(setbuf_str) + 10)
+data_scan = LM_DataScanEx(proc, setbuf_str, setbuf_addr - 10, len(setbuf_str) + 10)
 print(f"[*] Data Scan:    {hex(data_scan)}")
 
-pattern_scan = LM_PatternScanEx(proc, setbuf_str, "x" * len(setbuf_str), alloc - 10, len(setbuf_str) + 10)
+pattern_scan = LM_PatternScanEx(proc, setbuf_str, "x" * len(setbuf_str), setbuf_addr - 10, len(setbuf_str) + 10)
 print(f"[*] Pattern Scan: {hex(pattern_scan)}")
 
 sig = " ".join(["{:02X}".format(i) for i in setbuf_str]).replace("0x", "")
-sig_scan = LM_SigScanEx(proc, sig, alloc - 10, len(setbuf_str) + 10)
+sig_scan = LM_SigScanEx(proc, sig, setbuf_addr - 10, len(setbuf_str) + 10)
 print(f"[*] Sig Scan:     {hex(sig_scan)}")
 
 LM_FreeMemoryEx(proc, alloc, len(setbuf_str))

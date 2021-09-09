@@ -143,7 +143,7 @@ py_LM_EnumProcesses(PyObject *self,
 			      (lm_void_t *)&arg))
 		return PyErr_libmem();
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -158,7 +158,7 @@ py_LM_GetProcessId(PyObject *self,
 		return NULL;
 	}
 
-	return (PyObject *)PyLong_FromPid(pid);
+	return PyLong_FromPid(pid);
 }
 
 static PyObject *
@@ -178,28 +178,39 @@ py_LM_GetProcessIdEx(PyObject *self,
 
 	pid = LM_GetProcessIdEx(procstr);
 	if (pid == (lm_pid_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* process id not found */
 
-	return (PyObject *)PyLong_FromPid(pid);
+	return PyLong_FromPid(pid);
 }
 
 static PyObject *
 py_LM_GetParentId(PyObject *self,
 		  PyObject *args)
 {
-	return PyLong_FromPid(LM_GetParentId());
+	lm_pid_t ppid;
+
+	ppid = LM_GetParentId();
+	if (ppid == (lm_pid_t)LM_BAD)
+		return Py_BuildValue(""); /* parent process not found */
+
+	return PyLong_FromPid(ppid);
 }
 
 static PyObject *
 py_LM_GetParentIdEx(PyObject *self,
 		    PyObject *args)
 {
-	long pypid;
+	long     pypid;
+	lm_pid_t ppid;
 
 	if (!PyArg_ParseTuple(args, "l", &pypid))
 		return NULL;
+	
+	ppid = LM_GetParentIdEx((lm_pid_t)pypid);
+	if (ppid == (lm_pid_t)LM_BAD)
+		return Py_BuildValue(""); /* parent process not found */
 
-	return PyLong_FromPid(LM_GetParentIdEx((lm_pid_t)pypid));
+	return PyLong_FromPid(ppid);
 }
 
 static PyObject *
@@ -261,7 +272,7 @@ py_LM_CloseProcess(PyObject *self,
 
 	LM_CloseProcess(&pyproc->proc);
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -620,7 +631,7 @@ py_LM_GetModule(PyObject *self,
 	}
 
 	if (!LM_GetModule(flags, modarg, &mod))
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* invalid module */
 	
 	pymod = (py_lm_module_obj *)(
 		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
@@ -661,7 +672,7 @@ py_LM_GetModuleEx(PyObject *self,
 	}
 
 	if (!LM_GetModuleEx(pyproc->proc, flags, modarg, &mod))
-		return PyErr_libmem();
+		return Py_BuildValue("");
 	
 	pymod = (py_lm_module_obj *)(
 		PyObject_CallObject((PyObject *)&py_lm_module_t, NULL)
@@ -993,7 +1004,7 @@ py_LM_GetSymbol(PyObject *self,
 	
 	symaddr = LM_GetSymbol(pymod->mod, symstr);
 	if (symaddr == (lm_address_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* symbol not found */
 	
 	return PyLong_FromVoidPtr(symaddr);
 }
@@ -1013,6 +1024,8 @@ py_LM_GetSymbolEx(PyObject *self,
 		return NULL;
 	
 	symaddr = LM_GetSymbolEx(pyproc->proc, pymod->mod, symstr);
+	if (symaddr == (lm_address_t)LM_BAD)
+		return Py_BuildValue(""); /* symbol not found */
 	
 	return PyLong_FromVoidPtr(symaddr);
 }
@@ -1100,7 +1113,7 @@ py_LM_GetPage(PyObject *self,
 		return NULL;
 	
 	if (!LM_GetPage((lm_address_t)(lm_uintptr_t)addr, &page))
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* invalid page */
 	
 	pypage = (py_lm_page_obj *)(
 		PyObject_CallObject((PyObject *)&py_lm_page_t, NULL)
@@ -1126,7 +1139,7 @@ py_LM_GetPageEx(PyObject *self,
 	if (!LM_GetPageEx(pyproc->proc,
 			  (lm_address_t)(lm_uintptr_t)addr,
 			  &page))
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* invalid page */
 	
 	pypage = (py_lm_page_obj *)(
 		PyObject_CallObject((PyObject *)&py_lm_page_t, NULL)
@@ -1218,7 +1231,7 @@ py_LM_WriteMemory(PyObject *self,
 			   (lm_size_t)buf.len) != (lm_size_t)buf.len)
 		return PyErr_libmem();
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -1239,7 +1252,7 @@ py_LM_WriteMemoryEx(PyObject *self,
 			     (lm_size_t)buf.len) != (lm_size_t)buf.len)
 		return PyErr_libmem();
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -1258,7 +1271,7 @@ py_LM_SetMemory(PyObject *self,
 			 (lm_size_t)size) != (lm_size_t)size)
 		return PyErr_libmem();
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -1280,7 +1293,7 @@ py_LM_SetMemoryEx(PyObject *self,
 			   (lm_size_t)size) != (lm_size_t)size)
 		return PyErr_libmem();
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -1382,7 +1395,7 @@ py_LM_FreeMemory(PyObject *self,
 	if (!LM_FreeMemory((lm_address_t)alloc, (lm_size_t)size))
 		return PyErr_libmem();
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -1402,7 +1415,7 @@ py_LM_FreeMemoryEx(PyObject *self,
 			     (lm_size_t)size))
 		return PyErr_libmem();
 
-	return PyBool_FromLong(LM_TRUE);
+	return Py_BuildValue("");
 }
 
 static PyObject *
@@ -1423,7 +1436,7 @@ py_LM_DataScan(PyObject *self,
 			   (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* no matches found */
 
 	return PyLong_FromVoidPtr(scan);
 }
@@ -1449,7 +1462,7 @@ py_LM_DataScanEx(PyObject *self,
 			     (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* no matches found */
 
 	return PyLong_FromVoidPtr(scan);
 }
@@ -1478,7 +1491,7 @@ py_LM_PatternScan(PyObject *self,
 			       (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* no matches found */
 
 	return PyLong_FromVoidPtr(scan);
 }
@@ -1511,7 +1524,7 @@ py_LM_PatternScanEx(PyObject *self,
 				 (lm_size_t)scansize);
 
 	if (scan == (lm_address_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* no matches found */
 
 	return PyLong_FromVoidPtr(scan);
 }
@@ -1535,7 +1548,7 @@ py_LM_SigScan(PyObject *self,
 
 	scan = LM_SigScan(sig, (lm_address_t)addr, (lm_size_t)scansize);
 	if (scan == (lm_address_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* no matches found */
 
 	return PyLong_FromVoidPtr(scan);
 }
@@ -1566,7 +1579,7 @@ py_LM_SigScanEx(PyObject *self,
 			     (lm_size_t)scansize);
 	
 	if (scan == (lm_address_t)LM_BAD)
-		return PyErr_libmem();
+		return Py_BuildValue(""); /* no matches found */
 
 	return PyLong_FromVoidPtr(scan);
 }

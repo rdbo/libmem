@@ -1815,6 +1815,8 @@ LM_GetModule(lm_int_t     flags,
 		arg.len = LM_STRLEN((lm_tstring_t)arg.modarg);
 
 	ret = LM_EnumModules(_LM_GetModuleCallback, (lm_void_t *)&arg);
+	if (ret && arg.modbuf->size == 0)
+		ret = LM_FALSE;
 
 	return ret;
 }
@@ -1842,6 +1844,8 @@ LM_GetModuleEx(lm_process_t proc,
 		arg.len = LM_STRLEN((lm_tstring_t)arg.modarg);
 
 	ret = LM_EnumModulesEx(proc, _LM_GetModuleCallback, (lm_void_t *)&arg);
+	if (ret && arg.modbuf->size == 0)
+		ret = LM_FALSE;
 
 	return ret;
 }

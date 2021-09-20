@@ -2140,7 +2140,7 @@ LM_LoadModuleEx(lm_process_t proc,
 			} else {
 				arg0.datloc = LM_DATLOC_STACK;
 				arg0.data   = (lm_byte_t *)&path_addr;
-				arg0.size   = path_size;
+				arg0.size   = sizeof(path_addr);
 
 				arg1.datloc = LM_DATLOC_STACK;
 				arg1.data   = (lm_byte_t *)&mode;
@@ -2149,7 +2149,7 @@ LM_LoadModuleEx(lm_process_t proc,
 #			else
 			arg0.datloc = LM_DATLOC_STACK;
 			arg0.data   = (lm_byte_t *)&path_addr;
-			arg0.size   = path_size;
+			arg0.size   = sizeof(path_addr);
 
 			arg1.datloc = LM_DATLOC_STACK;
 			arg1.data   = (lm_byte_t *)&mode;

@@ -853,7 +853,7 @@ _LM_GetProcessIdCallback(lm_pid_t   pid,
 	if (LM_OpenProcessEx(pid, &proc)) {
 		lm_size_t len;
 
-		len = LM_GetProcessPathEx(proc,	path, LM_PATH_MAX - 1);
+		len = LM_GetProcessPathEx(proc,	path, LM_PATH_MAX);
 		if (len && len >= parg->len) {
 			path[len] = LM_STR('\x00');
 
@@ -963,7 +963,7 @@ LM_GetParentIdEx(lm_pid_t pid)
 		lm_tchar_t  status_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 		lm_tchar_t *ptr;
 
-		LM_SNPRINTF(status_path, LM_ARRLEN(status_path) - 1,
+		LM_SNPRINTF(status_path, LM_ARRLEN(status_path),
 			    LM_STR("%s/%d/status"), LM_PROCFS, pid);
 		
 		if (!_LM_OpenFileBuf(status_path, &status_buf))
@@ -1110,14 +1110,14 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 		if (!hModule)
 			return len;
 
-		len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen - 1);
+		len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 	{
 		lm_process_t proc;
 
 		if (LM_OpenProcess(&proc)) {
-			len = LM_GetProcessPathEx(proc, pathbuf, maxlen - 1);
+			len = LM_GetProcessPathEx(proc, pathbuf, maxlen);
 			LM_CloseProcess(&proc);
 		}
 	}
@@ -1142,12 +1142,12 @@ LM_GetProcessPathEx(lm_process_t proc,
 #	if LM_OS == LM_OS_WIN
 	{
 		len = (lm_size_t)GetModuleFileNameEx(proc.handle, NULL,
-						     pathbuf, maxlen - 1);
+						     pathbuf, maxlen);
 	}
 #	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	{
 		lm_tchar_t exe_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
-		LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path) - 1,
+		LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path),
 			    LM_STR("%s/%d/exe"), LM_PROCFS, proc.pid);
 		
 		len = (lm_size_t)readlink(exe_path, pathbuf, maxlen - 1);
@@ -1168,7 +1168,7 @@ LM_GetProcessPathEx(lm_process_t proc,
 
 			if (procs && nprocs) {
 				if (!procstat_getpathname(ps, procs,
-							  pathbuf, maxlen - 1))
+							  pathbuf, maxlen))
 					len = LM_STRLEN(pathbuf);
 
 				procstat_freeprocs(ps, procs);
@@ -1248,7 +1248,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 
 #	if LM_OS == LM_OS_WIN
 	{
-		len = (lm_size_t)GetModuleBaseName(proc.handle, NULL, namebuf, maxlen - 1);
+		len = (lm_size_t)GetModuleBaseName(proc.handle, NULL, namebuf, maxlen);
 		if (len)
 			namebuf[len] = LM_STR('\x00');
 	}
@@ -1257,7 +1257,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 		lm_tchar_t *filebuf;
 		lm_tchar_t comm_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
-		LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path) - 1,
+		LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path),
 			    LM_STR("%s/%d/comm"), LM_PROCFS, proc.pid);
 		
 		len = _LM_OpenFileBuf(comm_path, &filebuf);
@@ -1474,7 +1474,7 @@ LM_EnumThreadsEx(lm_process_t proc,
 		struct dirent *pdirent;
 		lm_tchar_t task_path[64] = { 0 };
 
-		LM_SNPRINTF(task_path, LM_ARRLEN(task_path) - 1,
+		LM_SNPRINTF(task_path, LM_ARRLEN(task_path),
 			    LM_STR("/proc/%d/task"), proc.pid);
 		
 		pdir = opendir(task_path);
@@ -1631,10 +1631,10 @@ LM_EnumModulesEx(lm_process_t proc,
 		lm_tchar_t maps_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
 #		if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
+		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 			    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
 #		elif LM_OS == LM_OS_BSD
-		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
+		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 			    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
 #		endif
 		
@@ -2815,10 +2815,10 @@ LM_EnumPagesEx(lm_process_t proc,
 		lm_tchar_t maps_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
 #		if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
+		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 			    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
 #		elif LM_OS == LM_OS_BSD
-		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path) - 1,
+		LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 			    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
 #		endif
 		
@@ -3028,7 +3028,7 @@ LM_ReadMemoryEx(lm_process_t proc,
 		int fd;
 		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
-		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
+		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path),
 			    LM_STR("%s/%d/mem"), LM_PROCFS, proc.pid);
 		
 		fd = open(mem_path, O_RDONLY);
@@ -3094,7 +3094,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 		int fd;
 		lm_tchar_t mem_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
 
-		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path) - 1,
+		LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path),
 			    LM_STR("%s/%d/mem"), LM_PROCFS, proc.pid);
 		
 		fd = open(mem_path, O_WRONLY);
@@ -4593,7 +4593,7 @@ LM_DebugCheck(lm_process_t proc)
 		lm_tchar_t *status_buf;
 		lm_tchar_t *ptr;
 
-		LM_SNPRINTF(status_path, LM_ARRLEN(status_path) - 1,
+		LM_SNPRINTF(status_path, LM_ARRLEN(status_path),
 			    LM_STR("/proc/%d/status"), proc.pid);
 
 		if (!_LM_OpenFileBuf(status_path, &status_buf))

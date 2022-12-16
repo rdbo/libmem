@@ -42,7 +42,6 @@ main()
 	lm_address_t alloc;
 	lm_prot_t    alloc_prot;
 	lm_prot_t    alloc_oldprot;
-	lm_byte_t    code[] = { 0x55, 0x54, 0x53, 0x52, 0x51 };
 	lm_inst_t    inst;
 	lm_size_t    disasm_count;
 	lm_size_t    disasm_bytes;

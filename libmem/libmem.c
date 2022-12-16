@@ -7,6 +7,7 @@
 
 #include "libmem.h"
 #include <capstone/capstone.h>
+#include <keystone/keystone.h>
 
 #if LM_COMPATIBLE
 /* Additional Types */

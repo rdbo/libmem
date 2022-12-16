@@ -6,24 +6,31 @@ project(libmem C)
 
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 
+option(LIBMEM_DEBUG OFF) # enable debug symbols
 option(LIBMEM_BUILD_TESTS OFF) # builds the optional libmem test libraries.
 option(LIBMEM_BUILD_STATIC ON) # builds libmem as a static library.
 
+if(LIBMEM_DEBUG)
+	set(CMAKE_BUILD_TYPE Debug)
+else()
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CAPSTONE_DIR "${PROJECT_SOURCE_DIR}/capstone")
 set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/capstone-engine-prefix/src/capstone-engine-build")
-ExternalProject_Add(capstone-engine SOURCE_DIR ${CAPSTONE_DIR} INSTALL_COMMAND echo CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCAPSTONE_ARCHITECTURE_DEFAULT=ON -DCAPSTONE_BUILD_TESTS=OFF -DCAPSTONE_BUILD_CSTOOL=OFF -DCAPSTONE_INSTALL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+ExternalProject_Add(capstone-engine SOURCE_DIR ${CAPSTONE_DIR} INSTALL_COMMAND echo CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCAPSTONE_ARCHITECTURE_DEFAULT=ON -DCAPSTONE_BUILD_TESTS=OFF -DCAPSTONE_BUILD_CSTOOL=OFF -DCAPSTONE_INSTALL=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 add_library(capstone STATIC IMPORTED)
 set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/libcapstone.a)
 
 set(KEYSTONE_DIR "${PROJECT_SOURCE_DIR}/keystone")
 set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
-ExternalProject_Add(keystone-engine SOURCE_DIR ${KEYSTONE_DIR} INSTALL_COMMAND echo CMAKE_ARGS -DBUILD_LIBS_ONLY=1 -DBUILDTYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+ExternalProject_Add(keystone-engine SOURCE_DIR ${KEYSTONE_DIR} INSTALL_COMMAND echo CMAKE_ARGS -DBUILD_LIBS_ONLY=1 -DBUILDTYPE=${CMAKE_BUILD_TYPE} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 add_library(keystone STATIC IMPORTED)
 set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/libkeystone.a)
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_SRC "${LIBMEM_DIR}/libmem.c")
-set(LIBMEM_DEPS capstone keystone)
+set(LIBMEM_DEPS capstone keystone stdc++)
 
 if(NOT MSVC)
 	add_compile_options(-Wall -Wextra -Wpedantic)

@@ -4523,6 +4523,48 @@ LM_DestroyTrampolineEx(lm_process_t proc,
 }
 
 LM_API lm_bool_t
+LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
+{
+	lm_bool_t ret = LM_FALSE;
+	ks_engine *ks;
+	ks_arch ksarch;
+	ks_mode ksmode;
+	unsigned char *encode;
+	size_t size;
+	size_t count;
+
+	if (!code || !inst)
+		return ret;
+
+	switch (arch) {
+	case LM_ARCH_X86: ksarch = KS_ARCH_X86; break;
+	default: return ret;
+	}
+
+	switch (bits) {
+	case 32: ksmode = KS_MODE_32; break;
+	case 64: ksmode = KS_MODE_64; break;
+	default: return ret;
+	}
+
+	if (ks_open(ksarch, ksmode, &ks) != KS_ERR_OK)
+		return ret;
+
+	ks_asm(ks, code, 0, &encode, &size, &count);
+	if (size <= 0)
+		goto CLEAN_EXIT;
+
+	inst->size = size;
+	memcpy((void *)inst->bytes, (void *)encode, size);
+
+	ks_free(encode);
+	ret = LM_TRUE;
+CLEAN_EXIT:
+	ks_close(ks);
+	return ret;
+}
+
+LM_API lm_bool_t
 LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
 {
 	lm_bool_t ret = LM_FALSE;
@@ -4547,13 +4589,14 @@ LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *ins
 	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
 		return LM_FALSE;
 
-	count = cs_disasm(cshandle, code, 32, 0, 1, &csinsn);
+	count = cs_disasm(cshandle, code, LM_INST_SIZE, 0, 1, &csinsn);
 	if (count <= 0)
 		goto CLEAN_EXIT;
 
 	memcpy((void *)inst, (void *)&csinsn[0], sizeof(lm_inst_t));
 
 	cs_free(csinsn, count);
+	ret = LM_TRUE;
 CLEAN_EXIT:
 	cs_close(&cshandle);
 	return ret;

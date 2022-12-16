@@ -396,6 +396,7 @@
 #	define mem_ex_del_trampoline    LM_DestroyTrampolineEx
 #	define mem_in_assemble          LM_Assemble
 #	define mem_in_disassemble       LM_Disassemble
+#	define mem_in_code_len          LM_CodeLength
 
 #	define mem_ex_dbg_attach        LM_DebugAttach
 #	define mem_ex_dbg_detach        LM_DebugDetach
@@ -595,6 +596,7 @@ typedef struct {
 } lm_page_t;
 
 enum {
+	LM_DETOUR_ANY,
 #	if LM_ARCH == LM_ARCH_X86
 	LM_DETOUR_JMP32,
 	LM_DETOUR_JMP64,
@@ -1079,6 +1081,9 @@ LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst);
 
 LM_API lm_bool_t
 LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst);
+
+LM_API lm_size_t
+LM_CodeLength(lm_address_t code, lm_size_t minlength);
 
 /****************************************/
 

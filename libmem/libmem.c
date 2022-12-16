@@ -165,6 +165,7 @@ _LM_DetourPayload(lm_address_t src,
 		break;
 	}
 	case LM_DETOUR_JMP64:
+	case LM_DETOUR_ANY:
 	{
 		if (bits == 64) {
 			lm_byte_t payload[] = {
@@ -4602,6 +4603,20 @@ LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *ins
 CLEAN_EXIT:
 	cs_close(&cshandle);
 	return ret;
+}
+
+LM_API lm_size_t
+LM_CodeLength(lm_address_t code, lm_size_t minlength)
+{
+	lm_size_t length;
+	lm_inst_t inst;
+	for (length = 0; length < minlength; code = (lm_address_t)LM_OFFSET(code, length)) {
+		if (LM_Disassemble(code, LM_ARCH, LM_BITS, &inst) == LM_FALSE)
+			return 0;
+		length += inst.size;
+	}
+
+	return length;
 }
 
 /****************************************/

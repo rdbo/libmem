@@ -1,12 +1,26 @@
-![libmem-logo](https://raw.githubusercontent.com/rdbo/libmem/master/LOGO.png)  
-  
-  
-[![discord-server](https://img.shields.io/discord/591914197219016707.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.com/invite/Qw8jsPD99X)
+![libmem-logo](LOGO.png)  
+
 #  
 
 ## Usage (C/C++)
+Clone the repository:
+```
+git clone https://github.com/rdbo/libmem
+```
+Initialize and update the submodules:
+```
+git submodule init
+git submodule update
+```
+Compile libmem:
+```
+mkdir build
+cd build
+cmake ..
+make
+```
 Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  
-Compile `libmem/libmem.c` along with your project.  
+Link the generated libmem library against your binary.
 
 ## Usage (Python)
 Make sure to have Python >= 3.6 active  
@@ -26,6 +40,9 @@ from libmem import *
 ```
 
 ## Dependencies
+All:
+- capstone (included in root project)
+
 Windows:  
 - Windows SDK (-luser32, -lpsapi)  
   
@@ -116,6 +133,7 @@ LM_MakeTrampoline
 LM_MakeTrampolineEx
 LM_DestroyTrampoline
 LM_DestroyTrampolineEx
+LM_Disassemble
 
 LM_DebugAttach
 LM_DebugDetach

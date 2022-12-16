@@ -16,6 +16,9 @@ class CMakeBuildExt(build_ext):
 				self.build_cmake(self.extensions[i])
 			else:
 				self.extensions[i].library_dirs.append(self.build_temp)
+				self.extensions[i].extra_objects.append(f"{self.build_temp}{os.sep}libmem.a")
+				self.extensions[i].extra_objects.append(f"{self.build_temp}{os.sep}capstone-engine-prefix{os.sep}src{os.sep}capstone-engine-build{os.sep}libcapstone.a")
+				self.extensions[i].extra_objects.append(f"{self.build_temp}{os.sep}keystone-engine-prefix{os.sep}src{os.sep}keystone-engine-build{os.sep}llvm{os.sep}lib{os.sep}libkeystone.a")
 		super().run()
 
 	def build_cmake(self, ext):
@@ -33,7 +36,6 @@ class CMakeBuildExt(build_ext):
 		] + ext.cmake_args
 
 		build_args = [
-		    '--config', config,
 		    '--', '-j4'
 		]
 
@@ -45,7 +47,7 @@ class CMakeBuildExt(build_ext):
 
 src_dir = f"src{os.sep}libmem-py"
 libmem_root_dir = f"{src_dir}{os.sep}libmem"
-libs = ["libmem"]
+libs = ["stdc++"]
 readme = ""
 
 with open("README.md", "r") as f:
@@ -63,7 +65,7 @@ elif platform.find("bsd") != -1:
 	libs.append("procstat")
 	libs.append("elf")
 
-libmem = CMakeExtension(f"{libmem_root_dir}", ["-DLIBMEM_BUILD_STATIC=OFF"])
+libmem = CMakeExtension(f"{libmem_root_dir}", [])
 
 libmem_py = Extension(
 	name = "libmem",

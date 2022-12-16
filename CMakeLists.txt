@@ -6,9 +6,9 @@ project(libmem C)
 
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 
-option(LIBMEM_DEBUG OFF) # enable debug symbols
-option(LIBMEM_BUILD_TESTS OFF) # builds the optional libmem test libraries.
-option(LIBMEM_BUILD_STATIC ON) # builds libmem as a static library.
+option(LIBMEM_DEBUG "Enable debug symbols" OFF) # enable debug symbols
+option(LIBMEM_BUILD_TESTS "Build tests" OFF) # builds the optional libmem test libraries.
+option(LIBMEM_BUILD_STATIC "Build a static library" ON) # builds libmem as a static library.
 
 if(LIBMEM_DEBUG)
 	set(CMAKE_BUILD_TYPE Debug)

@@ -150,6 +150,18 @@ LM_CloseProcess(proc)
 
 print("====================")
 
+code = "mov eax, ebx"
+print("[*] Assembly:")
+
+inst = LM_Assemble(code, LM_ARCH_X86, 32)
+print(f"{code} : {inst.bytes}")
+
+print("[*] Disassembly:")
+inst = LM_Disassemble(b"\x55", LM_ARCH_X86, 32)
+print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
+
+print("====================")
+
 print("[-] PyTest 1")
 print("********************")
 print("[+] PyTest 2")

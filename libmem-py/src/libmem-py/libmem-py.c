@@ -1626,6 +1626,8 @@ py_LM_Assemble(PyObject *self,
 	unsigned long bits;
 	lm_inst_t inst;
 	py_lm_inst_obj *pyinst;
+	
+	memset((void *)&inst, 0x0, sizeof(inst));
 
 	if (!PyArg_ParseTuple(args, "sik", &code, &arch, &bits))
 		return NULL;
@@ -1638,6 +1640,35 @@ py_LM_Assemble(PyObject *self,
 	);
 	pyinst->inst = inst;
 	pyinst->bytes = PyByteArray_FromStringAndSize(inst.bytes, inst.size);
+
+	return (PyObject *)pyinst;
+}
+
+static PyObject *
+py_LM_Disassemble(PyObject *self,
+		  PyObject *args)
+{
+	Py_buffer code;
+	int arch;
+	unsigned long bits;
+	lm_inst_t inst;
+	py_lm_inst_obj *pyinst;
+
+	memset((void *)&inst, 0x0, sizeof(inst));
+
+	if (!PyArg_ParseTuple(args, "y*ik", &code, &arch, &bits))
+		return NULL;
+
+	if (LM_Disassemble((lm_address_t)code.buf, (lm_arch_t)arch, (lm_size_t)bits, &inst) == LM_FALSE)
+		return Py_BuildValue("");
+
+	pyinst = (py_lm_inst_obj *)(
+		PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL)
+	);
+	pyinst->inst = inst;
+	pyinst->bytes = PyByteArray_FromStringAndSize(inst.bytes, inst.size);
+	pyinst->mnemonic = PyUnicode_FromString(inst.mnemonic);
+	pyinst->op_str = PyUnicode_FromString(inst.op_str);
 
 	return (PyObject *)pyinst;
 }
@@ -1709,6 +1740,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_SigScanEx", py_LM_SigScanEx, METH_VARARGS, "" },
 	/****************************************/
 	{ "LM_Assemble", py_LM_Assemble, METH_VARARGS, "" },
+	{ "LM_Disassemble", py_LM_Disassemble, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 

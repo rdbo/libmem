@@ -135,6 +135,7 @@ LM_MakeTrampoline
 LM_MakeTrampolineEx
 LM_DestroyTrampoline
 LM_DestroyTrampolineEx
+LM_Assemble
 LM_Disassemble
 
 LM_DebugAttach

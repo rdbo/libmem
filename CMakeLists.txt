@@ -1,11 +1,17 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.24)
+
+include(ExternalProject)
 
 project(libmem C)
+
+set(CAPSTONE_DIR "${PROJECT_SOURCE_DIR}/capstone")
+ExternalProject_Add(capstone-engine SOURCE_DIR ${CAPSTONE_DIR} INSTALL_COMMAND echo CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCAPSTONE_ARCHITECTURE_DEFAULT=ON -DCAPSTONE_BUILD_TESTS=OFF -DCAPSTONE_BUILD_CSTOOL=OFF -DCAPSTONE_INSTALL=OFF)
 
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_SRC "${LIBMEM_DIR}/libmem.c")
+set(LIBMEM_DEPS "capstone")
 
 set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
 set(TEST1_SRC "${TESTS_DIR}/test1.c")
@@ -44,30 +50,32 @@ if (LIBMEM_BUILD_TESTS)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
-	target_link_libraries(libmem user32 psapi)
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} user32 psapi)
+	target_link_libraries(libmem ${})
 
 	if (LIBMEM_BUILD_TESTS)
 		target_compile_definitions(test1 PUBLIC LIBTEST_PATH="libtest.dll")
 		target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest.dll" TEST1_NAME="test1.exe")
 	endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES Linux OR ${CMAKE_SYSTEM_NAME} MATCHES Android)
-	target_link_libraries(libmem dl)
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} dl)
+	target_link_libraries(libmem ${LIBMEM_DEPS})
 
 	if (LIBMEM_BUILD_TESTS)
 		target_compile_definitions(test1 PUBLIC LIBTEST_PATH="libtest.so")
-		target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest.dll" TEST1_NAME="test1")
+		target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest.so" TEST1_NAME="test1")
 	endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES FreeBSD)
 	target_link_libraries(libmem dl kvm procstat elf)
 
 	if (LIBMEM_BUILD_TESTS)
 		target_compile_definitions(test1 PUBLIC LIBTEST_PATH="libtest.so")
-		target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest.dll" TEST1_NAME="test1")
+		target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest.so" TEST1_NAME="test1")
 	endif()
 else()
 	message(FATAL_ERROR "[!] Unsupported platform")
 	if (LIBMEM_BUILD_TESTS)
 		target_compile_definitions(test1 PUBLIC LIBTEST_PATH="libtest.so")
-		target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest.dll" TEST1_NAME="test1")
+		target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest.so" TEST1_NAME="test1")
 	endif()
 endif()

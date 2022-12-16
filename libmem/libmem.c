@@ -6,6 +6,7 @@
  */
 
 #include "libmem.h"
+#include <capstone/capstone.h>
 
 #if LM_COMPATIBLE
 /* Additional Types */
@@ -4518,6 +4519,43 @@ LM_DestroyTrampolineEx(lm_process_t proc,
 {
 	if (tramp)
 		LM_FreeMemoryEx(proc, tramp, 1);
+}
+
+LM_API lm_bool_t
+LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
+{
+	lm_bool_t ret = LM_FALSE;
+	csh cshandle;
+	cs_insn *csinsn;
+	cs_arch csarch;
+	cs_mode csmode;
+	size_t count;
+
+	if (!code || !inst)
+		return ret;
+
+	switch (arch) {
+	case LM_ARCH_X86: csarch = CS_ARCH_X86; break;
+	}
+
+	switch (bits) {
+	case 32: csmode = CS_MODE_32; break;
+	case 64: csmode = CS_MODE_64; break;
+	}
+
+	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
+		return LM_FALSE;
+
+	count = cs_disasm(cshandle, code, 32, 0, 1, &csinsn);
+	if (count <= 0)
+		goto CLEAN_EXIT;
+
+	memcpy((void *)inst, (void *)&csinsn[0], sizeof(lm_inst_t));
+
+	cs_free(csinsn, count);
+CLEAN_EXIT:
+	cs_close(&cshandle);
+	return ret;
 }
 
 /****************************************/

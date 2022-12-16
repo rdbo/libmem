@@ -699,6 +699,18 @@ typedef struct {
 #	endif
 } lm_regs_t;
 
+/* Based from instruction struct from capstone.h */
+typedef struct {
+	lm_uint_t id;
+	lm_uint64_t address;
+	lm_uint16_t size;
+	lm_uint8_t bytes[16];
+	lm_char_t mnemonic[32];
+	lm_char_t op_str[160];
+} lm_inst_t;
+
+typedef lm_int_t lm_arch_t;
+
 /* Imports */
 #if LM_OS == LM_OS_WIN && LM_COMPILER == LM_COMPILER_CC && LM_BITS == 64
 extern BOOL
@@ -1058,6 +1070,9 @@ LM_DestroyTrampoline(lm_address_t tramp);
 LM_API lm_void_t
 LM_DestroyTrampolineEx(lm_process_t proc,
 		       lm_address_t tramp);
+
+LM_API lm_bool_t
+LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst);
 
 /****************************************/
 

@@ -42,6 +42,10 @@ main()
 	lm_address_t alloc;
 	lm_prot_t    alloc_prot;
 	lm_prot_t    alloc_oldprot;
+	lm_byte_t    code[] = { 0x55, 0x54, 0x53, 0x52, 0x51 };
+	lm_inst_t    inst;
+	lm_size_t    disasm_count;
+	lm_size_t    disasm_bytes;
 
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
@@ -113,6 +117,16 @@ main()
 	LM_PRINTF(LM_STR("[*] Alloc:    %p\n"), alloc);
 	LM_PRINTF(LM_STR("[*] Prot:     %d\n"), alloc_prot);
 	LM_PRINTF(LM_STR("[*] Old Prot: %d\n"), alloc_oldprot);
+	LM_PRINTF(LM_STR("====================\n"));
+
+	LM_PRINTF(LM_STR("[*] Dissassembly (main):\n"));
+	for (disasm_count = 0; disasm_count < 5; ++disasm_count) {
+		LM_Disassemble((lm_address_t)LM_OFFSET(main, disasm_bytes), LM_ARCH, LM_BITS, &inst);
+		LM_PRINTF(LM_STR("%s %s\n"), inst.mnemonic, inst.op_str);
+		disasm_bytes += inst.size;
+	}
+	LM_PRINTF(LM_STR("...\n"));
+
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[-] Test 1\n"));

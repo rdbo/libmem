@@ -98,6 +98,37 @@ static PyTypeObject py_lm_page_t = {
 	.tp_members = py_lm_page_members
 };
 
+/****************************************/
+
+typedef struct {
+	PyObject_HEAD
+	lm_inst_t inst;
+	PyObject *bytes;
+	PyObject *mnemonic;
+	PyObject *op_str;
+} py_lm_inst_obj;
+
+static PyMemberDef py_lm_inst_members[] = {
+	{ "id", T_UINT, offsetof(py_lm_inst_obj, inst.id) },
+	{ "address", T_ULONGLONG, offsetof(py_lm_inst_obj, inst.address) },
+	{ "size", T_USHORT, offsetof(py_lm_inst_obj, inst.size) },
+	{ "bytes", T_OBJECT, offsetof(py_lm_inst_obj, bytes) },
+	{ "mnemonic", T_OBJECT, offsetof(py_lm_inst_obj, mnemonic) },
+	{ "op_str", T_OBJECT, offsetof(py_lm_inst_obj, op_str) },
+	{ NULL }
+};
+
+static PyTypeObject py_lm_inst_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_inst_t",
+	.tp_doc = "",
+	.tp_basicsize = sizeof(py_lm_inst_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_inst_members
+};
+
 /* Python Functions */
 typedef struct {
 	PyObject *callback;
@@ -1584,6 +1615,33 @@ py_LM_SigScanEx(PyObject *self,
 	return PyLong_FromVoidPtr(scan);
 }
 
+/****************************************/
+
+static PyObject *
+py_LM_Assemble(PyObject *self,
+	       PyObject *args)
+{
+	const char *code;
+	int arch;
+	unsigned long bits;
+	lm_inst_t inst;
+	py_lm_inst_obj *pyinst;
+
+	if (!PyArg_ParseTuple(args, "sik", &code, &arch, &bits))
+		return NULL;
+
+	if (LM_Assemble((lm_cstring_t)code, (lm_arch_t)arch, (lm_size_t)bits, &inst) == LM_FALSE)
+		return Py_BuildValue("");
+
+	pyinst = (py_lm_inst_obj *)(
+		PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL)
+	);
+	pyinst->inst = inst;
+	pyinst->bytes = PyByteArray_FromStringAndSize(inst.bytes, inst.size);
+
+	return (PyObject *)pyinst;
+}
+
 /* Python Module */
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_VARARGS, "" },
@@ -1649,6 +1707,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_PatternScanEx", py_LM_PatternScanEx, METH_VARARGS, "" },
 	{ "LM_SigScan", py_LM_SigScan, METH_VARARGS, "" },
 	{ "LM_SigScanEx", py_LM_SigScanEx, METH_VARARGS, "" },
+	/****************************************/
+	{ "LM_Assemble", py_LM_Assemble, METH_VARARGS, "" },
 	{ NULL, NULL, 0, NULL } /* Sentinel */
 };
 
@@ -1674,6 +1734,9 @@ PyInit_libmem(void)
 	if (PyType_Ready(&py_lm_page_t) < 0)
 		goto _ERR_PYMOD;
 
+	if (PyType_Ready(&py_lm_inst_t) < 0)
+		goto _ERR_PYMOD;
+
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
 		goto _ERR_PYMOD;
@@ -1693,6 +1756,11 @@ PyInit_libmem(void)
 	if (PyModule_AddObject(pymod, "lm_page_t",
 			       (PyObject *)&py_lm_page_t) < 0)
 		goto _ERR_PAGE;
+
+	Py_INCREF(&py_lm_inst_t);
+	if (PyModule_AddObject(pymod, "lm_inst_t",
+			       (PyObject *)&py_lm_inst_t) < 0)
+		goto _ERR_INST;
 	
 	/* Global Variables */
 	DECL_GLOBAL(pymod, "LM_OS_WIN", LM_OS_WIN);
@@ -1735,8 +1803,12 @@ PyInit_libmem(void)
 	DECL_GLOBAL(pymod, "LM_PATH_MAX", LM_PATH_MAX);
 	DECL_GLOBAL(pymod, "LM_MOD_BY_STR", LM_MOD_BY_STR);
 	DECL_GLOBAL(pymod, "LM_MOD_BY_ADDR", LM_MOD_BY_ADDR);
+	DECL_GLOBAL(pymod, "LM_INST_SIZE", LM_INST_SIZE);
 
 	goto _RET; /* No Type Errors */
+_ERR_INST:
+	Py_DECREF(&py_lm_inst_t);
+	Py_DECREF(pymod);
 _ERR_PAGE:
 	Py_DECREF(&py_lm_page_t);
 	Py_DECREF(pymod);

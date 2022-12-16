@@ -4538,6 +4538,7 @@ LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
 
 	switch (arch) {
 	case LM_ARCH_X86: ksarch = KS_ARCH_X86; break;
+	case LM_ARCH_ARM: ksarch = KS_ARCH_ARM; break;
 	default: return ret;
 	}
 
@@ -4551,7 +4552,7 @@ LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
 		return ret;
 
 	ks_asm(ks, code, 0, &encode, &size, &count);
-	if (size <= 0)
+	if (size <= 0 || size > LM_INST_SIZE)
 		goto CLEAN_EXIT;
 
 	inst->size = size;
@@ -4579,6 +4580,7 @@ LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *ins
 
 	switch (arch) {
 	case LM_ARCH_X86: csarch = CS_ARCH_X86; break;
+	case LM_ARCH_ARM: csarch = CS_ARCH_ARM; break;
 	}
 
 	switch (bits) {

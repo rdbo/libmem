@@ -4,6 +4,12 @@ from sys import platform
 import pathlib
 import os
 
+libmem_lib = ""
+if platform == "win32":
+    libmem_lib = "libmem.lib"
+else:
+    libmem_lib = "libmem.a"
+
 class CMakeExtension(Extension):
 	def __init__(self, name, cmake_args=[]):
 		self.cmake_args = cmake_args
@@ -16,7 +22,7 @@ class CMakeBuildExt(build_ext):
 				self.build_cmake(self.extensions[i])
 			else:
 				self.extensions[i].library_dirs.append(self.build_temp)
-				self.extensions[i].extra_objects.append(f"{self.build_temp}{os.sep}libmem.a")
+				self.extensions[i].extra_objects.append(f"{self.build_temp}{os.sep}{libmem_lib}")
 				self.extensions[i].extra_objects.append(f"{self.build_temp}{os.sep}capstone-engine-prefix{os.sep}src{os.sep}capstone-engine-build{os.sep}libcapstone.a")
 				self.extensions[i].extra_objects.append(f"{self.build_temp}{os.sep}keystone-engine-prefix{os.sep}src{os.sep}keystone-engine-build{os.sep}llvm{os.sep}lib{os.sep}libkeystone.a")
 		super().run()

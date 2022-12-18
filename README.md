@@ -20,10 +20,11 @@ Compile libmem:
 mkdir build
 cd build
 cmake ..
-make
+make -j 4
 ```
-Include `libmem/libmem.h` (C/C++) or `libmem/libmem.hpp` (C++) in your project.  
-Link the generated libmem library against your binary.
+Add the folder `libmem/include` to your include directories
+Add `#include <libmem.h>` (C) or `#include <libmem.hpp>` (C++) to your source code
+Link the generated libmem library against your binary (`libmem.a` for Unix-like or `libmem.lib` for Windows).
 
 ## Usage (Python)
 Make sure to have Python >= 3.6 active  

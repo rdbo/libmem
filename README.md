@@ -2,6 +2,9 @@
 
 #  
 
+# Discord Server
+https://discord.com/invite/Qw8jsPD99X
+
 ## Usage (C/C++)
 Clone the repository:
 ```

@@ -47,6 +47,7 @@ All:
 - capstone (included in root project)
 - keystone (include in root project)
 - libstdc++ (used in keystone)
+- libmath (used in keystone)
 
 Windows:  
 - Windows SDK (-luser32, -lpsapi)  

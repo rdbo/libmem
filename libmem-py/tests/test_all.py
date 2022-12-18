@@ -157,7 +157,8 @@ inst = LM_Assemble(code, LM_ARCH_X86, 32)
 print(f"{code} : {inst.bytes}")
 
 print("[*] Disassembly:")
-inst = LM_Disassemble(b"\x55", LM_ARCH_X86, 32)
+# inst = LM_Disassemble(bytearray(b"\x55"), LM_ARCH_X86, 32)
+inst = LM_Disassemble(inst.bytes, LM_ARCH_X86, 32)
 print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 print("====================")

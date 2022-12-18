@@ -1627,7 +1627,7 @@ py_LM_Assemble(PyObject *self,
 	lm_inst_t inst;
 	py_lm_inst_obj *pyinst;
 	
-	memset((void *)&inst, 0x0, sizeof(inst));
+	LM_MEMSET((void *)&inst, 0x0, sizeof(inst));
 
 	if (!PyArg_ParseTuple(args, "sik", &code, &arch, &bits))
 		return NULL;
@@ -1648,18 +1648,18 @@ static PyObject *
 py_LM_Disassemble(PyObject *self,
 		  PyObject *args)
 {
-	Py_buffer code;
+	PyByteArrayObject *code;
 	int arch;
 	unsigned long bits;
 	lm_inst_t inst;
 	py_lm_inst_obj *pyinst;
 
-	memset((void *)&inst, 0x0, sizeof(inst));
+	LM_MEMSET((void *)&inst, 0x0, sizeof(inst));
 
-	if (!PyArg_ParseTuple(args, "y*ik", &code, &arch, &bits))
+	if (!PyArg_ParseTuple(args, "Yik", &code, &arch, &bits))
 		return NULL;
 
-	if (LM_Disassemble((lm_address_t)code.buf, (lm_arch_t)arch, (lm_size_t)bits, &inst) == LM_FALSE)
+	if (LM_Disassemble((lm_address_t)PyByteArray_AsString(code), (lm_arch_t)arch, (lm_size_t)bits, &inst) == LM_FALSE)
 		return Py_BuildValue("");
 
 	pyinst = (py_lm_inst_obj *)(

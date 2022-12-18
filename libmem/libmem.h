@@ -139,6 +139,7 @@
 #define LM_CALLOC   calloc
 #define LM_FREE     free
 #define LM_MEMCPY   memcpy
+#define LM_MEMSET   memset
 
 #define LM_CSTR(str) str
 #define LM_CSTRCMP   strcmp

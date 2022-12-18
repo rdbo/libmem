@@ -11,24 +11,28 @@ clean_script = "clean.py"
 
 print(f"[+] Creating '{clean_script}'...")
 
-keep_dirs = []
-keep_files = []
+if not os.path.exists(clean_script):
+	keep_dirs = []
+	keep_files = []
 
-for (path, dirs, files) in os.walk(os.curdir):
-	keep_dirs.append(path)
-	keep_files.extend([f"{path}{os.sep}{f}" for f in files])
+	for (path, dirs, files) in os.walk(os.curdir):
+		keep_dirs.append(path)
+		keep_files.extend([f"{path}{os.sep}{f}" for f in files])
 
-json_dict = {
-	"dirs" : keep_dirs,
-	"files" : keep_files
-}
+	json_dict = {
+		"dirs" : keep_dirs,
+		"files" : keep_files
+	}
 
-json_data = json.dumps(json_dict)
-with open("tree.json", "w") as tree_file:
-	tree_file.write(json_data)
-	tree_file.close()
+	json_data = json.dumps(json_dict)
+	with open("tree.json", "w") as tree_file:
+		tree_file.write(json_data)
+		tree_file.close()
+else:
+	print(f"[!] '{clean_script}' already exists, skipping...")
 
 print(f"[-] Creation complete")
+
 print("[+] Configuring files...")
 
 project_files = {
@@ -61,7 +65,7 @@ for i in project_files:
 	for f in files:
 		srcpath = f"{src_dir}{os.sep}{f}"
 		if os.path.isdir(srcpath):
-			shutil.copytree(f"{srcpath}", f"{dst_dir}{os.sep}{f}")
+			shutil.copytree(f"{srcpath}", f"{dst_dir}{os.sep}{f}", dirs_exist_ok=True)
 		else:
 			shutil.copy(f"{srcpath}", dst_dir)
 

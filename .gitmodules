@@ -1,7 +1,7 @@
 [submodule "capstone"]
 	path = capstone
 	url = https://github.com/capstone-engine/capstone
-	branch = next
+	branch = v4
 [submodule "keystone"]
 	path = keystone
 	url = https://github.com/keystone-engine/keystone

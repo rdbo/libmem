@@ -140,6 +140,7 @@
 #define LM_FREE     free
 #define LM_MEMCPY   memcpy
 #define LM_MEMSET   memset
+#define LM_ASSERT   assert
 
 #define LM_CSTR(str) str
 #define LM_CSTRCMP   strcmp
@@ -148,6 +149,7 @@
 #define LM_CSTRNCPY  strncpy
 #define LM_CSTRLEN   strlen
 #define LM_CSTRCHR   strchr
+#define LM_CSTRRCHR  strrchr
 #define LM_CSTRSTR   strstr
 #define LM_CSNPRINTF snprintf
 #define LM_CSTRTOP   strtoul
@@ -160,6 +162,7 @@
 #define LM_WSTRNCPY  wcsncpy
 #define LM_WSTRLEN   wcslen
 #define LM_WSTRCHR   wcschr
+#define LM_WSTRRCHR  wcsrchr
 #define LM_WSTRSTR   wcsstr
 #define LM_WSNPRINTF snwprintf
 #define LM_WSTRTOP   wcstoul
@@ -173,6 +176,7 @@
 #	define LM_STRNCPY  LM_WSTRNCPY
 #	define LM_STRLEN   LM_WSTRLEN
 #	define LM_STRCHR   LM_WSTRCHR
+#	define LM_STRRCHR  LM_WSTRRCHR
 #	define LM_STRSTR   LM_WSTRSTR
 #	define LM_SNPRINTF LM_WSNPRINTF
 #	define LM_STRTOP   LM_WSTRTOP
@@ -185,6 +189,7 @@
 #	define LM_STRNCPY  LM_CSTRNCPY
 #	define LM_STRLEN   LM_CSTRLEN
 #	define LM_STRCHR   LM_CSTRCHR
+#	define LM_STRRCHR  LM_CSTRRCHR
 #	define LM_STRSTR   LM_CSTRSTR
 #	define LM_SNPRINTF LM_CSNPRINTF
 #	define LM_STRTOP   LM_CSTRTOP
@@ -421,6 +426,7 @@
 #define LM_FALSE   (0)
 #define LM_TRUE    (!(LM_FALSE))
 #define LM_MAX     (-1UL)
+#define LM_PID_BAD ((lm_pid_t)LM_NULL) /* tecnically, PID = 0 exists, but should probably never be accessed anyways, unlike the last possible PID, which was the previous error value for lm_pid_t */
 #define LM_MASK_KNOWN    LM_STR('x')
 #define LM_MASK_KNOWN2   LM_STR('X')
 #define LM_MASK_UNKNOWN  LM_STR('?')
@@ -454,6 +460,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 #if LM_OS == LM_OS_WIN
 #	include <Windows.h>
 #	include <TlHelp32.h>
@@ -748,6 +755,7 @@ LM_GetParentIdEx(lm_pid_t pid);
 LM_API lm_bool_t
 LM_CheckProcess(lm_pid_t pid);
 
+/* TODO: Make this function return lm_void_t, because it cannot fail */
 LM_API lm_bool_t
 LM_OpenProcess(lm_process_t *procbuf);
 

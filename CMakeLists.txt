@@ -32,7 +32,7 @@ set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DI
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
-file(GLOB_RECURSE LIBMEM_SRC ${LIBMEM_DIR}/src/*.c)
+set(LIBMEM_SRC "${LIBMEM_DIR}/src/libmem.c")
 set(LIBMEM_DEPS capstone keystone stdc++ m)
 
 if(NOT MSVC)

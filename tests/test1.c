@@ -163,6 +163,7 @@ main()
 	}
 	LM_PRINTF(LM_STR("...\n"));
 
+	/*
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[*] Some Function Hook:\n"));
@@ -185,6 +186,7 @@ main()
 	some_function(5, 5);
 
 	LM_PRINTF(LM_STR("====================\n"));
+	*/
 
 	LM_PRINTF(LM_STR("[-] Test 1\n"));
 

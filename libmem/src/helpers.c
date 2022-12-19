@@ -5,7 +5,7 @@ _LM_OpenFileBuf(lm_tstring_t path,
 {
 	int         fd;
 	lm_size_t   total = 0;
-	lm_tchar_t  c;
+	lm_tchar_t  buf[1024];
 	ssize_t     rdsize;
 	lm_tchar_t *filebuf = (lm_tchar_t *)LM_NULL;
 
@@ -13,24 +13,17 @@ _LM_OpenFileBuf(lm_tstring_t path,
 	if (fd == -1)
 		return total;
 	
-	while ((rdsize = read(fd, &c, sizeof(c)) > 0)) {
-		lm_tchar_t *old_filebuf;
-
-		old_filebuf = filebuf;
-		filebuf = (lm_tchar_t *)LM_CALLOC(total + 2, sizeof(c));
-		if (old_filebuf) {
-			if (filebuf)
-				LM_STRNCPY(filebuf, old_filebuf, total);
-			LM_FREE(old_filebuf);
-		}
+	while ((rdsize = read(fd, buf, sizeof(buf))) > 0) {
+		/* Use 'realloc' to increase the buffer size and copy the old data */
+		filebuf = (lm_tchar_t *)LM_REALLOC(filebuf, total + rdsize + sizeof(lm_tchar_t));
 
 		if (!filebuf) {
 			total = 0;
 			break;
 		}
-
-		filebuf[total++] = c;
-		filebuf[total] = LM_STR('\x00');
+		
+		LM_MEMCPY(&filebuf[total], buf, rdsize);
+		total += rdsize;
 	}
 
 	if (filebuf) {

@@ -137,6 +137,7 @@
 /* Helpers */
 #define LM_MALLOC   malloc
 #define LM_CALLOC   calloc
+#define LM_REALLOC  realloc
 #define LM_FREE     free
 #define LM_MEMCPY   memcpy
 #define LM_MEMSET   memset

@@ -6,15 +6,8 @@ project(libmem C)
 
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 
-option(LIBMEM_DEBUG "Enable debug symbols" OFF) # enable debug symbols
 option(LIBMEM_BUILD_TESTS "Build tests" OFF) # builds the optional libmem test libraries.
 option(LIBMEM_BUILD_STATIC "Build a static library" ON) # builds libmem as a static library.
-
-if(LIBMEM_DEBUG)
-	set(CMAKE_BUILD_TYPE Debug)
-else()
-	set(CMAKE_BUILD_TYPE Release)
-endif()
 
 set(CAPSTONE_DIR "${PROJECT_SOURCE_DIR}/capstone")
 set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
@@ -37,6 +30,9 @@ set(LIBMEM_DEPS capstone keystone stdc++ m)
 
 if(NOT MSVC)
 	add_compile_options(-Wall -Wextra -Wpedantic)
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+		add_compile_options(-g -ggdb)
+	endif()
 endif()
 
 if (LIBMEM_BUILD_STATIC)

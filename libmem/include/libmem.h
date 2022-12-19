@@ -430,6 +430,7 @@
 #define LM_MAX     (-1UL)
 #define LM_PID_BAD ((lm_pid_t)LM_NULL) /* tecnically, PID = 0 exists, but should probably never be accessed anyways, unlike the last possible PID, which was the previous error value for lm_pid_t */
 #define LM_TID_BAD ((lm_tid_t)LM_NULL)
+#define LM_ADDRESS_BAD ((lm_address_t)LM_NULL)
 #define LM_MASK_KNOWN    LM_STR('x')
 #define LM_MASK_KNOWN2   LM_STR('X')
 #define LM_MASK_UNKNOWN  LM_STR('?')
@@ -437,15 +438,18 @@
 #define LM_INST_SIZE 16
 #if LM_OS == LM_OS_WIN
 #	define LM_PATH_MAX MAX_PATH
+#	define LM_PATH_SEP LM_STR('\\')
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 #	define LM_PATH_MAX PATH_MAX
 #	ifndef _GNU_SOURCE
 #		define _GNU_SOURCE 1
 #	endif
 #	define LM_PROCFS LM_STR("/proc")
+#	define LM_PATH_SEP LM_STR('/')
 #elif LM_OS == LM_OS_BSD
 #	define LM_PATH_MAX PATH_MAX
 #	define LM_PROCFS LM_STR("/proc")
+#	define LM_PATH_SEP LM_STR('/')
 #endif
 
 /* Compatibility */

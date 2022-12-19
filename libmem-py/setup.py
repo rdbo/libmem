@@ -75,7 +75,7 @@ libmem = CMakeExtension(f"{libmem_root_dir}", [])
 
 libmem_py = Extension(
 	name = "libmem",
-	include_dirs = [ f"{libmem_root_dir}{os.sep}libmem" ],
+	include_dirs = [ f"{libmem_root_dir}{os.sep}libmem{os.sep}include" ],
 	sources = [f"{src_dir}{os.sep}libmem-py.c"],
 	libraries = libs
 )

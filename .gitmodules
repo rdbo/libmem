@@ -5,4 +5,4 @@
 [submodule "keystone"]
 	path = keystone
 	url = https://github.com/keystone-engine/keystone
-	branch = next
+	branch = master

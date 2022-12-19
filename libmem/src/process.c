@@ -1,5 +1,5 @@
 #if LM_OS == LM_OS_WIN
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 				       lm_void_t *arg),
 		  lm_void_t *arg)
@@ -31,7 +31,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 	return ret;
 }
 #elif LM_OS == LM_OS_BSD
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 				       lm_void_t *arg),
 		  lm_void_t *arg)
@@ -72,7 +72,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 	return ret;
 }
 #else
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 				       lm_void_t *arg),
 		  lm_void_t *arg)
@@ -116,13 +116,13 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_pid_t
+LM_PRIVATE lm_pid_t
 _LM_GetProcessId(lm_void_t)
 {
 	return (lm_pid_t)GetCurrentProcessId();
 }
 #else
-static lm_pid_t
+LM_PRIVATE lm_pid_t
 _LM_GetProcessId(lm_void_t)
 {
 	return (lm_pid_t)getpid();
@@ -143,7 +143,7 @@ typedef struct {
 	lm_size_t    len;
 } _lm_get_pid_ex_t;
 
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_GetProcessIdExCallback(lm_pid_t   pid,
 			   lm_void_t *arg)
 {
@@ -196,13 +196,13 @@ LM_GetProcessIdEx(lm_tstring_t procstr)
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_pid_t
+LM_PRIVATE lm_pid_t
 _LM_GetParentId(lm_void_t)
 {
 	return LM_GetParentIdEx(LM_GetProcessId());
 }
 #else
-static lm_pid_t
+LM_PRIVATE lm_pid_t
 _LM_GetParentId(lm_void_t)
 {
 	return (lm_pid_t)getppid();
@@ -218,7 +218,7 @@ LM_GetParentId(lm_void_t)
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_pid_t
+LM_PRIVATE lm_pid_t
 _LM_GetParentIdEx(lm_pid_t pid)
 {
 	lm_pid_t ppid = LM_PID_BAD;
@@ -251,7 +251,7 @@ _LM_GetParentIdEx(lm_pid_t pid)
 	return ppid;
 }
 #else
-static lm_pid_t
+LM_PRIVATE lm_pid_t
 _LM_GetParentIdEx(lm_pid_t pid)
 {
 	lm_pid_t ppid = LM_PID_BAD;
@@ -293,7 +293,7 @@ typedef struct {
 	lm_bool_t check;
 } _lm_check_process_t;
 
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_CheckProcessCallback(lm_pid_t   pid,
 			 lm_void_t *arg)
 {
@@ -322,14 +322,14 @@ LM_CheckProcess(lm_pid_t pid)
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_OpenProcess(lm_process_t *procbuf)
 {
 	procbuf->handle = GetCurrentProcess();
 	return LM_TRUE;
 }
 #else
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_OpenProcess(lm_process_t *procbuf)
 {
 	return LM_TRUE;
@@ -349,7 +349,7 @@ LM_OpenProcess(lm_process_t *procbuf)
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_OpenProcessEx(lm_pid_t      pid,
 		  lm_process_t *procbuf)
 {
@@ -367,7 +367,7 @@ _LM_OpenProcessEx(lm_pid_t      pid,
 	return LM_TRUE;
 }
 #else
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_OpenProcessEx(lm_pid_t      pid,
 		  lm_process_t *procbuf)
 {
@@ -388,7 +388,7 @@ LM_OpenProcessEx(lm_pid_t      pid,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_void_t
+LM_PRIVATE lm_void_t
 _LM_CloseProcess(lm_process_t *procbuf)
 {
 	if (procbuf->handle && procbuf->pid != LM_GetProcessId())
@@ -397,7 +397,7 @@ _LM_CloseProcess(lm_process_t *procbuf)
 	procbuf->handle = (HANDLE)NULL;
 }
 #else
-static lm_void_t
+LM_PRIVATE lm_void_t
 _LM_CloseProcess(lm_process_t *procbuf)
 {
 
@@ -416,7 +416,7 @@ LM_CloseProcess(lm_process_t *procbuf)
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessPath(lm_tchar_t *pathbuf,
 		   lm_size_t   maxlen)
 {
@@ -427,7 +427,7 @@ _LM_GetProcessPath(lm_tchar_t *pathbuf,
 	return (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
 }
 #else
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessPath(lm_tchar_t *pathbuf,
 		   lm_size_t   maxlen)
 {
@@ -459,7 +459,7 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessPathEx(lm_process_t proc,
 		     lm_tchar_t  *pathbuf,
 		     lm_size_t    maxlen)
@@ -468,7 +468,7 @@ _LM_GetProcessPathEx(lm_process_t proc,
 					      pathbuf, maxlen);
 }
 #elif LM_OS == LM_OS_BSD
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessPathEx(lm_process_t proc,
 		     lm_tchar_t  *pathbuf,
 		     lm_size_t    maxlen)
@@ -500,7 +500,7 @@ _LM_GetProcessPathEx(lm_process_t proc,
 	return len;
 }
 #else
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessPathEx(lm_process_t proc,
 		     lm_tchar_t  *pathbuf,
 		     lm_size_t    maxlen)
@@ -540,7 +540,7 @@ LM_GetProcessPathEx(lm_process_t proc,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessName(lm_tchar_t *namebuf,
 		   lm_size_t   maxlen)
 {
@@ -581,7 +581,7 @@ _LM_GetProcessName(lm_tchar_t *namebuf,
 	return len;
 }
 #else
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessName(lm_tchar_t *namebuf,
 		   lm_size_t   maxlen)
 {
@@ -609,7 +609,7 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessNameEx(lm_process_t proc,
 		     lm_tchar_t  *namebuf,
 		     lm_size_t    maxlen)
@@ -618,7 +618,7 @@ _LM_GetProcessNameEx(lm_process_t proc,
 	return len;
 }
 #elif LM_OS == LM_OS_BSD
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessNameEx(lm_process_t proc,
 		     lm_tchar_t  *namebuf,
 		     lm_size_t    maxlen)
@@ -652,7 +652,7 @@ _LM_GetProcessNameEx(lm_process_t proc,
 	return len;
 }
 #else
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_GetProcessNameEx(lm_process_t proc,
 		     lm_tchar_t  *namebuf,
 		     lm_size_t    maxlen)
@@ -701,7 +701,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_void_t
+LM_PRIVATE lm_void_t
 _LM_GetSystemBits(lm_size_t *bits)
 {
 	SYSTEM_INFO sysinfo = { 0 };
@@ -716,7 +716,7 @@ _LM_GetSystemBits(lm_size_t *bits)
 	}
 }
 #else
-static lm_void_t
+LM_PRIVATE lm_void_t
 _LM_GetSystemBits(lm_size_t *bits)
 {
 	struct utsname utsbuf;
@@ -752,7 +752,7 @@ LM_GetProcessBits(lm_void_t)
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-static lm_void_t
+LM_PRIVATE lm_void_t
 _LM_GetProcessBitsEx(lm_process_t proc,
 		     lm_size_t   *bits)
 {
@@ -770,7 +770,7 @@ _LM_GetProcessBitsEx(lm_process_t proc,
 		*bits = 64;
 }
 #else
-static lm_void_t
+LM_PRIVATE lm_void_t
 _LM_GetProcessBitsEx(lm_process_t proc,
 		     lm_size_t   *bits)
 {

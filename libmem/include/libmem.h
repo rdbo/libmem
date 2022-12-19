@@ -236,6 +236,7 @@
 #else
 #	define LM_API
 #endif
+#define LM_PRIVATE static
 
 /* Old V3 API */
 #if defined(LM_OLD)
@@ -428,6 +429,7 @@
 #define LM_TRUE    (!(LM_FALSE))
 #define LM_MAX     (-1UL)
 #define LM_PID_BAD ((lm_pid_t)LM_NULL) /* tecnically, PID = 0 exists, but should probably never be accessed anyways, unlike the last possible PID, which was the previous error value for lm_pid_t */
+#define LM_TID_BAD ((lm_tid_t)LM_NULL)
 #define LM_MASK_KNOWN    LM_STR('x')
 #define LM_MASK_KNOWN2   LM_STR('X')
 #define LM_MASK_UNKNOWN  LM_STR('?')

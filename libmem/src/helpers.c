@@ -1,5 +1,5 @@
 #if LM_OS != LM_OS_WIN
-static lm_size_t
+LM_PRIVATE lm_size_t
 _LM_OpenFileBuf(lm_tstring_t path, 
 		lm_tchar_t **pfilebuf)
 {
@@ -36,7 +36,7 @@ _LM_OpenFileBuf(lm_tstring_t path,
 	return total;
 }
 
-static lm_void_t
+LM_PRIVATE lm_void_t
 _LM_CloseFileBuf(lm_tchar_t **pfilebuf)
 {
 	if (pfilebuf && *pfilebuf) {
@@ -47,7 +47,7 @@ _LM_CloseFileBuf(lm_tchar_t **pfilebuf)
 #endif
 
 /* TODO: Receive a pointer instead of a copy of proc */
-static lm_bool_t
+LM_PRIVATE lm_bool_t
 _LM_ValidProcess(lm_process_t proc)
 {
 	lm_bool_t ret = LM_FALSE;

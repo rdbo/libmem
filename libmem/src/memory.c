@@ -223,6 +223,280 @@ LM_SetMemoryEx(lm_process_t proc,
 
 /********************************/
 
-/********************************/
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_ProtMemory(lm_address_t addr,
+	       lm_size_t    size,
+	       lm_prot_t    prot,
+	       lm_prot_t   *oldprot)
+{
+	DWORD old_prot;
+
+	if (!VirtualProtect(addr, size, prot, &old_prot))
+		return LM_FALSE
+
+	if (oldprot)
+		*oldprot = (lm_prot_t)old_prot;
+
+	return LM_TRUE;
+}
+#else
+LM_PRIVATE lm_bool_t
+_LM_ProtMemory(lm_address_t addr,
+	       lm_size_t    size,
+	       lm_prot_t    prot,
+	       lm_prot_t   *oldprot)
+{
+	long pagesize;
+	lm_page_t page;
+
+	if (oldprot && !LM_GetPage(addr, &page))
+		return LM_FALSE;
+
+	pagesize = sysconf(_SC_PAGE_SIZE);
+	addr = (lm_address_t)(
+		(lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize)
+	);
+
+	if (mprotect(addr, size, prot))
+		return LM_FALSE;
+
+	if (oldprot)
+		*oldprot = page.prot;
+
+	return LM_TRUE;
+}
+#endif
+
+LM_API lm_bool_t
+LM_ProtMemory(lm_address_t addr,
+	      lm_size_t    size,
+	      lm_prot_t    prot,
+	      lm_prot_t   *oldprot)
+{
+	/* oldprot can be a null pointer */
+	LM_ASSERT(addr != LM_ADDRESS_BAD && size > 0);
+	
+	return _LM_ProtMemory(addr, size, prot, oldprot);
+}
 
 /********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_ProtMemoryEx(lm_process_t proc,
+		 lm_address_t addr,
+		 lm_size_t    size,
+		 lm_prot_t    prot,
+		 lm_prot_t   *oldprot)
+{
+	DWORD old_prot;
+	if (!VirtualProtectEx(proc.handle, addr, size, prot, &old_prot))
+		return LM_FALSE;
+
+	if (oldprot)
+		*oldprot = (lm_prot_t)old_prot;
+
+	return LM_TRUE;
+}
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_bool_t
+_LM_ProtMemoryEx(lm_process_t proc,
+		 lm_address_t addr,
+		 lm_size_t    size,
+		 lm_prot_t    prot,
+		 lm_prot_t   *oldprot)
+{
+	/* TODO: Reimplement */
+
+	return LM_FALSE;
+}
+#else
+LM_PRIVATE lm_bool_t
+_LM_ProtMemoryEx(lm_process_t proc,
+		 lm_address_t addr,
+		 lm_size_t    size,
+		 lm_prot_t    prot,
+		 lm_prot_t   *oldprot)
+{
+	/* TODO: Reimplement */
+
+	return LM_FALSE;
+}
+#endif
+
+LM_API lm_bool_t
+LM_ProtMemoryEx(lm_process_t proc,
+		lm_address_t addr,
+		lm_size_t    size,
+		lm_prot_t    prot,
+		lm_prot_t   *oldprot)
+{
+	LM_ASSERT(_LM_ValidProcess(proc) &&
+		  addr != LM_ADDRESS_BAD &&
+		  size > 0);
+
+	return _LM_ProtMemoryEx(proc, addr, size, prot, oldprot);
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_address_t
+_LM_AllocMemory(lm_size_t size,
+		lm_prot_t prot)
+{
+	lm_address_t alloc;
+
+	alloc = (lm_address_t)VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, prot);
+	if (!alloc)
+		alloc = LM_ADDRESS_BAD;
+
+	return alloc;
+}
+#else
+LM_PRIVATE lm_address_t
+_LM_AllocMemory(lm_size_t size,
+		lm_prot_t prot)
+{
+	lm_address_t alloc;
+
+	alloc = (lm_address_t)(
+		mmap(NULL, size, prot, MAP_PRIVATE | MAP_ANON, -1, 0)
+	);
+
+	if (alloc == (lm_address_t)MAP_FAILED)
+		alloc = (lm_address_t)LM_ADDRESS_BAD;
+
+	return alloc;
+}
+#endif
+
+LM_API lm_address_t
+LM_AllocMemory(lm_size_t size,
+	       lm_prot_t prot)
+{
+	LM_ASSERT(size > 0);
+
+	return _LM_AllocMemory(size, prot);
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_address_t
+_LM_AllocMemoryEx(lm_process_t proc,
+		  lm_size_t    size,
+		  lm_prot_t    prot)
+{
+	lm_address_t alloc;
+
+	alloc = (lm_address_t)VirtualAllocEx(proc.handle, NULL, size,
+					     MEM_COMMIT | MEM_RESERVE, prot);
+	if (!alloc)
+		alloc = LM_ADDRESS_BAD;
+
+	return alloc;
+}
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_address_t
+_LM_AllocMemoryEx(lm_process_t proc,
+		  lm_size_t    size,
+		  lm_prot_t    prot)
+{
+	/* TODO: Reimplement */
+
+	return LM_ADDRESS_BAD;
+}
+#else
+LM_PRIVATE lm_address_t
+_LM_AllocMemoryEx(lm_process_t proc,
+		  lm_size_t    size,
+		  lm_prot_t    prot)
+{
+	/* TODO: Reimplement */
+
+	return LM_ADDRESS_BAD;
+}
+#endif
+
+LM_API lm_address_t
+LM_AllocMemoryEx(lm_process_t proc,
+		 lm_size_t    size,
+		 lm_prot_t    prot)
+{
+	LM_ASSERT(_LM_ValidProcess(proc) && size > 0);
+
+	return _LM_AllocMemoryEx(proc, size, prot);
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_FreeMemory(lm_address_t alloc,
+	       lm_size_t    size)
+{
+	return VirtualFree(alloc, 0, MEM_RELEASE) ? LM_TRUE : LM_FALSE;
+}
+#else
+LM_PRIVATE lm_bool_t
+_LM_FreeMemory(lm_address_t alloc,
+	       lm_size_t    size)
+{
+	return munmap(alloc, size) ? LM_FALSE : LM_TRUE;
+}
+#endif
+
+LM_API lm_bool_t
+LM_FreeMemory(lm_address_t alloc,
+	      lm_size_t    size)
+{
+	/* size can be 0 (at least on Windows, where it MUST be 0) */
+	LM_ASSERT(alloc != LM_ADDRESS_BAD);
+	
+	return _LM_FreeMemory(alloc, size);	
+}
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_FreeMemoryEx(lm_process_t proc,
+		 lm_address_t alloc,
+		 lm_size_t    size)
+{
+	return VirtualFreeEx(proc.handle, alloc, 0, MEM_RELEASE) ?
+		LM_TRUE : LM_FALSE;
+}
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_bool_t
+_LM_FreeMemoryEx(lm_process_t proc,
+		 lm_address_t alloc,
+		 lm_size_t    size)
+{
+	/* TODO: Reimplement */
+
+	return LM_FALSE;
+}
+#else
+LM_PRIVATE lm_bool_t
+_LM_FreeMemoryEx(lm_process_t proc,
+		 lm_address_t alloc,
+		 lm_size_t    size)
+{
+	/* TODO: Reimplement */
+
+	return LM_FALSE;
+}
+#endif
+
+LM_API lm_bool_t
+LM_FreeMemoryEx(lm_process_t proc,
+		lm_address_t alloc,
+		lm_size_t    size)
+{
+	LM_ASSERT(_LM_ValidProcess(proc) && alloc != LM_ADDRESS_BAD);
+
+	return _LM_FreeMemoryEx(proc, alloc, size);
+}
+

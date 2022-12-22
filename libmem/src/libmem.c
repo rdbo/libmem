@@ -10,11 +10,7 @@
 #include <keystone/keystone.h>
 
 #include "helpers.c"
-#if LM_OS == LM_OS_WIN
-#	include "peparser.c"
-#else
-#	include "elfparser.c"
-#endif
+#include "binparser.c"
 #include "process.c"
 #include "thread.c"
 #include "module.c"

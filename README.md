@@ -5,6 +5,9 @@
 # Discord Server
 https://discord.com/invite/Qw8jsPD99X
 
+# Note
+The master branch often receives great changes. For stability, use a tag/release.
+
 ## Usage (C/C++)
 Clone the repository:
 ```

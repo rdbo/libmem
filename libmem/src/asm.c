@@ -2,25 +2,48 @@
 #include <capstone/capstone.h>
 #include <keystone/keystone.h>
 
-#if LM_ARCH == LM_ARCH_X86
-#	define CSARCH CS_ARCH_X86
-#	define KSARCH KS_ARCH_X86
-#elif LM_ARCH == LM_ARCH_ARM
-#	define CSARCH CS_ARCH_ARM
-#	define KSARCH KS_ARCH_ARM
-#endif
-
 LM_API lm_bool_t
-LM_Assemble(lm_cstring_t code, lm_size_t bits, lm_inst_t *inst)
+LM_Assemble(lm_cstring_t code,
+	    lm_inst_t   *inst)
 {
-	lm_bool_t ret = LM_FALSE;
-	ks_engine *ks;
-	ks_mode ksmode;
-	unsigned char *encode;
-	size_t size;
-	size_t count;
+	lm_bool_t  ret = LM_FALSE;
+	lm_byte_t *codebuf;
 
-	LM_ASSERT(code != LM_NULLPTR && inst != LM_NULLPTR);
+	if (!LM_AssembleEx(code, LM_ARCH, LM_BITS, (lm_address_t)0, &codebuf))
+		return LM_FALSE;
+
+	LM_Disassemble(codebuf, inst);
+
+	LM_FreeCodeBuffer(codebuf);
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_size_t
+LM_AssembleEx(lm_cstring_t code,
+	      lm_arch_t    arch,
+	      lm_size_t    bits,
+	      lm_address_t base_addr,
+	      lm_byte_t  **pcodebuf)
+{
+	lm_size_t      ret = 0;
+	ks_engine     *ks;
+	ks_arch        ksarch;
+	ks_mode        ksmode;
+	unsigned char *encode;
+	size_t         size;
+	size_t         count;
+	lm_byte_t     *codebuf;
+
+	LM_ASSERT(code != LM_NULLPTR && pcodebuf != LM_NULLPTR);
+
+	switch (arch) {
+	case LM_ARCH_X86: ksarch = KS_ARCH_X86; break;
+	case LM_ARCH_ARM: ksarch = KS_ARCH_ARM; break;
+	default: return ret;
+	}
 
 	switch (bits) {
 	case 32: ksmode = KS_MODE_32; break;
@@ -28,18 +51,21 @@ LM_Assemble(lm_cstring_t code, lm_size_t bits, lm_inst_t *inst)
 	default: return ret;
 	}
 
-	if (ks_open(KSARCH, ksmode, &ks) != KS_ERR_OK)
+	if (ks_open(ksarch, ksmode, &ks) != KS_ERR_OK)
 		return ret;
 
 	ks_asm(ks, code, 0, &encode, &size, &count);
-	if (size <= 0 || size > LM_INST_SIZE)
-		goto CLEAN_EXIT;
 
-	inst->size = size;
-	memcpy((void *)inst->bytes, (void *)encode, size);
+	codebuf = (lm_byte_t *)LM_MALLOC(size);
+	if (!codebuf)
+		goto FREE_RET;
 
+	LM_MEMCPY((void *)codebuf, encode, size);
+
+	*pcodebuf = codebuf;
+	ret = (lm_size_t)size;
+FREE_RET:
 	ks_free(encode);
-	ret = LM_TRUE;
 CLEAN_EXIT:
 	ks_close(ks);
 	return ret;
@@ -47,36 +73,100 @@ CLEAN_EXIT:
 
 /********************************/
 
+LM_API lm_void_t
+LM_FreeCodeBuffer(lm_byte_t *codebuf)
+{
+	if (codebuf)
+		LM_FREE(codebuf);
+}
+
+/********************************/
+
 LM_API lm_bool_t
-LM_Disassemble(lm_address_t code, lm_size_t bits, lm_inst_t *inst)
+LM_Disassemble(lm_address_t code, lm_inst_t *inst)
 {
 	lm_bool_t ret = LM_FALSE;
-	csh cshandle;
-	cs_insn *csinsn;
-	cs_mode csmode;
-	size_t count;
+	lm_inst_t *insts;
 
 	LM_ASSERT(code != LM_ADDRESS_BAD && inst != LM_NULLPTR);
+
+	if (!LM_DisassembleEx(code, LM_ARCH, LM_BITS,
+			      LM_INST_SIZE, 1, (lm_address_t)0, &insts))
+		return LM_FALSE;
+
+	*inst = *insts;
+
+	LM_FreeInstructions(insts);
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_size_t
+LM_DisassembleEx(lm_address_t code,
+		 lm_arch_t    arch,
+		 lm_size_t    bits,
+		 lm_size_t    size,
+		 lm_size_t    count,
+		 lm_address_t base_addr,
+		 lm_inst_t  **pinsts)
+{
+	lm_size_t ret = 0;
+	csh cshandle;
+	cs_insn *csinsn;
+	cs_arch csarch;
+	cs_mode csmode;
+	size_t inst_count;
+	lm_inst_t *insts = (lm_inst_t *)LM_NULLPTR;
+	size_t i;
+
+	LM_ASSERT(code != LM_ADDRESS_BAD && pinsts != LM_NULLPTR);
+
+	switch (arch) {
+	case LM_ARCH_X86: csarch = CS_ARCH_X86; break;
+	case LM_ARCH_ARM: csarch = CS_ARCH_ARM; break;
+	default: return ret;
+	}
 
 	switch (bits) {
 	case 32: csmode = CS_MODE_32; break;
 	case 64: csmode = CS_MODE_64; break;
+	default: return ret;
 	}
 
-	if (cs_open(CSARCH, csmode, &cshandle) != CS_ERR_OK)
-		return LM_FALSE;
+	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
+		return ret;
 
-	count = cs_disasm(cshandle, code, LM_INST_SIZE, 0, 1, &csinsn);
-	if (count <= 0)
+	inst_count = cs_disasm(cshandle, code, size, base_addr, count, &csinsn);
+	if (inst_count <= 0)
 		goto CLEAN_EXIT;
 
-	memcpy((void *)inst, (void *)&csinsn[0], sizeof(lm_inst_t));
+	insts = LM_CALLOC(inst_count, sizeof(lm_inst_t));
+	if (!insts)
+		goto FREE_EXIT;
 
-	cs_free(csinsn, count);
-	ret = LM_TRUE;
+	for (i = 0; i < inst_count; ++i) {
+		LM_MEMCPY((void *)&insts[i], (void *)&csinsn[i],
+			  sizeof(lm_inst_t));
+	}
+
+	*pinsts = insts;
+	ret = (lm_size_t)inst_count;
+FREE_EXIT:
+	cs_free(csinsn, inst_count);
 CLEAN_EXIT:
 	cs_close(&cshandle);
 	return ret;
+}
+
+/********************************/
+
+LM_API lm_void_t
+LM_FreeInstructions(lm_inst_t *insts)
+{
+	if (insts)
+		LM_FREE(insts);
 }
 
 /********************************/
@@ -90,7 +180,7 @@ LM_CodeLength(lm_address_t code, lm_size_t minlength)
 	LM_ASSERT(code != LM_ADDRESS_BAD && minlength > 0);
 
 	for (length = 0; length < minlength; code = (lm_address_t)LM_OFFSET(code, length)) {
-		if (LM_Disassemble(code, LM_BITS, &inst) == LM_FALSE)
+		if (LM_Disassemble(code, &inst) == LM_FALSE)
 			return 0;
 		length += inst.size;
 	}

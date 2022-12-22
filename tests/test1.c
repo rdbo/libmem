@@ -62,7 +62,6 @@ main()
 	lm_prot_t    alloc_prot;
 	lm_prot_t    alloc_oldprot;
 	lm_inst_t    inst;
-	lm_cstring_t code = "mov eax, ebx";
 	lm_size_t    asm_count;
 	lm_size_t    disasm_count;
 	lm_size_t    disasm_bytes = 0;
@@ -142,26 +141,27 @@ main()
 	LM_PRINTF(LM_STR("[*] Old Prot: %d\n"), alloc_oldprot);
 	LM_PRINTF(LM_STR("====================\n"));
 
+	LM_PRINTF(LM_STR("[*] Dissassembly (main):\n"));
+	LM_ProtMemory((lm_address_t)main, LM_PROT_XRW, 100, LM_NULLPTR);
+	for (disasm_count = 0; disasm_count < 5; ++disasm_count) {
+		memset((void *)&inst, 0x0, sizeof(inst));
+		LM_Disassemble((lm_address_t)LM_OFFSET(main, disasm_bytes), &inst);
+		LM_PRINTF(LM_STR("%s %s\n"), inst.mnemonic, inst.op_str);
+		disasm_bytes += inst.size;
+	}
+	LM_PRINTF(LM_STR("...\n"));
+
+	LM_PRINTF(LM_STR("====================\n"));
+
+	/* Reassemble the bytes from the disassembly */
 	LM_PRINTF(LM_STR("[*] Assembly:\n"));
-	LM_PRINTF(LM_STR("%s : "), code);
-	memset((void *)&inst, 0x0, sizeof(inst));
-	LM_Assemble(code, 64, &inst);
+	LM_PRINTF(LM_STR("%s %s: "), inst.mnemonic, inst.op_str);
+	LM_Assemble(inst.bytes, &inst);
 	for (asm_count = 0; asm_count < inst.size; ++asm_count) {
 		printf("0x%02x ", inst.bytes[asm_count]);
 	}
 	printf("\n");
 	LM_PRINTF(LM_STR("====================\n"));
-
-
-	LM_PRINTF(LM_STR("[*] Dissassembly (main):\n"));
-	LM_ProtMemory((lm_address_t)main, LM_PROT_XRW, 100, LM_NULLPTR);
-	for (disasm_count = 0; disasm_count < 5; ++disasm_count) {
-		memset((void *)&inst, 0x0, sizeof(inst));
-		LM_Disassemble((lm_address_t)LM_OFFSET(main, disasm_bytes), LM_BITS, &inst);
-		LM_PRINTF(LM_STR("%s %s\n"), inst.mnemonic, inst.op_str);
-		disasm_bytes += inst.size;
-	}
-	LM_PRINTF(LM_STR("...\n"));
 
 	/*
 	LM_PRINTF(LM_STR("====================\n"));

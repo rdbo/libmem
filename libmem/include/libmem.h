@@ -405,12 +405,13 @@ typedef lm_int_t lm_detour_t;
 
 /* Based from instruction struct from capstone.h */
 typedef struct {
-	lm_uint_t id;
+	lm_uint_t   id;
 	lm_uint64_t address;
 	lm_uint16_t size;
-	lm_uint8_t bytes[LM_INST_SIZE];
-	lm_char_t mnemonic[32];
-	lm_char_t op_str[160];
+	lm_uint8_t  bytes[LM_INST_SIZE];
+	lm_char_t   mnemonic[32];
+	lm_char_t   op_str[160];
+	lm_void_t  *detail;
 } lm_inst_t;
 
 typedef lm_int_t lm_arch_t;
@@ -748,10 +749,34 @@ LM_DestroyTrampolineEx(lm_process_t proc,
 		       lm_address_t tramp);
 
 LM_API lm_bool_t
-LM_Assemble(lm_cstring_t code, lm_size_t bits, lm_inst_t *inst);
+LM_Assemble(lm_cstring_t code,
+	    lm_inst_t   *inst);
+
+LM_API lm_size_t
+LM_AssembleEx(lm_cstring_t code,
+	      lm_arch_t    arch,
+	      lm_size_t    bits,
+	      lm_address_t base_addr,
+	      lm_byte_t  **pcodebuf);
+
+LM_API lm_void_t
+LM_FreeCodeBuffer(lm_byte_t *codebuf);
 
 LM_API lm_bool_t
-LM_Disassemble(lm_address_t code, lm_size_t bits, lm_inst_t *inst);
+LM_Disassemble(lm_address_t code,
+	       lm_inst_t   *inst);
+
+LM_API lm_size_t
+LM_DisassembleEx(lm_address_t code,
+		 lm_arch_t    arch,
+		 lm_size_t    bits,
+		 lm_size_t    size,
+		 lm_size_t    count,
+		 lm_address_t base_addr,
+		 lm_inst_t  **pinsts);
+
+LM_API lm_void_t
+LM_FreeInstructions(lm_inst_t *insts);
 
 LM_API lm_size_t
 LM_CodeLength(lm_address_t code, lm_size_t minlength);

@@ -15,7 +15,7 @@ _LM_GenerateHook(lm_address_t from,
 		LM_CSNPRINTF(code, sizeof(code), "jmp %p", (void *)to);
 	}
 
-	return LM_AssembleEx(from, to, LM_ARCH, bits, pcodebuf);
+	return LM_AssembleEx(code, LM_ARCH, bits, from, pcodebuf);
 }
 #elif LM_ARCH == LM_ARCH_ARM
 LM_PRIVATE lm_size_t
@@ -54,16 +54,19 @@ LM_HookCode(lm_address_t  from,
 
 	/* TODO: Add jump back for trampoline */
 	if (ptrampoline) {
-		lm_byte_t *jumpback;
-		lm_size_t  jumpbacksize;
-
 		/* the jump back code is the same as the hook code, but
 		   with a different jump address */
 		*ptrampoline = LM_AllocMemory(codesize * 2, LM_PROT_XRW);
-		if (!(*ptrampoline))
+		if (*ptrampoline == LM_ADDRESS_BAD)
 			goto FREE_EXIT;
 
 		LM_ReadMemory(*ptrampoline, from, alignedsize);
+
+		/* place jump back code on trampoline after the
+		   original instructions */
+		LM_HookCode((lm_address_t)LM_OFFSET(*ptrampoline, alignedsize),
+			    (lm_address_t)LM_OFFSET(from, alignedsize),
+			    LM_NULLPTR);
 	}
 
 	LM_WriteMemory(from, codebuf, codesize);

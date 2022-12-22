@@ -2,12 +2,19 @@
 #include <capstone/capstone.h>
 #include <keystone/keystone.h>
 
+#if LM_ARCH == LM_ARCH_X86
+#	define CSARCH CS_ARCH_X86
+#	define KSARCH KS_ARCH_X86
+#elif LM_ARCH == LM_ARCH_ARM
+#	define CSARCH CS_ARCH_ARM
+#	define KSARCH KS_ARCH_ARM
+#endif
+
 LM_API lm_bool_t
-LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
+LM_Assemble(lm_cstring_t code, lm_size_t bits, lm_inst_t *inst)
 {
 	lm_bool_t ret = LM_FALSE;
 	ks_engine *ks;
-	ks_arch ksarch;
 	ks_mode ksmode;
 	unsigned char *encode;
 	size_t size;
@@ -15,19 +22,13 @@ LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
 
 	LM_ASSERT(code != LM_NULLPTR && inst != LM_NULLPTR);
 
-	switch (arch) {
-	case LM_ARCH_X86: ksarch = KS_ARCH_X86; break;
-	case LM_ARCH_ARM: ksarch = KS_ARCH_ARM; break;
-	default: return ret;
-	}
-
 	switch (bits) {
 	case 32: ksmode = KS_MODE_32; break;
 	case 64: ksmode = KS_MODE_64; break;
 	default: return ret;
 	}
 
-	if (ks_open(ksarch, ksmode, &ks) != KS_ERR_OK)
+	if (ks_open(KSARCH, ksmode, &ks) != KS_ERR_OK)
 		return ret;
 
 	ks_asm(ks, code, 0, &encode, &size, &count);
@@ -47,28 +48,22 @@ CLEAN_EXIT:
 /********************************/
 
 LM_API lm_bool_t
-LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
+LM_Disassemble(lm_address_t code, lm_size_t bits, lm_inst_t *inst)
 {
 	lm_bool_t ret = LM_FALSE;
 	csh cshandle;
 	cs_insn *csinsn;
-	cs_arch csarch;
 	cs_mode csmode;
 	size_t count;
 
 	LM_ASSERT(code != LM_ADDRESS_BAD && inst != LM_NULLPTR);
-
-	switch (arch) {
-	case LM_ARCH_X86: csarch = CS_ARCH_X86; break;
-	case LM_ARCH_ARM: csarch = CS_ARCH_ARM; break;
-	}
 
 	switch (bits) {
 	case 32: csmode = CS_MODE_32; break;
 	case 64: csmode = CS_MODE_64; break;
 	}
 
-	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
+	if (cs_open(CSARCH, csmode, &cshandle) != CS_ERR_OK)
 		return LM_FALSE;
 
 	count = cs_disasm(cshandle, code, LM_INST_SIZE, 0, 1, &csinsn);
@@ -95,7 +90,7 @@ LM_CodeLength(lm_address_t code, lm_size_t minlength)
 	LM_ASSERT(code != LM_ADDRESS_BAD && minlength > 0);
 
 	for (length = 0; length < minlength; code = (lm_address_t)LM_OFFSET(code, length)) {
-		if (LM_Disassemble(code, LM_ARCH, LM_BITS, &inst) == LM_FALSE)
+		if (LM_Disassemble(code, LM_BITS, &inst) == LM_FALSE)
 			return 0;
 		length += inst.size;
 	}

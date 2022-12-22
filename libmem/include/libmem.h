@@ -418,10 +418,10 @@ typedef lm_int_t lm_arch_t;
 /* Imports */
 #if LM_OS == LM_OS_WIN && LM_COMPILER == LM_COMPILER_CC && LM_BITS == 64
 extern BOOL
-Wow64SetThreadContext(HANDLE	       hThread,
+Wow64SetThreadContext(HANDLE		   hThread,
 		      const WOW64_CONTEXT *lpContext);
 extern BOOL
-Wow64GetThreadContext(HANDLE	       hThread,
+Wow64GetThreadContext(HANDLE		   hThread,
 		      const WOW64_CONTEXT *lpContext);
 #endif
 
@@ -748,10 +748,10 @@ LM_DestroyTrampolineEx(lm_process_t proc,
 		       lm_address_t tramp);
 
 LM_API lm_bool_t
-LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst);
+LM_Assemble(lm_cstring_t code, lm_size_t bits, lm_inst_t *inst);
 
 LM_API lm_bool_t
-LM_Disassemble(lm_address_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst);
+LM_Disassemble(lm_address_t code, lm_size_t bits, lm_inst_t *inst);
 
 LM_API lm_size_t
 LM_CodeLength(lm_address_t code, lm_size_t minlength);

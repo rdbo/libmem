@@ -1,3 +1,5 @@
+#include "internal.h"
+
 LM_API lm_bool_t
 LM_EnumThreads(lm_bool_t(*callback)(lm_tid_t   tid,
 				    lm_void_t *arg),

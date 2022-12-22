@@ -1,3 +1,5 @@
+#include "internal.h"
+
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,

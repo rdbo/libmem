@@ -1,3 +1,5 @@
+#include "internal.h"
+
 LM_API lm_address_t
 LM_DataScan(lm_bstring_t data,
 	    lm_size_t    size,

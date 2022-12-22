@@ -1,3 +1,5 @@
+#include "internal.h"
+
 LM_API lm_size_t
 LM_ReadMemory(lm_address_t src,
 	      lm_byte_t   *dst,

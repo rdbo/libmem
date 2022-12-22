@@ -1,3 +1,5 @@
+#include "internal.h"
+
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,

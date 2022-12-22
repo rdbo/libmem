@@ -1,3 +1,5 @@
+#include "internal.h"
+
 static lm_size_t
 _LM_DetourPayload(lm_address_t src,
 		  lm_address_t dst,

@@ -1,3 +1,7 @@
+#include "internal.h"
+#include <capstone/capstone.h>
+#include <keystone/keystone.h>
+
 LM_API lm_bool_t
 LM_Assemble(lm_cstring_t code, lm_arch_t arch, lm_size_t bits, lm_inst_t *inst)
 {

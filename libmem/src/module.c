@@ -1,3 +1,5 @@
+#include "internal.h"
+
 LM_API lm_bool_t
 LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 				    lm_tstring_t path,

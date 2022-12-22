@@ -6,3 +6,7 @@
 	path = keystone
 	url = https://github.com/keystone-engine/keystone
 	branch = master
+[submodule "LIEF"]
+	path = LIEF
+	url = https://github.com/lief-project/LIEF
+	branch = master

@@ -721,32 +721,26 @@ LM_SigScanEx(lm_process_t proc,
 
 /****************************************/
 
-LM_API lm_bool_t
-LM_DetourCode(lm_address_t src,
-	      lm_address_t dst,
-	      lm_detour_t  detour);
+LM_API lm_size_t
+LM_HookCode(lm_address_t  from,
+	    lm_address_t  to,
+	    lm_address_t *ptrampoline);
 
 LM_API lm_bool_t
-LM_DetourCodeEx(lm_process_t proc,
-		lm_address_t src,
-		lm_address_t dst,
-		lm_detour_t  detour);
+LM_UnhookCode(lm_address_t  from,
+	      lm_address_t  trampoline,
+	      lm_size_t     size);
 
-LM_API lm_address_t
-LM_MakeTrampoline(lm_address_t src,
-		  lm_size_t    size);
+LM_API lm_bool_t
+LM_HookCodeEx(lm_address_t  from,
+	      lm_address_t  to,
+	      lm_address_t *ptrampoline);
 
-LM_API lm_address_t
-LM_MakeTrampolineEx(lm_process_t proc,
-		    lm_address_t src,
-		    lm_size_t    size);
+LM_API lm_bool_t
+LM_UnhookCodeEx(lm_address_t  from,
+		lm_address_t *ptrampoline);
 
-LM_API lm_void_t
-LM_DestroyTrampoline(lm_address_t tramp);
-
-LM_API lm_void_t
-LM_DestroyTrampolineEx(lm_process_t proc,
-		       lm_address_t tramp);
+/****************************************/
 
 LM_API lm_bool_t
 LM_Assemble(lm_cstring_t code,
@@ -779,7 +773,8 @@ LM_API lm_void_t
 LM_FreeInstructions(lm_inst_t *insts);
 
 LM_API lm_size_t
-LM_CodeLength(lm_address_t code, lm_size_t minlength);
+LM_CodeLength(lm_address_t code,
+	      lm_size_t minlength);
 
 #if LM_LANG == LM_LANG_CPP
 }

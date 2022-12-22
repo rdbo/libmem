@@ -187,3 +187,4 @@ LM_CodeLength(lm_address_t code, lm_size_t minlength)
 
 	return length;
 }
+

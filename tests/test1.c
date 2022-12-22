@@ -65,9 +65,7 @@ main()
 	lm_size_t    asm_count;
 	lm_size_t    disasm_count;
 	lm_size_t    disasm_bytes = 0;
-	lm_size_t    hook_minlen = 14;
-	lm_size_t    hook_codelen;
-	lm_prot_t    hook_prot;
+	lm_size_t    tramp_size;
 
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
@@ -163,30 +161,20 @@ main()
 	printf("\n");
 	LM_PRINTF(LM_STR("====================\n"));
 
-	/*
-	LM_PRINTF(LM_STR("====================\n"));
-
 	LM_PRINTF(LM_STR("[*] Some Function Hook:\n"));
 
-	hook_codelen = LM_CodeLength((lm_address_t)some_function, hook_minlen);
-	LM_PRINTF(LM_STR("[*] Trampoline size: %p\n"), (void *)hook_codelen);
+	tramp_size = LM_HookCode(some_function, hk_some_function, (lm_address_t)&some_function_orig);
 
-	some_function_orig = (some_function_t)LM_MakeTrampoline(some_function, hook_codelen);
 	LM_PRINTF(LM_STR("[*] Some Function Trampoline: %p\n"), (void *)some_function_orig);
-	LM_DetourCode(some_function, hk_some_function, LM_DETOUR_ANY);
 
 	some_function(10, 10);
 
-	LM_ProtMemory((lm_address_t)some_function, hook_codelen, LM_PROT_XRW, &hook_prot);
-	LM_WriteMemory(some_function, some_function_orig, hook_codelen);
-	LM_ProtMemory((lm_address_t)some_function, hook_codelen, hook_prot, LM_NULLPTR);
-	LM_DestroyTrampoline(some_function_orig);
+	LM_UnhookCode((lm_address_t)some_function, (lm_address_t)some_function_orig, tramp_size);
 
 	printf("\nUnhooked\n\n");
 	some_function(5, 5);
 
 	LM_PRINTF(LM_STR("====================\n"));
-	*/
 
 	LM_PRINTF(LM_STR("[-] Test 1\n"));
 

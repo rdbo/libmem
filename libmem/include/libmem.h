@@ -306,9 +306,7 @@
 #	endif
 #	include <sys/uio.h>
 #	include <dlfcn.h>
-#	include <link.h>
 #	include <fcntl.h>
-#	include <elf.h>
 #elif LM_OS == LM_OS_BSD
 #	include <dirent.h>
 #	include <errno.h>
@@ -325,12 +323,10 @@
 #	include <sys/utsname.h>
 #	include <machine/reg.h>
 #	include <dlfcn.h>
-#	include <link.h>
 #	include <fcntl.h>
 #	include <kvm.h>
 #	include <libprocstat.h>
 #	include <paths.h>
-#	include <elf.h>
 #endif /* LM_OS */
 
 #if LM_LANG == LM_LANG_CPP

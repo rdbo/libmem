@@ -1036,35 +1036,6 @@ LM_SigScanEx(lm_process_t proc,
 
 /****************************************/
 
-LM_API lm_uintptr_t
-LM_SystemCall(lm_int_t     nsyscall,
-	      lm_uintptr_t arg0,
-	      lm_uintptr_t arg1,
-	      lm_uintptr_t arg2,
-	      lm_uintptr_t arg3,
-	      lm_uintptr_t arg4,
-	      lm_uintptr_t arg5);
-
-LM_API lm_bool_t
-LM_SystemCallEx(lm_process_t proc,
-		lm_size_t    stack_align,
-		lm_size_t    nargs,
-		lm_size_t    nrets,
-		...);
-
-LM_API lm_uintptr_t
-LM_FunctionCall(lm_address_t fnaddr,
-		lm_size_t    nargs,
-		...);
-
-LM_API lm_bool_t
-LM_FunctionCallEx(lm_process_t proc,
-		  lm_uintptr_t stack_align,
-		  lm_address_t fnaddr,
-		  lm_size_t    nargs,
-		  lm_size_t    nrets,
-		  ...);
-
 LM_API lm_bool_t
 LM_DetourCode(lm_address_t src,
 	      lm_address_t dst,

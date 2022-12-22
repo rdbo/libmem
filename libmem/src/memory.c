@@ -86,7 +86,7 @@ LM_ReadMemoryEx(lm_process_t proc,
 		lm_byte_t   *dst,
 		lm_size_t    size)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  src != LM_ADDRESS_BAD &&
 		  dst != LM_NULLPTR &&
 		  size > 0);
@@ -179,7 +179,7 @@ LM_WriteMemoryEx(lm_process_t proc,
 		 lm_bstring_t src,
 		 lm_size_t    size)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  dst != LM_ADDRESS_BAD &&
 		  src != LM_NULLPTR &&
 		  size > 0);
@@ -337,7 +337,7 @@ LM_ProtMemoryEx(lm_process_t proc,
 		lm_prot_t    prot,
 		lm_prot_t   *oldprot)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  addr != LM_ADDRESS_BAD &&
 		  size > 0);
 
@@ -430,7 +430,7 @@ LM_AllocMemoryEx(lm_process_t proc,
 		 lm_size_t    size,
 		 lm_prot_t    prot)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) && size > 0);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && size > 0);
 
 	return _LM_AllocMemoryEx(proc, size, prot);
 }
@@ -500,7 +500,7 @@ LM_FreeMemoryEx(lm_process_t proc,
 		lm_address_t alloc,
 		lm_size_t    size)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) && alloc != LM_ADDRESS_BAD);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && alloc != LM_ADDRESS_BAD);
 
 	return _LM_FreeMemoryEx(proc, alloc, size);
 }

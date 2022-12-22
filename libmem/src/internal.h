@@ -9,9 +9,6 @@
 #define LM_PRIVATE
 #endif
 
-LM_PRIVATE lm_bool_t
-_LM_ValidProcess(lm_process_t proc);
-
 #if LM_OS == LM_OS_WIN
 #else
 LM_PRIVATE lm_size_t

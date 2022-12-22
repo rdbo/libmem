@@ -532,7 +532,7 @@ LM_GetProcessPathEx(lm_process_t proc,
 {
 	lm_size_t len;
 
-	LM_ASSERT(_LM_ValidProcess(proc) &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  pathbuf != LM_NULLPTR &&
 		  maxlen > 0);
 
@@ -693,7 +693,7 @@ LM_GetProcessNameEx(lm_process_t proc,
 {
 	lm_size_t len;
 
-	LM_ASSERT(_LM_ValidProcess(proc) &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  namebuf != LM_NULLPTR &&
 		  maxlen > 0);
 
@@ -797,7 +797,7 @@ LM_GetProcessBitsEx(lm_process_t proc)
 {
 	lm_size_t bits = LM_BITS;
 
-	LM_ASSERT(_LM_ValidProcess(proc));
+	LM_ASSERT(LM_VALID_PROCESS(proc));
 
 	_LM_GetProcessBitsEx(proc, &bits);
 

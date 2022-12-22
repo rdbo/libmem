@@ -212,7 +212,7 @@ LM_EnumPagesEx(lm_process_t proc,
 				      lm_void_t *arg),
 	       lm_void_t   *arg)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) && callback != LM_NULLPTR);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
 
 	return _LM_EnumPagesEx(proc, callback, arg);
 }
@@ -271,7 +271,7 @@ LM_GetPageEx(lm_process_t proc,
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
 
-	LM_ASSERT(_LM_ValidProcess(proc) &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  addr != LM_ADDRESS_BAD &&
 		  page != LM_NULLPTR);
 

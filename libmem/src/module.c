@@ -208,7 +208,7 @@ LM_EnumModulesEx(lm_process_t proc,
 					lm_void_t   *arg),
 		 lm_void_t   *arg)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) && callback != LM_NULLPTR);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
 
 	return _LM_EnumModulesEx(proc, callback, arg);
 }
@@ -433,7 +433,7 @@ LM_GetModuleNameEx(lm_process_t proc,
 	lm_tchar_t  path[LM_PATH_MAX];
 	lm_tchar_t *holder;
 
-	LM_ASSERT(_LM_ValidProcess(proc) &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  namebuf != LM_NULLPTR &&
 		  maxlen > 0);
 

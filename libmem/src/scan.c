@@ -67,7 +67,7 @@ LM_DataScanEx(lm_process_t proc,
 	lm_byte_t   *ptr;
 	lm_page_t    oldpage;
 
-	LM_ASSERT(_LM_ValidProcess(proc) && data != LM_NULLPTR &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) && data != LM_NULLPTR &&
 		  size > 0 && addr != LM_NULLPTR && scansize > 0);
 
 	if (!LM_GetPageEx(proc, addr, &oldpage))
@@ -190,7 +190,7 @@ LM_PatternScanEx(lm_process_t proc,
 	lm_page_t    oldpage;
 	lm_byte_t   *ptr;
 
-	LM_ASSERT(_LM_ValidProcess(proc) && pattern != LM_NULLPTR &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) && pattern != LM_NULLPTR &&
 		  mask != LM_NULLPTR && addr != LM_ADDRESS_BAD &&
 		  scansize > 0);
 
@@ -342,7 +342,7 @@ LM_SigScanEx(lm_process_t proc,
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
 	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
 
-	LM_ASSERT(_LM_ValidProcess(proc) && sig != LM_NULLPTR &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) && sig != LM_NULLPTR &&
 		  addr != LM_NULLPTR && scansize > 0);
 
 	if (!_LM_ParseSig(sig, &pattern, &mask))

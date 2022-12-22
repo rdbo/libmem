@@ -91,7 +91,7 @@ LM_EnumSymbolsEx(lm_process_t proc,
 					lm_void_t   *arg),
 		 lm_void_t *arg)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) && callback != LM_NULLPTR);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
 
 	return _LM_EnumSymbolsEx(proc, mod, callback, arg);
 }
@@ -177,7 +177,7 @@ LM_GetSymbolEx(lm_process_t proc,
 {
 	_lm_get_symbol_t arg;
 
-	LM_ASSERT(_LM_ValidProcess(proc) && symstr != LM_NULLPTR);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && symstr != LM_NULLPTR);
 
 	arg.symbol = symstr;
 	arg.addr   = LM_ADDRESS_BAD;

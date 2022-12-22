@@ -199,8 +199,13 @@
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
 #define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)
 #define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
-#define LM_CHKADDR(addr) ((lm_address_t)addr != (lm_address_t)LM_BAD)
 #define LM_OFFSET(base, offset) (&((lm_byte_t *)base)[offset])
+#if LM_OS == LM_OS_WIN
+#	define _LM_VALID_PROCESS(proc) (proc.pid != LM_GetProcessId() && proc.handle != NULL)
+#else
+#	define _LM_VALID_PROCESS(proc) LM_TRUE
+#endif
+#define LM_VALID_PROCESS(proc) (proc.pid != LM_PID_BAD && _LM_VALID_PROCESS(proc))
 
 /* Flags */
 #if LM_OS == LM_OS_WIN

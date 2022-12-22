@@ -116,7 +116,7 @@ LM_EnumThreadsEx(lm_process_t proc,
 					lm_void_t *arg),
 		 lm_void_t   *arg)
 {
-	LM_ASSERT(_LM_ValidProcess(proc) && callback != LM_NULLPTR);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
 
 	return _LM_EnumThreadsEx(proc, callback, arg);
 }
@@ -160,7 +160,7 @@ LM_GetThreadIdEx(lm_process_t proc)
 {
 	lm_tid_t tid = LM_TID_BAD;
 
-	LM_ASSERT(_LM_ValidProcess(proc));
+	LM_ASSERT(LM_VALID_PROCESS(proc));
 
 	LM_EnumThreadsEx(proc, _LM_GetThreadIdExCallback, (lm_void_t *)&tid);
 

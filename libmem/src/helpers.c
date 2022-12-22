@@ -50,28 +50,3 @@ _LM_CloseFileBuf(lm_tchar_t **pfilebuf)
 }
 #endif
 
-/* TODO: Receive a pointer instead of a copy of proc */
-LM_PRIVATE lm_bool_t
-_LM_ValidProcess(lm_process_t proc)
-{
-	lm_bool_t ret = LM_FALSE;
-
-	if (proc.pid == (lm_pid_t)LM_BAD)
-		return ret;
-
-#	if LM_OS == LM_OS_WIN
-	{
-		if (proc.pid != LM_GetProcessId() && !proc.handle)
-			return ret;
-	}
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
-	{
-		
-	}
-#	endif
-
-	ret = LM_TRUE;
-
-	return ret;
-}
-

@@ -289,44 +289,11 @@
 #	include <Windows.h>
 #	include <TlHelp32.h>
 #	include <Psapi.h>
-#elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-#	include <dirent.h>
-#	include <errno.h>
+#else
 #	include <sys/types.h>
 #	include <unistd.h>
-#	include <sys/stat.h>
-#	include <sys/ptrace.h>
-#	include <sys/wait.h>
 #	include <sys/mman.h>
-#	include <sys/user.h>
-#	include <sys/syscall.h>
-#	include <sys/utsname.h>
-#	if LM_OS != LM_OS_ANDROID
-#		include <sys/io.h>
-#	endif
-#	include <sys/uio.h>
-#	include <dlfcn.h>
-#	include <fcntl.h>
-#elif LM_OS == LM_OS_BSD
-#	include <dirent.h>
-#	include <errno.h>
-#	include <sys/types.h>
-#	include <unistd.h>
-#	include <sys/stat.h>
-#	include <sys/param.h>
-#	include <sys/ptrace.h>
-#	include <sys/wait.h>
-#	include <sys/mman.h>
-#	include <sys/user.h>
-#	include <sys/sysctl.h>
-#	include <sys/syscall.h>
-#	include <sys/utsname.h>
-#	include <machine/reg.h>
-#	include <dlfcn.h>
-#	include <fcntl.h>
-#	include <kvm.h>
-#	include <libprocstat.h>
-#	include <paths.h>
+#	include <limits.h>
 #endif /* LM_OS */
 
 #if LM_LANG == LM_LANG_CPP
@@ -423,114 +390,13 @@ typedef struct {
 	lm_flags_t   flags;
 } lm_page_t;
 
-enum {
-	LM_DETOUR_ANY,
-#	if LM_ARCH == LM_ARCH_X86
-	LM_DETOUR_JMP32,
-	LM_DETOUR_JMP64,
-	LM_DETOUR_CALL32,
-	LM_DETOUR_CALL64,
-	LM_DETOUR_RET32,
-	LM_DETOUR_RET64,
-#	endif
-	LM_DETOUR_INVAL
-};
-
-typedef lm_int_t lm_detour_t;
-
 /* LM_GetModule(Ex) Flags */
 enum {
 	LM_MOD_BY_STR = 0,
 	LM_MOD_BY_ADDR
 };
 
-enum {
-	LM_DATLOC_INVAL = 0,
-#	if LM_ARCH == LM_ARCH_X86
-	/* x86_32 */
-	LM_DATLOC_EAX,
-	LM_DATLOC_EBX,
-	LM_DATLOC_ECX,
-	LM_DATLOC_EDX,
-	LM_DATLOC_ESI,
-	LM_DATLOC_EDI,
-	LM_DATLOC_ESP,
-	LM_DATLOC_EBP,
-	LM_DATLOC_EIP,
-	/*
-	LM_DATLOC_XMM0,
-	LM_DATLOC_XMM1,
-	LM_DATLOC_XMM2,
-	LM_DATLOC_XMM3,
-	LM_DATLOC_XMM4,
-	LM_DATLOC_XMM5,
-	LM_DATLOC_XMM6,
-	LM_DATLOC_XMM7,
-	*/
-	/* x86_64 */
-#	if LM_BITS == 64
-	LM_DATLOC_RAX,
-	LM_DATLOC_RBX,
-	LM_DATLOC_RCX,
-	LM_DATLOC_RDX,
-	LM_DATLOC_RSI,
-	LM_DATLOC_RDI,
-	LM_DATLOC_RSP,
-	LM_DATLOC_RBP,
-	LM_DATLOC_RIP,
-	LM_DATLOC_R8,
-	LM_DATLOC_R9,
-	LM_DATLOC_R10,
-	LM_DATLOC_R11,
-	LM_DATLOC_R12,
-	LM_DATLOC_R13,
-	LM_DATLOC_R14,
-	LM_DATLOC_R15,
-	/*
-	LM_DATLOC_XMM8,
-	LM_DATLOC_XMM9,
-	LM_DATLOC_XMM10,
-	LM_DATLOC_XMM11,
-	LM_DATLOC_XMM12,
-	LM_DATLOC_XMM13,
-	LM_DATLOC_XMM14,
-	LM_DATLOC_XMM15,
-	*/
-#	endif
-#	elif LM_ARCH == LM_ARCH_ARM
-#	endif
-	LM_DATLOC_STACK
-};
-
-typedef lm_int_t lm_datloc_t;
-
-typedef struct {
-	lm_datloc_t datloc;
-	lm_size_t   size;
-	lm_byte_t  *data;
-} lm_datio_t;
-
-typedef struct {
-#	if LM_OS == LM_OS_WIN
-	CONTEXT regs;
-#	if LM_BITS == 64
-	WOW64_CONTEXT regs32;
-#	endif
-#	elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-#	if LM_ARCH == LM_ARCH_X86
-	struct user_regs_struct   regs;
-	struct user_fpregs_struct fpregs;
-#	elif LM_ARCH == LM_ARCH_ARM
-	struct user regs;
-#	endif
-#	elif LM_OS == LM_OS_BSD
-#	if LM_ARCH == LM_ARCH_X86
-	struct reg   regs;
-	struct fpreg fpregs;
-#	elif LM_ARCH == LM_ARCH_ARM
-#	endif
-#	endif
-} lm_regs_t;
+typedef lm_int_t lm_detour_t;
 
 /* Based from instruction struct from capstone.h */
 typedef struct {

@@ -29,6 +29,7 @@ _LM_EnumPeSyms(lm_size_t    bits,
 }
 #else
 #include <LIEF/ELF.hpp>
+#include <fcntl.h>
 
 using namespace LIEF::ELF;
 

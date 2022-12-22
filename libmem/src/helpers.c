@@ -1,6 +1,8 @@
 #include "internal.h"
 
 #if LM_OS != LM_OS_WIN
+#include <fcntl.h>
+
 LM_PRIVATE lm_size_t
 _LM_OpenFileBuf(lm_tstring_t path, 
 		lm_tchar_t **pfilebuf)

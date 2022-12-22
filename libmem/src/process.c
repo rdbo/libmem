@@ -1,4 +1,8 @@
 #include "internal.h"
+#if LM_OS != LM_OS_WIN
+#	include <dirent.h>
+#	include <sys/utsname.h>
+#endif
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t

@@ -1,4 +1,7 @@
 #include "internal.h"
+#if LM_OS != LM_OS_WIN
+#	include <dlfcn.h>
+#endif
 
 LM_API lm_bool_t
 LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,

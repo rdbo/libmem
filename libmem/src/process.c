@@ -676,25 +676,30 @@ _LM_GetProcessNameEx(lm_process_t proc,
 		     lm_tchar_t  *namebuf,
 		     lm_size_t    maxlen)
 {
-	lm_size_t len = 0;
-	lm_tchar_t *filebuf;
-	lm_tchar_t comm_path[LM_PATH_MAX];
+	lm_size_t   len = 0;
+	size_t      buf_len;
+	lm_tchar_t *comm_line = NULL;
+	lm_tchar_t  comm_path[LM_PATH_MAX];
+	FILE       *comm_file;
 
 	LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path),
 		    LM_STR("%s/%d/comm"), LM_PROCFS, proc.pid);
 
-	len = _LM_OpenFileBuf(comm_path, &filebuf);
+	comm_file = LM_FOPEN(comm_path, "r");
+	if (!comm_file)
+		return len;
 
-	if (len) {
-		--len; /* remove new line */
+	if ((len = LM_GETLINE(&comm_line, &buf_len, comm_file)) <= 0)
+		goto CLEAN_EXIT;
 
-		if (len >= maxlen)
-			len = maxlen - 1;
-			
-		LM_STRNCPY(namebuf, filebuf, len);
-		_LM_CloseFileBuf(&filebuf);
-	}
+	--len; /* remove new line */
+	if (len >= maxlen)
+		len = maxlen - 1;
 
+	LM_STRNCPY(namebuf, comm_line, len);
+CLEAN_EXIT:
+	LM_FREE(comm_line); /* the buffer should be freed even if getline fails (according to the getline man page) */
+	LM_FCLOSE(comm_file);
 	return len;
 }
 #endif

@@ -1,5 +1,9 @@
 #include "internal.h"
 
+#if LM_OS != LM_OS_WIN
+#	include <regex.h>
+#endif
+
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
@@ -98,109 +102,70 @@ _LM_EnumPagesEx(lm_process_t proc,
 				       lm_void_t *arg),
 		lm_void_t   *arg)
 {
-	lm_bool_t  ret = LM_FALSE;
+	lm_bool_t   ret = LM_FALSE;
 	lm_tchar_t *maps_buf;
-	lm_tchar_t *ptr;
-	lm_tchar_t maps_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
+	lm_tchar_t *maps_line = NULL;
+	lm_size_t   maps_line_len;
+	lm_tchar_t  maps_path[LM_PATH_MAX] = { 0 };
+	FILE       *maps_file;
+	regex_t     regex;
+	regmatch_t  matches[4];
+	lm_page_t   page;
+	size_t      i;
 
-#		if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
-#		elif LM_OS == LM_OS_BSD
+#	if LM_OS == LM_OS_BSD
+	if (regcomp(&regex, "", REG_ICASE | REG_EXTENDED))
+		goto FREE_EXIT;
+
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
-#		endif
-	
-	if (!_LM_OpenFileBuf(maps_path, &maps_buf))
-		return ret;
+#	else
+	if (regcomp(&regex, "([a-z0-9]+)-([a-z0-9]+)[[:blank:]]+(.+).*", REG_ICASE | REG_EXTENDED))
+		goto FREE_EXIT;
 
-	ret = LM_TRUE;
+	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
+		    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
+#	endif
 
-	for (ptr = maps_buf; ptr; ptr = LM_STRCHR(ptr, LM_STR('\n'))) {
-		lm_page_t page;
+	maps_file = LM_FOPEN(maps_path, "r");
+	if (!maps_file)
+		goto FREE_EXIT;
 
-		if (ptr != maps_buf)
-			ptr = &ptr[1];
-		
-		page.base = (lm_address_t)LM_STRTOP(ptr, NULL, 16);
+	while (LM_GETLINE(&maps_line, &maps_line_len, maps_file)) {
+		if (regexec(&regex, maps_line, LM_ARRLEN(matches), matches, 0))
+			continue;
 
-#			if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-		ptr = LM_STRCHR(ptr, LM_STR('-'));
-#			elif LM_OS == LM_OS_BSD
-		ptr = LM_STRSTR(ptr, LM_STR(" 0x"));
-#			endif
-
-		if (!ptr)
-			break; /* EOF */
-
-		ptr = &ptr[1];
-
-		page.end = (lm_address_t)LM_STRTOP(ptr, NULL, 16);
-		page.size = (lm_size_t)(
-			(lm_uintptr_t)page.end - 
-			(lm_uintptr_t)page.base
+#		if LM_OS == LM_OS_BSD
+		/* TODO: Implement */
+#		else
+		page.base = (lm_address_t)LM_STRTOP(
+			&maps_line[matches[1].rm_so], NULL, 16
+		);
+		page.end = (lm_address_t)LM_STRTOP(
+			&maps_line[matches[2].rm_so], NULL, 16
 		);
 
-		page.prot  = 0;
+		page.prot = 0;
 		page.flags = 0;
-
-#			if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-		{
-			lm_size_t i;
-
-			ptr = LM_STRCHR(ptr, LM_STR(' '));
-			ptr = &ptr[1];
-
-			for (i = 0; i < 4; ++i) {
-				switch (ptr[i]) {
-				case LM_STR('r'):
-					page.prot |= PROT_READ;
-					break;
-				case LM_STR('w'):
-					page.prot |= PROT_WRITE;
-					break;
-				case LM_STR('x'):
-					page.prot |= PROT_EXEC;
-					break;
-				case LM_STR('p'):
-					page.flags = MAP_PRIVATE;
-					break;
-				case LM_STR('s'):
-					page.flags = MAP_SHARED;
-					break;
-				}
+		for (i = 0; i < matches[3].rm_eo - matches[3].rm_so; ++i) {
+			switch (maps_line[matches[3].rm_so + i]) {
+			case 'r': page.prot |= PROT_READ; break;
+			case 'w': page.prot |= PROT_WRITE; break;
+			case 'x': page.prot |= PROT_EXEC; break;
+			case 'p': page.flags |= MAP_PRIVATE; break;
+			case 's': page.flags |= MAP_SHARED; break;
 			}
 		}
-#			elif LM_OS == LM_OS_BSD
-		{
-			lm_size_t i;
-
-			for (i = 0; i < 4; ++i) {
-				ptr = LM_STRCHR(ptr, LM_STR(' '));
-				ptr = &ptr[1];
-			}
-
-			for (i = 0; i < 3; ++i) {
-				switch (ptr[i]) {
-				case LM_STR('r'):
-					page.prot |= PROT_READ;
-					break;
-				case LM_STR('w'):
-					page.prot |= PROT_WRITE;
-					break;
-				case LM_STR('x'):
-					page.prot |= PROT_EXEC;
-					break;
-				}
-			}
-		}
-#			endif
+#		endif
+		page.size = (lm_uintptr_t)page.end - (lm_uintptr_t)page.base;
 
 		if (callback(page, arg) == LM_FALSE)
 			break;
 	}
-
-	_LM_CloseFileBuf(&maps_buf);
+	
+	LM_FCLOSE(maps_file);
+FREE_EXIT:
+	regfree(&regex);
 
 	return ret;
 }

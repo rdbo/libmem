@@ -115,13 +115,13 @@ _LM_EnumPagesEx(lm_process_t proc,
 
 #	if LM_OS == LM_OS_BSD
 	if (regcomp(&regex, "", REG_ICASE | REG_EXTENDED))
-		goto FREE_EXIT;
+		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
 #	else
 	if (regcomp(&regex, "([a-z0-9]+)-([a-z0-9]+)[[:blank:]]+(.+).*", REG_ICASE | REG_EXTENDED))
-		goto FREE_EXIT;
+		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 		    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
@@ -157,12 +157,16 @@ _LM_EnumPagesEx(lm_process_t proc,
 			}
 		}
 #		endif
-		page.size = (lm_uintptr_t)page.end - (lm_uintptr_t)page.base;
+		page.size = (lm_size_t)(
+			(lm_uintptr_t)page.end - (lm_uintptr_t)page.base
+		);
 
 		if (callback(page, arg) == LM_FALSE)
 			break;
 	}
-	
+
+	ret = LM_TRUE;
+
 	LM_FCLOSE(maps_file);
 FREE_EXIT:
 	regfree(&regex);

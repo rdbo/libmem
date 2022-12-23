@@ -1,6 +1,7 @@
 #include "internal.h"
 #if LM_OS != LM_OS_WIN
 #	include <dlfcn.h>
+#	include <regex.h>
 #endif
 
 LM_API lm_bool_t
@@ -79,124 +80,78 @@ _LM_EnumModulesEx(lm_process_t proc,
 					 lm_void_t   *arg),
 		  lm_void_t   *arg)
 {
-	lm_bool_t   ret = LM_FALSE;
-	lm_tchar_t *maps_buf;
-	lm_tchar_t *ptr;
-	lm_tchar_t  maps_path[LM_PATH_MAX] = { 0 };
+	lm_bool_t    ret = LM_FALSE;
+	lm_tchar_t   maps_path[LM_PATH_MAX];
+	FILE        *maps_file;
+	lm_tchar_t  *maps_line = NULL;
+	lm_size_t    maps_line_len;
+	ssize_t      line_len;
+	regex_t      regex;
+	regmatch_t   matches[5];
+	lm_module_t  mod;
+	lm_tchar_t   path[LM_PATH_MAX] = { 0 };
+	lm_tstring_t curpath;
+	lm_bool_t    is_same_module = LM_FALSE;
 
-#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
-#	elif LM_OS == LM_OS_BSD
-	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
-#	endif
-		
-	if (!_LM_OpenFileBuf(maps_path, &maps_buf))
+#	if LM_OS == LM_OS_BSD
+	if (regcomp(&regex, "", REG_ICASE | REG_EXTENDED))
 		return ret;
 
-	ret = LM_TRUE;
+	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
+		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
+#	else
+	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[^/]+(/.+)$", REG_ICASE | REG_EXTENDED))
+		return ret;
 
-	for (ptr = maps_buf;
-	     ptr && (ptr = LM_STRCHR(ptr, LM_STR('/')));
-	     ptr = LM_STRCHR(ptr, LM_STR('\n'))) {
-		lm_tchar_t *tmp;
-		lm_tchar_t *holder;
-		lm_tchar_t *path;
-		lm_size_t   pathlen;
-		lm_module_t mod;
+	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
+		    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
+#	endif
 
-		tmp = LM_STRCHR(ptr, LM_STR('\n'));
+	maps_file = LM_FOPEN(maps_path, "r");
+	if (!maps_file)
+		goto FREE_EXIT;
+
+	while ((line_len = LM_GETLINE(&maps_line, &maps_line_len, maps_file)) > 0) {
+		if (regexec(&regex, maps_line, LM_ARRLEN(matches), matches, 0))
+			continue;
 
 #		if LM_OS == LM_OS_BSD
-		{
-			lm_tchar_t *tmp2;
-			lm_size_t i;
-			holder = tmp;
+		/* TODO: Implement */
+#		else
+		maps_line[--line_len] = LM_STR('\x00'); /* remove \n */
+		curpath = &maps_line[matches[3].rm_so];
+		is_same_module = LM_STRCMP(curpath, path) ? LM_FALSE : LM_TRUE;
 
-			for (i = 0; i < 2; ++i) {
-				for (tmp2 = ptr;
-				     (lm_uintptr_t)(
-				        tmp2 = LM_STRCHR(tmp2,
-							 LM_STR(' '))
-				     ) < (lm_uintptr_t)tmp;
-				     tmp2 = &tmp2[1])
-					holder = tmp2;
+		if (!LM_STRLEN(path) == 0 || !is_same_module) {
+			lm_size_t pathlen = LM_STRLEN(curpath);
 
-				tmp = holder;
-			}
+			if (pathlen >= LM_ARRLEN(path))
+				pathlen = LM_ARRLEN(path) - 1;
+			LM_STRNCPY(path, curpath, pathlen);
+			path[pathlen] = LM_STR('\x00');
+
+			mod.base = (lm_address_t)LM_STRTOP(
+				&maps_line[matches[1].rm_so], NULL, 16
+			);
 		}
-#		endif
-		pathlen = (lm_size_t)(
-			((lm_uintptr_t)tmp - (lm_uintptr_t)ptr) /
-			sizeof(tmp[0])
+		mod.end = (lm_address_t)LM_STRTOP(
+			&maps_line[matches[2].rm_so], NULL, 16
 		);
-		
-		path = (lm_tchar_t *)LM_CALLOC(pathlen + 1,
-					       sizeof(lm_tchar_t));
-		if (!path) {
-			ret = LM_FALSE;
-			break;
-		}
-
-		LM_STRNCPY(path, ptr, pathlen);
-		path[pathlen] = LM_STR('\x00');
-
-		holder = maps_buf;
-		for (tmp = maps_buf;
-		     (lm_uintptr_t)(
-			     tmp = LM_STRCHR(tmp, LM_STR('\n'))
-		     ) < (lm_uintptr_t)ptr;
-		     tmp = &tmp[1])
-			holder = &tmp[1];
-		
-		mod.base = (lm_address_t)LM_STRTOP(holder, NULL, 16);
-
-		holder = ptr;
-		for (tmp = ptr;
-		     (tmp = LM_STRCHR(tmp, LM_STR('\n'))) &&
-		     (tmp = LM_STRCHR(tmp, LM_STR('/')));
-		     tmp = &tmp[1]) {
-			if (LM_STRNCMP(tmp, path, pathlen))
-				break;
-			holder = tmp;
-		}
-		
-		ptr = holder;
-
-		holder = maps_buf;
-		for (tmp = maps_buf;
-		     (lm_uintptr_t)(
-			     tmp = LM_STRCHR(tmp, LM_STR('\n'))
-		     ) < (lm_uintptr_t)ptr;
-		     tmp = &tmp[1])
-			holder = &tmp[1];
-
-#		if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-		holder = LM_STRCHR(holder, LM_STR('-'));
-#		elif LM_OS == LM_OS_BSD
-		holder = LM_STRSTR(holder, LM_STR(" 0x"));
 #		endif
-		holder = &holder[1];
-
-		mod.end = (lm_address_t)LM_STRTOP(holder, NULL, 16);
-		mod.size = (
+		mod.size = (lm_size_t)(
 			(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
 		);
 
-		{
-			lm_bool_t cbret;
-
-			cbret = callback(mod, path, arg);
-			LM_FREE(path);
-
-			if (cbret == LM_FALSE)
-				break;
-		}
+		if (!is_same_module && callback(mod, path, arg) == LM_FALSE)
+			break;
 	}
 
-	_LM_CloseFileBuf(&maps_buf);
 
+	ret = LM_TRUE;
+
+	LM_FCLOSE(maps_file);
+FREE_EXIT:
+	regfree(&regex);
 	return ret;
 }
 #endif

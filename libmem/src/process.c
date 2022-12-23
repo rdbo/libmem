@@ -266,7 +266,7 @@ _LM_GetParentIdEx(lm_pid_t pid)
 	FILE       *status_file;
 	lm_tchar_t *status_line = NULL;
 	regex_t     regex;
-	size_t      len;
+	size_t      buf_len;
 	regmatch_t  matches[2];
 
 	LM_SNPRINTF(status_path, LM_ARRLEN(status_path),
@@ -279,7 +279,7 @@ _LM_GetParentIdEx(lm_pid_t pid)
 	if (regcomp(&regex, "^PPid:[[:blank:]]+([0-9]+)$", REG_ICASE | REG_EXTENDED))
 		goto CLOSE_EXIT;
 
-	while (LM_GETLINE(&status_line, &len, status_file) > 0) {
+	while (LM_GETLINE(&status_line, &buf_len, status_file) > 0) {
 		if (regexec(&regex, status_line, LM_ARRLEN(matches), matches, 0))
 			continue;
 

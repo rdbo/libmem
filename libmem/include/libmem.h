@@ -731,14 +731,17 @@ LM_UnhookCode(lm_address_t  from,
 	      lm_address_t  trampoline,
 	      lm_size_t     size);
 
-LM_API lm_bool_t
-LM_HookCodeEx(lm_address_t  from,
+LM_API lm_size_t
+LM_HookCodeEx(lm_process_t  proc,
+	      lm_address_t  from,
 	      lm_address_t  to,
 	      lm_address_t *ptrampoline);
 
 LM_API lm_bool_t
-LM_UnhookCodeEx(lm_address_t  from,
-		lm_address_t *ptrampoline);
+LM_UnhookCodeEx(lm_process_t  proc,
+		lm_address_t  from,
+		lm_address_t  trampoline,
+		lm_size_t     size);
 
 /****************************************/
 
@@ -775,6 +778,11 @@ LM_FreeInstructions(lm_inst_t *insts);
 LM_API lm_size_t
 LM_CodeLength(lm_address_t code,
 	      lm_size_t minlength);
+
+LM_API lm_size_t
+LM_CodeLengthEx(lm_process_t proc,
+		lm_address_t code,
+		lm_size_t minlength);
 
 #if LM_LANG == LM_LANG_CPP
 }

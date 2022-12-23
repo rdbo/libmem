@@ -8,14 +8,27 @@ _LM_GenerateHook(lm_address_t from,
 		 lm_byte_t  **pcodebuf)
 {
 	lm_char_t code[255];
+	lm_size_t size;
+
 	if (bits == 64) {
+		/* dereference of RIP will be the jump address */
 		LM_CSNPRINTF(code, sizeof(code),
-			     "movabs rax, %p ; jmp rax", (void *)to);
+			     "jmp [rip];"
+			     /* these NOPs will become the jump address */
+			     "nop; nop; nop; nop; nop; nop; nop; nop");
 	} else {
 		LM_CSNPRINTF(code, sizeof(code), "jmp %p", (void *)to);
 	}
 
-	return LM_AssembleEx(code, LM_ARCH, bits, from, pcodebuf);
+	size = LM_AssembleEx(code, LM_ARCH, bits, from, pcodebuf);
+
+	if (size > 0 && bits == 64) {
+		*(lm_uint64_t *)(
+			LM_OFFSET(*pcodebuf, size - sizeof(lm_uint64_t))
+		) = (lm_uint64_t)to;
+	}
+
+	return size;
 }
 #elif LM_ARCH == LM_ARCH_ARM
 LM_PRIVATE lm_size_t
@@ -56,11 +69,11 @@ LM_HookCode(lm_address_t  from,
 	if (ptrampoline) {
 		/* the jump back code is the same as the hook code, but
 		   with a different jump address */
-		*ptrampoline = LM_AllocMemory(codesize * 2, LM_PROT_XRW);
+		*ptrampoline = LM_AllocMemory(alignedsize + codesize, LM_PROT_XRW);
 		if (*ptrampoline == LM_ADDRESS_BAD)
 			goto FREE_EXIT;
 
-		LM_ReadMemory(*ptrampoline, from, alignedsize);
+		LM_ReadMemory(from, *ptrampoline, alignedsize);
 
 		/* place jump back code on trampoline after the
 		   original instructions */

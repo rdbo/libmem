@@ -39,7 +39,6 @@ set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/libLI
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
-message(STATUS "Source: ${LIBMEM_SRC}")
 set(LIBMEM_DEPS capstone keystone LIEF stdc++ m)
 
 if(NOT MSVC)

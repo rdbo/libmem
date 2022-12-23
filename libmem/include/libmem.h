@@ -142,6 +142,9 @@
 #define LM_MEMCPY   memcpy
 #define LM_MEMSET   memset
 #define LM_ASSERT   assert
+#define LM_FOPEN    fopen
+#define LM_FCLOSE   fclose
+#define LM_GETLINE  getline /* TODO: Add wchar_t variant */
 
 #define LM_CSTR(str) str
 #define LM_CSTRCMP   strcmp

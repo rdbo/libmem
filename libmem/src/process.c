@@ -2,6 +2,7 @@
 #if LM_OS != LM_OS_WIN
 #	include <dirent.h>
 #	include <sys/utsname.h>
+#	include <regex.h>
 #endif
 
 #if LM_OS == LM_OS_WIN
@@ -260,26 +261,38 @@ _LM_GetParentIdEx(lm_pid_t pid)
 LM_PRIVATE lm_pid_t
 _LM_GetParentIdEx(lm_pid_t pid)
 {
-	lm_pid_t ppid = LM_PID_BAD;
-	lm_tchar_t *status_buf;
-	lm_tchar_t  status_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
-	lm_tchar_t *ptr;
+	lm_pid_t    ppid = LM_PID_BAD;	
+	lm_tchar_t  status_path[LM_PATH_MAX] = { 0 };
+	FILE       *status_file;
+	lm_tchar_t *status_line = NULL;
+	regex_t     regex;
+	size_t      len;
+	regmatch_t  matches[2];
 
 	LM_SNPRINTF(status_path, LM_ARRLEN(status_path),
 		    LM_STR("%s/%d/status"), LM_PROCFS, pid);
-		
-	if (!_LM_OpenFileBuf(status_path, &status_buf))
+
+	status_file = LM_FOPEN(status_path, "r");
+	if (!status_file)
 		return ppid;
 
-	ptr = LM_STRSTR(status_buf, LM_STR("\nPPid:\t"));
+	if (regcomp(&regex, "^PPid:[[:blank:]]+([0-9]+)$", REG_ICASE | REG_EXTENDED))
+		goto CLOSE_EXIT;
 
-	if (ptr) {
-		ptr = LM_STRCHR(ptr, LM_STR('\t'));
-		ptr = &ptr[1];
-		ppid = (lm_pid_t)LM_ATOI(ptr);
+	while (LM_GETLINE(&status_line, &len, status_file) > 0) {
+		if (regexec(&regex, status_line, LM_ARRLEN(matches), matches, 0))
+			continue;
+
+		status_line[matches[1].rm_eo] = '\x00';
+		ppid = LM_ATOI(&status_line[matches[1].rm_so]);
+		break;
 	}
 
-	_LM_CloseFileBuf(&status_buf);
+	regfree(&regex);
+	LM_FREE(status_line);
+CLOSE_EXIT:
+	LM_FCLOSE(status_file);
+
 	return ppid;
 }
 #endif

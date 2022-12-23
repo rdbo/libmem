@@ -49,4 +49,3 @@ _LM_CloseFileBuf(lm_tchar_t **pfilebuf)
 	}
 }
 #endif
-

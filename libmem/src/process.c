@@ -298,7 +298,7 @@ _LM_GetParentIdEx(lm_pid_t pid)
 	if (!status_file)
 		return ppid;
 
-	if (regcomp(&regex, "^PPid:[[:blank:]]+([0-9]+)$", REG_ICASE | REG_EXTENDED))
+	if (regcomp(&regex, "^PPid:[[:blank:]]+([0-9]+)$", REG_EXTENDED))
 		goto CLOSE_EXIT;
 
 	while (LM_GETLINE(&status_line, &buf_len, status_file) > 0) {

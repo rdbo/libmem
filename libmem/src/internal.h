@@ -10,9 +10,6 @@
 #if LM_OS == LM_OS_WIN
 #	include <TlHelp32.h>
 #	include <Psapi.h>
-#	if LM_LANG == LM_LANG_CPP
-#		include <LIEF/PE.hpp>
-#	endif
 #else
 #	include <dirent.h>
 #	include <errno.h>
@@ -28,13 +25,11 @@
 #	include <dlfcn.h>
 #	include <fcntl.h>
 #	include <regex.h>
-#	if LM_LANG != LM_LANG_CPP /* conflicts with LIEF */
-#		include <link.h>
-#		include <elf.h>
-#	else
-#		include <LIEF/ELF.hpp>
-#	endif
+#	include <link.h>
+#	include <elf.h>
 #	if LM_OS == LM_OS_BSD
+#		include <sys/param.h>
+#		include <sys/sysctl.h>
 #		include <machine/reg.h>
 #		include <kvm.h>
 #		include <libprocstat.h>

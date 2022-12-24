@@ -263,11 +263,11 @@ _LM_GetParentIdEx(lm_pid_t pid)
 
 	ps = procstat_open_sysctl();
 	if (!ps)
-		return len;
+		return ppid;
 
 	procs = procstat_getprocs(
 		ps, KERN_PROC_PID,
-		proc.pid, &nprocs
+		pid, &nprocs
 	);
 
 	if (procs && nprocs) {

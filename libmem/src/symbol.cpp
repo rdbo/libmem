@@ -1,6 +1,9 @@
-#include "internal.h"
+#define LM_FORCE_LANG_CPP
+#include <libmem.h>
 
 #if LM_OS == LM_OS_WIN
+#include <LIEF/PE.hpp>
+
 using namespace LIEF::PE;
 
 LM_PRIVATE lm_bool_t
@@ -36,6 +39,8 @@ _LM_EnumSymbols(lm_module_t mod,
 	return _LM_EnumPeSyms(LM_GetProcessBits(), mod.base, callback, arg);
 }
 #else
+#include <LIEF/ELF.hpp>
+
 using namespace LIEF::ELF;
 
 LM_PRIVATE lm_bool_t

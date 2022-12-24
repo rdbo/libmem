@@ -99,9 +99,8 @@ _LM_EnumPagesEx(lm_process_t proc,
 		lm_void_t   *arg)
 {
 	lm_bool_t   ret = LM_FALSE;
-	lm_tchar_t *maps_buf;
 	lm_tchar_t *maps_line = NULL;
-	lm_size_t   maps_line_len;
+	size_t      maps_line_len;
 	lm_tchar_t  maps_path[LM_PATH_MAX] = { 0 };
 	FILE       *maps_file;
 	regex_t     regex;
@@ -140,7 +139,7 @@ _LM_EnumPagesEx(lm_process_t proc,
 
 		page.prot = 0;
 		page.flags = 0;
-		for (i = 0; i < matches[3].rm_eo - matches[3].rm_so; ++i) {
+		for (i = 0; i < (size_t)(matches[3].rm_eo - matches[3].rm_so); ++i) {
 			switch (maps_line[matches[3].rm_so + i]) {
 			case 'r': page.prot |= PROT_READ; break;
 			case 'w': page.prot |= PROT_WRITE; break;

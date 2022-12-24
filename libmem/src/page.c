@@ -182,6 +182,25 @@ LM_EnumPagesEx(lm_process_t proc,
 
 /********************************/
 
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_GetPage(lm_address_t addr,
+	    lm_page_t   *page)
+{
+	MEMORY_BASIC_INFORMATION mbi;
+
+	if (!VirtualQuery(addr, &mbi, sizeof(mbi)))
+		return LM_FALSE;
+
+	page->base  = (lm_address_t)mbi.BaseAddress;
+	page->size  = (lm_size_t)mbi.RegionSize;
+	page->end   = (lm_address_t)LM_OFFSET(page.base, page.size);
+	page->prot  = mbi.Protect;
+	page->flags = mbi.Type;
+
+	return LM_TRUE;
+}
+#else
 typedef struct {
 	lm_address_t addr;
 	lm_page_t   *pagebuf;
@@ -202,9 +221,9 @@ _LM_GetPageCallback(lm_page_t  page,
 	return LM_TRUE;
 }
 
-LM_API lm_bool_t
-LM_GetPage(lm_address_t addr,
-	   lm_page_t   *page)
+LM_PRIVATE lm_bool_t
+_LM_GetPage(lm_address_t addr,
+	    lm_page_t   *page)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
@@ -223,13 +242,41 @@ LM_GetPage(lm_address_t addr,
 
 	return ret;
 }
+#endif
+
+LM_API lm_bool_t
+LM_GetPage(lm_address_t addr,
+	   lm_page_t   *page)
+{
+	return _LM_GetPage(addr, page);
+}
 
 /********************************/
 
-LM_API lm_bool_t
-LM_GetPageEx(lm_process_t proc,
-	     lm_address_t addr,
-	     lm_page_t   *page)
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_GetPageEx(lm_process_t proc,
+	      lm_address_t addr,
+	      lm_page_t   *page)
+{
+	MEMORY_BASIC_INFORMATION mbi;
+
+	if (!VirtualQueryEx(proc.handle, addr, &mbi, sizeof(mbi)))
+		return LM_FALSE;
+
+	page->base  = (lm_address_t)mbi.BaseAddress;
+	page->size  = (lm_size_t)mbi.RegionSize;
+	page->end   = (lm_address_t)LM_OFFSET(page.base, page.size);
+	page->prot  = mbi.Protect;
+	page->flags = mbi.Type;
+
+	return LM_TRUE;	
+}
+#else
+LM_PRIVATE lm_bool_t
+_LM_GetPageEx(lm_process_t proc,
+	      lm_address_t addr,
+	      lm_page_t   *page)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
@@ -248,5 +295,14 @@ LM_GetPageEx(lm_process_t proc,
 
 	ret = page->size > 0 ? LM_TRUE : LM_FALSE;
 	return ret;
+}
+#endif
+
+LM_API lm_bool_t
+LM_GetPageEx(lm_process_t proc,
+	     lm_address_t addr,
+	     lm_page_t   *page)
+{
+	return _LM_GetPageEx(proc, addr, page);
 }
 

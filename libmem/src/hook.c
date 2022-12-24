@@ -88,7 +88,7 @@ LM_HookCode(lm_address_t  from,
 
 	ret = alignedsize;
 FREE_EXIT:
-	LM_FreeCodeBuffer(codebuf);
+	LM_FreeCodeBuffer(&codebuf);
 
 	return ret;
 }
@@ -97,14 +97,18 @@ FREE_EXIT:
 
 LM_API lm_bool_t
 LM_UnhookCode(lm_address_t  from,
-	      lm_address_t  trampoline,
+	      lm_address_t *ptrampoline,
 	      lm_size_t     size)
 {
 	lm_prot_t old_prot;
+	lm_address_t trampoline;
 
 	LM_ASSERT(from != LM_ADDRESS_BAD &&
-		  trampoline != LM_ADDRESS_BAD &&
+		  ptrampoline != LM_NULLPTR &&
+		  *ptrampoline != LM_ADDRESS_BAD &&
 		  size > 0);
+
+	trampoline = *ptrampoline;
 
 	if (!LM_ProtMemory(from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;
@@ -113,6 +117,8 @@ LM_UnhookCode(lm_address_t  from,
 
 	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
 	LM_FreeMemory(trampoline, size);
+
+	*ptrampoline = LM_ADDRESS_BAD;
 
 	return LM_TRUE;
 }
@@ -200,10 +206,19 @@ FREE_EXIT:
 LM_API lm_bool_t
 LM_UnhookCodeEx(lm_process_t  proc,
 		lm_address_t  from,
-		lm_address_t  trampoline,
+		lm_address_t *ptrampoline,
 		lm_size_t     size)
 {
 	lm_prot_t old_prot;
+	lm_address_t trampoline;
+
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+		  from != LM_ADDRESS_BAD &&
+		  ptrampoline != LM_NULLPTR &&
+		  *ptrampoline != LM_ADDRESS_BAD &&
+		  size > 0);
+
+	trampoline = *ptrampoline;
 
 	if (!LM_ProtMemoryEx(proc, from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;
@@ -212,6 +227,8 @@ LM_UnhookCodeEx(lm_process_t  proc,
 
 	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
 	LM_FreeMemory(trampoline, size);
+
+	*ptrampoline = LM_ADDRESS_BAD;
 
 	return LM_TRUE;
 }

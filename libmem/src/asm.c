@@ -14,7 +14,7 @@ LM_Assemble(lm_cstring_t code,
 
 	LM_Disassemble(codebuf, inst);
 
-	LM_FreeCodeBuffer(codebuf);
+	LM_FreeCodeBuffer(&codebuf);
 
 	return LM_TRUE;
 }
@@ -74,10 +74,11 @@ CLEAN_EXIT:
 /********************************/
 
 LM_API lm_void_t
-LM_FreeCodeBuffer(lm_byte_t *codebuf)
+LM_FreeCodeBuffer(lm_byte_t **pcodebuf)
 {
-	if (codebuf)
-		LM_FREE(codebuf);
+	if (*pcodebuf)
+		LM_FREE(*pcodebuf);
+	*pcodebuf = (lm_byte_t *)LM_NULLPTR;
 }
 
 /********************************/
@@ -96,7 +97,7 @@ LM_Disassemble(lm_address_t code, lm_inst_t *inst)
 
 	*inst = *insts;
 
-	LM_FreeInstructions(insts);
+	LM_FreeInstructions(&insts);
 
 	return LM_TRUE;
 }
@@ -163,10 +164,12 @@ CLEAN_EXIT:
 /********************************/
 
 LM_API lm_void_t
-LM_FreeInstructions(lm_inst_t *insts)
+LM_FreeInstructions(lm_inst_t **pinsts)
 {
-	if (insts)
-		LM_FREE(insts);
+	if (*pinsts)
+		LM_FREE(*pinsts);
+
+	*pinsts = (lm_inst_t *)LM_NULLPTR;
 }
 
 /********************************/

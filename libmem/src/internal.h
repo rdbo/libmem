@@ -12,13 +12,6 @@
 #if LM_OS == LM_OS_WIN
 #else
 LM_PRIVATE lm_size_t
-_LM_OpenFileBuf(lm_tstring_t path, 
-		lm_tchar_t **pfilebuf);
-
-LM_PRIVATE lm_void_t
-_LM_CloseFileBuf(lm_tchar_t **pfilebuf);
-
-LM_PRIVATE lm_size_t
 _LM_GetElfBits(lm_tchar_t *path);
 #endif
 

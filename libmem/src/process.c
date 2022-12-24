@@ -5,6 +5,14 @@
 #	include <regex.h>
 #	include <elf.h>
 #	include <fcntl.h>
+#	if LM_OS == LM_OS_BSD
+#		include <sys/param.h>
+#		include <sys/sysctl.h>
+#		include <sys/types.h>
+#		include <sys/user.h>
+#		include <kvm.h>
+#		include <libprocstat.h>
+#	endif
 #endif
 
 #if LM_OS == LM_OS_WIN

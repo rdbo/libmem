@@ -93,13 +93,13 @@ _LM_EnumModulesEx(lm_process_t proc,
 	lm_tstring_t curpath;
 
 #	if LM_OS == LM_OS_BSD
-	if (regcomp(&regex, "", REG_ICASE | REG_EXTENDED))
+	if (regcomp(&regex, "^0x([a-z0-9]+)[[:blank:]]+0x([a-z0-9]+)[[:blank:]]+[^/]+(/.*)([[:blank:]])+[A-Z]+[[:blank:]]+.*$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
 #	else
-	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[^/]+(/.+)$", REG_ICASE | REG_EXTENDED))
+	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[^/]+(/.+)$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
@@ -114,10 +114,10 @@ _LM_EnumModulesEx(lm_process_t proc,
 		if (regexec(&regex, maps_line, LM_ARRLEN(matches), matches, 0))
 			continue;
 
-#		if LM_OS == LM_OS_BSD
-		/* TODO: Implement */
-#		else
 		maps_line[--line_len] = LM_STR('\x00'); /* remove \n */
+#		if LM_OS == LM_OS_BSD
+		maps_line[matches[4].rm_so] = LM_STR('\x00');
+#		endif
 		curpath = &maps_line[matches[3].rm_so];
 
 
@@ -166,7 +166,6 @@ _LM_EnumModulesEx(lm_process_t proc,
 		mod.end = (lm_address_t)LM_STRTOP(
 			&maps_line[matches[2].rm_so], NULL, 16
 		);
-#		endif
 	}
 
 

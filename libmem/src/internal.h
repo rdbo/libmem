@@ -18,9 +18,6 @@ _LM_EnumPeSyms(lm_size_t    bits,
 				      lm_void_t   *arg),
 	       lm_void_t *arg);
 #else
-LM_PRIVATE lm_size_t
-_LM_GetElfBits(lm_tchar_t *path);
-
 LM_PRIVATE lm_bool_t
 _LM_EnumElfSyms(lm_module_t mod,
 		lm_tchar_t *modpath,

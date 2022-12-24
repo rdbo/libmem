@@ -213,9 +213,9 @@ LM_GetPage(lm_address_t addr,
 
 	arg.addr = addr;
 	arg.pagebuf = page;
-	arg.pagebuf->base = (lm_address_t)LM_BAD;
+	arg.pagebuf->base = LM_ADDRESS_BAD;
 	arg.pagebuf->size = 0;
-	arg.pagebuf->end  = (lm_address_t)LM_BAD;
+	arg.pagebuf->end  = LM_ADDRESS_BAD;
 
 	LM_EnumPages(_LM_GetPageCallback, (lm_void_t *)&arg);
 
@@ -240,9 +240,9 @@ LM_GetPageEx(lm_process_t proc,
 
 	arg.addr = addr;
 	arg.pagebuf = page;
-	arg.pagebuf->base = (lm_address_t)LM_BAD;
+	arg.pagebuf->base = LM_ADDRESS_BAD;
 	arg.pagebuf->size = 0;
-	arg.pagebuf->end  = (lm_address_t)LM_BAD;
+	arg.pagebuf->end  = LM_ADDRESS_BAD;
 
 	LM_EnumPagesEx(proc, _LM_GetPageCallback, (lm_void_t *)&arg);
 

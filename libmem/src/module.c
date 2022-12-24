@@ -91,7 +91,6 @@ _LM_EnumModulesEx(lm_process_t proc,
 	lm_module_t  mod;
 	lm_tchar_t   path[LM_PATH_MAX] = { 0 };
 	lm_tstring_t curpath;
-	lm_bool_t    is_same_module = LM_FALSE;
 
 #	if LM_OS == LM_OS_BSD
 	if (regcomp(&regex, "", REG_ICASE | REG_EXTENDED))
@@ -120,13 +119,13 @@ _LM_EnumModulesEx(lm_process_t proc,
 #		else
 		maps_line[--line_len] = LM_STR('\x00'); /* remove \n */
 		curpath = &maps_line[matches[3].rm_so];
-		is_same_module = LM_STRCMP(curpath, path) ? LM_FALSE : LM_TRUE;
 
-		if (!LM_STRLEN(path) == 0 || !is_same_module) {
+		if (LM_STRLEN(path) == 0) {
 			lm_size_t pathlen = LM_STRLEN(curpath);
 
 			if (pathlen >= LM_ARRLEN(path))
 				pathlen = LM_ARRLEN(path) - 1;
+
 			LM_STRNCPY(path, curpath, pathlen);
 			path[pathlen] = LM_STR('\x00');
 
@@ -134,16 +133,36 @@ _LM_EnumModulesEx(lm_process_t proc,
 				&maps_line[matches[1].rm_so], NULL, 16
 			);
 		}
+
+		/* if the module changes, run a callback and copy the new base and path */
+		if (LM_STRCMP(curpath, path)) {
+			lm_size_t pathlen;
+
+			mod.size = (lm_size_t)(
+				(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
+			);
+
+			if (callback(mod, path, arg) == LM_FALSE)
+				break;
+
+			pathlen = LM_STRLEN(curpath);
+			if (pathlen >= LM_ARRLEN(path))
+				pathlen = LM_ARRLEN(path) - 1;
+
+			LM_STRNCPY(path, curpath, pathlen);
+			path[pathlen] = LM_STR('\x00');
+
+			mod.base = (lm_address_t)LM_STRTOP(
+				&maps_line[matches[1].rm_so], NULL, 16
+			);
+		}
+
+		/* the module end address should always update, since it's supposed
+		   to be the last valid address for a module */
 		mod.end = (lm_address_t)LM_STRTOP(
 			&maps_line[matches[2].rm_so], NULL, 16
 		);
 #		endif
-		mod.size = (lm_size_t)(
-			(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
-		);
-
-		if (!is_same_module && callback(mod, path, arg) == LM_FALSE)
-			break;
 	}
 
 

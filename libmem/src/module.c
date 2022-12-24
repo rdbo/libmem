@@ -120,6 +120,10 @@ _LM_EnumModulesEx(lm_process_t proc,
 		maps_line[--line_len] = LM_STR('\x00'); /* remove \n */
 		curpath = &maps_line[matches[3].rm_so];
 
+
+		/* TODO: Group copies of base and path of first and new module conditions */
+
+		/* if it is the first module, copy the base and path */
 		if (LM_STRLEN(path) == 0) {
 			lm_size_t pathlen = LM_STRLEN(curpath);
 

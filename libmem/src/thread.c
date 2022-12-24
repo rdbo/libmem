@@ -66,15 +66,34 @@ _LM_EnumThreadsEx(lm_process_t proc,
 	return ret;
 }
 #elif LM_OS == LM_OS_BSD
+typedef struct {
+	lm_pid_t pid;
+	lm_bool_t (*callback)(lm_tid_t tid, lm_void_t *arg);
+	lm_void_t *arg;
+} _lm_enum_threads_t;
+
+LM_PRIVATE lm_bool_t
+_LM_EnumThreadsExCallback(lm_pid_t   pid,
+			  lm_void_t *arg)
+{
+	_lm_enum_threads_t *data = (_lm_enum_threads_t *)arg;
+	/* if the given pid owns the current pid, it is its thread */
+	if (LM_GetParentIdEx(pid) == data->pid)
+		data->callback((lm_tid_t)pid, data->arg);
+	return LM_TRUE;
+}
+
 LM_PRIVATE lm_bool_t
 _LM_EnumThreadsEx(lm_process_t proc,
 		  lm_bool_t  (*callback)(lm_tid_t   tid,
 					 lm_void_t *arg),
 		  lm_void_t   *arg)
 {
-	/* TODO: Implement feature properly */
-	callback((lm_tid_t)proc.pid, arg);
-	return LM_TRUE;
+	_lm_enum_threads_t data;
+	data.pid = proc.pid;
+	data.callback = callback;
+	data.arg = arg;
+	return LM_EnumProcesses(_LM_EnumThreadsExCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t

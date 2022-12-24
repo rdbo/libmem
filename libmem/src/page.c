@@ -114,13 +114,13 @@ _LM_EnumPagesEx(lm_process_t proc,
 	size_t      i;
 
 #	if LM_OS == LM_OS_BSD
-	if (regcomp(&regex, "", REG_ICASE | REG_EXTENDED))
+	if (regcomp(&regex, "^0x([a-z0-9]+)[[:blank:]]+0x([a-z0-9]+).*0x[a-z0-9]+[[:blank:]]+(.+).*$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
 #	else
-	if (regcomp(&regex, "([a-z0-9]+)-([a-z0-9]+)[[:blank:]]+(.+).*", REG_ICASE | REG_EXTENDED))
+	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[[:blank:]]+(.+).*$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
@@ -135,9 +135,6 @@ _LM_EnumPagesEx(lm_process_t proc,
 		if (regexec(&regex, maps_line, LM_ARRLEN(matches), matches, 0))
 			continue;
 
-#		if LM_OS == LM_OS_BSD
-		/* TODO: Implement */
-#		else
 		page.base = (lm_address_t)LM_STRTOP(
 			&maps_line[matches[1].rm_so], NULL, 16
 		);
@@ -152,11 +149,12 @@ _LM_EnumPagesEx(lm_process_t proc,
 			case 'r': page.prot |= PROT_READ; break;
 			case 'w': page.prot |= PROT_WRITE; break;
 			case 'x': page.prot |= PROT_EXEC; break;
+#			if LM_OS != LM_OS_BSD
 			case 'p': page.flags |= MAP_PRIVATE; break;
 			case 's': page.flags |= MAP_SHARED; break;
+#			endif
 			}
 		}
-#		endif
 		page.size = (lm_size_t)(
 			(lm_uintptr_t)page.end - (lm_uintptr_t)page.base
 		);

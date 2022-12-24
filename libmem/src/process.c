@@ -252,6 +252,33 @@ _LM_GetParentIdEx(lm_pid_t pid)
 	CloseHandle(hSnap);
 	return ppid;
 }
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_pid_t
+_LM_GetParentIdEx(lm_pid_t pid)
+{
+	lm_pid_t ppid = LM_PID_BAD;
+	struct procstat *ps;
+	unsigned int nprocs = 0;
+	struct kinfo_proc *procs;
+
+	ps = procstat_open_sysctl();
+	if (!ps)
+		return len;
+
+	procs = procstat_getprocs(
+		ps, KERN_PROC_PID,
+		proc.pid, &nprocs
+	);
+
+	if (procs && nprocs) {
+		ppid = (lm_pid_t)procs[0].ki_ppid;
+		procstat_freeprocs(ps, procs);
+	}
+
+	procstat_close(ps);
+
+	return ppid;
+}
 #else
 LM_PRIVATE lm_pid_t
 _LM_GetParentIdEx(lm_pid_t pid)

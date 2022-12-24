@@ -1,8 +1,4 @@
 #include "internal.h"
-#if LM_OS != LM_OS_WIN
-#	include <sys/uio.h>
-#	include <fcntl.h>
-#endif
 
 LM_API lm_size_t
 LM_ReadMemory(lm_address_t src,

@@ -1,8 +1,4 @@
 #include "internal.h"
-#if LM_OS != LM_OS_WIN
-#	include <dlfcn.h>
-#	include <regex.h>
-#endif
 
 LM_API lm_bool_t
 LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,

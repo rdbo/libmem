@@ -295,12 +295,10 @@
 #include <assert.h>
 #if LM_OS == LM_OS_WIN
 #	include <Windows.h>
-#	include <TlHelp32.h>
-#	include <Psapi.h>
 #else
 #	include <sys/types.h>
+#	include <sys/mman.h> /* Protection flags */
 #	include <unistd.h>
-#	include <sys/mman.h>
 #	include <limits.h>
 #endif /* LM_OS */
 

@@ -1,12 +1,6 @@
 #include "internal.h"
 
 #if LM_OS == LM_OS_WIN
-#	include <LIEF/PE.hpp>
-#else
-#	include <LIEF/ELF.hpp>
-#endif
-
-#if LM_OS == LM_OS_WIN
 using namespace LIEF::PE;
 
 LM_PRIVATE lm_bool_t

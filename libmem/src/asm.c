@@ -1,6 +1,4 @@
 #include "internal.h"
-#include <capstone/capstone.h>
-#include <keystone/keystone.h>
 
 LM_API lm_bool_t
 LM_Assemble(lm_cstring_t code,

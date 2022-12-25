@@ -291,6 +291,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
@@ -322,31 +323,26 @@ typedef wchar_t            lm_wchar_t;
 typedef void               lm_void_t;
 typedef lm_int_t           lm_bool_t;
 
-#if LM_BITS == 64
-typedef lm_llong_t         lm_intmax_t;
-typedef lm_ullong_t        lm_uintmax_t;
-#else
-typedef lm_long_t          lm_intmax_t;
-typedef lm_ulong_t         lm_uintmax_t;
-#endif
+typedef intmax_t           lm_intmax_t;
+typedef uintmax_t          lm_uintmax_t;
 
-typedef lm_char_t          lm_int8_t;
-typedef lm_short_t         lm_int16_t;
-typedef lm_int_t           lm_int32_t;
-typedef lm_intmax_t        lm_int64_t;
+typedef int8_t             lm_int8_t;
+typedef int16_t            lm_int16_t;
+typedef int32_t            lm_int32_t;
+typedef int64_t            lm_int64_t;
 
-typedef lm_uchar_t         lm_uint8_t;
-typedef lm_ushort_t        lm_uint16_t;
-typedef lm_uint_t          lm_uint32_t;
-typedef lm_uintmax_t       lm_uint64_t;
+typedef uint8_t            lm_uint8_t;
+typedef uint16_t           lm_uint16_t;
+typedef uint32_t           lm_uint32_t;
+typedef uint64_t           lm_uint64_t;
 
 typedef lm_uint8_t         lm_byte_t;
 typedef lm_uint16_t        lm_word_t;
 typedef lm_uint32_t        lm_dword_t;
 typedef lm_uint64_t        lm_qword_t;
 
-typedef lm_intmax_t        lm_intptr_t;
-typedef lm_uintmax_t       lm_uintptr_t;
+typedef intptr_t           lm_intptr_t;
+typedef uintptr_t          lm_uintptr_t;
 typedef lm_void_t         *lm_voidptr_t;
 
 typedef lm_voidptr_t       lm_address_t;

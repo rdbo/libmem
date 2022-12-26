@@ -1,23 +1,9 @@
 #include "internal.h"
 
-#if LM_OS != LM_OS_WIN
-
-#elif LM_OS != LM_OS_WIN
-LM_PRIVATE lm_bool_t
-_LM_SystemCallEx(lm_process_t proc,
-		 lm_int_t     syscall_num,
-		 lm_uintptr_t arg0,
-		 lm_uintptr_t arg1,
-		 lm_uintptr_t arg2,
-		 lm_uintptr_t arg3,
-		 lm_uintptr_t arg4,
-		 lm_uintptr_t arg5)
-{
-
-}
+#if LM_OS == LM_OS_LINUX
+#	define __NR_mmap  9
+#	define __NR_mmap2 192
 #endif
-
-/********************************/
 
 LM_API lm_size_t
 LM_ReadMemory(lm_address_t src,
@@ -320,18 +306,6 @@ _LM_ProtMemoryEx(lm_process_t proc,
 
 	return LM_TRUE;
 }
-#elif LM_OS == LM_OS_BSD
-LM_PRIVATE lm_bool_t
-_LM_ProtMemoryEx(lm_process_t proc,
-		 lm_address_t addr,
-		 lm_size_t    size,
-		 lm_prot_t    prot,
-		 lm_prot_t   *oldprot)
-{
-	/* TODO: Reimplement */
-
-	return LM_FALSE;
-}
 #else
 LM_PRIVATE lm_bool_t
 _LM_ProtMemoryEx(lm_process_t proc,
@@ -340,9 +314,32 @@ _LM_ProtMemoryEx(lm_process_t proc,
 		 lm_prot_t    prot,
 		 lm_prot_t   *oldprot)
 {
-	/* TODO: Reimplement */
+	_lm_syscall_data_t data;
+	lm_uintptr_t       syscall_ret = (lm_uintptr_t)-1;
 
-	return LM_FALSE;
+	if (oldprot) {
+		lm_page_t page;
+
+		if (!LM_GetPageEx(proc, addr, &page))
+			return LM_FALSE;
+
+		*oldprot = page.prot;
+	}
+
+#	if LM_OS == LM_OS_LINUX
+	data.syscall_num = __NR_mprotect;
+#	else
+	data.syscall_num = SYS_mprotect;
+#	endif
+
+	data.arg0 = (lm_uintptr_t)addr; /* addr */
+	data.arg1 = (lm_uintptr_t)size; /* len */
+	data.arg2 = (lm_uintptr_t)prot; /* prot */
+	data.arg3 = data.arg4 = data.arg5 = 0;
+	if (!_LM_SystemCallEx(proc, &data, syscall_ret))
+		return LM_FALSE;
+
+	return syscall_ret != (lm_uintptr_t)-1 ? LM_TRUE : LM_FALSE;
 }
 #endif
 
@@ -419,25 +416,39 @@ _LM_AllocMemoryEx(lm_process_t proc,
 
 	return alloc;
 }
-#elif LM_OS == LM_OS_BSD
-LM_PRIVATE lm_address_t
-_LM_AllocMemoryEx(lm_process_t proc,
-		  lm_size_t    size,
-		  lm_prot_t    prot)
-{
-	/* TODO: Reimplement */
-
-	return LM_ADDRESS_BAD;
-}
 #else
 LM_PRIVATE lm_address_t
 _LM_AllocMemoryEx(lm_process_t proc,
 		  lm_size_t    size,
 		  lm_prot_t    prot)
 {
-	/* TODO: Reimplement */
+	_lm_syscall_data_t data;
+	lm_uintptr_t       syscall_ret = (lm_uintptr_t)MAP_FAILED;
 
-	return LM_ADDRESS_BAD;
+#	if LM_OS == LM_OS_LINUX
+	lm_size_t bits = LM_GetProcessBitsEx(proc);
+	if (bits == 64)
+		data.syscall_num = __NR_mmap;
+	else
+		data.syscall_num = __NR_mmap2;
+#	else
+	data.syscall_num = SYS_mmap;
+#	endif
+
+	data.arg0 = 0; /* addr */
+	data.arg1 = (lm_uintptr_t)size; /* length */
+	data.arg2 = (lm_uintptr_t)prot; /* prot */
+	data.arg3 = (lm_uintptr_t)(MAP_PRIVATE | MAP_ANON); /* flags */
+	data.arg4 = (lm_uintptr_t)-1; /* fd */
+	data.arg5 = (lm_uintptr_t)0; /* offset */
+
+	if (!_LM_SystemCallEx(proc, &data, &syscall_ret))
+		return LM_ADDRESS_BAD;
+
+	if (syscall_ret == (lm_uintptr_t)MAP_FAILED)
+		return LM_ADDRESS_BAD;
+
+	return (lm_address_t)syscall_ret;
 }
 #endif
 

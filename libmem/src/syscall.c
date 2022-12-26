@@ -7,14 +7,14 @@ _LM_PtraceAttach(lm_pid_t pid)
 	int status;
 
 #	if LM_OS == LM_OS_LINUX
-	if (ptrace(PTRACE_ATTACH, pid, NULL, NULL) == -1);
+	if (ptrace(PTRACE_ATTACH, pid, NULL, NULL) == -1)
 		return LM_FALSE;
 #	else
 	if (ptrace(PT_ATTACH, pid, NULL, 0) == -1)
 		return LM_FALSE;
 #	endif
 
-	wait(&status);
+	waitpid(pid, &status, WSTOPPED);
 	return LM_TRUE;
 }
 
@@ -294,14 +294,23 @@ _LM_SystemCallEx(lm_process_t        proc,
 	if (!old_code)
 		goto FREE_CODEBUF_RET;
 
-	if (!_LM_PtraceAttach(proc.pid))
+	printf("payload generated\n");
+
+	if (!_LM_PtraceAttach(proc.pid)) {
+		perror("unable to attach");
+		printf("errno: %d\n", errno);
 		goto FREE_OLDCODE_RET;
+	}
+
+	printf("attached\n");
 
 	/* save original registers and a copy that will be modified
 	   for the injection */
 	if (!_LM_PtraceGetRegs(proc.pid, &old_regs) ||
 	    !_LM_PtraceGetRegs(proc.pid, &regs))
 		goto DETACH_RET;
+
+	printf("got regs\n");
 
 	/* setup injection registers and get the program counter,
 	   which is where the code will be injected */
@@ -310,20 +319,24 @@ _LM_SystemCallEx(lm_process_t        proc,
 	/* save original code in a buffer and write the payload */
 	_LM_PtraceRead(proc.pid, program_counter, old_code, codesize);
 	_LM_PtraceWrite(proc.pid, program_counter, codebuf, codesize);
+	printf("saved old code and wrote payload\n");
 
 	/* write the new registers and step a single instruction */
 	_LM_PtraceSetRegs(proc.pid, regs);
 	_LM_PtraceStep(proc.pid);
+	printf("set regs and stepped\n");
 
 	/* save registers after running the system call and retrieve
 	   its return value */
 	_LM_PtraceGetRegs(proc.pid, &regs);
 	if (syscall_ret)
 		*syscall_ret = _LM_GetSyscallRet(regs);
+	printf("saved syscall return value\n");
 
 	/* write the original code and registers */
 	_LM_PtraceWrite(proc.pid, program_counter, old_code, codesize);
 	_LM_PtraceSetRegs(proc.pid, old_regs);
+	printf("restored old process state\n");
 
 	ret = LM_TRUE;
 FREE_REGS_RET:
@@ -331,6 +344,7 @@ FREE_REGS_RET:
 	_LM_PtraceFreeRegs(&regs);
 DETACH_RET:
 	_LM_PtraceDetach(proc.pid); /* detach and continue process */
+	printf("detached\n");
 FREE_OLDCODE_RET:
 	LM_FREE(old_code);
 FREE_CODEBUF_RET:

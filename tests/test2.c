@@ -95,9 +95,9 @@ main()
 	LM_ReadMemoryEx(proc, val_sym, (lm_byte_t *)&rdbuf, sizeof(rdbuf));
 	LM_WriteMemoryEx(proc, val_sym, (lm_bstring_t)&wrbuf, sizeof(wrbuf));
 	LM_ReadMemoryEx(proc, val_sym, (lm_byte_t *)&rdbuf2, sizeof(rdbuf));
-	data_scan = LM_DataScanEx(proc, scanme, sizeof(scanme), mod.base, mod.size);
+	/* data_scan = LM_DataScanEx(proc, scanme, sizeof(scanme), mod.base, mod.size);
 	pattern_scan = LM_PatternScanEx(proc, scanme, mask, mod.base, mod.size);
-	sig_scan = LM_SigScanEx(proc, signature, mod.base, mod.size);
+	sig_scan = LM_SigScanEx(proc, signature, mod.base, mod.size); */
 	alloc = LM_AllocMemoryEx(proc, 1, LM_PROT_RW);
 	LM_ProtMemoryEx(proc, alloc, 1, LM_PROT_XRW, &alloc_oldprot);
 	LM_GetPageEx(proc, alloc, &page);

@@ -352,7 +352,7 @@ _LM_SystemCallEx(lm_process_t        proc,
 		goto FREE_REGS_RET;
 
 	/* (debugging) check if the right payload was written */
-	_LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); 
+	/* _LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); */
 
 	/* write the new registers and step a single instruction */
 	_LM_PtraceSetRegs(proc.pid, regs);
@@ -369,7 +369,7 @@ _LM_SystemCallEx(lm_process_t        proc,
 	_LM_PtraceSetRegs(proc.pid, old_regs);
 
 	/* (debugging) check if the right original code was written */
-	_LM_PtraceRead(proc.pid, program_counter, codebuf, codesize);
+	/* _LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); */
 
 	/* if the program counter of regs and old regs is the same,
 	   the syscall has not executed */

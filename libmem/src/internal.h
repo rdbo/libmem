@@ -3,7 +3,7 @@
 
 #include <libmem.h>
 
-#define LM_PRIVATE static
+#define LM_PRIVATE
 
 #include <capstone/capstone.h>
 #include <keystone/keystone.h>
@@ -40,6 +40,23 @@
 #			include <sys/io.h>
 #		endif
 #	endif
+#endif
+
+#if LM_OS != LM_OS_WIN
+typedef struct {
+	 lm_int_t      syscall_num;
+	 lm_uintptr_t  arg0;
+	 lm_uintptr_t  arg1;
+	 lm_uintptr_t  arg2;
+	 lm_uintptr_t  arg3;
+	 lm_uintptr_t  arg4;
+	 lm_uintptr_t  arg5;
+} _lm_syscall_data_t;
+
+LM_PRIVATE lm_bool_t
+_LM_SystemCallEx(lm_process_t        proc,
+		 _lm_syscall_data_t *data,
+		 lm_uintptr_t        *syscall_ret);
 #endif
 
 #endif

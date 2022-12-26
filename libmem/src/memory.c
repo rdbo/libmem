@@ -1,5 +1,24 @@
 #include "internal.h"
 
+#if LM_OS != LM_OS_WIN
+
+#elif LM_OS != LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_SystemCallEx(lm_process_t proc,
+		 lm_int_t     syscall_num,
+		 lm_uintptr_t arg0,
+		 lm_uintptr_t arg1,
+		 lm_uintptr_t arg2,
+		 lm_uintptr_t arg3,
+		 lm_uintptr_t arg4,
+		 lm_uintptr_t arg5)
+{
+
+}
+#endif
+
+/********************************/
+
 LM_API lm_size_t
 LM_ReadMemory(lm_address_t src,
 	      lm_byte_t   *dst,

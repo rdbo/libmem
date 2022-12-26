@@ -84,8 +84,6 @@ _LM_GetProgramCounter(lm_void_t *regs)
 #		endif
 #	endif
 
-	printf("program counter: %p\n", (void *)program_counter);
-
 	return program_counter;
 }
 
@@ -202,11 +200,6 @@ _LM_PtraceRead(lm_pid_t     pid,
 			return LM_FALSE;
 	}
 #	endif
-
-	printf("_LM_PtraceRead buf: ");
-	for (i = 0; i < size; ++i)
-		printf("%02x ", dst[i]);
-	printf("\n");
 	
 	return LM_TRUE;
 }
@@ -234,11 +227,6 @@ _LM_PtraceWrite(lm_pid_t     pid,
 		goto FREE_RET;
 
 	LM_MEMCPY(buf, src, size);
-
-	printf("_LM_PtraceWrite buf: ");
-	for (i = 0; i < aligned_size; ++i)
-		printf("%02x ", buf[i]);
-	printf("\n");
 
 #	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
@@ -344,24 +332,16 @@ _LM_SystemCallEx(lm_process_t        proc,
 	if (!old_code)
 		goto FREE_CODEBUF_RET;
 
-	printf("payload generated\n");
 
-	if (!_LM_PtraceAttach(proc.pid)) {
-		perror("unable to attach");
-		printf("errno: %d\n", errno);
+	if (!_LM_PtraceAttach(proc.pid))
 		goto FREE_OLDCODE_RET;
-	}
-
-	printf("attached\n");
 
 	/* save original registers and a copy that will be modified
 	   for the injection */
 	if (!_LM_PtraceGetRegs(proc.pid, &old_regs) ||
 	    !_LM_PtraceGetRegs(proc.pid, &regs))
 		goto DETACH_RET;
-
-	printf("got regs\n");
-
+	
 	/* setup injection registers and get the program counter,
 	   which is where the code will be injected */
 	_LM_SetupRegs(data, bits, regs, &program_counter);
@@ -370,7 +350,6 @@ _LM_SystemCallEx(lm_process_t        proc,
 	if (!_LM_PtraceRead(proc.pid, program_counter, old_code, codesize) ||
 	    !_LM_PtraceWrite(proc.pid, program_counter, codebuf, codesize))
 		goto FREE_REGS_RET;
-	printf("saved old code and wrote payload\n");
 
 	/* (debugging) check if the right payload was written */
 	_LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); 
@@ -378,19 +357,16 @@ _LM_SystemCallEx(lm_process_t        proc,
 	/* write the new registers and step a single instruction */
 	_LM_PtraceSetRegs(proc.pid, regs);
 	_LM_PtraceStep(proc.pid);
-	printf("set regs and stepped\n");
 
 	/* save registers after running the system call and retrieve
 	   its return value */
 	_LM_PtraceGetRegs(proc.pid, &regs);
 	if (syscall_ret)
 		*syscall_ret = _LM_GetSyscallRet(regs);
-	printf("saved syscall return value\n");
 
 	/* write the original code and registers */
 	_LM_PtraceWrite(proc.pid, program_counter, old_code, codesize);
 	_LM_PtraceSetRegs(proc.pid, old_regs);
-	printf("restored old process state\n");
 
 	/* (debugging) check if the right original code was written */
 	_LM_PtraceRead(proc.pid, program_counter, codebuf, codesize);
@@ -398,14 +374,11 @@ _LM_SystemCallEx(lm_process_t        proc,
 	/* if the program counter of regs and old regs is the same,
 	   the syscall has not executed */
 	ret = _LM_CheckProgramCounter(regs, old_regs);
-	if (!ret)
-		printf("syscall not executed\n");
 FREE_REGS_RET:
 	_LM_PtraceFreeRegs(&old_regs);
 	_LM_PtraceFreeRegs(&regs);
 DETACH_RET:
 	_LM_PtraceDetach(proc.pid); /* detach and continue process */
-	printf("detached\n");
 FREE_OLDCODE_RET:
 	LM_FREE(old_code);
 FREE_CODEBUF_RET:

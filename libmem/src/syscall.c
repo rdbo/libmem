@@ -63,6 +63,32 @@ _LM_PtraceFreeRegs(lm_void_t **regsbuf)
 	*regsbuf = LM_NULLPTR;
 }
 
+LM_PRIVATE lm_uintptr_t
+_LM_GetProgramCounter(lm_void_t *regs)
+{
+	lm_uintptr_t program_counter = 0;
+
+#	if LM_OS == LM_OS_LINUX
+	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
+#		if LM_BITS == 64
+	program_counter = pregs->rip;
+#		else
+	program_counter = pregs->eip;
+#		endif
+#	else
+	struct reg *pregs = (struct user_regs_struct *)regs;
+#		if LM_BITS == 64
+	program_counter = pregs->r_rip;
+#		else
+	program_counter = pregs->r_eip;
+#		endif
+#	endif
+
+	printf("program counter: %p\n", (void *)program_counter);
+
+	return program_counter;
+}
+
 LM_PRIVATE lm_void_t
 _LM_SetupRegs(_lm_syscall_data_t *data,
 	      lm_size_t           bits,
@@ -90,8 +116,6 @@ _LM_SetupRegs(_lm_syscall_data_t *data,
 		pregs->rdi = data->arg4;
 		pregs->rbp = data->arg5;
 	}
-
-	*program_counter = pregs->rip;
 #		else
 	pregs->eax = data->syscall_num;
 	pregs->ebx = data->arg0;
@@ -100,7 +124,6 @@ _LM_SetupRegs(_lm_syscall_data_t *data,
 	pregs->esi = data->arg3;
 	pregs->edi = data->arg4;
 	pregs->ebp = data->arg5;
-	*program_counter = pregs->eip;
 #		endif
 #	else
 	struct reg *pregs = (struct reg *)regs;
@@ -123,8 +146,6 @@ _LM_SetupRegs(_lm_syscall_data_t *data,
 		pregs->r_rdi = data->arg4;
 		pregs->r_rbp = data->arg5;
 	}
-
-	*program_counter = pregs->r_rip;
 #		else
 	pregs->r_eax = data->syscall_num;
 	pregs->r_ebx = data->arg0;
@@ -133,9 +154,10 @@ _LM_SetupRegs(_lm_syscall_data_t *data,
 	pregs->r_esi = data->arg3;
 	pregs->r_edi = data->arg4;
 	pregs->r_ebp = data->arg5;
-	*program_counter = pregs->r_eip;
 #		endif
 #	endif
+
+	*program_counter = _LM_GetProgramCounter(regs);
 }
 
 LM_PRIVATE lm_bool_t
@@ -166,6 +188,9 @@ _LM_PtraceRead(lm_pid_t     pid,
 					   pid,
 					   (void *)LM_OFFSET(src, i),
 					   NULL);
+
+		if (dst[i] == (lm_byte_t)-1 && errno)
+			return LM_FALSE;
 	}
 #	elif LM_OS == LM_OS_BSD
 	for (i = 0; i < size; ++i) {
@@ -173,8 +198,15 @@ _LM_PtraceRead(lm_pid_t     pid,
 					   pid,
 					   (caddr_t)LM_OFFSET(src, i),
 					   0);
+		if (dst[i] == (lm_byte_t)-1 && errno)
+			return LM_FALSE;
 	}
 #	endif
+
+	printf("_LM_PtraceRead buf: ");
+	for (i = 0; i < size; ++i)
+		printf("%02x ", dst[i]);
+	printf("\n");
 	
 	return LM_TRUE;
 }
@@ -190,9 +222,6 @@ _LM_PtraceWrite(lm_pid_t     pid,
 	lm_size_t   aligned_size = size;
 	lm_byte_t  *buf;
 
-	if (!src || !size)
-		return ret;
-	
 	aligned_size += aligned_size > sizeof(lm_uintptr_t) ?
 		aligned_size % sizeof(lm_uintptr_t) :
 		sizeof(lm_uintptr_t) - aligned_size;
@@ -201,33 +230,41 @@ _LM_PtraceWrite(lm_pid_t     pid,
 	if (!buf)
 		return ret;
 	
-	_LM_PtraceRead(pid, dst, buf, aligned_size);
+	if (!_LM_PtraceRead(pid, dst, buf, aligned_size))
+		goto FREE_RET;
+
 	LM_MEMCPY(buf, src, size);
+
+	printf("_LM_PtraceWrite buf: ");
+	for (i = 0; i < aligned_size; ++i)
+		printf("%02x ", buf[i]);
+	printf("\n");
 
 #	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
-		ptrace(PTRACE_POKEDATA,
-		       pid,
-		       (void *)LM_OFFSET(dst, i),
-		       *(lm_uintptr_t *)(&buf[i]));
+		if (ptrace(PTRACE_POKEDATA, pid, (void *)LM_OFFSET(dst, i),
+			   *(lm_uintptr_t *)(&buf[i])) == -1)
+			goto FREE_RET;
 	}
 #	elif LM_OS == LM_OS_BSD
 	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
-		ptrace(PT_WRITE_D,
-		       pid,
-		       (caddr_t)LM_OFFSET(dst, i),
-		       *(lm_uintptr_t *)(&buf[i]));
+		if (ptrace(PT_WRITE_D, pid, (caddr_t)LM_OFFSET(dst, i),
+			   *(lm_uintptr_t *)(&buf[i])) == -1)
+			goto FREE_RET;
 	}
 #	endif
-	
-	LM_FREE(buf);
+
 	ret = LM_TRUE;
+FREE_RET:
+	LM_FREE(buf);	
 	return ret;
 }
 
 LM_PRIVATE lm_bool_t
 _LM_PtraceStep(lm_pid_t pid)
 {
+	int status;
+
 #	if LM_OS == LM_OS_LINUX
 	if (ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL) == -1)
 		return LM_FALSE;
@@ -235,6 +272,7 @@ _LM_PtraceStep(lm_pid_t pid)
 	if (ptrace(PT_STEP, pid, (caddr_t)NULL, 0) == -1)
 		return LM_FALSE;
 #	endif
+	waitpid(pid, &status, WSTOPPED);
 
 	return LM_TRUE;
 }
@@ -266,6 +304,18 @@ _LM_GetSyscallRet(lm_void_t *regs)
 #		endif
 #	endif
 	return ret;
+}
+
+LM_PRIVATE lm_bool_t
+_LM_CheckProgramCounter(lm_void_t *regs, lm_void_t *old_regs)
+{
+	lm_uintptr_t pc;
+	lm_uintptr_t old_pc;
+
+	pc = _LM_GetProgramCounter(regs);
+	old_pc = _LM_GetProgramCounter(old_regs);
+
+	return pc == old_pc ? LM_FALSE : LM_TRUE;
 }
 
 LM_PRIVATE lm_bool_t
@@ -314,12 +364,16 @@ _LM_SystemCallEx(lm_process_t        proc,
 
 	/* setup injection registers and get the program counter,
 	   which is where the code will be injected */
-	_LM_SetupRegs(data, bits, &regs, &program_counter);
+	_LM_SetupRegs(data, bits, regs, &program_counter);
 
 	/* save original code in a buffer and write the payload */
-	_LM_PtraceRead(proc.pid, program_counter, old_code, codesize);
-	_LM_PtraceWrite(proc.pid, program_counter, codebuf, codesize);
+	if (!_LM_PtraceRead(proc.pid, program_counter, old_code, codesize) ||
+	    !_LM_PtraceWrite(proc.pid, program_counter, codebuf, codesize))
+		goto FREE_REGS_RET;
 	printf("saved old code and wrote payload\n");
+
+	/* (debugging) check if the right payload was written */
+	_LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); 
 
 	/* write the new registers and step a single instruction */
 	_LM_PtraceSetRegs(proc.pid, regs);
@@ -338,7 +392,14 @@ _LM_SystemCallEx(lm_process_t        proc,
 	_LM_PtraceSetRegs(proc.pid, old_regs);
 	printf("restored old process state\n");
 
-	ret = LM_TRUE;
+	/* (debugging) check if the right original code was written */
+	_LM_PtraceRead(proc.pid, program_counter, codebuf, codesize);
+
+	/* if the program counter of regs and old regs is the same,
+	   the syscall has not executed */
+	ret = _LM_CheckProgramCounter(regs, old_regs);
+	if (!ret)
+		printf("syscall not executed\n");
 FREE_REGS_RET:
 	_LM_PtraceFreeRegs(&old_regs);
 	_LM_PtraceFreeRegs(&regs);

@@ -61,7 +61,7 @@ typedef struct {
 	lm_uintptr_t   arg3;
 	lm_uintptr_t   arg4;
 	lm_uintptr_t   arg5;
-}
+} _lm_libcall_data_t;
 
 LM_PRIVATE lm_bool_t
 _LM_SystemCallEx(lm_process_t        proc,

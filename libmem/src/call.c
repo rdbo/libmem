@@ -386,5 +386,18 @@ FREE_CODEBUF_RET:
 
 	return ret;
 }
+
+LM_PRIVATE lm_bool_t
+_LM_LibraryCallEx(lm_process_t       proc,
+		 _lm_libcall_data_t *data,
+		 lm_uintptr_t       *call_ret)
+{
+	lm_address_t path_addr;
+	lm_uintptr_t program_counter;
+
+	/* TODO: Reimplement */
+
+	return LM_FALSE;
+}
 #endif
 

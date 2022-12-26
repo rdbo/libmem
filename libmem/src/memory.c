@@ -336,7 +336,7 @@ _LM_ProtMemoryEx(lm_process_t proc,
 	data.arg1 = (lm_uintptr_t)size; /* len */
 	data.arg2 = (lm_uintptr_t)prot; /* prot */
 	data.arg3 = data.arg4 = data.arg5 = 0;
-	if (!_LM_SystemCallEx(proc, &data, syscall_ret))
+	if (!_LM_SystemCallEx(proc, &data, &syscall_ret))
 		return LM_FALSE;
 
 	return syscall_ret != (lm_uintptr_t)-1 ? LM_TRUE : LM_FALSE;
@@ -500,25 +500,24 @@ _LM_FreeMemoryEx(lm_process_t proc,
 	return VirtualFreeEx(proc.handle, alloc, 0, MEM_RELEASE) ?
 		LM_TRUE : LM_FALSE;
 }
-#elif LM_OS == LM_OS_BSD
-LM_PRIVATE lm_bool_t
-_LM_FreeMemoryEx(lm_process_t proc,
-		 lm_address_t alloc,
-		 lm_size_t    size)
-{
-	/* TODO: Reimplement */
-
-	return LM_FALSE;
-}
 #else
 LM_PRIVATE lm_bool_t
 _LM_FreeMemoryEx(lm_process_t proc,
 		 lm_address_t alloc,
 		 lm_size_t    size)
 {
-	/* TODO: Reimplement */
+	_lm_syscall_data_t data;
+#	if LM_OS == LM_OS_LINUX
+	data.syscall_num = __NR_munmap;
+#	else
+	data.syscall_num = SYS_mmap;
+#	endif
 
-	return LM_FALSE;
+	data.arg0 = (lm_uintptr_t)alloc;
+	data.arg1 = (lm_uintptr_t)size;
+	data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
+
+	return _LM_SystemCallEx(proc, &data, LM_NULLPTR);
 }
 #endif
 

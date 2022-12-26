@@ -99,10 +99,10 @@ main()
 	pattern_scan = LM_PatternScanEx(proc, scanme, mask, mod.base, mod.size);
 	sig_scan = LM_SigScanEx(proc, signature, mod.base, mod.size); */
 	alloc = LM_AllocMemoryEx(proc, 1, LM_PROT_RW);
-	/* LM_ProtMemoryEx(proc, alloc, 1, LM_PROT_XRW, &alloc_oldprot);
+	LM_ProtMemoryEx(proc, alloc, 1, LM_PROT_XRW, &alloc_oldprot);
 	LM_GetPageEx(proc, alloc, &page);
 	alloc_prot = page.prot;
-	LM_FreeMemoryEx(proc, alloc, 1); */
+	LM_FreeMemoryEx(proc, alloc, 1);
 
 	LM_PRINTF(LM_STR("[*] Read Value:    %d\n"), rdbuf);
 	LM_PRINTF(LM_STR("[*] Written Value: %d\n"), wrbuf);

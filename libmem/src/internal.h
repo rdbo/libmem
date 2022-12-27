@@ -69,6 +69,10 @@ _LM_SystemCallEx(lm_process_t        proc,
 		 lm_uintptr_t       *syscall_ret);
 
 LM_PRIVATE lm_bool_t
+_LM_FindLibc(lm_process_t proc,
+	     lm_module_t *libc_mod);
+
+LM_PRIVATE lm_bool_t
 _LM_LibraryCallEx(lm_process_t       proc,
 		 _lm_libcall_data_t *data,
 		 lm_uintptr_t       *call_ret);

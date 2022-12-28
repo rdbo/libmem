@@ -421,6 +421,12 @@ _LM_FindLibc(lm_process_t proc,
 	if (regcomp(&arg.regex, ".*/libc[\.\-].*", REG_EXTENDED))
 		return LM_FALSE;
 
+	/* (debugging) using patched version of dlopen that has been LD_PRELOAD'ed.
+	   This version will just print the path and the flags so we know it has
+	   been called properly */
+	//if (regcomp(&arg.regex, ".*/modlibc[\.\-].*", REG_EXTENDED))
+	//	return LM_FALSE;
+
 	arg.libc_mod.size = 0;
 
 	LM_EnumModulesEx(proc, _LM_FindLibcCallback, (lm_void_t *)&arg);

@@ -404,7 +404,7 @@ _LM_FindLibcCallback(lm_module_t  mod,
 {
 	_lm_find_libc_t *parg = (_lm_find_libc_t *)arg;
 
-	if (regexec(&parg->regex, path, 0, NULL, 0)) {
+	if (!regexec(&parg->regex, path, 0, NULL, 0)) {
 		parg->libc_mod = mod;
 		return LM_FALSE;
 	}
@@ -418,7 +418,7 @@ _LM_FindLibc(lm_process_t proc,
 {
 	_lm_find_libc_t arg;
 
-	if (!regcomp(&arg.regex, ".*/libc[\.\-].*\.so.*", REG_EXTENDED))
+	if (regcomp(&arg.regex, ".*/libc[\.\-].*", REG_EXTENDED))
 		return LM_FALSE;
 
 	arg.libc_mod.size = 0;

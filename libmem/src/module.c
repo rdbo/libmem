@@ -494,8 +494,11 @@ _LM_LoadModuleEx(lm_process_t proc,
 		return ret;
 
 	dlopen_addr = LM_GetSymbolEx(proc, libc_mod, "__libc_dlopen_mode");
-	if (dlopen_addr == LM_ADDRESS_BAD)
-		return ret;
+	if (dlopen_addr == LM_ADDRESS_BAD) {
+		dlopen_addr = LM_GetSymbolEx(proc, libc_mod, "dlopen");
+		if (dlopen_addr == LM_ADDRESS_BAD)
+			return ret;
+	}
 
 	modpath_size = LM_STRLEN(path) * sizeof(lm_tchar_t);
 	modpath_addr = LM_AllocMemoryEx(proc, modpath_size, LM_PROT_XRW);

@@ -500,7 +500,8 @@ _LM_LoadModuleEx(lm_process_t proc,
 			return ret;
 	}
 
-	modpath_size = LM_STRLEN(path) * sizeof(lm_tchar_t);
+	/* it is LM_STRLEN(path) + 1 because the null terminator should also be written */
+	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
 	modpath_addr = LM_AllocMemoryEx(proc, modpath_size, LM_PROT_XRW);
 	if (modpath_addr == LM_ADDRESS_BAD)
 		return ret;

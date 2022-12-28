@@ -3,8 +3,6 @@
 
 #include <libmem.h>
 
-#define LM_PRIVATE
-
 #include <capstone/capstone.h>
 #include <keystone/keystone.h>
 #if LM_OS == LM_OS_WIN

@@ -1,5 +1,10 @@
 #include "internal.h"
 
+/*
+ * System call and library call interfacing with Assembly (Linux):
+ * https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux
+ */
+
 #if LM_OS != LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_PtraceAttach(lm_pid_t pid)
@@ -126,7 +131,7 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 #	else
 	struct reg *pregs = (struct reg *)regs;
 #		if LM_BITS == 64
-	/* tdata->arget process bits is 64 */
+	/* target process bits is 64 */
 	if (bits == 64) {
 		pregs->r_rax = data->syscall_num;
 		pregs->r_rdi = data->arg0;
@@ -464,14 +469,28 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 #		if LM_BITS == 64
 	/* target process bits is 64 */
 	if (bits == 64) {
+		/*
+		 * Arg0: rdi
+		 * Arg1: rsi
+		 * Arg2: rdx
+		 * Arg3: rcx
+		 * Arg4: r8
+		 * Arg5: r9
+		 * Ret:  rax
+		 */
 		pregs->rax = data->func_addr;
 		pregs->rdi = data->arg0;
 		pregs->rsi = data->arg1;
 		pregs->rdx = data->arg2;
-		pregs->r10 = data->arg3;
+		pregs->rcx = data->arg3;
 		pregs->r8  = data->arg4;
 		pregs->r9  = data->arg5;
 	} else {
+		/*
+		 * The registers don't matter,
+		 * their values will be pushed
+		 * onto the stack
+		 */
 		pregs->rax = data->func_addr;
 		pregs->rbx = data->arg0;
 		pregs->rcx = data->arg1;
@@ -492,13 +511,13 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 #	else
 	struct reg *pregs = (struct reg *)regs;
 #		if LM_BITS == 64
-	/* tdata->arget process bits is 64 */
+	/* target process bits is 64 */
 	if (bits == 64) {
 		pregs->r_rax = data->func_addr;
 		pregs->r_rdi = data->arg0;
 		pregs->r_rsi = data->arg1;
 		pregs->r_rdx = data->arg2;
-		pregs->r_r10 = data->arg3;
+		pregs->r_rcx = data->arg3;
 		pregs->r_r8  = data->arg4;
 		pregs->r_r9  = data->arg5;
 	} else {

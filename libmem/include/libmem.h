@@ -244,7 +244,7 @@
 #else
 #	define LM_API
 #endif
-#define LM_PRIVATE static
+#define LM_PRIVATE
 
 /* Others */
 #define LM_NULL    (0)

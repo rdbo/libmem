@@ -473,9 +473,30 @@ _LM_LoadModuleEx(lm_process_t proc,
 		 lm_tstring_t path,
 		 lm_module_t *modbuf)
 {
-	/* TODO: Reimplement */
+	lm_bool_t    ret = LM_FALSE;
+	lm_size_t    modpath_size;
+	lm_address_t modpath_addr;
+	HANDLE       hThread;
 
-	return LM_FALSE;
+	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t)
+	modpath_addr = LM_AllocMemoryEx(proc, modpath_size, LM_PROT_XRW);
+	if (modpath_addr == LM_ADDRESS_BAD)
+		return ret;
+
+	if (!LM_WriteMemoryEx(process, modpath_addr, path, modpath_size))
+		goto FREE_EXIT;
+
+	hThread = (HANDLE)CreateRemoteThread(proc.handle, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, modpath_addr, 0, NULL);
+	if (!hThread)
+		goto FREE_RET;
+
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+
+	ret = LM_TRUE;
+FREE_EXIT:
+	LM_FreeMemoryEx(proc, modpath_addr, modpath_size);
+	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t

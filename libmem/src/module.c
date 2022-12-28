@@ -489,6 +489,7 @@ _LM_LoadModuleEx(lm_process_t proc,
 	lm_size_t          modpath_size;
 	lm_address_t       modpath_addr;
 	_lm_libcall_data_t data;
+	lm_uintptr_t       modhandle = 0;
 
 	if (!_LM_FindLibc(proc, &libc_mod))
 		return ret;
@@ -514,7 +515,9 @@ _LM_LoadModuleEx(lm_process_t proc,
 	data.arg1 = (lm_uintptr_t)RTLD_LAZY;
 	data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
 
-	ret = _LM_LibraryCallEx(proc, &data, LM_NULLPTR);
+	ret = _LM_LibraryCallEx(proc, &data, &modhandle);
+	if (!modhandle)
+		ret = LM_FALSE;
 FREE_RET:
 	LM_FreeMemoryEx(proc, modpath_addr, modpath_size);
 	return ret;

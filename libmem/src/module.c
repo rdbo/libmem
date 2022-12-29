@@ -504,44 +504,13 @@ _LM_LoadModuleEx(lm_process_t proc,
 		 lm_tstring_t path,
 		 lm_module_t *modbuf)
 {
-	lm_bool_t          ret = LM_FALSE;
-	lm_module_t        libc_mod;
-	lm_address_t       dlopen_addr;
-	lm_size_t          modpath_size;
-	lm_address_t       modpath_addr;
-	_lm_libcall_data_t data;
-	lm_uintptr_t       modhandle = 0;
+	if (!_LM_CallDlopen(proc, path, RTLD_LAZY, LM_NULLPTR))
+		return LM_FALSE;
 
-	if (!_LM_FindLibc(proc, &libc_mod))
-		return ret;
+	if (modbuf && !LM_GetModuleEx(proc, LM_MOD_BY_STR, path, modbuf))
+		return LM_FALSE;
 
-	dlopen_addr = LM_GetSymbolEx(proc, libc_mod, "__libc_dlopen_mode");
-	if (dlopen_addr == LM_ADDRESS_BAD) {
-		dlopen_addr = LM_GetSymbolEx(proc, libc_mod, "dlopen");
-		if (dlopen_addr == LM_ADDRESS_BAD)
-			return ret;
-	}
-
-	/* it is LM_STRLEN(path) + 1 because the null terminator should also be written */
-	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
-	modpath_addr = LM_AllocMemoryEx(proc, modpath_size, LM_PROT_XRW);
-	if (modpath_addr == LM_ADDRESS_BAD)
-		return ret;
-
-	if (!LM_WriteMemoryEx(proc, modpath_addr, path, modpath_size))
-		goto FREE_RET;
-
-	data.func_addr = (lm_uintptr_t)dlopen_addr;
-	data.arg0 = (lm_uintptr_t)modpath_addr;
-	data.arg1 = (lm_uintptr_t)RTLD_LAZY;
-	data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
-
-	ret = _LM_LibraryCallEx(proc, &data, &modhandle);
-	if (!modhandle)
-		ret = LM_FALSE;
-FREE_RET:
-	LM_FreeMemoryEx(proc, modpath_addr, modpath_size);
-	return ret;
+	return LM_TRUE;
 }
 #endif
 
@@ -604,10 +573,41 @@ LM_UnloadModule(lm_module_t mod)
 
 /********************************/
 
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_UnloadModuleEx(lm_process_t proc,
+		   lm_module_t  mod)
+{
+	/* TODO: Implement */
+
+	return LM_FALSE;
+}
+#else
+LM_PRIVATE lm_bool_t
+_LM_UnloadModuleEx(lm_process_t proc,
+		   lm_module_t  mod)
+{
+	lm_bool_t ret = LM_FALSE;
+	void *modhandle;
+	lm_tchar_t modpath[LM_PATH_MAX];
+
+	if (!LM_GetModulePathEx(proc, mod, modpath, LM_PATH_MAX))
+		return ret;
+
+	if (!_LM_CallDlopen(proc, modpath, RTLD_NOLOAD, &modhandle))
+		return ret;
+
+	if (_LM_CallDlclose(proc, modhandle) && _LM_CallDlclose(proc, modhandle))
+		ret = LM_TRUE;
+
+	return ret;
+}
+#endif
+
 LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t proc,
 		  lm_module_t  mod)
 {
-	/* TODO: Implement */
+	return _LM_UnloadModuleEx(proc, mod);
 }
 

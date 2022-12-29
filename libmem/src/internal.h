@@ -53,6 +53,7 @@ typedef struct {
 
 typedef struct {
 	lm_uintptr_t   func_addr;
+	lm_size_t      nargs;
 	lm_uintptr_t   arg0;
 	lm_uintptr_t   arg1;
 	lm_uintptr_t   arg2;
@@ -74,6 +75,16 @@ LM_PRIVATE lm_bool_t
 _LM_LibraryCallEx(lm_process_t       proc,
 		 _lm_libcall_data_t *data,
 		 lm_uintptr_t       *call_ret);
+
+LM_PRIVATE lm_bool_t
+_LM_CallDlopen(lm_process_t proc,
+	       lm_tstring_t path,
+	       lm_int_t     mode,
+	       void       **plibhandle);
+
+LM_PRIVATE lm_bool_t
+_LM_CallDlclose(lm_process_t proc,
+		void *modhandle);
 #endif
 
 #endif

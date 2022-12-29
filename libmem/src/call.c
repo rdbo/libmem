@@ -442,7 +442,8 @@ _LM_FindLibc(lm_process_t proc,
 }
 
 LM_PRIVATE lm_size_t
-_LM_GenerateLibcall(lm_size_t bits,
+_LM_GenerateLibcall(lm_size_t   bits,
+		    lm_size_t   nargs,
 		    lm_byte_t **pcodebuf)
 {
 	lm_char_t code[255];
@@ -458,7 +459,21 @@ _LM_GenerateLibcall(lm_size_t bits,
 		   in it. */
 		LM_CSNPRINTF(code, sizeof(code), "call rax ; int3");
 	} else {
-		LM_CSNPRINTF(code, sizeof(code), "push ebx ; push ecx ; call eax ; int3");
+		lm_size_t i;
+		lm_cstring_t push_list[] = {
+			"push ebx ; ",
+			"push ecx ; ",
+			"push edx ; ",
+			"push esi ; ",
+			"push edi ; "
+		};
+
+		LM_ASSERT(nargs <= LM_ARRLEN(push_list));
+
+		for (i = 0; i < nargs; ++i)
+			LM_CSNPRINTF(code, sizeof(code), push_list[i]);
+
+		LM_CSNPRINTF(code, sizeof(code), "call eax ; int3");
 	}
 
 	return LM_AssembleEx(code, LM_ARCH, bits, LM_NULLPTR, pcodebuf);
@@ -503,7 +518,7 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 		pregs->rdx = data->arg2;
 		pregs->rsi = data->arg3;
 		pregs->rdi = data->arg4;
-		pregs->rbp = data->arg5;
+		/* pregs->rbp = data->arg5; */
 	}
 #		else
 	pregs->eax = data->func_addr;
@@ -512,7 +527,7 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 	pregs->edx = data->arg2;
 	pregs->esi = data->arg3;
 	pregs->edi = data->arg4;
-	pregs->ebp = data->arg5;
+	/* pregs->ebp = data->arg5; */
 #		endif
 #	else
 	struct reg *pregs = (struct reg *)regs;
@@ -533,7 +548,7 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 		pregs->r_rdx = data->arg2;
 		pregs->r_rsi = data->arg3;
 		pregs->r_rdi = data->arg4;
-		pregs->r_rbp = data->arg5;
+		/* pregs->r_rbp = data->arg5; */
 	}
 #		else
 	pregs->r_eax = data->func_addr;
@@ -542,7 +557,7 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 	pregs->r_edx = data->arg2;
 	pregs->r_esi = data->arg3;
 	pregs->r_edi = data->arg4;
-	pregs->r_ebp = data->arg5;
+	/* pregs->r_ebp = data->arg5; */
 #		endif
 #	endif
 
@@ -604,7 +619,7 @@ _LM_LibraryCallEx(lm_process_t       proc,
 
 	bits = LM_GetProcessBitsEx(proc);
 
-	codesize = _LM_GenerateLibcall(bits, &codebuf);
+	codesize = _LM_GenerateLibcall(bits, data->nargs, &codebuf);
 	if (!codesize)
 		return ret;
 
@@ -667,6 +682,88 @@ FREE_CODEBUF_RET:
 
 	return ret;
 
+}
+
+LM_PRIVATE lm_bool_t
+_LM_CallDlopen(lm_process_t proc,
+	       lm_tstring_t path,
+	       lm_int_t     mode,
+	       void       **plibhandle)
+{
+	lm_bool_t          ret = LM_FALSE;
+	lm_module_t        libc_mod;
+	lm_address_t       dlopen_addr;
+	lm_size_t          modpath_size;
+	lm_address_t       modpath_addr;
+	_lm_libcall_data_t data;
+	lm_uintptr_t       modhandle = 0;
+
+	if (!_LM_FindLibc(proc, &libc_mod))
+		return ret;
+
+	dlopen_addr = LM_GetSymbolEx(proc, libc_mod, "__libc_dlopen_mode");
+	if (dlopen_addr == LM_ADDRESS_BAD) {
+		dlopen_addr = LM_GetSymbolEx(proc, libc_mod, "dlopen");
+		if (dlopen_addr == LM_ADDRESS_BAD)
+			return ret;
+	}
+
+	/* it is LM_STRLEN(path) + 1 because the null terminator should also be written */
+	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
+	modpath_addr = LM_AllocMemoryEx(proc, modpath_size, LM_PROT_XRW);
+	if (modpath_addr == LM_ADDRESS_BAD)
+		return ret;
+
+	if (!LM_WriteMemoryEx(proc, modpath_addr, path, modpath_size))
+		goto FREE_RET;
+
+	data.func_addr = (lm_uintptr_t)dlopen_addr;
+	data.nargs = 2;
+	data.arg0 = (lm_uintptr_t)modpath_addr;
+	data.arg1 = (lm_uintptr_t)mode;
+	data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
+
+	ret = _LM_LibraryCallEx(proc, &data, &modhandle);
+	if (!modhandle)
+		ret = LM_FALSE;
+	else if (plibhandle)
+		*plibhandle = modhandle;
+FREE_RET:
+	LM_FreeMemoryEx(proc, modpath_addr, modpath_size);
+	return ret;
+
+}
+
+LM_PRIVATE lm_bool_t
+_LM_CallDlclose(lm_process_t proc,
+		void *modhandle)
+{
+	lm_bool_t          ret = LM_FALSE;
+	lm_module_t        libc_mod;
+	lm_address_t       dlclose_addr;
+	_lm_libcall_data_t data;
+	lm_uintptr_t       retval;
+
+	if (!_LM_FindLibc(proc, &libc_mod))
+		return ret;
+
+	dlclose_addr = LM_GetSymbolEx(proc, libc_mod, "__libc_dlclose");
+	if (dlclose_addr == LM_ADDRESS_BAD) {
+		dlclose_addr = LM_GetSymbolEx(proc, libc_mod, "dlclose");
+		if (dlclose_addr == LM_ADDRESS_BAD)
+			return ret;
+	}
+
+	data.func_addr = (lm_uintptr_t)dlclose_addr;
+	data.nargs = 1;
+	data.arg0 = (lm_uintptr_t)modhandle;
+	data.arg1 = data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
+
+	ret = _LM_LibraryCallEx(proc, &data, &retval);
+	if (retval)
+		ret = LM_FALSE;
+
+	return ret;
 }
 #endif
 

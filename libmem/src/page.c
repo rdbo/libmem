@@ -1,21 +1,24 @@
 #include "internal.h"
 
 #if LM_OS == LM_OS_WIN
+typedef struct {
+	lm_bool_t(*callback)(lm_page_t page, lm_void_t *arg);
+	lm_void_t *arg;
+} _lm_enum_pages_t;
+
 LM_PRIVATE lm_bool_t
-_LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
-				   lm_void_t *arg),
-	      lm_void_t *arg)
+_LM_EnumPagesCallback(lm_module_t  mod,
+		      lm_tstring_t modpath,
+		      lm_void_t   *arg)
 {
 	lm_address_t addr;
+	_lm_enum_pages_t *parg = (_lm_enum_pages_t *)arg;
 	MEMORY_BASIC_INFORMATION mbi;
 	lm_page_t page;
 
-	/* TODO: Only loop through real pages */
-	for (addr = (lm_address_t)0;
+	for (addr = mod.base;
 	     VirtualQuery(addr, &mbi, sizeof(mbi));
-	     addr = (lm_address_t)(
-		     &((lm_byte_t *)mbi.BaseAddress)[mbi.RegionSize]
-	     )) {
+	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;
 		page.size  = (lm_size_t)mbi.RegionSize;
 		page.end   = (lm_address_t)(
@@ -24,11 +27,24 @@ _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 		page.prot  = mbi.Protect;
 		page.flags = mbi.Type;
 
-		if (callback(page, arg) == LM_FALSE)
-			break;
+		if (parg->callback(page, parg->arg) == LM_FALSE)
+			return LM_FALSE;
 	}
 
 	return LM_TRUE;
+}
+
+LM_PRIVATE lm_bool_t
+_LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
+				   lm_void_t *arg),
+	      lm_void_t *arg)
+{
+	_lm_enum_pages_t data;
+
+	data.callback = callback;
+	data.arg = arg;
+
+	return _LM_EnumModules(_LM_EnumPagesCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t
@@ -61,22 +77,25 @@ LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
+typedef struct {
+	lm_process_t proc;
+	lm_bool_t(*callback)(lm_page_t page, lm_void_t *arg);
+	lm_void_t *arg;
+} _lm_enum_pages_ex_t;
+
 LM_PRIVATE lm_bool_t
-_LM_EnumPagesEx(lm_process_t proc,
-		lm_bool_t  (*callback)(lm_page_t  page,
-				       lm_void_t *arg),
-		lm_void_t   *arg)
+_LM_EnumPagesExCallback(lm_module_t  mod,
+			lm_tstring_t modpath,
+			lm_void_t   *arg)
 {
 	lm_address_t addr;
+	_lm_enum_pages_ex_t *parg = (_lm_enum_pages_t *)arg;
 	MEMORY_BASIC_INFORMATION mbi;
+	lm_page_t page;
 
-	for (addr = (lm_address_t)0;
-	     VirtualQueryEx(proc.handle, addr, &mbi, sizeof(mbi));
-	     addr = (lm_address_t)(
-		     &((lm_byte_t *)mbi.BaseAddress)[mbi.RegionSize]
-	     )) {
-		lm_page_t page;
-
+	for (addr = mod.base;
+	     VirtualQueryEx(parg->proc.handle, addr, &mbi, sizeof(mbi));
+	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;
 		page.size  = (lm_size_t)mbi.RegionSize;
 		page.end   = (lm_address_t)(
@@ -85,11 +104,26 @@ _LM_EnumPagesEx(lm_process_t proc,
 		page.prot  = mbi.Protect;
 		page.flags = mbi.Type;
 
-		if (callback(page, arg) == LM_FALSE)
-			break;
+		if (parg->callback(page, parg->arg) == LM_FALSE)
+			return LM_FALSE;
 	}
 
 	return LM_TRUE;
+}
+
+LM_PRIVATE lm_bool_t
+_LM_EnumPagesEx(lm_proces_t proc,
+		lm_bool_t(*callback)(lm_page_t  page,
+				     lm_void_t *arg),
+		lm_void_t *arg)
+{
+	_lm_enum_pages_ex_t data;
+
+	data.proc = proc;
+	data.callback = callback;
+	data.arg = arg;
+
+	return _LM_EnumModulesEx(proc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t

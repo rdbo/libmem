@@ -578,9 +578,47 @@ LM_PRIVATE lm_bool_t
 _LM_UnloadModuleEx(lm_process_t proc,
 		   lm_module_t  mod)
 {
-	/* TODO: Implement */
+	lm_bool_t ret = LM_FALSE;
+	HANDLE hSnap;
+	MODULEENTRY32 entry;
+	HMODULE hModule = NULL;
+	HANDLE hThread;
 
-	return LM_FALSE;
+	hSnap = CreateToolhelp32Snapshot(
+		TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
+		proc.pid
+	);
+
+	if (hSnap == INVALID_HANDLE_VALUE)
+		return ret;
+
+	entry.dwSize = sizeof(MODULEENTRY32);
+
+	if (Module32First(hSnap, &entry)) {
+		do {
+			lm_module_t mod;
+			if ((lm_address_t)entry.modBaseAddr == mod.base) {
+				hModule = entry.hModule;
+				break;
+			}
+		} while (Module32Next(hSnap, &entry));
+	}
+
+	CloseHandle(hSnap);
+
+	if (!hModule)
+		return ret;
+
+	hThread = (HANDLE)CreateRemoteThread(proc.handle, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, hModule, 0, NULL);
+	if (!hThread)
+		return ret;
+
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+
+	ret = LM_TRUE;
+
+	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t

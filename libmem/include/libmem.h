@@ -373,13 +373,6 @@ typedef int                lm_flags_t;
 #endif
 
 typedef struct {
-	lm_pid_t pid;
-#	if LM_OS == LM_OS_WIN
-	HANDLE   handle;
-#	endif
-} lm_process_t;
-
-typedef struct {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
@@ -428,17 +421,6 @@ LM_GetParentIdEx(lm_pid_t pid);
 
 LM_API lm_bool_t
 LM_IsProcessAlive(lm_pid_t pid);
-
-/* TODO: Make this function return lm_void_t, because it cannot fail */
-LM_API lm_bool_t
-LM_OpenProcess(lm_process_t *procbuf);
-
-LM_API lm_bool_t
-LM_OpenProcessEx(lm_pid_t      pid,
-		 lm_process_t *procbuf);
-
-LM_API lm_void_t
-LM_CloseProcess(lm_process_t *procbuf);
 
 LM_API lm_size_t
 LM_GetProcessPath(lm_tchar_t *pathbuf,

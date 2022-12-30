@@ -56,8 +56,8 @@ main()
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), bits);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	LM_GetModuleEx(proc, LM_MOD_BY_STR, procpath, &mod);
-	LM_GetModuleEx(proc, LM_MOD_BY_ADDR, mod.base, &mod);
+	LM_FindModuleEx(proc, LM_MOD_BY_STR, procpath, &mod);
+	LM_FindModuleEx(proc, LM_MOD_BY_ADDR, mod.base, &mod);
 	LM_GetModuleNameEx(proc, mod, modname, LM_ARRLEN(modname));
 	LM_GetModulePathEx(proc, mod, modpath, LM_ARRLEN(modpath));
 	main_sym = LM_GetSymbolEx(proc, mod, "main");

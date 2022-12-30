@@ -628,7 +628,7 @@ CLEAN_EXIT:
 #endif
 
 LM_API lm_size_t
-LM_GetProcessNameEx(lm_process_t pid,
+LM_GetProcessNameEx(lm_pid_t     pid,
 		    lm_tchar_t  *namebuf,
 		    lm_size_t    maxlen)
 {
@@ -772,7 +772,7 @@ LM_GetProcessBitsEx(lm_pid_t pid)
 
 	LM_ASSERT(pid != LM_PID_BAD);
 
-	_LM_GetProcessBitsEx(proc, &bits);
+	_LM_GetProcessBitsEx(pid, &bits);
 
 	return bits;
 }

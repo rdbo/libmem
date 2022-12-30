@@ -203,12 +203,6 @@
 #define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)
 #define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
 #define LM_OFFSET(base, offset) (&((lm_byte_t *)base)[offset])
-#if LM_OS == LM_OS_WIN
-#	define _LM_VALID_PROCESS(proc) (proc.pid != LM_GetProcessId() && proc.handle != NULL)
-#else
-#	define _LM_VALID_PROCESS(proc) LM_TRUE
-#endif
-#define LM_VALID_PROCESS(proc) (proc.pid != LM_PID_BAD && _LM_VALID_PROCESS(proc))
 
 /* Flags */
 #if LM_OS == LM_OS_WIN
@@ -218,7 +212,6 @@
 #	define LM_PROT_RW  (PAGE_READWRITE)
 #	define LM_PROT_XR  (PAGE_EXECUTE_READ)
 #	define LM_PROT_XRW (PAGE_EXECUTE_READWRITE)
-#	define LM_PROCESS_ACCESS (PROCESS_ALL_ACCESS)
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 #	define LM_PROT_R   (PROT_READ)
 #	define LM_PROT_W   (PROT_WRITE)
@@ -427,7 +420,7 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 		  lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetProcessPathEx(lm_process_t proc,
+LM_GetProcessPathEx(lm_pid_t     pid,
 		    lm_tchar_t  *pathbuf,
 		    lm_size_t    maxlen);
 
@@ -436,7 +429,7 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 		  lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetProcessNameEx(lm_process_t proc,
+LM_GetProcessNameEx(lm_pid_t     pid,
 		    lm_tchar_t  *namebuf,
 		    lm_size_t    maxlen);
 
@@ -447,7 +440,7 @@ LM_API lm_size_t
 LM_GetProcessBits(lm_void_t);
 
 LM_API lm_size_t
-LM_GetProcessBitsEx(lm_process_t proc);
+LM_GetProcessBitsEx(lm_pid_t proc);
 
 /****************************************/
 

@@ -584,13 +584,13 @@ LM_EnumSymbolsEx(lm_process_t proc,
 		 lm_void_t *arg);
 
 LM_API lm_address_t
-LM_GetSymbol(lm_module_t  mod,
-	     lm_cstring_t symstr);
+LM_FindSymbol(lm_module_t  mod,
+	      lm_cstring_t symstr);
 
 LM_API lm_address_t
-LM_GetSymbolEx(lm_process_t proc,
-	       lm_module_t  mod,
-	       lm_cstring_t symstr);
+LM_FindSymbolEx(lm_process_t proc,
+		lm_module_t  mod,
+		lm_cstring_t symstr);
 
 /****************************************/
 

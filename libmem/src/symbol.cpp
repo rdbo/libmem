@@ -165,8 +165,8 @@ LM_EnumSymbolsEx(lm_process_t proc,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_address_t
-_LM_GetSymbol(lm_module_t  mod,
-	      lm_cstring_t symstr)
+_LM_FindSymbol(lm_module_t  mod,
+	       lm_cstring_t symstr)
 {
 	lm_address_t symaddr = LM_ADDRESS_BAD;
 	HMODULE      hModule;
@@ -187,8 +187,8 @@ _LM_GetSymbol(lm_module_t  mod,
 }
 #else
 LM_PRIVATE lm_address_t
-_LM_GetSymbol(lm_module_t  mod,
-	      lm_cstring_t symstr)
+_LM_FindSymbol(lm_module_t  mod,
+	       lm_cstring_t symstr)
 {
 	lm_address_t symaddr = LM_ADDRESS_BAD;
 	lm_process_t proc;
@@ -196,7 +196,7 @@ _LM_GetSymbol(lm_module_t  mod,
 	if (!LM_OpenProcess(&proc))
 		return symaddr;
 
-	symaddr = LM_GetSymbolEx(proc, mod, symstr);
+	symaddr = LM_FindSymbolEx(proc, mod, symstr);
 
 	LM_CloseProcess(&proc);
 
@@ -205,12 +205,12 @@ _LM_GetSymbol(lm_module_t  mod,
 #endif
 
 LM_API lm_address_t
-LM_GetSymbol(lm_module_t  mod,
+LM_FindSymbol(lm_module_t  mod,
 	     lm_cstring_t symstr)
 {
 	LM_ASSERT(symstr != LM_NULLPTR);
 
-	return _LM_GetSymbol(mod, symstr);
+	return _LM_FindSymbol(mod, symstr);
 }
 
 /********************************/
@@ -221,9 +221,9 @@ typedef struct {
 } _lm_get_symbol_t;
 
 LM_PRIVATE lm_bool_t
-_LM_GetSymbolExCallback(lm_cstring_t symbol,
-			lm_address_t addr,
-			lm_void_t   *arg)
+_LM_FindSymbolExCallback(lm_cstring_t symbol,
+			 lm_address_t addr,
+			 lm_void_t   *arg)
 {
 	_lm_get_symbol_t *parg = (_lm_get_symbol_t *)arg;
 
@@ -236,9 +236,9 @@ _LM_GetSymbolExCallback(lm_cstring_t symbol,
 }
 
 LM_API lm_address_t
-LM_GetSymbolEx(lm_process_t proc,
-	       lm_module_t  mod,
-	       lm_cstring_t symstr)
+LM_FindSymbolEx(lm_process_t proc,
+		lm_module_t  mod,
+		lm_cstring_t symstr)
 {
 	_lm_get_symbol_t arg;
 
@@ -247,17 +247,8 @@ LM_GetSymbolEx(lm_process_t proc,
 	arg.symbol = symstr;
 	arg.addr   = LM_ADDRESS_BAD;
 
-	LM_EnumSymbolsEx(proc, mod, _LM_GetSymbolExCallback, (lm_void_t *)&arg);
+	LM_EnumSymbolsEx(proc, mod, _LM_FindSymbolExCallback, (lm_void_t *)&arg);
 
 	return arg.addr;
 }
-
-/********************************/
-
-/********************************/
-
-/********************************/
-
-
-
 

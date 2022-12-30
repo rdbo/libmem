@@ -88,7 +88,7 @@ main()
 	LM_FindModule(LM_MOD_BY_ADDR, mod.base, &mod);
 	LM_GetModuleName(mod, modname, LM_ARRLEN(modname));
 	LM_GetModulePath(mod, modpath, LM_ARRLEN(modpath));
-	main_sym = LM_GetSymbol(mod, "main");
+	main_sym = LM_FindSymbol(mod, "main");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);

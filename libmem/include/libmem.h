@@ -414,16 +414,6 @@ typedef struct {
 
 typedef lm_int_t lm_arch_t;
 
-/* Imports */
-#if LM_OS == LM_OS_WIN && LM_COMPILER == LM_COMPILER_CC && LM_BITS == 64
-extern BOOL
-Wow64SetThreadContext(HANDLE		   hThread,
-		      const WOW64_CONTEXT *lpContext);
-extern BOOL
-Wow64GetThreadContext(HANDLE		   hThread,
-		      const WOW64_CONTEXT *lpContext);
-#endif
-
 /* libmem */
 LM_API lm_bool_t
 LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,

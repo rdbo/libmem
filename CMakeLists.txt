@@ -7,7 +7,7 @@ project(libmem)
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 
 option(LIBMEM_BUILD_TESTS "Build tests" ON) # builds the optional libmem test libraries.
-option(LIBMEM_BUILD_STATIC "Build a static library" ON) # builds libmem as a static library.
+option(LIBMEM_BUILD_STATIC "Build a static library" OFF) # builds libmem as a static library.
 
 set(CAPSTONE_DIR "${PROJECT_SOURCE_DIR}/capstone")
 set(CAPSTONE_INC "${CAPSTONE_DIR}/include")

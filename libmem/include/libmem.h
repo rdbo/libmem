@@ -393,12 +393,6 @@ typedef struct {
 	lm_flags_t   flags;
 } lm_page_t;
 
-/* LM_GetModule(Ex) Flags */
-enum {
-	LM_MOD_BY_STR = 0,
-	LM_MOD_BY_ADDR
-};
-
 typedef lm_int_t lm_detour_t;
 
 /* Based from instruction struct from capstone.h */
@@ -508,14 +502,12 @@ LM_EnumModulesEx(lm_process_t proc,
 		 lm_void_t   *arg);
 
 LM_API lm_bool_t
-LM_FindModule(lm_int_t     flags,
-	      lm_void_t   *modarg,
+LM_FindModule(lm_tstring_t name,
 	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
 LM_FindModuleEx(lm_process_t proc,
-		lm_int_t     flags,
-		lm_void_t   *modarg,
+		lm_tstring_t name,
 		lm_module_t *modbuf);
 
 LM_API lm_size_t

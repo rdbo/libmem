@@ -190,113 +190,72 @@ LM_EnumModulesEx(lm_process_t proc,
 
 typedef struct {
 	lm_module_t *modbuf;
-	lm_void_t   *modarg;
+	lm_tstring_t name;
 	lm_size_t    len;
-	lm_int_t     flags;
 } _lm_find_mod_t;
 
 LM_PRIVATE lm_bool_t
 _LM_FindModuleCallback(lm_module_t  mod,
-		      lm_tstring_t path,
-		      lm_void_t   *arg)
+		       lm_tstring_t path,
+		       lm_void_t   *arg)
 {
 	_lm_find_mod_t *parg = (_lm_find_mod_t *)arg;
+	lm_size_t       pathlen;
 
-	switch (parg->flags) {
-	case LM_MOD_BY_STR:
-		{
-			lm_tstring_t modstr = (lm_tstring_t)parg->modarg;
-			lm_size_t pathlen;
+	pathlen = LM_STRLEN(path);
 
-			pathlen = LM_STRLEN(path);
-
-			if (pathlen >= parg->len) {
-				if (!LM_STRCMP(&path[pathlen - parg->len],
-					       modstr)) {
-					*(parg->modbuf) = mod;
-					return LM_FALSE;
-				}
-			}
-
-			break;
+	if (pathlen >= parg->len) {
+		if (!LM_STRCMP(&path[pathlen - parg->len], parg->name)) {
+			*(parg->modbuf) = mod;
+			return LM_FALSE;
 		}
-
-	case LM_MOD_BY_ADDR:
-		{
-			lm_address_t addr = (lm_address_t)parg->modarg;
-
-			if ((lm_uintptr_t)addr >= (lm_uintptr_t)mod.base &&
-			    (lm_uintptr_t)addr < (lm_uintptr_t)mod.end) {
-				*(parg->modbuf) = mod;
-				return LM_FALSE;
-			}
-
-			break;
-		}
-	default:
-		return LM_FALSE;
 	}
 
 	return LM_TRUE;
 }
 
 LM_API lm_bool_t
-LM_FindModule(lm_int_t     flags,
-	      lm_void_t   *modarg,
+LM_FindModule(lm_tstring_t name,
 	      lm_module_t *modbuf)
 {
-	lm_bool_t ret = LM_FALSE;
 	_lm_find_mod_t arg;
 
-	LM_ASSERT(modarg != LM_NULLPTR && modbuf != LM_NULLPTR);
+	LM_ASSERT(name != LM_NULLPTR && modbuf != LM_NULLPTR);
 
 	arg.modbuf = modbuf;
-	arg.modbuf->base = LM_ADDRESS_BAD;
 	arg.modbuf->size = 0;
-	arg.modbuf->end  = LM_ADDRESS_BAD;
-	arg.modarg = modarg;
-	arg.flags  = flags;
+	arg.name = name;
+	arg.len = LM_STRLEN(arg.name);
 
-	if (flags == LM_MOD_BY_STR)
-		arg.len = LM_STRLEN((lm_tstring_t)arg.modarg);
+	if (!LM_EnumModules(_LM_FindModuleCallback, (lm_void_t *)&arg))
+		return LM_FALSE;
 
-	ret = LM_EnumModules(_LM_FindModuleCallback, (lm_void_t *)&arg);
-	if (ret && arg.modbuf->size == 0)
-		ret = LM_FALSE;
-
-	return ret;
+	return arg.modbuf->size > 0 ? LM_TRUE : LM_FALSE;
 }
 
 /********************************/
 
 LM_API lm_bool_t
 LM_FindModuleEx(lm_process_t proc,
-	       lm_int_t     flags,
-	       lm_void_t   *modarg,
-	       lm_module_t *modbuf)
+		lm_tstring_t name,
+		lm_module_t *modbuf)
 {
-	lm_bool_t ret = LM_FALSE;
 	_lm_find_mod_t arg;
 
-	LM_ASSERT(modarg != LM_NULLPTR && modbuf != LM_NULLPTR);
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+		  name != LM_NULLPTR &&
+		  modbuf != LM_NULLPTR);
 
 	arg.modbuf = modbuf;
-	arg.modbuf->base = LM_ADDRESS_BAD;
 	arg.modbuf->size = 0;
-	arg.modbuf->end  = LM_ADDRESS_BAD;
-	arg.modarg = modarg;
-	arg.flags  = flags;
+	arg.name = name;
+	arg.len = LM_STRLEN(arg.name);
 
-	if (flags == LM_MOD_BY_STR)
-		arg.len = LM_STRLEN((lm_tstring_t)arg.modarg);
+	if (!LM_EnumModulesEx(proc, _LM_FindModuleCallback, (lm_void_t *)&arg))
+		return LM_FALSE;
 
-	ret = LM_EnumModulesEx(proc, _LM_FindModuleCallback, (lm_void_t *)&arg);
-	if (ret && arg.modbuf->size == 0)
-		ret = LM_FALSE;
-
-	return ret;
+	return arg.modbuf->size > 0 ? LM_TRUE : LM_FALSE;
 }
-
 
 /********************************/
 
@@ -431,29 +390,15 @@ LM_GetModuleNameEx(lm_process_t proc,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_LoadModule(lm_tstring_t path,
-	       lm_module_t *modbuf)
+_LM_LoadModule(lm_tstring_t path)
 {
-	if (!LoadLibrary(path))
-		return LM_FALSE;
-
-	if (modbuf && !LM_FindModule(LM_MOD_BY_STR, path, modbuf))
-		return LM_FALSE;
-
-	return LM_TRUE;
+	return LoadLibrary(path) ? LM_TRUE : LM_FALSE;
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_LoadModule(lm_tstring_t path,
-	       lm_module_t *modbuf)
+_LM_LoadModule(lm_tstring_t path)
 {
-	if (!dlopen(path, RTLD_LAZY))
-		return LM_FALSE;
-
-	if (modbuf && !LM_FindModule(LM_MOD_BY_STR, path, modbuf))
-		return LM_FALSE;
-
-	return LM_TRUE;
+	return dlopen(path, RTLD_LAZY) ? LM_TRUE : LM_FALSE;
 }
 #endif
 
@@ -464,7 +409,14 @@ LM_LoadModule(lm_tstring_t path,
 	/* modbuf can be NULL. in that case, the module info won't be saved */
 	LM_ASSERT(path != LM_NULLPTR);
 
-	return _LM_LoadModule(path, modbuf);
+	if (!_LM_LoadModule(path))
+		return LM_FALSE;
+
+	/* TODO (?): Unload the module if it doesn't find it */
+	if (modbuf && !LM_FindModule(path, modbuf))
+		return LM_FALSE;
+
+	return LM_TRUE;
 }
 
 /********************************/
@@ -509,7 +461,7 @@ _LM_LoadModuleEx(lm_process_t proc,
 	if (!_LM_CallDlopen(proc, path, RTLD_LAZY, LM_NULLPTR))
 		return LM_FALSE;
 
-	if (modbuf && !LM_FindModuleEx(proc, LM_MOD_BY_STR, path, modbuf))
+	if (modbuf && !LM_FindModuleEx(proc, path, modbuf))
 		return LM_FALSE;
 
 	return LM_TRUE;

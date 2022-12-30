@@ -83,14 +83,7 @@ _LM_EnumSymbols(lm_module_t mod,
 				      lm_void_t   *arg),
 		lm_void_t *arg)
 {
-	lm_bool_t    ret = LM_FALSE;
-	lm_process_t proc;
-	if (!LM_OpenProcess(&proc))
-		return ret;
-
-	ret = LM_EnumSymbolsEx(proc, mod, callback, arg);
-	LM_CloseProcess(&proc);
-	return ret;
+	return LM_EnumSymbolsEx(LM_GetProcessId(), mod, callback, arg);
 }
 #endif
 
@@ -108,57 +101,44 @@ LM_EnumSymbols(lm_module_t mod,
 /********************************/
 #if LM_OS == LM_OS_WIN
 LM_API lm_bool_t
-_LM_EnumSymbolsEx(lm_process_t proc,
-		  lm_module_t  mod,
-	          lm_bool_t  (*callback)(lm_cstring_t symbol,
-		 			 lm_address_t addr,
-					 lm_void_t   *arg),
-		  lm_void_t *arg)
+_LM_EnumSymbolsEx(lm_pid_t    pid,
+		  lm_module_t mod,
+	          lm_bool_t (*callback)(lm_cstring_t symbol,
+		 			lm_address_t addr,
+					lm_void_t   *arg),
+		  lm_void_t  *arg)
 {
-	lm_bool_t    ret = LM_FALSE;
-	lm_address_t alloc;
-
-	alloc = LM_AllocMemory(LM_PROT_RW, mod.size);
-	if (alloc == LM_ADDRESS_BAD)
-		return ret;
-		
-	if (LM_ReadMemoryEx(proc, mod.base, (lm_byte_t *)alloc, mod.size)) {
-		ret = _LM_EnumPeSyms(LM_GetProcessBitsEx(proc), alloc,
-					callback, arg);
-	}
-
-	LM_FreeMemory(alloc, mod.size);
-
-	return ret;
+	/* TODO: Reimplement */
+	return LM_FALSE;
 }
 #else
 LM_API lm_bool_t
-_LM_EnumSymbolsEx(lm_process_t proc,
-		  lm_module_t  mod,
-	          lm_bool_t  (*callback)(lm_cstring_t symbol,
-		 			 lm_address_t addr,
-					 lm_void_t   *arg),
+_LM_EnumSymbolsEx(lm_pid_t    pid,
+		  lm_module_t mod,
+	          lm_bool_t (*callback)(lm_cstring_t symbol,
+		 			lm_address_t addr,
+					lm_void_t   *arg),
 		  lm_void_t *arg)
 {
 	lm_tchar_t path[LM_PATH_MAX];
 
-	if (!LM_GetModulePathEx(proc, mod, path, LM_PATH_MAX))
+	if (!LM_GetModulePathEx(pid, mod, path, LM_PATH_MAX))
 		return LM_FALSE;
 
 	return _LM_EnumElfSyms(mod, path, callback, arg);
 }
 #endif
 LM_API lm_bool_t
-LM_EnumSymbolsEx(lm_process_t proc,
-		 lm_module_t  mod,
-	         lm_bool_t  (*callback)(lm_cstring_t symbol,
-		 			lm_address_t addr,
-					lm_void_t   *arg),
-		 lm_void_t *arg)
+LM_EnumSymbolsEx(lm_pid_t    pid,
+		 lm_module_t mod,
+	         lm_bool_t (*callback)(lm_cstring_t symbol,
+				       lm_address_t addr,
+				       lm_void_t   *arg),
+		 lm_void_t  *arg)
 {
-	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD && callback != LM_NULLPTR);
 
-	return _LM_EnumSymbolsEx(proc, mod, callback, arg);
+	return _LM_EnumSymbolsEx(pid, mod, callback, arg);
 }
 
 /********************************/
@@ -190,17 +170,7 @@ LM_PRIVATE lm_address_t
 _LM_FindSymbol(lm_module_t  mod,
 	       lm_cstring_t symstr)
 {
-	lm_address_t symaddr = LM_ADDRESS_BAD;
-	lm_process_t proc;
-
-	if (!LM_OpenProcess(&proc))
-		return symaddr;
-
-	symaddr = LM_FindSymbolEx(proc, mod, symstr);
-
-	LM_CloseProcess(&proc);
-
-	return symaddr;
+	return LM_FindSymbolEx(LM_GetProcessId(), mod, symstr);
 }
 #endif
 
@@ -236,18 +206,18 @@ _LM_FindSymbolExCallback(lm_cstring_t symbol,
 }
 
 LM_API lm_address_t
-LM_FindSymbolEx(lm_process_t proc,
+LM_FindSymbolEx(lm_pid_t     pid,
 		lm_module_t  mod,
 		lm_cstring_t symstr)
 {
 	_lm_get_symbol_t arg;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) && symstr != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD && symstr != LM_NULLPTR);
 
 	arg.symbol = symstr;
 	arg.addr   = LM_ADDRESS_BAD;
 
-	LM_EnumSymbolsEx(proc, mod, _LM_FindSymbolExCallback, (lm_void_t *)&arg);
+	LM_EnumSymbolsEx(pid, mod, _LM_FindSymbolExCallback, (lm_void_t *)&arg);
 
 	return arg.addr;
 }

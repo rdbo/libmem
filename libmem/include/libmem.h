@@ -489,17 +489,17 @@ LM_GetThreadIdEx(lm_process_t proc);
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
+LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 				    lm_tstring_t path,
 				    lm_void_t   *arg),
 	       lm_void_t *arg);
 
 LM_API lm_bool_t
 LM_EnumModulesEx(lm_process_t proc,
-		 lm_bool_t  (*callback)(lm_module_t  mod,
-					lm_tstring_t path,
-					lm_void_t   *arg),
-		 lm_void_t   *arg);
+		 lm_bool_t(*callback)(lm_module_t *pmod,
+				      lm_tstring_t path,
+				      lm_void_t   *arg),
+		 lm_void_t *arg);
 
 LM_API lm_bool_t
 LM_FindModule(lm_tstring_t name,
@@ -511,24 +511,24 @@ LM_FindModuleEx(lm_process_t proc,
 		lm_module_t *modbuf);
 
 LM_API lm_size_t
-LM_GetModulePath(lm_module_t mod,
-		 lm_tchar_t *pathbuf,
-		 lm_size_t   maxlen);
+LM_GetModulePath(lm_module_t *pmod,
+		 lm_tchar_t  *pathbuf,
+		 lm_size_t    maxlen);
 
 LM_API lm_size_t
 LM_GetModulePathEx(lm_process_t proc,
-		   lm_module_t  mod,
+		   lm_module_t *pmod,
 		   lm_tchar_t  *pathbuf,
 		   lm_size_t    maxlen);
 
 LM_API lm_size_t
-LM_GetModuleName(lm_module_t mod,
-		 lm_tchar_t *namebuf,
-		 lm_size_t   maxlen);
+LM_GetModuleName(lm_module_t *pmod,
+		 lm_tchar_t  *namebuf,
+		 lm_size_t    maxlen);
 
 LM_API lm_size_t
 LM_GetModuleNameEx(lm_process_t proc,
-		   lm_module_t  mod,
+		   lm_module_t *pmod,
 		   lm_tchar_t  *namebuf,
 		   lm_size_t    maxlen);
 
@@ -542,37 +542,37 @@ LM_LoadModuleEx(lm_process_t proc,
 		lm_module_t *modbuf);
 
 LM_API lm_bool_t
-LM_UnloadModule(lm_module_t mod);
+LM_UnloadModule(lm_module_t *pmod);
 
 LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t proc,
-		  lm_module_t  mod);
+		  lm_module_t *pmod);
 
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumSymbols(lm_module_t mod,
-	       lm_bool_t (*callback)(lm_cstring_t symbol,
-	       			     lm_address_t addr,
-	       			     lm_void_t   *arg),
-	       lm_void_t *arg);
+LM_EnumSymbols(lm_module_t *pmod,
+	       lm_bool_t  (*callback)(lm_cstring_t symbol,
+				      lm_address_t addr,
+				      lm_void_t   *arg),
+	       lm_void_t   *arg);
 
 LM_API lm_bool_t
 LM_EnumSymbolsEx(lm_process_t proc,
-		 lm_module_t  mod,
+		 lm_module_t *pmod,
 	         lm_bool_t  (*callback)(lm_cstring_t symbol,
-		 			lm_address_t addr,
+					lm_address_t addr,
 					lm_void_t   *arg),
-		 lm_void_t *arg);
+		 lm_void_t   *arg);
 
 LM_API lm_address_t
-LM_FindSymbol(lm_module_t  mod,
-	      lm_cstring_t symstr);
+LM_FindSymbol(lm_module_t  *pmod,
+	      lm_cstring_t  symstr);
 
 LM_API lm_address_t
 LM_FindSymbolEx(lm_process_t proc,
-		lm_module_t  mod,
-		lm_cstring_t symstr);
+		lm_module_t  *pmod,
+		lm_cstring_t  symstr);
 
 /****************************************/
 

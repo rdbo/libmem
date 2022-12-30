@@ -470,18 +470,18 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 	       lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumModulesEx(lm_process_t proc,
-		 lm_bool_t  (*callback)(lm_module_t  mod,
-					lm_tstring_t path,
-					lm_void_t   *arg),
-		 lm_void_t   *arg);
+LM_EnumModulesEx(lm_pid_t   pid,
+		 lm_bool_t(*callback)(lm_module_t  mod,
+				      lm_tstring_t path,
+				      lm_void_t   *arg),
+		 lm_void_t *arg);
 
 LM_API lm_bool_t
 LM_FindModule(lm_tstring_t name,
 	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
-LM_FindModuleEx(lm_process_t proc,
+LM_FindModuleEx(lm_pid_t     pid,
 		lm_tstring_t name,
 		lm_module_t *modbuf);
 
@@ -491,10 +491,10 @@ LM_GetModulePath(lm_module_t mod,
 		 lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetModulePathEx(lm_process_t proc,
-		   lm_module_t  mod,
-		   lm_tchar_t  *pathbuf,
-		   lm_size_t    maxlen);
+LM_GetModulePathEx(lm_pid_t    pid,
+		   lm_module_t mod,
+		   lm_tchar_t *pathbuf,
+		   lm_size_t   maxlen);
 
 LM_API lm_size_t
 LM_GetModuleName(lm_module_t mod,
@@ -502,17 +502,17 @@ LM_GetModuleName(lm_module_t mod,
 		 lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetModuleNameEx(lm_process_t proc,
-		   lm_module_t  mod,
-		   lm_tchar_t  *namebuf,
-		   lm_size_t    maxlen);
+LM_GetModuleNameEx(lm_pid_t    pid,
+		   lm_module_t mod,
+		   lm_tchar_t *namebuf,
+		   lm_size_t   maxlen);
 
 LM_API lm_bool_t
 LM_LoadModule(lm_tstring_t path,
 	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
-LM_LoadModuleEx(lm_process_t proc,
+LM_LoadModuleEx(lm_pid_t     pid,
 		lm_tstring_t path,
 		lm_module_t *modbuf);
 
@@ -520,8 +520,8 @@ LM_API lm_bool_t
 LM_UnloadModule(lm_module_t mod);
 
 LM_API lm_bool_t
-LM_UnloadModuleEx(lm_process_t proc,
-		  lm_module_t  mod);
+LM_UnloadModuleEx(lm_pid_t    pid,
+		  lm_module_t mod);
 
 /****************************************/
 

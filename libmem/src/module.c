@@ -6,28 +6,20 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 				    lm_void_t   *arg),
 	       lm_void_t *arg)
 {
-	lm_bool_t ret = LM_FALSE;
-	lm_process_t proc;
-
 	LM_ASSERT(callback != LM_NULLPTR);
 
-	if (LM_OpenProcess(&proc)) {
-		ret = LM_EnumModulesEx(proc, callback, arg);
-		LM_CloseProcess(&proc);
-	}
-
-	return ret;
+	return LM_EnumModulesEx(LM_GetProcessId(), callback, arg);
 }
 
 /********************************/
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_EnumModulesEx(lm_process_t proc,
-		  lm_bool_t  (*callback)(lm_module_t  mod,
-					 lm_tstring_t path,
-					 lm_void_t   *arg),
-		  lm_void_t   *arg)
+_LM_EnumModulesEx(lm_pid_t   pid,
+		  lm_bool_t(*callback)(lm_module_t  mod,
+				       lm_tstring_t path,
+				       lm_void_t   *arg),
+		  lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hSnap;
@@ -35,7 +27,7 @@ _LM_EnumModulesEx(lm_process_t proc,
 
 	hSnap = CreateToolhelp32Snapshot(
 		TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
-		proc.pid
+		pid
 	);
 
 	if (hSnap == INVALID_HANDLE_VALUE)
@@ -70,11 +62,11 @@ _LM_EnumModulesEx(lm_process_t proc,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumModulesEx(lm_process_t proc,
-		  lm_bool_t  (*callback)(lm_module_t  mod,
-					 lm_tstring_t path,
-					 lm_void_t   *arg),
-		  lm_void_t   *arg)
+_LM_EnumModulesEx(lm_pid_t   pid,
+		  lm_bool_t(*callback)(lm_module_t  mod,
+				       lm_tstring_t path,
+				       lm_void_t   *arg),
+		  lm_void_t *arg)
 {
 	lm_bool_t    ret = LM_FALSE;
 	lm_tchar_t   maps_path[LM_PATH_MAX];
@@ -93,13 +85,13 @@ _LM_EnumModulesEx(lm_process_t proc,
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
+		    LM_STR("%s/%d/map"), LM_PROCFS, pid);
 #	else
 	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[^/]+(/.+)$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
+		    LM_STR("%s/%d/maps"), LM_PROCFS, pid);
 #	endif
 
 	maps_file = LM_FOPEN(maps_path, "r");
@@ -175,15 +167,15 @@ FREE_EXIT:
 #endif
 
 LM_API lm_bool_t
-LM_EnumModulesEx(lm_process_t proc,
-		 lm_bool_t  (*callback)(lm_module_t  mod,
-					lm_tstring_t path,
-					lm_void_t   *arg),
-		 lm_void_t   *arg)
+LM_EnumModulesEx(lm_pid_t   pid,
+		 lm_bool_t(*callback)(lm_module_t  mod,
+				      lm_tstring_t path,
+				      lm_void_t   *arg),
+		 lm_void_t *arg)
 {
-	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD && callback != LM_NULLPTR);
 
-	return _LM_EnumModulesEx(proc, callback, arg);
+	return _LM_EnumModulesEx(pid, callback, arg);
 }
 
 /********************************/
@@ -236,13 +228,13 @@ LM_FindModule(lm_tstring_t name,
 /********************************/
 
 LM_API lm_bool_t
-LM_FindModuleEx(lm_process_t proc,
+LM_FindModuleEx(lm_pid_t     pid,
 		lm_tstring_t name,
 		lm_module_t *modbuf)
 {
 	_lm_find_mod_t arg;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+	LM_ASSERT(pid != LM_PID_BAD &&
 		  name != LM_NULLPTR &&
 		  modbuf != LM_NULLPTR);
 
@@ -251,7 +243,7 @@ LM_FindModuleEx(lm_process_t proc,
 	arg.name = name;
 	arg.len = LM_STRLEN(arg.name);
 
-	if (!LM_EnumModulesEx(proc, _LM_FindModuleCallback, (lm_void_t *)&arg))
+	if (!LM_EnumModulesEx(pid, _LM_FindModuleCallback, (lm_void_t *)&arg))
 		return LM_FALSE;
 
 	return arg.modbuf->size > 0 ? LM_TRUE : LM_FALSE;
@@ -306,21 +298,21 @@ LM_GetModulePath(lm_module_t mod,
 /********************************/
 
 LM_API lm_size_t
-LM_GetModulePathEx(lm_process_t proc,
-		   lm_module_t  mod,
-		   lm_tchar_t  *pathbuf,
-		   lm_size_t    maxlen)
+LM_GetModulePathEx(lm_pid_t    pid,
+		   lm_module_t mod,
+		   lm_tchar_t *pathbuf,
+		   lm_size_t   maxlen)
 {
 	_lm_get_mod_path_t arg;
 
-	LM_ASSERT(pathbuf != LM_NULLPTR && maxlen > 0);
-	
+	LM_ASSERT(pid != LM_PID_BAD && pathbuf != LM_NULLPTR && maxlen > 0);
+
 	arg.mod     = mod;
 	arg.pathbuf = pathbuf;
 	arg.maxlen  = maxlen;
 	arg.len     = 0;
 
-	LM_EnumModulesEx(proc, _LM_GetModulePathCallback, (lm_void_t *)&arg);
+	LM_EnumModulesEx(pid, _LM_GetModulePathCallback, (lm_void_t *)&arg);
 
 	return arg.len;
 }
@@ -357,20 +349,20 @@ LM_GetModuleName(lm_module_t mod,
 /********************************/
 
 LM_API lm_size_t
-LM_GetModuleNameEx(lm_process_t proc,
-		   lm_module_t  mod,
-		   lm_tchar_t  *namebuf,
-		   lm_size_t    maxlen)
+LM_GetModuleNameEx(lm_pid_t    pid,
+		   lm_module_t mod,
+		   lm_tchar_t *namebuf,
+		   lm_size_t   maxlen)
 {
 	lm_size_t   len = 0;
 	lm_tchar_t  path[LM_PATH_MAX];
 	lm_tchar_t *holder;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+	LM_ASSERT(pid != LM_PID_BAD &&
 		  namebuf != LM_NULLPTR &&
 		  maxlen > 0);
 
-	if (!LM_GetModulePathEx(proc, mod, path, LM_PATH_MAX))
+	if (!LM_GetModulePathEx(pid, mod, path, LM_PATH_MAX))
 		return len;
 
 	holder = LM_STRRCHR(path, LM_PATH_SEP);
@@ -423,24 +415,27 @@ LM_LoadModule(lm_tstring_t path,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_LoadModuleEx(lm_process_t proc,
-		 lm_tstring_t path,
-		 lm_module_t *modbuf)
+_LM_LoadModuleEx(lm_pid_t     pid,
+		 lm_tstring_t path)
 {
 	lm_bool_t    ret = LM_FALSE;
+	HANDLE       hProcess;
 	lm_size_t    modpath_size;
 	lm_address_t modpath_addr;
 	HANDLE       hThread;
 
-	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t)
-	modpath_addr = LM_AllocMemoryEx(proc, modpath_size, LM_PROT_XRW);
-	if (modpath_addr == LM_ADDRESS_BAD)
+	if (!_LM_OpenProcess(&hProcess))
 		return ret;
 
-	if (!LM_WriteMemoryEx(process, modpath_addr, path, modpath_size))
+	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t)
+	modpath_addr = LM_AllocMemoryEx(pid, modpath_size, LM_PROT_XRW);
+	if (modpath_addr == LM_ADDRESS_BAD)
+		goto CLOSE_EXIT;
+
+	if (!LM_WriteMemoryEx(hProcess, modpath_addr, path, modpath_size))
 		goto FREE_EXIT;
 
-	hThread = (HANDLE)CreateRemoteThread(proc.handle, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, modpath_addr, 0, NULL);
+	hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, modpath_addr, 0, NULL);
 	if (!hThread)
 		goto FREE_RET;
 
@@ -449,32 +444,40 @@ _LM_LoadModuleEx(lm_process_t proc,
 
 	ret = LM_TRUE;
 FREE_EXIT:
-	LM_FreeMemoryEx(proc, modpath_addr, modpath_size);
+	LM_FreeMemoryEx(pid, modpath_addr, modpath_size);
+CLOSE_EXIT:
+	_LM_CloseProcess(&hProcess);
 	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_LoadModuleEx(lm_process_t proc,
-		 lm_tstring_t path,
-		 lm_module_t *modbuf)
+_LM_LoadModuleEx(lm_pid_t     pid,
+		 lm_tstring_t path)
 {
-	if (!_LM_CallDlopen(proc, path, RTLD_LAZY, LM_NULLPTR))
+	if (!_LM_CallDlopen(pid, path, RTLD_LAZY, LM_NULLPTR))
 		return LM_FALSE;
 
-	if (modbuf && !LM_FindModuleEx(proc, path, modbuf))
-		return LM_FALSE;
+	
 
 	return LM_TRUE;
 }
 #endif
 
 LM_API lm_bool_t
-LM_LoadModuleEx(lm_process_t proc,
+LM_LoadModuleEx(lm_pid_t     pid,
 		lm_tstring_t path,
 		lm_module_t *modbuf)
 {
-	LM_ASSERT(LM_VALID_PROCESS(proc) && path != LM_NULLPTR);
-	return _LM_LoadModuleEx(proc, path, modbuf);
+	LM_ASSERT(pid != LM_PID_BAD && path != LM_NULLPTR);
+
+	if (!_LM_LoadModuleEx(pid, path))
+		return LM_FALSE;
+
+	/* TODO (?): Unload module if it is not found */
+	if (modbuf && !LM_FindModuleEx(pid, path, modbuf))
+		return LM_FALSE;
+
+	return LM_TRUE;
 }
 
 /********************************/
@@ -529,22 +532,26 @@ LM_UnloadModule(lm_module_t mod)
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_UnloadModuleEx(lm_process_t proc,
-		   lm_module_t  mod)
+_LM_UnloadModuleEx(lm_pid_t    pid,
+		   lm_module_t mod)
 {
 	lm_bool_t ret = LM_FALSE;
+	HANDLE hProcess;
 	HANDLE hSnap;
 	MODULEENTRY32 entry;
 	HMODULE hModule = NULL;
 	HANDLE hThread;
 
+	if (!_LM_OpenProcess(&hProcess))
+		return ret;
+
 	hSnap = CreateToolhelp32Snapshot(
 		TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
-		proc.pid
+		pid
 	);
 
 	if (hSnap == INVALID_HANDLE_VALUE)
-		return ret;
+		goto CLOSE_RET;
 
 	entry.dwSize = sizeof(MODULEENTRY32);
 
@@ -561,35 +568,36 @@ _LM_UnloadModuleEx(lm_process_t proc,
 	CloseHandle(hSnap);
 
 	if (!hModule)
-		return ret;
+		goto CLOSE_RET;
 
-	hThread = (HANDLE)CreateRemoteThread(proc.handle, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, hModule, 0, NULL);
+	hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, hModule, 0, NULL);
 	if (!hThread)
-		return ret;
+		goto CLOSE_RET;
 
 	WaitForSingleObject(hThread, INFINITE);
 	CloseHandle(hThread);
 
 	ret = LM_TRUE;
-
+CLOSE_RET:
+	_LM_CloseProcess(&hProcess);
 	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_UnloadModuleEx(lm_process_t proc,
-		   lm_module_t  mod)
+_LM_UnloadModuleEx(lm_pid_t    pid,
+		   lm_module_t mod)
 {
 	lm_bool_t ret = LM_FALSE;
 	void *modhandle;
 	lm_tchar_t modpath[LM_PATH_MAX];
 
-	if (!LM_GetModulePathEx(proc, mod, modpath, LM_PATH_MAX))
+	if (!LM_GetModulePathEx(pid, mod, modpath, LM_PATH_MAX))
 		return ret;
 
-	if (!_LM_CallDlopen(proc, modpath, RTLD_NOLOAD, &modhandle))
+	if (!_LM_CallDlopen(pid, modpath, RTLD_NOLOAD, &modhandle))
 		return ret;
 
-	if (_LM_CallDlclose(proc, modhandle) && _LM_CallDlclose(proc, modhandle))
+	if (_LM_CallDlclose(pid, modhandle) && _LM_CallDlclose(pid, modhandle))
 		ret = LM_TRUE;
 
 	return ret;
@@ -597,9 +605,9 @@ _LM_UnloadModuleEx(lm_process_t proc,
 #endif
 
 LM_API lm_bool_t
-LM_UnloadModuleEx(lm_process_t proc,
-		  lm_module_t  mod)
+LM_UnloadModuleEx(lm_pid_t    pid,
+		  lm_module_t mod)
 {
-	return _LM_UnloadModuleEx(proc, mod);
+	return _LM_UnloadModuleEx(pid, mod);
 }
 

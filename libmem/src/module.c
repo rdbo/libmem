@@ -383,6 +383,7 @@ LM_GetModuleName(lm_module_t mod,
 		return len;
 
 	holder = LM_STRRCHR(path, LM_PATH_SEP);
+	holder = &holder[1]; /* don't include the path separator */
 
 	len = LM_STRLEN(holder);
 	if (len >= maxlen)
@@ -414,6 +415,7 @@ LM_GetModuleNameEx(lm_process_t proc,
 		return len;
 
 	holder = LM_STRRCHR(path, LM_PATH_SEP);
+	holder = &holder[1]; /* don't include the path separator */
 
 	len = LM_STRLEN(holder);
 	if (len >= maxlen)

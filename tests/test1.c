@@ -37,7 +37,7 @@ void hk_some_function(int a, int b)
 int
 main()
 {
-	lm_process_t proc;
+	lm_pid_t     pid;
 	lm_tchar_t   procname[LM_PATH_MAX];
 	lm_tchar_t   procpath[LM_PATH_MAX];
 	lm_pid_t     ppid;
@@ -69,7 +69,7 @@ main()
 
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
-	LM_OpenProcess(&proc);
+	pid = LM_GetProcessId();
 	LM_GetProcessName(procname, LM_ARRLEN(procname));
 	LM_GetProcessPath(procpath, LM_ARRLEN(procpath));
 	ppid = LM_GetParentId();
@@ -78,7 +78,7 @@ main()
 
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), procname);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
-	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
+	LM_PRINTF(LM_STR("[*] PID:  %d\n"), pid);
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), bits);
@@ -181,8 +181,6 @@ main()
 	for (;;) {
 		LM_SLEEP(1);
 	}
-
-	LM_CloseProcess(&proc);
 
 	return 0;
 }

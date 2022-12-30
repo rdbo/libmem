@@ -97,7 +97,7 @@ _LM_EnumThreadIdsEx(lm_pid_t   pid,
 	lm_tchar_t task_path[LM_PATH_MAX] = { 0 };
 
 	LM_SNPRINTF(task_path, LM_ARRLEN(task_path),
-		    LM_STR("/proc/%d/task"), proc.pid);
+		    LM_STR("/proc/%d/task"), pid);
 
 	pdir = opendir(task_path);
 	if (!pdir)

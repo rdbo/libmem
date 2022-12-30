@@ -486,15 +486,15 @@ LM_GetProcessBitsEx(lm_process_t proc);
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumThreads(lm_bool_t(*callback)(lm_tid_t   tid,
-				    lm_void_t *arg),
-	       lm_void_t *arg);
+LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
+				      lm_void_t *arg),
+		 lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumThreadsEx(lm_process_t proc,
-		 lm_bool_t  (*callback)(lm_tid_t   tid,
-					lm_void_t *arg),
-		 lm_void_t   *arg);
+LM_EnumThreadIdsEx(lm_process_t proc,
+		   lm_bool_t  (*callback)(lm_tid_t   tid,
+					  lm_void_t *arg),
+		   lm_void_t   *arg);
 
 LM_API lm_tid_t
 LM_GetThreadId(lm_void_t);

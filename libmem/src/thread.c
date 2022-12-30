@@ -4,9 +4,9 @@
 #endif
 
 LM_API lm_bool_t
-LM_EnumThreads(lm_bool_t(*callback)(lm_tid_t   tid,
-				    lm_void_t *arg),
-	       lm_void_t *arg)
+LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
+				      lm_void_t *arg),
+		 lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	lm_process_t proc;
@@ -14,7 +14,7 @@ LM_EnumThreads(lm_bool_t(*callback)(lm_tid_t   tid,
 	LM_ASSERT(callback != LM_NULLPTR);	
 
 	if (LM_OpenProcess(&proc)) {
-		ret = LM_EnumThreadsEx(proc, callback, arg);
+		ret = LM_EnumThreadIdsEx(proc, callback, arg);
 		LM_CloseProcess(&proc);
 	}
 
@@ -25,10 +25,10 @@ LM_EnumThreads(lm_bool_t(*callback)(lm_tid_t   tid,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadsEx(lm_process_t proc,
-		  lm_bool_t  (*callback)(lm_tid_t   tid,
-					 lm_void_t *arg),
-		  lm_void_t   *arg)
+_LM_EnumThreadIdsEx(lm_process_t proc,
+		    lm_bool_t  (*callback)(lm_tid_t   tid,
+					   lm_void_t *arg),
+		    lm_void_t   *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hSnap;
@@ -70,13 +70,13 @@ typedef struct {
 	lm_pid_t pid;
 	lm_bool_t (*callback)(lm_tid_t tid, lm_void_t *arg);
 	lm_void_t *arg;
-} _lm_enum_threads_t;
+} _lm_enum_tids_t;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadsExCallback(lm_pid_t   pid,
-			  lm_void_t *arg)
+_LM_EnumThreadIdsExCallback(lm_pid_t   pid,
+			    lm_void_t *arg)
 {
-	_lm_enum_threads_t *data = (_lm_enum_threads_t *)arg;
+	_lm_enum_tids_t *data = (_lm_enum_tids_t *)arg;
 	/* if the given pid owns the current pid, it is its thread */
 	if (LM_GetParentIdEx(pid) == data->pid)
 		data->callback((lm_tid_t)pid, data->arg);
@@ -84,23 +84,23 @@ _LM_EnumThreadsExCallback(lm_pid_t   pid,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadsEx(lm_process_t proc,
-		  lm_bool_t  (*callback)(lm_tid_t   tid,
-					 lm_void_t *arg),
-		  lm_void_t   *arg)
+_LM_EnumThreadIdsEx(lm_process_t proc,
+		    lm_bool_t  (*callback)(lm_tid_t   tid,
+					   lm_void_t *arg),
+		    lm_void_t   *arg)
 {
-	_lm_enum_threads_t data;
+	_lm_enum_tids_t data;
 	data.pid = proc.pid;
 	data.callback = callback;
 	data.arg = arg;
-	return LM_EnumProcesses(_LM_EnumThreadsExCallback, (lm_void_t *)&data);
+	return LM_EnumProcessIds(_LM_EnumThreadIdsExCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadsEx(lm_process_t proc,
-		  lm_bool_t  (*callback)(lm_tid_t   tid,
-					 lm_void_t *arg),
-		  lm_void_t   *arg)
+_LM_EnumThreadIdsEx(lm_process_t proc,
+		    lm_bool_t  (*callback)(lm_tid_t   tid,
+					   lm_void_t *arg),
+		    lm_void_t   *arg)
 {
 	DIR *pdir;
 	struct dirent *pdirent;
@@ -130,14 +130,14 @@ _LM_EnumThreadsEx(lm_process_t proc,
 #endif
 
 LM_API lm_bool_t
-LM_EnumThreadsEx(lm_process_t proc,
-		 lm_bool_t  (*callback)(lm_tid_t   tid,
-					lm_void_t *arg),
-		 lm_void_t   *arg)
+LM_EnumThreadIdsEx(lm_process_t proc,
+		   lm_bool_t  (*callback)(lm_tid_t   tid,
+					  lm_void_t *arg),
+		   lm_void_t   *arg)
 {
 	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
 
-	return _LM_EnumThreadsEx(proc, callback, arg);
+	return _LM_EnumThreadIdsEx(proc, callback, arg);
 }
 
 /********************************/
@@ -181,7 +181,7 @@ LM_GetThreadIdEx(lm_process_t proc)
 
 	LM_ASSERT(LM_VALID_PROCESS(proc));
 
-	LM_EnumThreadsEx(proc, _LM_GetThreadIdExCallback, (lm_void_t *)&tid);
+	LM_EnumThreadIdsEx(proc, _LM_GetThreadIdExCallback, (lm_void_t *)&tid);
 
 	return tid;
 }

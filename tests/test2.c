@@ -57,10 +57,10 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_FindModuleEx(pid, procpath, &mod);
-	LM_GetModuleNameEx(pid, mod, modname, LM_ARRLEN(modname));
-	LM_GetModulePathEx(pid, mod, modpath, LM_ARRLEN(modpath));
-	main_sym = LM_FindSymbolEx(pid, mod, "main");
-	val_sym = LM_FindSymbolEx(pid, mod, "val");
+	LM_GetModuleNameEx(pid, &mod, modname, LM_ARRLEN(modname));
+	LM_GetModulePathEx(pid, &mod, modpath, LM_ARRLEN(modpath));
+	main_sym = LM_FindSymbolEx(pid, &mod, "main");
+	val_sym = LM_FindSymbolEx(pid, &mod, "val");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);

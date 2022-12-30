@@ -1,7 +1,7 @@
 #include "internal.h"
 
 LM_API lm_bool_t
-LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
+LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 				    lm_tstring_t path,
 				    lm_void_t   *arg),
 	       lm_void_t *arg)
@@ -16,7 +16,7 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_EnumModulesEx(lm_pid_t   pid,
-		  lm_bool_t(*callback)(lm_module_t  mod,
+		  lm_bool_t(*callback)(lm_module_t *pmod,
 				       lm_tstring_t path,
 				       lm_void_t   *arg),
 		  lm_void_t *arg)
@@ -24,6 +24,7 @@ _LM_EnumModulesEx(lm_pid_t   pid,
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hSnap;
 	MODULEENTRY32 entry;
+	lm_module_t mod;
 
 	hSnap = CreateToolhelp32Snapshot(
 		TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
@@ -37,19 +38,11 @@ _LM_EnumModulesEx(lm_pid_t   pid,
 
 	if (Module32First(hSnap, &entry)) {
 		do {
-			lm_module_t mod;
+			mod.base = (lm_address_t)entry.modBaseAddr;
+			mod.size = (lm_size_t)entry.modBaseSize;
+			mod.end  = (lm_address_t)LM_OFFSET(mod.base, mod.size);
 
-			mod.base = (lm_address_t)(
-				entry.modBaseAddr
-			);
-			mod.size = (lm_size_t)(
-				entry.modBaseSize
-			);
-			mod.end  = (lm_address_t)(
-				&((lm_byte_t *)mod.base)[mod.size]
-			);
-
-			if (callback(mod, entry.szExePath, arg) == LM_FALSE)
+			if (callback(&mod, entry.szExePath, arg) == LM_FALSE)
 				break;
 		} while (Module32Next(hSnap, &entry));
 
@@ -63,7 +56,7 @@ _LM_EnumModulesEx(lm_pid_t   pid,
 #else
 LM_PRIVATE lm_bool_t
 _LM_EnumModulesEx(lm_pid_t   pid,
-		  lm_bool_t(*callback)(lm_module_t  mod,
+		  lm_bool_t(*callback)(lm_module_t *pmod,
 				       lm_tstring_t path,
 				       lm_void_t   *arg),
 		  lm_void_t *arg)
@@ -134,7 +127,7 @@ _LM_EnumModulesEx(lm_pid_t   pid,
 				(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
 			);
 
-			if (callback(mod, path, arg) == LM_FALSE)
+			if (callback(&mod, path, arg) == LM_FALSE)
 				break;
 
 			pathlen = LM_STRLEN(curpath);
@@ -168,7 +161,7 @@ FREE_EXIT:
 
 LM_API lm_bool_t
 LM_EnumModulesEx(lm_pid_t   pid,
-		 lm_bool_t(*callback)(lm_module_t  mod,
+		 lm_bool_t(*callback)(lm_module_t *pmod,
 				      lm_tstring_t path,
 				      lm_void_t   *arg),
 		 lm_void_t *arg)
@@ -187,7 +180,7 @@ typedef struct {
 } _lm_find_mod_t;
 
 LM_PRIVATE lm_bool_t
-_LM_FindModuleCallback(lm_module_t  mod,
+_LM_FindModuleCallback(lm_module_t *pmod,
 		       lm_tstring_t path,
 		       lm_void_t   *arg)
 {
@@ -198,7 +191,7 @@ _LM_FindModuleCallback(lm_module_t  mod,
 
 	if (pathlen >= parg->len) {
 		if (!LM_STRCMP(&path[pathlen - parg->len], parg->name)) {
-			*(parg->modbuf) = mod;
+			*(parg->modbuf) = *pmod;
 			return LM_FALSE;
 		}
 	}
@@ -252,20 +245,20 @@ LM_FindModuleEx(lm_pid_t     pid,
 /********************************/
 
 typedef struct {
-	lm_module_t  mod;
+	lm_module_t *pmod;
 	lm_tstring_t pathbuf;
 	lm_size_t    maxlen;
 	lm_size_t    len;
 } _lm_get_mod_path_t;
 
 LM_PRIVATE lm_bool_t
-_LM_GetModulePathCallback(lm_module_t  mod,
+_LM_GetModulePathCallback(lm_module_t *pmod,
 			  lm_tstring_t path,
 			  lm_void_t   *arg)
 {
 	_lm_get_mod_path_t *parg = (_lm_get_mod_path_t *)arg;
 	
-	if (parg->mod.base == mod.base) {
+	if (parg->pmod->base == pmod->base) {
 		parg->len = LM_STRLEN(path);
 		if (parg->len >= parg->maxlen)
 			parg->len = parg->maxlen - 1;
@@ -277,15 +270,15 @@ _LM_GetModulePathCallback(lm_module_t  mod,
 }
 
 LM_API lm_size_t
-LM_GetModulePath(lm_module_t mod,
-		 lm_tchar_t *pathbuf,
-		 lm_size_t   maxlen)
+LM_GetModulePath(lm_module_t *pmod,
+		 lm_tchar_t  *pathbuf,
+		 lm_size_t    maxlen)
 {
 	_lm_get_mod_path_t arg;
 
-	LM_ASSERT(pathbuf != LM_NULLPTR && maxlen > 0);
+	LM_ASSERT(pmod != LM_NULLPTR && pathbuf != LM_NULLPTR && maxlen > 0);
 
-	arg.mod     = mod;
+	arg.pmod    = pmod;
 	arg.pathbuf = pathbuf;
 	arg.maxlen  = maxlen;
 	arg.len     = 0;
@@ -298,16 +291,19 @@ LM_GetModulePath(lm_module_t mod,
 /********************************/
 
 LM_API lm_size_t
-LM_GetModulePathEx(lm_pid_t    pid,
-		   lm_module_t mod,
-		   lm_tchar_t *pathbuf,
-		   lm_size_t   maxlen)
+LM_GetModulePathEx(lm_pid_t     pid,
+		   lm_module_t *pmod,
+		   lm_tchar_t  *pathbuf,
+		   lm_size_t    maxlen)
 {
 	_lm_get_mod_path_t arg;
 
-	LM_ASSERT(pid != LM_PID_BAD && pathbuf != LM_NULLPTR && maxlen > 0);
+	LM_ASSERT(pid != LM_PID_BAD &&
+		  pmod != LM_NULLPTR &&
+		  pathbuf != LM_NULLPTR &&
+		  maxlen > 0);
 
-	arg.mod     = mod;
+	arg.pmod    = pmod;
 	arg.pathbuf = pathbuf;
 	arg.maxlen  = maxlen;
 	arg.len     = 0;
@@ -320,17 +316,19 @@ LM_GetModulePathEx(lm_pid_t    pid,
 /********************************/
 
 LM_API lm_size_t
-LM_GetModuleName(lm_module_t mod,
-		 lm_tchar_t *namebuf,
-		 lm_size_t   maxlen)
+LM_GetModuleName(lm_module_t *pmod,
+		 lm_tchar_t  *namebuf,
+		 lm_size_t    maxlen)
 {
 	lm_size_t   len = 0;
 	lm_tchar_t  path[LM_PATH_MAX];
 	lm_tchar_t *holder;
 
-	LM_ASSERT(namebuf != LM_NULLPTR && maxlen > 0);
+	LM_ASSERT(pmod != LM_NULLPTR &&
+		  namebuf != LM_NULLPTR &&
+		  maxlen > 0);
 
-	if (!LM_GetModulePath(mod, path, LM_PATH_MAX))
+	if (!LM_GetModulePath(pmod, path, LM_PATH_MAX))
 		return len;
 
 	holder = LM_STRRCHR(path, LM_PATH_SEP);
@@ -349,20 +347,21 @@ LM_GetModuleName(lm_module_t mod,
 /********************************/
 
 LM_API lm_size_t
-LM_GetModuleNameEx(lm_pid_t    pid,
-		   lm_module_t mod,
-		   lm_tchar_t *namebuf,
-		   lm_size_t   maxlen)
+LM_GetModuleNameEx(lm_pid_t     pid,
+		   lm_module_t *pmod,
+		   lm_tchar_t  *namebuf,
+		   lm_size_t    maxlen)
 {
 	lm_size_t   len = 0;
 	lm_tchar_t  path[LM_PATH_MAX];
 	lm_tchar_t *holder;
 
 	LM_ASSERT(pid != LM_PID_BAD &&
+		  pmod != LM_NULLPTR &&
 		  namebuf != LM_NULLPTR &&
 		  maxlen > 0);
 
-	if (!LM_GetModulePathEx(pid, mod, path, LM_PATH_MAX))
+	if (!LM_GetModulePathEx(pid, pmod, path, LM_PATH_MAX))
 		return len;
 
 	holder = LM_STRRCHR(path, LM_PATH_SEP);
@@ -484,12 +483,12 @@ LM_LoadModuleEx(lm_pid_t     pid,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_UnloadModule(lm_module_t mod)
+_LM_UnloadModule(lm_module_t *pmod)
 {
 	HMODULE hModule;
 
 	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-			  (LPTSTR)mod.base, &hModule);
+			  (LPTSTR)pmod->base, &hModule);
 
 	if (!hModule)
 		return LM_FALSE:
@@ -499,12 +498,12 @@ _LM_UnloadModule(lm_module_t mod)
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_UnloadModule(lm_module_t mod)
+_LM_UnloadModule(lm_module_t *pmod)
 {
 	lm_tchar_t libpath[LM_PATH_MAX];
 	void *libhandle;
 
-	if (!LM_GetModulePath(mod, libpath, LM_PATH_MAX))
+	if (!LM_GetModulePath(pmod, libpath, LM_PATH_MAX))
 		return LM_FALSE;
 
 	/* reopen the library without loading, which gives us the
@@ -523,17 +522,19 @@ _LM_UnloadModule(lm_module_t mod)
 #endif
 
 LM_API lm_bool_t
-LM_UnloadModule(lm_module_t mod)
+LM_UnloadModule(lm_module_t *pmod)
 {
-	return _LM_UnloadModule(mod);
+	LM_ASSERT(pmod != LM_NULLPTR);
+
+	return _LM_UnloadModule(pmod);
 }
 
 /********************************/
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_UnloadModuleEx(lm_pid_t    pid,
-		   lm_module_t mod)
+_LM_UnloadModuleEx(lm_pid_t     pid,
+		   lm_module_t *pmod)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hProcess;
@@ -556,9 +557,8 @@ _LM_UnloadModuleEx(lm_pid_t    pid,
 	entry.dwSize = sizeof(MODULEENTRY32);
 
 	if (Module32First(hSnap, &entry)) {
-		do {
-			lm_module_t mod;
-			if ((lm_address_t)entry.modBaseAddr == mod.base) {
+		do {			
+			if ((lm_address_t)entry.modBaseAddr == pmod->base) {
 				hModule = entry.hModule;
 				break;
 			}
@@ -584,14 +584,14 @@ CLOSE_RET:
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_UnloadModuleEx(lm_pid_t    pid,
-		   lm_module_t mod)
+_LM_UnloadModuleEx(lm_pid_t     pid,
+		   lm_module_t *pmod)
 {
 	lm_bool_t ret = LM_FALSE;
 	void *modhandle;
 	lm_tchar_t modpath[LM_PATH_MAX];
 
-	if (!LM_GetModulePathEx(pid, mod, modpath, LM_PATH_MAX))
+	if (!LM_GetModulePathEx(pid, pmod, modpath, LM_PATH_MAX))
 		return ret;
 
 	if (!_LM_CallDlopen(pid, modpath, RTLD_NOLOAD, &modhandle))
@@ -605,9 +605,11 @@ _LM_UnloadModuleEx(lm_pid_t    pid,
 #endif
 
 LM_API lm_bool_t
-LM_UnloadModuleEx(lm_pid_t    pid,
-		  lm_module_t mod)
+LM_UnloadModuleEx(lm_pid_t     pid,
+		  lm_module_t *pmod)
 {
-	return _LM_UnloadModuleEx(pid, mod);
+	LM_ASSERT(pid != LM_PID_BAD && pmod != LM_NULLPTR);
+
+	return _LM_UnloadModuleEx(pid, pmod);
 }
 

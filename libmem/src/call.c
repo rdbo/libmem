@@ -398,14 +398,14 @@ typedef struct {
 } _lm_find_libc_t;
 
 LM_PRIVATE lm_bool_t
-_LM_FindLibcCallback(lm_module_t  mod,
+_LM_FindLibcCallback(lm_module_t *pmod,
 		     lm_tstring_t path,
 		     lm_void_t   *arg)
 {
 	_lm_find_libc_t *parg = (_lm_find_libc_t *)arg;
 
 	if (!regexec(&parg->regex, path, 0, NULL, 0)) {
-		parg->libc_mod = mod;
+		parg->libc_mod = *pmod;
 		return LM_FALSE;
 	}
 
@@ -701,9 +701,9 @@ _LM_CallDlopen(lm_pid_t     pid,
 	if (!_LM_FindLibc(pid, &libc_mod))
 		return ret;
 
-	dlopen_addr = LM_FindSymbolEx(pid, libc_mod, "__libc_dlopen_mode");
+	dlopen_addr = LM_FindSymbolEx(pid, &libc_mod, "__libc_dlopen_mode");
 	if (dlopen_addr == LM_ADDRESS_BAD) {
-		dlopen_addr = LM_FindSymbolEx(pid, libc_mod, "dlopen");
+		dlopen_addr = LM_FindSymbolEx(pid, &libc_mod, "dlopen");
 		if (dlopen_addr == LM_ADDRESS_BAD)
 			return ret;
 	}
@@ -747,9 +747,9 @@ _LM_CallDlclose(lm_pid_t pid,
 	if (!_LM_FindLibc(pid, &libc_mod))
 		return ret;
 
-	dlclose_addr = LM_FindSymbolEx(pid, libc_mod, "__libc_dlclose");
+	dlclose_addr = LM_FindSymbolEx(pid, &libc_mod, "__libc_dlclose");
 	if (dlclose_addr == LM_ADDRESS_BAD) {
-		dlclose_addr = LM_FindSymbolEx(pid, libc_mod, "dlclose");
+		dlclose_addr = LM_FindSymbolEx(pid, &libc_mod, "dlclose");
 		if (dlclose_addr == LM_ADDRESS_BAD)
 			return ret;
 	}

@@ -426,15 +426,15 @@ Wow64GetThreadContext(HANDLE		   hThread,
 
 /* libmem */
 LM_API lm_bool_t
-LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
-				      lm_void_t *arg),
-		 lm_void_t *arg);
+LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+				       lm_void_t *arg),
+		  lm_void_t *arg);
 
 LM_API lm_pid_t
 LM_GetProcessId(lm_void_t);
 
 LM_API lm_pid_t
-LM_GetProcessIdEx(lm_tstring_t procstr);
+LM_FindProcessId(lm_tstring_t procstr);
 
 LM_API lm_pid_t
 LM_GetParentId(lm_void_t);
@@ -443,7 +443,7 @@ LM_API lm_pid_t
 LM_GetParentIdEx(lm_pid_t pid);
 
 LM_API lm_bool_t
-LM_CheckProcess(lm_pid_t pid);
+LM_IsProcessAlive(lm_pid_t pid);
 
 /* TODO: Make this function return lm_void_t, because it cannot fail */
 LM_API lm_bool_t

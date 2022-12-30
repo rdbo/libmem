@@ -2,9 +2,9 @@
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
-				       lm_void_t *arg),
-		  lm_void_t *arg)
+_LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+					lm_void_t *arg),
+		   lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hSnap;
@@ -34,9 +34,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
-				       lm_void_t *arg),
-		  lm_void_t *arg)
+_LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+					lm_void_t *arg),
+		   lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	struct procstat *ps;
@@ -75,9 +75,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
-				       lm_void_t *arg),
-		  lm_void_t *arg)
+_LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+					lm_void_t *arg),
+		   lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	struct dirent *pdirent;
@@ -106,13 +106,13 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
 #endif
 
 LM_API lm_bool_t
-LM_EnumProcesses(lm_bool_t(*callback)(lm_pid_t   pid,
-				      lm_void_t *arg),
-		 lm_void_t *arg)
+LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+				       lm_void_t *arg),
+		  lm_void_t *arg)
 {
 	LM_ASSERT(callback != LM_NULLPTR);
 
-	return _LM_EnumProcesses(callback, arg);
+	return _LM_EnumProcessIds(callback, arg);
 }
 
 /********************************/
@@ -143,15 +143,15 @@ typedef struct {
 	lm_pid_t     pid;
 	lm_tstring_t procstr;
 	lm_size_t    len;
-} _lm_get_pid_ex_t;
+} _lm_find_pid_t;
 
 LM_PRIVATE lm_bool_t
-_LM_GetProcessIdExCallback(lm_pid_t   pid,
-			   lm_void_t *arg)
+_LM_FindProcessIdCallback(lm_pid_t   pid,
+			  lm_void_t *arg)
 {
 	lm_bool_t	  ret = LM_TRUE;
 	lm_process_t	  proc;
-	_lm_get_pid_ex_t *parg = (_lm_get_pid_ex_t *)arg;
+	_lm_find_pid_t *parg = (_lm_find_pid_t *)arg;
 	lm_tchar_t	 *path;
 
 	path = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
@@ -181,9 +181,9 @@ _LM_GetProcessIdExCallback(lm_pid_t   pid,
 }
 
 LM_API lm_pid_t
-LM_GetProcessIdEx(lm_tstring_t procstr)
+LM_FindProcessId(lm_tstring_t procstr)
 {
-	_lm_get_pid_ex_t arg;
+	_lm_find_pid_t arg;
 
 	LM_ASSERT(procstr != LM_NULLPTR);
 
@@ -191,7 +191,7 @@ LM_GetProcessIdEx(lm_tstring_t procstr)
 	arg.procstr = procstr;
 	arg.len = LM_STRLEN(arg.procstr);
 
-	LM_EnumProcesses(_LM_GetProcessIdExCallback, (lm_void_t *)&arg);
+	LM_EnumProcessIds(_LM_FindProcessIdCallback, (lm_void_t *)&arg);
 	return arg.pid;
 }
 
@@ -331,17 +331,17 @@ LM_GetParentIdEx(lm_pid_t pid)
 
 typedef struct {
 	lm_pid_t  pid;
-	lm_bool_t check;
-} _lm_check_process_t;
+	lm_bool_t is_alive;
+} _lm_is_proc_alive_t;
 
 LM_PRIVATE lm_bool_t
-_LM_CheckProcessCallback(lm_pid_t   pid,
-			 lm_void_t *arg)
+_LM_IsProcessAliveCallback(lm_pid_t   pid,
+			   lm_void_t *arg)
 {
-	_lm_check_process_t *parg = (_lm_check_process_t *)arg;
+	_lm_is_proc_alive_t *parg = (_lm_is_proc_alive_t *)arg;
 
 	if (parg->pid == pid) {
-		parg->check = LM_TRUE;
+		parg->is_alive = LM_TRUE;
 		return LM_FALSE;
 	}
 
@@ -349,15 +349,15 @@ _LM_CheckProcessCallback(lm_pid_t   pid,
 }
 
 LM_API lm_bool_t
-LM_CheckProcess(lm_pid_t pid)
+LM_IsProcessAlive(lm_pid_t pid)
 {
-	_lm_check_process_t arg;
-	arg.pid   = pid;
-	arg.check = LM_FALSE;
+	_lm_is_proc_alive_t arg;
+	arg.pid      = pid;
+	arg.is_alive = LM_FALSE;
 
-	LM_EnumProcesses(_LM_CheckProcessCallback, (lm_void_t *)&arg);
+	LM_EnumProcessIds(_LM_IsProcessAliveCallback, (lm_void_t *)&arg);
 
-	return arg.check;
+	return arg.is_alive;
 }
 
 /********************************/
@@ -413,7 +413,7 @@ _LM_OpenProcessEx(lm_pid_t      pid,
 		  lm_process_t *procbuf)
 {
 	procbuf->pid = pid;
-	return LM_CheckProcess(pid);
+	return LM_IsProcessAlive(pid);
 }
 #endif
 

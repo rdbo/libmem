@@ -41,7 +41,7 @@ main()
 
 	LM_PRINTF(LM_STR("[+] Test 2\n"));
 
-	LM_OpenProcessEx(LM_GetProcessIdEx(LM_STR(TEST1_NAME)), &proc);
+	LM_OpenProcessEx(LM_FindProcessId(LM_STR(TEST1_NAME)), &proc);
 	LM_GetProcessNameEx(proc, procname, LM_ARRLEN(procname));
 	LM_GetProcessPathEx(proc, procpath, LM_ARRLEN(procpath));
 	ppid = LM_GetParentIdEx(proc.pid);

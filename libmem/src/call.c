@@ -276,7 +276,7 @@ _LM_GenerateSyscall(lm_size_t bits, lm_byte_t **pcodebuf)
 	if (bits == 64)
 		return LM_AssembleEx("syscall", LM_ARCH, bits, LM_NULLPTR, pcodebuf);
 
-	return LM_AssembleEx("int80", LM_ARCH, bits, LM_NULLPTR, pcodebuf);
+	return LM_AssembleEx("int 80", LM_ARCH, bits, LM_NULLPTR, pcodebuf);
 }
 
 LM_PRIVATE lm_uintptr_t

@@ -49,8 +49,9 @@ from libmem import *
 ## Dependencies
 All:
 - capstone (included in root project)
-- keystone (include in root project)
-- libstdc++ (used in keystone)
+- keystone (included in root project)
+- LIEF (included in root project)
+- libstdc++ (used in keystone and LIEF)
 - libmath (used in keystone)
 
 Windows:  

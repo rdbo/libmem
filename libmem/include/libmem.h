@@ -737,7 +737,7 @@ LM_CodeLength(lm_address_t code,
 	      lm_size_t minlength);
 
 LM_API lm_size_t
-LM_CodeLengthEx(lm_process_t proc,
+LM_CodeLengthEx(lm_pid_t     pid,
 		lm_address_t code,
 		lm_size_t minlength);
 

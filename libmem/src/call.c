@@ -43,7 +43,7 @@ _LM_PtraceGetRegs(lm_pid_t pid, lm_void_t **regsbuf)
 		return 0;
 #	else
 	struct reg regs;
-	if (ptrace(PT_GETREGS, process.pid, (caddr_t)&regs, 0) == -1)
+	if (ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0) == -1)
 		return 0;
 #	endif
 
@@ -312,7 +312,7 @@ _LM_CheckProgramCounter(lm_void_t *regs, lm_void_t *old_regs)
 }
 
 LM_PRIVATE lm_bool_t
-_LM_SystemCallEx(lm_process_t        proc,
+_LM_SystemCallEx(lm_pid_t            pid,
 		 _lm_syscall_data_t *data,
 		 lm_uintptr_t       *syscall_ret)
 {
@@ -325,9 +325,9 @@ _LM_SystemCallEx(lm_process_t        proc,
 	lm_size_t    bits;
 	lm_byte_t   *old_code;
 	
-	LM_ASSERT(LM_VALID_PROCESS(proc) && data != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD && data != LM_NULLPTR);
 
-	bits = LM_GetProcessBitsEx(proc);
+	bits = LM_GetProcessBitsEx(pid);
 
 	codesize = _LM_GenerateSyscall(bits, &codebuf);
 	if (!codesize)
@@ -338,13 +338,13 @@ _LM_SystemCallEx(lm_process_t        proc,
 		goto FREE_CODEBUF_RET;
 
 
-	if (!_LM_PtraceAttach(proc.pid))
+	if (!_LM_PtraceAttach(pid))
 		goto FREE_OLDCODE_RET;
 
 	/* save original registers and a copy that will be modified
 	   for the injection */
-	if (!_LM_PtraceGetRegs(proc.pid, &old_regs) ||
-	    !_LM_PtraceGetRegs(proc.pid, &regs))
+	if (!_LM_PtraceGetRegs(pid, &old_regs) ||
+	    !_LM_PtraceGetRegs(pid, &regs))
 		goto DETACH_RET;
 	
 	/* setup injection registers and get the program counter,
@@ -352,29 +352,29 @@ _LM_SystemCallEx(lm_process_t        proc,
 	_LM_SetupSyscallRegs(data, bits, regs, &program_counter);
 
 	/* save original code in a buffer and write the payload */
-	if (!_LM_PtraceRead(proc.pid, program_counter, old_code, codesize) ||
-	    !_LM_PtraceWrite(proc.pid, program_counter, codebuf, codesize))
+	if (!_LM_PtraceRead(pid, program_counter, old_code, codesize) ||
+	    !_LM_PtraceWrite(pid, program_counter, codebuf, codesize))
 		goto FREE_REGS_RET;
 
 	/* (debugging) check if the right payload was written */
-	/* _LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); */
+	/* _LM_PtraceRead(pid, program_counter, codebuf, codesize); */
 
 	/* write the new registers and step a single instruction */
-	_LM_PtraceSetRegs(proc.pid, regs);
-	_LM_PtraceStep(proc.pid);
+	_LM_PtraceSetRegs(pid, regs);
+	_LM_PtraceStep(pid);
 
 	/* save registers after running the system call and retrieve
 	   its return value */
-	_LM_PtraceGetRegs(proc.pid, &regs);
+	_LM_PtraceGetRegs(pid, &regs);
 	if (syscall_ret)
 		*syscall_ret = _LM_GetSyscallRet(regs);
 
 	/* write the original code and registers */
-	_LM_PtraceWrite(proc.pid, program_counter, old_code, codesize);
-	_LM_PtraceSetRegs(proc.pid, old_regs);
+	_LM_PtraceWrite(pid, program_counter, old_code, codesize);
+	_LM_PtraceSetRegs(pid, old_regs);
 
 	/* (debugging) check if the right original code was written */
-	/* _LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); */
+	/* _LM_PtraceRead(pid, program_counter, codebuf, codesize); */
 
 	/* if the program counter of regs and old regs is the same,
 	   the syscall has not executed */
@@ -383,7 +383,7 @@ FREE_REGS_RET:
 	_LM_PtraceFreeRegs(&old_regs);
 	_LM_PtraceFreeRegs(&regs);
 DETACH_RET:
-	_LM_PtraceDetach(proc.pid); /* detach and continue process */
+	_LM_PtraceDetach(pid); /* detach and continue process */
 FREE_OLDCODE_RET:
 	LM_FREE(old_code);
 FREE_CODEBUF_RET:
@@ -413,7 +413,7 @@ _LM_FindLibcCallback(lm_module_t  mod,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_FindLibc(lm_process_t proc,
+_LM_FindLibc(lm_pid_t     pid,
 	     lm_module_t *libc_mod)
 {
 	_lm_find_libc_t arg;
@@ -429,7 +429,7 @@ _LM_FindLibc(lm_process_t proc,
 
 	arg.libc_mod.size = 0;
 
-	LM_EnumModulesEx(proc, _LM_FindLibcCallback, (lm_void_t *)&arg);
+	LM_EnumModulesEx(pid, _LM_FindLibcCallback, (lm_void_t *)&arg);
 
 	regfree(&arg.regex);
 
@@ -602,7 +602,7 @@ _LM_PtraceContAndWait(lm_pid_t pid)
 }
 
 LM_PRIVATE lm_bool_t
-_LM_LibraryCallEx(lm_process_t       proc,
+_LM_LibraryCallEx(lm_pid_t           pid,
 		 _lm_libcall_data_t *data,
 		 lm_uintptr_t       *call_ret)
 {
@@ -615,9 +615,9 @@ _LM_LibraryCallEx(lm_process_t       proc,
 	lm_size_t    bits;
 	lm_byte_t   *old_code;
 	
-	LM_ASSERT(LM_VALID_PROCESS(proc) && data != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD && data != LM_NULLPTR);
 
-	bits = LM_GetProcessBitsEx(proc);
+	bits = LM_GetProcessBitsEx(pid);
 
 	codesize = _LM_GenerateLibcall(bits, data->nargs, &codebuf);
 	if (!codesize)
@@ -628,13 +628,13 @@ _LM_LibraryCallEx(lm_process_t       proc,
 		goto FREE_CODEBUF_RET;
 
 
-	if (!_LM_PtraceAttach(proc.pid))
+	if (!_LM_PtraceAttach(pid))
 		goto FREE_OLDCODE_RET;
 
 	/* save original registers and a copy that will be modified
 	   for the injection */
-	if (!_LM_PtraceGetRegs(proc.pid, &old_regs) ||
-	    !_LM_PtraceGetRegs(proc.pid, &regs))
+	if (!_LM_PtraceGetRegs(pid, &old_regs) ||
+	    !_LM_PtraceGetRegs(pid, &regs))
 		goto DETACH_RET;
 	
 	/* setup injection registers and get the program counter,
@@ -642,30 +642,30 @@ _LM_LibraryCallEx(lm_process_t       proc,
 	_LM_SetupLibcallRegs(data, bits, regs, &program_counter);
 
 	/* save original code in a buffer and write the payload */
-	if (!_LM_PtraceRead(proc.pid, program_counter, old_code, codesize) ||
-	    !_LM_PtraceWrite(proc.pid, program_counter, codebuf, codesize))
+	if (!_LM_PtraceRead(pid, program_counter, old_code, codesize) ||
+	    !_LM_PtraceWrite(pid, program_counter, codebuf, codesize))
 		goto FREE_REGS_RET;
 
 	/* (debugging) check if the right payload was written */
-	/* _LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); */
+	/* _LM_PtraceRead(pid, program_counter, codebuf, codesize); */
 
 	/* write the new registers and continue the process,
 	   waiting for it to SIGINT */
-	_LM_PtraceSetRegs(proc.pid, regs);
-	_LM_PtraceContAndWait(proc.pid);
+	_LM_PtraceSetRegs(pid, regs);
+	_LM_PtraceContAndWait(pid);
 
 	/* save registers after running the system call and retrieve
 	   its return value */
-	_LM_PtraceGetRegs(proc.pid, &regs);
+	_LM_PtraceGetRegs(pid, &regs);
 	if (call_ret)
 		*call_ret = _LM_GetLibcallRet(regs);
 
 	/* write the original code and registers */
-	_LM_PtraceWrite(proc.pid, program_counter, old_code, codesize);
-	_LM_PtraceSetRegs(proc.pid, old_regs);
+	_LM_PtraceWrite(pid, program_counter, old_code, codesize);
+	_LM_PtraceSetRegs(pid, old_regs);
 
 	/* (debugging) check if the right original code was written */
-	/* _LM_PtraceRead(proc.pid, program_counter, codebuf, codesize); */
+	/* _LM_PtraceRead(pid, program_counter, codebuf, codesize); */
 
 	/* if the program counter of regs and old regs is the same,
 	   the syscall has not executed */
@@ -674,7 +674,7 @@ FREE_REGS_RET:
 	_LM_PtraceFreeRegs(&old_regs);
 	_LM_PtraceFreeRegs(&regs);
 DETACH_RET:
-	_LM_PtraceDetach(proc.pid); /* detach and continue process */
+	_LM_PtraceDetach(pid); /* detach and continue process */
 FREE_OLDCODE_RET:
 	LM_FREE(old_code);
 FREE_CODEBUF_RET:
@@ -685,7 +685,7 @@ FREE_CODEBUF_RET:
 }
 
 LM_PRIVATE lm_bool_t
-_LM_CallDlopen(lm_process_t proc,
+_LM_CallDlopen(lm_pid_t     pid,
 	       lm_tstring_t path,
 	       lm_int_t     mode,
 	       void       **plibhandle)
@@ -698,23 +698,23 @@ _LM_CallDlopen(lm_process_t proc,
 	_lm_libcall_data_t data;
 	lm_uintptr_t       modhandle = 0;
 
-	if (!_LM_FindLibc(proc, &libc_mod))
+	if (!_LM_FindLibc(pid, &libc_mod))
 		return ret;
 
-	dlopen_addr = LM_FindSymbolEx(proc, libc_mod, "__libc_dlopen_mode");
+	dlopen_addr = LM_FindSymbolEx(pid, libc_mod, "__libc_dlopen_mode");
 	if (dlopen_addr == LM_ADDRESS_BAD) {
-		dlopen_addr = LM_FindSymbolEx(proc, libc_mod, "dlopen");
+		dlopen_addr = LM_FindSymbolEx(pid, libc_mod, "dlopen");
 		if (dlopen_addr == LM_ADDRESS_BAD)
 			return ret;
 	}
 
 	/* it is LM_STRLEN(path) + 1 because the null terminator should also be written */
 	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
-	modpath_addr = LM_AllocMemoryEx(proc, modpath_size, LM_PROT_XRW);
+	modpath_addr = LM_AllocMemoryEx(pid, modpath_size, LM_PROT_XRW);
 	if (modpath_addr == LM_ADDRESS_BAD)
 		return ret;
 
-	if (!LM_WriteMemoryEx(proc, modpath_addr, path, modpath_size))
+	if (!LM_WriteMemoryEx(pid, modpath_addr, path, modpath_size))
 		goto FREE_RET;
 
 	data.func_addr = (lm_uintptr_t)dlopen_addr;
@@ -723,20 +723,20 @@ _LM_CallDlopen(lm_process_t proc,
 	data.arg1 = (lm_uintptr_t)mode;
 	data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
 
-	ret = _LM_LibraryCallEx(proc, &data, &modhandle);
+	ret = _LM_LibraryCallEx(pid, &data, &modhandle);
 	if (!modhandle)
 		ret = LM_FALSE;
 	else if (plibhandle)
 		*plibhandle = modhandle;
 FREE_RET:
-	LM_FreeMemoryEx(proc, modpath_addr, modpath_size);
+	LM_FreeMemoryEx(pid, modpath_addr, modpath_size);
 	return ret;
 
 }
 
 LM_PRIVATE lm_bool_t
-_LM_CallDlclose(lm_process_t proc,
-		void *modhandle)
+_LM_CallDlclose(lm_pid_t pid,
+		void    *modhandle)
 {
 	lm_bool_t          ret = LM_FALSE;
 	lm_module_t        libc_mod;
@@ -744,12 +744,12 @@ _LM_CallDlclose(lm_process_t proc,
 	_lm_libcall_data_t data;
 	lm_uintptr_t       retval;
 
-	if (!_LM_FindLibc(proc, &libc_mod))
+	if (!_LM_FindLibc(pid, &libc_mod))
 		return ret;
 
-	dlclose_addr = LM_FindSymbolEx(proc, libc_mod, "__libc_dlclose");
+	dlclose_addr = LM_FindSymbolEx(pid, libc_mod, "__libc_dlclose");
 	if (dlclose_addr == LM_ADDRESS_BAD) {
-		dlclose_addr = LM_FindSymbolEx(proc, libc_mod, "dlclose");
+		dlclose_addr = LM_FindSymbolEx(pid, libc_mod, "dlclose");
 		if (dlclose_addr == LM_ADDRESS_BAD)
 			return ret;
 	}
@@ -759,7 +759,7 @@ _LM_CallDlclose(lm_process_t proc,
 	data.arg0 = (lm_uintptr_t)modhandle;
 	data.arg1 = data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
 
-	ret = _LM_LibraryCallEx(proc, &data, &retval);
+	ret = _LM_LibraryCallEx(pid, &data, &retval);
 	if (retval)
 		ret = LM_FALSE;
 

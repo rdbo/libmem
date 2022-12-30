@@ -646,7 +646,7 @@ LM_DataScan(lm_bstring_t data,
 	    lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_DataScanEx(lm_process_t proc,
+LM_DataScanEx(lm_pid_t     pid,
 	      lm_bstring_t data,
 	      lm_size_t    size,
 	      lm_address_t addr,
@@ -659,7 +659,7 @@ LM_PatternScan(lm_bstring_t pattern,
 	       lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_PatternScanEx(lm_process_t proc,
+LM_PatternScanEx(lm_pid_t     pid,
 		 lm_bstring_t pattern,
 		 lm_tstring_t mask,
 		 lm_address_t addr,
@@ -671,7 +671,7 @@ LM_SigScan(lm_tstring_t sig,
 	   lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_SigScanEx(lm_process_t proc,
+LM_SigScanEx(lm_pid_t     pid,
 	     lm_tstring_t sig,
 	     lm_address_t addr,
 	     lm_size_t    scansize);

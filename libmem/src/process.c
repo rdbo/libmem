@@ -404,7 +404,7 @@ _LM_GetProcessPathEx(lm_pid_t     pid,
 
 	len = (lm_size_t)GetModuleFileNameEx(hProcess, NULL, pathbuf, maxlen);
 
-	_LM_CloseHandle(&hProcess);
+	_LM_CloseProcess(&hProcess);
 
 	return len;
 }
@@ -555,7 +555,7 @@ _LM_GetProcessNameEx(lm_pid_t    pid,
 
 	len = (lm_size_t)GetModuleBaseName(hProcess, NULL, namebuf, maxlen);
 
-	_LM_CloseHandle(&hProcess);
+	_LM_CloseProcess(&hProcess);
 
 	return len;
 }
@@ -719,7 +719,7 @@ _LM_GetProcessBitsEx(lm_pid_t   pid,
 			*bits = 64;
 	}
 
-	_LM_CloseHandle(&hProcess);
+	_LM_CloseProcess(&hProcess);
 }
 #else
 LM_PRIVATE lm_size_t

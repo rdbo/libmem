@@ -450,10 +450,10 @@ LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
 		 lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumThreadIdsEx(lm_pid_t    pid,
-		   lm_bool_t (*callback)(lm_tid_t   tid,
-					 lm_void_t *arg),
-		   lm_void_t  *arg);
+LM_EnumThreadIdsEx(lm_pid_t   pid,
+		   lm_bool_t(*callback)(lm_tid_t   tid,
+					lm_void_t *arg),
+		   lm_void_t *arg);
 
 LM_API lm_tid_t
 LM_GetThreadId(lm_void_t);

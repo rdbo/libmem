@@ -46,7 +46,7 @@ _LM_OpenProcess(lm_pid_t pid,
 		HANDLE *hProcess);
 
 LM_PRIVATE lm_void_t
-_LM_CloseHandle(HANDLE *handle);
+_LM_CloseProcess(HANDLE *handle);
 #else
 typedef struct {
 	 lm_int_t      syscall_num;

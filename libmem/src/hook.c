@@ -126,7 +126,7 @@ LM_UnhookCode(lm_address_t  from,
 /********************************/
 
 LM_API lm_size_t
-LM_HookCodeEx(lm_process_t  proc,
+LM_HookCodeEx(lm_process_t *pproc,
 	      lm_address_t  from,
 	      lm_address_t  to,
 	      lm_address_t *ptrampoline)
@@ -138,21 +138,21 @@ LM_HookCodeEx(lm_process_t  proc,
 	lm_size_t  codesize;
 	lm_size_t  alignedsize;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
 		  from != LM_ADDRESS_BAD &&
 		  to != LM_ADDRESS_BAD);
 
-	bits = LM_GetProcessBitsEx(proc);
+	bits = LM_GetProcessBitsEx(pproc);
 
 	if (!(codesize = _LM_GenerateHook(from, to, bits, &codebuf)))
 		return ret;
 
 	/* Get minimum hook size that doesn't overwrite the existing instructions */
-	alignedsize = LM_CodeLengthEx(proc, from, codesize);
+	alignedsize = LM_CodeLengthEx(pproc, from, codesize);
 	if (!alignedsize)
 		goto FREE_EXIT;
 
-	if (!LM_ProtMemoryEx(proc, from, codesize, LM_PROT_XRW, &old_prot))
+	if (!LM_ProtMemoryEx(pproc, from, codesize, LM_PROT_XRW, &old_prot))
 		goto FREE_EXIT;
 
 	if (ptrampoline) {
@@ -165,19 +165,19 @@ LM_HookCodeEx(lm_process_t  proc,
 			goto FREE_EXIT;
 
 		/* read the original bytes that will be written to the trampoline */
-		LM_ReadMemoryEx(proc, from, tramp_code, alignedsize);
+		LM_ReadMemoryEx(pproc, from, tramp_code, alignedsize);
 
-		*ptrampoline = LM_AllocMemoryEx(proc,
+		*ptrampoline = LM_AllocMemoryEx(pproc,
 						alignedsize + codesize,
 						LM_PROT_XRW);
 		if (*ptrampoline != LM_ADDRESS_BAD) {
-			LM_WriteMemoryEx(proc, *ptrampoline,
+			LM_WriteMemoryEx(pproc, *ptrampoline,
 					 tramp_code, alignedsize);
 
 			/* place jump back code on trampoline after the
 			   original instructions */
 			LM_HookCodeEx(
-				proc,
+				pproc,
 				(lm_address_t)LM_OFFSET(*ptrampoline, alignedsize),
 				(lm_address_t)LM_OFFSET(from, alignedsize),
 				LM_NULLPTR
@@ -190,9 +190,9 @@ LM_HookCodeEx(lm_process_t  proc,
 			goto FREE_EXIT;
 	}
 
-	LM_WriteMemoryEx(proc, from, codebuf, codesize);
+	LM_WriteMemoryEx(pproc, from, codebuf, codesize);
 
-	LM_ProtMemoryEx(proc, from, codesize, old_prot, LM_NULLPTR);
+	LM_ProtMemoryEx(pproc, from, codesize, old_prot, LM_NULLPTR);
 
 	ret = alignedsize;
 FREE_EXIT:
@@ -204,7 +204,7 @@ FREE_EXIT:
 /********************************/
 
 LM_API lm_bool_t
-LM_UnhookCodeEx(lm_process_t  proc,
+LM_UnhookCodeEx(lm_process_t *pproc,
 		lm_address_t  from,
 		lm_address_t *ptrampoline,
 		lm_size_t     size)
@@ -212,7 +212,7 @@ LM_UnhookCodeEx(lm_process_t  proc,
 	lm_prot_t old_prot;
 	lm_address_t trampoline;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
 		  from != LM_ADDRESS_BAD &&
 		  ptrampoline != LM_NULLPTR &&
 		  *ptrampoline != LM_ADDRESS_BAD &&
@@ -220,10 +220,10 @@ LM_UnhookCodeEx(lm_process_t  proc,
 
 	trampoline = *ptrampoline;
 
-	if (!LM_ProtMemoryEx(proc, from, size, LM_PROT_XRW, &old_prot))
+	if (!LM_ProtMemoryEx(pproc, from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;
 
-	LM_WriteMemoryEx(proc, from, trampoline, size);
+	LM_WriteMemoryEx(pproc, from, trampoline, size);
 
 	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
 	LM_FreeMemory(trampoline, size);

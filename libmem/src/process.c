@@ -161,7 +161,7 @@ _LM_FindProcessIdCallback(lm_pid_t   pid,
 	if (LM_OpenProcessEx(pid, &proc)) {
 		lm_size_t len;
 
-		len = LM_GetProcessPathEx(proc,	path, LM_PATH_MAX);
+		len = LM_GetProcessPathEx(&proc, path, LM_PATH_MAX);
 		if (len && len >= parg->len) {
 			path[len] = LM_STR('\x00');
 
@@ -476,7 +476,7 @@ _LM_GetProcessPath(lm_tchar_t *pathbuf,
 	lm_process_t proc;
 
 	if (LM_OpenProcess(&proc)) {
-		len = LM_GetProcessPathEx(proc, pathbuf, maxlen);
+		len = LM_GetProcessPathEx(&proc, pathbuf, maxlen);
 		LM_CloseProcess(&proc);
 	}
 
@@ -501,18 +501,18 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_process_t proc,
-		     lm_tchar_t  *pathbuf,
-		     lm_size_t    maxlen)
+_LM_GetProcessPathEx(lm_process_t *pproc,
+		     lm_tchar_t   *pathbuf,
+		     lm_size_t     maxlen)
 {
-	return (lm_size_t)GetModuleFileNameEx(proc.handle, NULL,
+	return (lm_size_t)GetModuleFileNameEx(pproc->handle, NULL,
 					      pathbuf, maxlen);
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_process_t proc,
-		     lm_tchar_t  *pathbuf,
-		     lm_size_t    maxlen)
+_LM_GetProcessPathEx(lm_process_t *pproc,
+		     lm_tchar_t   *pathbuf,
+		     lm_size_t     maxlen)
 {
 	lm_size_t len = 0;
 	struct procstat *ps;
@@ -525,7 +525,7 @@ _LM_GetProcessPathEx(lm_process_t proc,
 
 	procs = procstat_getprocs(
 		ps, KERN_PROC_PID,
-		proc.pid, &nprocs
+		pproc->pid, &nprocs
 	);
 
 	if (procs && nprocs) {
@@ -542,14 +542,14 @@ _LM_GetProcessPathEx(lm_process_t proc,
 }
 #else
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_process_t proc,
-		     lm_tchar_t  *pathbuf,
-		     lm_size_t    maxlen)
+_LM_GetProcessPathEx(lm_process_t *pproc,
+		     lm_tchar_t   *pathbuf,
+		     lm_size_t     maxlen)
 {
 	ssize_t slen;
-	lm_tchar_t exe_path[LM_ARRLEN(LM_PROCFS) + 64] = { 0 };
+	lm_tchar_t exe_path[LM_PATH_MAX] = { 0 };
 	LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path),
-		    LM_STR("%s/%d/exe"), LM_PROCFS, proc.pid);
+		    LM_STR("%s/%d/exe"), LM_PROCFS, pproc->pid);
 	
 	/* readlink does not append a null terminator, so use maxlen - 1
 	   and append it later */
@@ -561,17 +561,17 @@ _LM_GetProcessPathEx(lm_process_t proc,
 #endif
 
 LM_API lm_size_t
-LM_GetProcessPathEx(lm_process_t proc,
-		    lm_tchar_t  *pathbuf,
-		    lm_size_t    maxlen)
+LM_GetProcessPathEx(lm_process_t *pproc,
+		    lm_tchar_t   *pathbuf,
+		    lm_size_t     maxlen)
 {
 	lm_size_t len;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
 		  pathbuf != LM_NULLPTR &&
 		  maxlen > 0);
 
-	len = _LM_GetProcessPathEx(proc, pathbuf, maxlen);
+	len = _LM_GetProcessPathEx(pproc, pathbuf, maxlen);
 
 	pathbuf[len] = LM_STR('\x00');
 
@@ -630,7 +630,7 @@ _LM_GetProcessName(lm_tchar_t *namebuf,
 	lm_process_t proc;
 
 	if (LM_OpenProcess(&proc)) {
-		len = LM_GetProcessNameEx(proc, namebuf, maxlen);
+		len = LM_GetProcessNameEx(&proc, namebuf, maxlen);
 		LM_CloseProcess(&proc);
 	}
 
@@ -651,18 +651,18 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_size_t
-_LM_GetProcessNameEx(lm_process_t proc,
-		     lm_tchar_t  *namebuf,
-		     lm_size_t    maxlen)
+_LM_GetProcessNameEx(lm_process_t *pproc,
+		     lm_tchar_t   *namebuf,
+		     lm_size_t     maxlen)
 {
-	len = (lm_size_t)GetModuleBaseName(proc.handle, NULL, namebuf, maxlen);
+	len = (lm_size_t)GetModuleBaseName(pproc->handle, NULL, namebuf, maxlen);
 	return len;
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_size_t
-_LM_GetProcessNameEx(lm_process_t proc,
-		     lm_tchar_t  *namebuf,
-		     lm_size_t    maxlen)
+_LM_GetProcessNameEx(lm_process_t *pproc,
+		     lm_tchar_t   *namebuf,
+		     lm_size_t     maxlen)
 {
 	lm_size_t len = 0;
 	struct procstat *ps;
@@ -675,7 +675,7 @@ _LM_GetProcessNameEx(lm_process_t proc,
 
 	procs = procstat_getprocs(
 		ps, KERN_PROC_PID,
-		proc.pid, &nprocs
+		pproc->pid, &nprocs
 	);
 
 	if (procs && nprocs) {
@@ -694,9 +694,9 @@ _LM_GetProcessNameEx(lm_process_t proc,
 }
 #else
 LM_PRIVATE lm_size_t
-_LM_GetProcessNameEx(lm_process_t proc,
-		     lm_tchar_t  *namebuf,
-		     lm_size_t    maxlen)
+_LM_GetProcessNameEx(lm_process_t *pproc,
+		     lm_tchar_t   *namebuf,
+		     lm_size_t     maxlen)
 {
 	lm_size_t   len = 0;
 	size_t      buf_len;
@@ -705,7 +705,7 @@ _LM_GetProcessNameEx(lm_process_t proc,
 	FILE       *comm_file;
 
 	LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path),
-		    LM_STR("%s/%d/comm"), LM_PROCFS, proc.pid);
+		    LM_STR("%s/%d/comm"), LM_PROCFS, pproc->pid);
 
 	comm_file = LM_FOPEN(comm_path, "r");
 	if (!comm_file)
@@ -727,17 +727,17 @@ CLEAN_EXIT:
 #endif
 
 LM_API lm_size_t
-LM_GetProcessNameEx(lm_process_t proc,
-		    lm_tchar_t  *namebuf,
-		    lm_size_t    maxlen)
+LM_GetProcessNameEx(lm_process_t *pproc,
+		    lm_tchar_t   *namebuf,
+		    lm_size_t     maxlen)
 {
 	lm_size_t len;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
 		  namebuf != LM_NULLPTR &&
 		  maxlen > 0);
 
-	len = _LM_GetProcessNameEx(proc, namebuf, maxlen);
+	len = _LM_GetProcessNameEx(pproc, namebuf, maxlen);
 
 	namebuf[len] = LM_STR('\x00');
 
@@ -799,13 +799,13 @@ LM_GetProcessBits(lm_void_t)
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_void_t
-_LM_GetProcessBitsEx(lm_process_t proc,
-		     lm_size_t   *bits)
+_LM_GetProcessBitsEx(lm_process_t *pproc,
+		     lm_size_t    *bits)
 {
 	BOOL IsWow64;
 	lm_size_t sysbits;
 
-	if (!IsWow64Process(proc.handle, &IsWow64))
+	if (!IsWow64Process(pproc->handle, &IsWow64))
 		return;
 
 	sysbits = LM_GetSystemBits();
@@ -844,13 +844,13 @@ _LM_GetElfBits(lm_tchar_t *path)
 }
 
 LM_PRIVATE lm_void_t
-_LM_GetProcessBitsEx(lm_process_t proc,
-		     lm_size_t   *bits)
+_LM_GetProcessBitsEx(lm_process_t *pproc,
+		     lm_size_t    *bits)
 {
 	lm_tchar_t path[LM_PATH_MAX];
 	lm_size_t elf_bits;
 
-	if (!LM_GetProcessPathEx(proc, path, LM_PATH_MAX))
+	if (!LM_GetProcessPathEx(pproc, path, LM_PATH_MAX))
 		return;
 
 	elf_bits = _LM_GetElfBits(path);
@@ -860,13 +860,13 @@ _LM_GetProcessBitsEx(lm_process_t proc,
 #endif
 
 LM_API lm_size_t
-LM_GetProcessBitsEx(lm_process_t proc)
+LM_GetProcessBitsEx(lm_process_t *pproc)
 {
 	lm_size_t bits = LM_BITS;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc));
+	LM_ASSERT(pproc != LM_NULLPTR);
 
-	_LM_GetProcessBitsEx(proc, &bits);
+	_LM_GetProcessBitsEx(pproc, &bits);
 
 	return bits;
 }

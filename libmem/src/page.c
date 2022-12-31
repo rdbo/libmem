@@ -56,7 +56,7 @@ _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 	lm_process_t proc;
 
 	if (LM_OpenProcess(&proc)) {
-		ret = LM_EnumPagesEx(proc, callback, arg);
+		ret = LM_EnumPagesEx(&proc, callback, arg);
 		LM_CloseProcess(&proc);
 	}
 
@@ -78,7 +78,7 @@ LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 
 #if LM_OS == LM_OS_WIN
 typedef struct {
-	lm_process_t proc;
+	lm_process_t *pproc;
 	lm_bool_t(*callback)(lm_page_t page, lm_void_t *arg);
 	lm_void_t *arg;
 } _lm_enum_pages_ex_t;
@@ -94,7 +94,7 @@ _LM_EnumPagesExCallback(lm_module_t  mod,
 	lm_page_t page;
 
 	for (addr = mod.base;
-	     VirtualQueryEx(parg->proc.handle, addr, &mbi, sizeof(mbi));
+	     VirtualQueryEx(parg->pproc->handle, addr, &mbi, sizeof(mbi));
 	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;
 		page.size  = (lm_size_t)mbi.RegionSize;
@@ -112,24 +112,24 @@ _LM_EnumPagesExCallback(lm_module_t  mod,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPagesEx(lm_proces_t proc,
-		lm_bool_t(*callback)(lm_page_t  page,
-				     lm_void_t *arg),
+_LM_EnumPagesEx(lm_process_t *pproc,
+		lm_bool_t   (*callback)(lm_page_t  page,
+					lm_void_t *arg),
 		lm_void_t *arg)
 {
 	_lm_enum_pages_ex_t data;
 
-	data.proc = proc;
+	data.pproc = pproc;
 	data.callback = callback;
 	data.arg = arg;
 
-	return _LM_EnumModulesEx(proc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
+	return _LM_EnumModulesEx(pproc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumPagesEx(lm_process_t proc,
-		lm_bool_t  (*callback)(lm_page_t  page,
-				       lm_void_t *arg),
+_LM_EnumPagesEx(lm_process_t *pproc,
+		lm_bool_t   (*callback)(lm_page_t  page,
+					lm_void_t *arg),
 		lm_void_t   *arg)
 {
 	lm_bool_t   ret = LM_FALSE;
@@ -147,13 +147,13 @@ _LM_EnumPagesEx(lm_process_t proc,
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/map"), LM_PROCFS, proc.pid);
+		    LM_STR("%s/%d/map"), LM_PROCFS, pproc->pid);
 #	else
 	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[[:blank:]]+(.+).*$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/maps"), LM_PROCFS, proc.pid);
+		    LM_STR("%s/%d/maps"), LM_PROCFS, pproc->pid);
 #	endif
 
 	maps_file = LM_FOPEN(maps_path, "r");
@@ -203,14 +203,14 @@ FREE_EXIT:
 #endif
 
 LM_API lm_bool_t
-LM_EnumPagesEx(lm_process_t proc,
-	       lm_bool_t  (*callback)(lm_page_t  page,
-				      lm_void_t *arg),
-	       lm_void_t   *arg)
+LM_EnumPagesEx(lm_process_t *pproc,
+	       lm_bool_t   (*callback)(lm_page_t  page,
+				       lm_void_t *arg),
+	       lm_void_t    *arg)
 {
-	LM_ASSERT(LM_VALID_PROCESS(proc) && callback != LM_NULLPTR);
+	LM_ASSERT(pproc != LM_NULLPTR && callback != LM_NULLPTR);
 
-	return _LM_EnumPagesEx(proc, callback, arg);
+	return _LM_EnumPagesEx(pproc, callback, arg);
 }
 
 /********************************/
@@ -288,13 +288,13 @@ LM_GetPage(lm_address_t addr,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_GetPageEx(lm_process_t proc,
-	      lm_address_t addr,
-	      lm_page_t   *page)
+_LM_GetPageEx(lm_process_t *pproc,
+	      lm_address_t  addr,
+	      lm_page_t    *page)
 {
 	MEMORY_BASIC_INFORMATION mbi;
 
-	if (!VirtualQueryEx(proc.handle, addr, &mbi, sizeof(mbi)))
+	if (!VirtualQueryEx(pproc->handle, addr, &mbi, sizeof(mbi)))
 		return LM_FALSE;
 
 	page->base  = (lm_address_t)mbi.BaseAddress;
@@ -307,14 +307,14 @@ _LM_GetPageEx(lm_process_t proc,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_GetPageEx(lm_process_t proc,
-	      lm_address_t addr,
-	      lm_page_t   *page)
+_LM_GetPageEx(lm_process_t *pproc,
+	      lm_address_t  addr,
+	      lm_page_t    *page)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
 
-	LM_ASSERT(LM_VALID_PROCESS(proc) &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
 		  addr != LM_ADDRESS_BAD &&
 		  page != LM_NULLPTR);
 
@@ -324,7 +324,7 @@ _LM_GetPageEx(lm_process_t proc,
 	arg.pagebuf->size = 0;
 	arg.pagebuf->end  = LM_ADDRESS_BAD;
 
-	LM_EnumPagesEx(proc, _LM_GetPageCallback, (lm_void_t *)&arg);
+	LM_EnumPagesEx(pproc, _LM_GetPageCallback, (lm_void_t *)&arg);
 
 	ret = page->size > 0 ? LM_TRUE : LM_FALSE;
 	return ret;
@@ -332,10 +332,10 @@ _LM_GetPageEx(lm_process_t proc,
 #endif
 
 LM_API lm_bool_t
-LM_GetPageEx(lm_process_t proc,
-	     lm_address_t addr,
-	     lm_page_t   *page)
+LM_GetPageEx(lm_process_t *pproc,
+	     lm_address_t  addr,
+	     lm_page_t    *page)
 {
-	return _LM_GetPageEx(proc, addr, page);
+	return _LM_GetPageEx(pproc, addr, page);
 }
 

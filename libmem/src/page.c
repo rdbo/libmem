@@ -52,7 +52,11 @@ _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 				   lm_void_t *arg),
 	      lm_void_t *arg)
 {
-	return LM_EnumPagesEx(LM_GetProcessId(), callback, arg);
+	lm_process_t proc;
+	if (!LM_GetProcess(&proc))
+		return LM_FALSE;
+
+	return LM_EnumPagesEx(&proc, callback, arg);
 }
 #endif
 
@@ -104,21 +108,21 @@ _LM_EnumPagesExCallback(lm_module_t  mod,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPagesEx(lm_pid_t   pid,
-		lm_bool_t(*callback)(lm_page_t  page,
-				     lm_void_t *arg),
-		lm_void_t *arg)
+_LM_EnumPagesEx(lm_process_t *pproc,
+		lm_bool_t   (*callback)(lm_page_t  page,
+					lm_void_t *arg),
+		lm_void_t    *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_enum_pages_ex_t data;
 
-	if (!_LM_OpenProcess(pid, &data.hProcess))
+	if (!_LM_OpenProcess(pproc, &data.hProcess))
 		return ret;
 
 	data.callback = callback;
 	data.arg = arg;
 
-	ret = _LM_EnumModulesEx(pid, _LM_EnumPagesExCallback, (lm_void_t *)&data);
+	ret = _LM_EnumModulesEx(pproc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
 
 	_LM_CloseProcess(&data.hProcess);
 
@@ -126,10 +130,10 @@ _LM_EnumPagesEx(lm_pid_t   pid,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumPagesEx(lm_pid_t   pid,
-		lm_bool_t(*callback)(lm_page_t  page,
-				     lm_void_t *arg),
-		lm_void_t *arg)
+_LM_EnumPagesEx(lm_process_t *pproc,
+		lm_bool_t   (*callback)(lm_page_t  page,
+					lm_void_t *arg),
+		lm_void_t    *arg)
 {
 	lm_bool_t   ret = LM_FALSE;
 	lm_tchar_t *maps_line = NULL;
@@ -146,13 +150,13 @@ _LM_EnumPagesEx(lm_pid_t   pid,
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/map"), LM_PROCFS, pid);
+		    LM_STR("%s/%d/map"), LM_PROCFS, pproc->pid);
 #	else
 	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[[:blank:]]+(.+).*$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/maps"), LM_PROCFS, pid);
+		    LM_STR("%s/%d/maps"), LM_PROCFS, pproc->pid);
 #	endif
 
 	maps_file = LM_FOPEN(maps_path, "r");
@@ -202,14 +206,14 @@ FREE_EXIT:
 #endif
 
 LM_API lm_bool_t
-LM_EnumPagesEx(lm_pid_t   pid,
-	       lm_bool_t(*callback)(lm_page_t  page,
-				    lm_void_t *arg),
-	       lm_void_t *arg)
+LM_EnumPagesEx(lm_process_t *pproc,
+	       lm_bool_t   (*callback)(lm_page_t  page,
+				       lm_void_t *arg),
+	       lm_void_t    *arg)
 {
-	LM_ASSERT(pid != LM_PID_BAD && callback != LM_NULLPTR);
+	LM_ASSERT(pproc != LM_NULLPTR && callback != LM_NULLPTR);
 
-	return _LM_EnumPagesEx(pid, callback, arg);
+	return _LM_EnumPagesEx(pproc, callback, arg);
 }
 
 /********************************/
@@ -287,15 +291,15 @@ LM_GetPage(lm_address_t addr,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_GetPageEx(lm_pid_t     pid,
-	      lm_address_t addr,
-	      lm_page_t   *page)
+_LM_GetPageEx(lm_process_t *pproc,
+	      lm_address_t  addr,
+	      lm_page_t    *page)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hProcess;
 	MEMORY_BASIC_INFORMATION mbi;
 
-	if (!_LM_OpenProcess(pid, &hProcess))
+	if (!_LM_OpenProcess(pproc, &hProcess))
 		return ret;
 
 	if (!VirtualQueryEx(hProcess, addr, &mbi, sizeof(mbi)))
@@ -314,14 +318,14 @@ CLOSE_RET:
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_GetPageEx(lm_pid_t     pid,
-	      lm_address_t addr,
-	      lm_page_t   *page)
+_LM_GetPageEx(lm_process_t *pproc,
+	      lm_address_t  addr,
+	      lm_page_t    *page)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
 
-	LM_ASSERT(pid != LM_PID_BAD &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
 		  addr != LM_ADDRESS_BAD &&
 		  page != LM_NULLPTR);
 
@@ -331,7 +335,7 @@ _LM_GetPageEx(lm_pid_t     pid,
 	arg.pagebuf->size = 0;
 	arg.pagebuf->end  = LM_ADDRESS_BAD;
 
-	LM_EnumPagesEx(pid, _LM_GetPageCallback, (lm_void_t *)&arg);
+	LM_EnumPagesEx(pproc, _LM_GetPageCallback, (lm_void_t *)&arg);
 
 	ret = page->size > 0 ? LM_TRUE : LM_FALSE;
 	return ret;
@@ -339,10 +343,10 @@ _LM_GetPageEx(lm_pid_t     pid,
 #endif
 
 LM_API lm_bool_t
-LM_GetPageEx(lm_pid_t     pid,
-	     lm_address_t addr,
-	     lm_page_t   *page)
+LM_GetPageEx(lm_process_t *pproc,
+	     lm_address_t  addr,
+	     lm_page_t    *page)
 {
-	return _LM_GetPageEx(pid, addr, page);
+	return _LM_GetPageEx(pproc, addr, page);
 }
 

@@ -45,8 +45,8 @@ _LM_GetNameFromPath(lm_tchar_t *path);
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_OpenProcess(lm_pid_t pid,
-		HANDLE *hProcess);
+_LM_OpenProcess(lm_process_t *pproc,
+		HANDLE       *hProcess);
 
 LM_PRIVATE lm_void_t
 _LM_CloseProcess(HANDLE *handle);

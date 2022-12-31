@@ -191,20 +191,20 @@ LM_CodeLength(lm_address_t code, lm_size_t minlength)
 /********************************/
 
 LM_API lm_size_t
-LM_CodeLengthEx(lm_pid_t     pid,
-		lm_address_t code,
-		lm_size_t    minlength)
+LM_CodeLengthEx(lm_process_t *pproc,
+		lm_address_t  code,
+		lm_size_t     minlength)
 {
 	lm_size_t length;
 	lm_inst_t inst;
 	lm_byte_t codebuf[LM_INST_SIZE];
 
-	LM_ASSERT(pid != LM_PID_BAD &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
 		  code != LM_ADDRESS_BAD &&
 		  minlength > 0);
 
 	for (length = 0; length < minlength; code = (lm_address_t)LM_OFFSET(code, length)) {
-		LM_ReadMemoryEx(pid, code, codebuf, sizeof(codebuf));
+		LM_ReadMemoryEx(pproc, code, codebuf, sizeof(codebuf));
 		if (LM_Disassemble(codebuf, &inst) == LM_FALSE)
 			return 0;
 		length += inst.size;

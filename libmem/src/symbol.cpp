@@ -83,7 +83,11 @@ _LM_EnumSymbols(lm_module_t *pmod,
 				       lm_void_t   *arg),
 		lm_void_t   *arg)
 {
-	return LM_EnumSymbolsEx(LM_GetProcessId(), pmod, callback, arg);
+	lm_process_t proc;
+	if (!LM_GetProcess(&proc))
+		return LM_FALSE;
+
+	return LM_EnumSymbolsEx(&proc, pmod, callback, arg);
 }
 #endif
 
@@ -170,7 +174,11 @@ LM_PRIVATE lm_address_t
 _LM_FindSymbol(lm_module_t *pmod,
 	       lm_cstring_t symstr)
 {
-	return LM_FindSymbolEx(LM_GetProcessId(), pmod, symstr);
+	lm_process_t proc;
+	if (!LM_GetProcess(&proc))
+		return LM_FALSE;
+
+	return LM_FindSymbolEx(&proc, pmod, symstr);
 }
 #endif
 

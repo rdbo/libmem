@@ -40,6 +40,9 @@
 #	endif
 #endif
 
+LM_PRIVATE lm_tchar_t *
+_LM_GetNameFromPath(lm_tchar_t *path);
+
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_OpenProcess(lm_pid_t pid,

@@ -1,247 +1,15 @@
 #include "internal.h"
 
 #if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_size_t
-_LM_GetProcessBitsEx(lm_process_t *pproc)
-{
-	HANDLE hProcess;
-	BOOL IsWow64;
-	lm_size_t sysbits;
-	lm_size_t bits = 0;
-
-	if (!_LM_OpenProcess(pproc->pid, &hProcess))
-		return;
-
-	if (IsWow64Process(hProcess, &IsWow64)) {
-		sysbits = LM_GetSystemBits();
-
-		if (sysbits == 32 || IsWow64)
-			bits = 32;
-		else if (sysbits == 64)
-			bits = 64;
-	}
-
-	_LM_CloseProcess(&hProcess);
-
-	if (!bits)
-		bits = LM_BITS;
-
-	return bits;
-}
-#else
-LM_PRIVATE lm_size_t
-_LM_GetElfBits(lm_tchar_t *path)
-{
-	lm_size_t bits = 0;
-	int fd;
-	unsigned char elf_num;
-
-	fd = open(path, O_RDONLY);
-	if (fd == -1)
-		return bits;
-
-	/*
-	 * ELF Magic:
-	 * 32 bits -> 0x7F, E, L, F, 1
-	 * 64 bits -> 0x7F, E, L, F, 2
-	 */
-
-	lseek(fd, EI_MAG3 + 1, SEEK_SET);
-	if (read(fd, &elf_num, sizeof(elf_num)) > 0 &&
-	    (elf_num == 1 || elf_num == 2))
-		bits = elf_num * 32;
-
-	close(fd);
-
-	return bits;
-}
-
-LM_PRIVATE lm_size_t
-_LM_GetProcessBitsEx(lm_process_t *pproc)
-{
-	lm_size_t elf_bits;
-
-	elf_bits = _LM_GetElfBits(pproc->path);
-	if (!elf_bits)
-		elf_bits = LM_BITS;
-
-	return elf_bits;
-}
-
-#if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_pid_t     pid,
-		     lm_tchar_t  *pathbuf,
-		     lm_size_t    maxlen)
-{
-	HANDLE    hProcess;
-	lm_size_t len = 0;
-
-	if (!_LM_OpenProcess(pid, &hProcess))
-		return len;
-
-	len = (lm_size_t)GetModuleFileNameEx(hProcess, NULL, pathbuf, maxlen);
-
-	_LM_CloseProcess(&hProcess);
-
-	/* From: https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmodulefilenameexa
-	 * "A pointer to a buffer that receives the fully qualified
-	 * path to the module. If the size of the file name is larger
-	 * than the value of the nSize parameter, the function succeeds
-	 * but the file name is truncated and null-terminated."
-	 *
-	 * It doesn't mention whether it's null-terminater or not when
-	 * the file name is not truncated, so it will be forcefully appended
-	 */
-
-	if (len >= maxlen)
-		len = maxlen - 1;
-	pathbuf[len] = LM_STR('\x00');
-
-	return len;
-}
-#elif LM_OS == LM_OS_BSD
-LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_pid_t     pid,
-		     lm_tchar_t  *pathbuf,
-		     lm_size_t    maxlen)
-{
-	lm_size_t len = 0;
-	struct procstat *ps;
-	unsigned int nprocs = 0;
-	struct kinfo_proc *procs;
-
-	ps = procstat_open_sysctl();
-	if (!ps)
-		return len;
-
-	procs = procstat_getprocs(
-		ps, KERN_PROC_PID,
-		pid, &nprocs
-	);
-
-	if (procs && nprocs) {
-		if (!procstat_getpathname(ps, procs,
-					  pathbuf, maxlen))
-			len = LM_STRLEN(pathbuf);
-
-		procstat_freeprocs(ps, procs);
-	}
-
-	procstat_close(ps);
-
-	return len;
-}
-#else
-LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_pid_t     pid,
-		     lm_tchar_t  *pathbuf,
-		     lm_size_t    maxlen)
-{
-	ssize_t slen;
-	lm_tchar_t exe_path[LM_PATH_MAX] = { 0 };
-	LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path),
-		    LM_STR("%s/%d/exe"), LM_PROCFS, pid);
-	
-	/* readlink does not append a null terminator, so use maxlen - 1
-	   and append it later */
-	slen = readlink(exe_path, pathbuf, maxlen - 1);
-	if (slen == -1)
-		slen = 0;
-
-	pathbuf[slen] = LM_STR('\x00');
-
-	return (lm_size_t)slen;
-}
-#endif
-
-
-/********************************/
-
-LM_PRIVATE lm_tchar_t *
-_LM_GetNameFromPath(lm_tchar_t *path)
-{
-	lm_tchar_t *holder;
-
-	LM_ASSERT(path != LM_NULLPTR);
-
-	holder = LM_STRRCHR(path, LM_PATH_SEP);
-	holder = &holder[1]; /* don't include the path separator */
-
-	return holder;
-}
-
-/********************************/
-
-#if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_size_t
-_LM_GetProcessPath(lm_tchar_t *pathbuf,
-		   lm_size_t   maxlen)
-{
-	HMODULE hModule = GetModuleHandle(NULL);
-	if (!hModule)
-		return len;
-
-	return (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
-}
-#else
-LM_PRIVATE lm_size_t
-_LM_GetProcessPath(lm_tchar_t *pathbuf,
-		   lm_size_t   maxlen)
-{
-	lm_process_t proc;
-	if (LM_GetProcess(&proc))
-		return 0;
-
-	return _LM_GetProcessPathEx(&proc, pathbuf, maxlen);
-}
-#endif
-
-LM_API lm_size_t
-LM_GetProcessPath(lm_tchar_t *pathbuf,
-		  lm_size_t   maxlen)
-{
-	lm_size_t len;
-
-	LM_ASSERT(pathbuf != LM_NULLPTR && maxlen > 0);
-
-	len = _LM_GetProcessPath(pathbuf, maxlen);
-	pathbuf[len] = LM_STR('\x00');
-	return len;
-}
-
-/********************************/
-
 LM_PRIVATE lm_bool_t
-_LM_FillProcess(lm_pid_t      pid,
-		lm_process_t *pproc)
-{
-	if (pid == LM_PID_BAD)
-		return LM_FALSE;
-
-	pproc->pid = pid;
-	if (!_LM_GetProcessPathEx(pproc->pid, pproc->path, LM_ARRLEN(pproc->path)))
-		return LM_FALSE;
-
-	if (!(pproc->name = _LM_GetNameFromPath(pproc->path)))
-		return LM_FALSE;
-
-	pproc->bits = _LM_GetProcessBitsEx(pproc);
-	return LM_TRUE;
-}
-
-#if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
-					lm_void_t   *arg),
+_LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+					lm_void_t *arg),
 		   lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hSnap;
 	PROCESSENTRY32 entry;
-	lm_pid_t     pid;
-	lm_process_t proc;
-
+		
 	hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hSnap == INVALID_HANDLE_VALUE)
 		return ret;
@@ -249,13 +17,11 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 	entry.dwSize = sizeof(PROCESSENTRY32);
 	if (Process32First(hSnap, &entry)) {
 		do {
-			
-			pid = (lm_pid_t)entry.th32ProcessID;
+			lm_pid_t pid = (lm_pid_t)(
+				entry.th32ProcessID
+			);
 
-			if (!_LM_FillProcess(pid, &proc))
-				continue;
-
-			if (callback(&proc, arg) == LM_FALSE)
+			if (callback(pid, arg) == LM_FALSE)
 				break;
 		} while (Process32Next(hSnap, &entry));
 
@@ -263,21 +29,19 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 	}
 
 	CloseHandle(hSnap);
-
+	
 	return ret;
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
-				       lm_void_t    *arg),
-		  lm_void_t *arg)
+_LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+					lm_void_t *arg),
+		   lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	struct procstat *ps;
 	unsigned int nprocs = 0;
 	struct kinfo_proc *procs;
-	lm_pid_t     pid;
-	lm_process_t proc;
 
 	ps = procstat_open_sysctl();
 	if (!ps)
@@ -292,11 +56,11 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 		unsigned int i;
 
 		for (i = 0; i < nprocs; ++i) {
-			pid = (lm_pid_t)procs[i].ki_pid;
-			if (!_LM_FillProcess(pid, &proc))
-				continue;
+			lm_pid_t pid = (lm_pid_t)(
+				procs[i].ki_pid
+			);
 
-			if (callback(&proc, arg) == LM_FALSE)
+			if (callback(pid, arg) == LM_FALSE)
 				break;
 		}
 
@@ -311,15 +75,13 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumProcessIds(lm_bool_t(*callback)(lm_process_t *pproc,
-					lm_void_t    *arg),
+_LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+					lm_void_t *arg),
 		   lm_void_t *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	struct dirent *pdirent;
 	DIR *dir;
-	lm_pid_t     pid;
-	lm_process_t proc;
 
 	dir = opendir(LM_PROCFS);
 
@@ -327,16 +89,13 @@ _LM_EnumProcessIds(lm_bool_t(*callback)(lm_process_t *pproc,
 		return ret;
 		
 	while ((pdirent = readdir(dir))) {
-		pid = (lm_pid_t)LM_ATOI(pdirent->d_name);
+		lm_pid_t pid = (lm_pid_t)LM_ATOI(pdirent->d_name);
 
-		if (!pid && LM_STRCMP(pdirent->d_name, LM_STR("0")))
-			continue;
-
-		if (!_LM_FillProcess(pid, &proc))
-			continue;
-
-		if (callback(&proc, arg) == LM_FALSE)
-			break;
+		if (pid || (!pid && !LM_STRCMP(pdirent->d_name,
+					       LM_STR("0")))) {
+			if (callback(pid, arg) == LM_FALSE)
+				break;
+		}
 	}
 
 	ret = LM_TRUE;
@@ -347,13 +106,13 @@ _LM_EnumProcessIds(lm_bool_t(*callback)(lm_process_t *pproc,
 #endif
 
 LM_API lm_bool_t
-LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
-				      lm_void_t    *arg),
+LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
+				       lm_void_t *arg),
 		  lm_void_t *arg)
 {
 	LM_ASSERT(callback != LM_NULLPTR);
 
-	return _LM_EnumProcesses(callback, arg);
+	return _LM_EnumProcessIds(callback, arg);
 }
 
 /********************************/
@@ -372,75 +131,61 @@ _LM_GetProcessId(lm_void_t)
 }
 #endif
 
-LM_API lm_bool_t
-LM_GetProcess(lm_process_t *procbuf)
+LM_API lm_pid_t
+LM_GetProcessId(lm_void_t)
 {
-	/*
-	 * There's no need to do all these operations everytime
-	 * this function is called. Just store the results in
-	 * a static variable, since they'll never change anyways
-	 */
-	static lm_process_t proc = { LM_PID_BAD, 0, { 0 }, LM_NULLPTR };
-	if (proc.pid == LM_PID_BAD) {
-		proc.pid = _LM_GetProcessId();
-		if (!_LM_GetProcessPath(proc.path, LM_ARRLEN(proc.path)))
-			return LM_FALSE;
-
-		if (!(procbuf->name = _LM_GetNameFromPath(procbuf->path)))
-			return LM_FALSE;
-
-		procbuf->bits = LM_BITS;
-	}
-
-	*procbuf = proc;
-
-	return LM_TRUE;
+	return _LM_GetProcessId();
 }
 
 /********************************/
 
 typedef struct {
-	lm_process_t *pproc;
-	lm_tstring_t  procstr;
-	lm_size_t     len;
+	lm_pid_t     pid;
+	lm_tstring_t procstr;
+	lm_size_t    len;
 } _lm_find_pid_t;
 
 LM_PRIVATE lm_bool_t
-_LM_FindProcessCallback(lm_process_t *pproc,
-			lm_void_t    *arg)
+_LM_FindProcessIdCallback(lm_pid_t   pid,
+			  lm_void_t *arg)
 {
 	lm_bool_t	  ret = LM_TRUE;
 	_lm_find_pid_t   *parg = (_lm_find_pid_t *)arg;
+	lm_tchar_t	 *path;
 	lm_size_t         len;
 
-	len = LM_STRLEN(pproc->path);
-	if (len >= parg->len) {
-		if (!LM_STRCMP(&pproc->path[len - parg->len], parg->procstr)) {
-			*(parg->pproc) = *pproc;
+	path = (lm_tchar_t *)LM_CALLOC(LM_PATH_MAX, sizeof(lm_tchar_t));
+	if (!path)
+		return LM_FALSE;
+
+	len = LM_GetProcessPathEx(pid, path, LM_PATH_MAX);
+	if (len && len >= parg->len) {
+		path[len] = LM_STR('\x00');
+
+		if (!LM_STRCMP(&path[len - parg->len], parg->procstr)) {
+			parg->pid = pid;
 			ret = LM_FALSE;
 		}
 	}
 
+	LM_FREE(path);
+
 	return ret;
 }
 
-LM_API lm_bool_t
-LM_FindProcess(lm_tstring_t  name,
-	       lm_process_t *procbuf)
+LM_API lm_pid_t
+LM_FindProcessId(lm_tstring_t procstr)
 {
 	_lm_find_pid_t arg;
 
-	LM_ASSERT(name != LM_NULLPTR && procbuf != LM_NULLPTR);
+	LM_ASSERT(procstr != LM_NULLPTR);
 
-	arg.pproc = procbuf;
-	arg.pproc->pid = LM_PID_BAD;
-	arg.procstr = name;
+	arg.pid = LM_PID_BAD;
+	arg.procstr = procstr;
 	arg.len = LM_STRLEN(arg.procstr);
 
-	LM_ASSERT(arg.len > 0);
-
-	LM_EnumProcesses(_LM_FindProcessCallback, (lm_void_t *)&arg);
-	return arg.pproc->pid != LM_PID_BAD ? LM_TRUE : LM_FALSE;
+	LM_EnumProcessIds(_LM_FindProcessIdCallback, (lm_void_t *)&arg);
+	return arg.pid;
 }
 
 /********************************/
@@ -449,7 +194,7 @@ LM_FindProcess(lm_tstring_t  name,
 LM_PRIVATE lm_pid_t
 _LM_GetParentId(lm_void_t)
 {
-	return _LM_GetParentIdEx(LM_GetProcess());
+	return LM_GetParentIdEx(LM_GetProcessId());
 }
 #else
 LM_PRIVATE lm_pid_t
@@ -459,11 +204,10 @@ _LM_GetParentId(lm_void_t)
 }
 #endif
 
-LM_API lm_bool_t
-LM_GetParentProcess(lm_process_t *pproc)
+LM_API lm_pid_t
+LM_GetParentId(lm_void_t)
 {
-	lm_pid_t ppid = _LM_GetParentId();
-	return _LM_FillProcess(ppid, pproc);
+	return _LM_GetParentId();
 }
 
 /********************************/
@@ -569,30 +313,27 @@ CLOSE_EXIT:
 #endif
 
 LM_API lm_pid_t
-LM_GetParentProcessEx(lm_process_t *pproc,
-		      lm_process_t *procbuf)
+LM_GetParentIdEx(lm_pid_t pid)
 {
-	lm_pid_t pid;
-	LM_ASSERT(pproc != LM_NULLPTR && procbuf != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD);
 
-	pid = _LM_GetParentIdEx(pid);
-	return _LM_FillProcess(pid, procbuf);
+	return _LM_GetParentIdEx(pid);
 }
 
 /********************************/
 
 typedef struct {
-	lm_process_t *pproc;
-	lm_bool_t     is_alive;
+	lm_pid_t  pid;
+	lm_bool_t is_alive;
 } _lm_is_proc_alive_t;
 
 LM_PRIVATE lm_bool_t
-_LM_IsProcessAliveCallback(lm_process_t *pproc,
-			   lm_void_t    *arg)
+_LM_IsProcessAliveCallback(lm_pid_t   pid,
+			   lm_void_t *arg)
 {
 	_lm_is_proc_alive_t *parg = (_lm_is_proc_alive_t *)arg;
 
-	if (parg->pproc->pid == pproc->pid) {
+	if (parg->pid == pid) {
 		parg->is_alive = LM_TRUE;
 		return LM_FALSE;
 	}
@@ -601,15 +342,307 @@ _LM_IsProcessAliveCallback(lm_process_t *pproc,
 }
 
 LM_API lm_bool_t
-LM_IsProcessAlive(lm_process_t *pproc)
+LM_IsProcessAlive(lm_pid_t pid)
 {
 	_lm_is_proc_alive_t arg;
-	arg.pproc    = pproc;
+	arg.pid      = pid;
 	arg.is_alive = LM_FALSE;
 
-	LM_EnumProcesses(_LM_IsProcessAliveCallback, (lm_void_t *)&arg);
+	LM_EnumProcessIds(_LM_IsProcessAliveCallback, (lm_void_t *)&arg);
 
 	return arg.is_alive;
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_size_t
+_LM_GetProcessPath(lm_tchar_t *pathbuf,
+		   lm_size_t   maxlen)
+{
+	HMODULE hModule = GetModuleHandle(NULL);
+	if (!hModule)
+		return len;
+
+	return (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
+}
+#else
+LM_PRIVATE lm_size_t
+_LM_GetProcessPath(lm_tchar_t *pathbuf,
+		   lm_size_t   maxlen)
+{
+	return LM_GetProcessPathEx(LM_GetProcessId(), pathbuf, maxlen);
+}
+#endif
+
+LM_API lm_size_t
+LM_GetProcessPath(lm_tchar_t *pathbuf,
+		  lm_size_t   maxlen)
+{
+	lm_size_t len;
+
+	LM_ASSERT(pathbuf != LM_NULLPTR && maxlen > 0);
+
+	len = _LM_GetProcessPath(pathbuf, maxlen);
+	pathbuf[len] = LM_STR('\x00');
+	return len;
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_size_t
+_LM_GetProcessPathEx(lm_pid_t     pid,
+		     lm_tchar_t  *pathbuf,
+		     lm_size_t    maxlen)
+{
+	HANDLE    hProcess;
+	lm_size_t len;
+
+	if (!_LM_OpenProcess(pid, &hProcess))
+		return 0;
+
+	len = (lm_size_t)GetModuleFileNameEx(hProcess, NULL, pathbuf, maxlen);
+
+	_LM_CloseProcess(&hProcess);
+
+	return len;
+}
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_size_t
+_LM_GetProcessPathEx(lm_pid_t     pid,
+		     lm_tchar_t  *pathbuf,
+		     lm_size_t    maxlen)
+{
+	lm_size_t len = 0;
+	struct procstat *ps;
+	unsigned int nprocs = 0;
+	struct kinfo_proc *procs;
+
+	ps = procstat_open_sysctl();
+	if (!ps)
+		return len;
+
+	procs = procstat_getprocs(
+		ps, KERN_PROC_PID,
+		pid, &nprocs
+	);
+
+	if (procs && nprocs) {
+		if (!procstat_getpathname(ps, procs,
+					  pathbuf, maxlen))
+			len = LM_STRLEN(pathbuf);
+
+		procstat_freeprocs(ps, procs);
+	}
+
+	procstat_close(ps);
+
+	return len;
+}
+#else
+LM_PRIVATE lm_size_t
+_LM_GetProcessPathEx(lm_pid_t     pid,
+		     lm_tchar_t  *pathbuf,
+		     lm_size_t    maxlen)
+{
+	ssize_t slen;
+	lm_tchar_t exe_path[LM_PATH_MAX] = { 0 };
+	LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path),
+		    LM_STR("%s/%d/exe"), LM_PROCFS, pid);
+	
+	/* readlink does not append a null terminator, so use maxlen - 1
+	   and append it later */
+	slen = readlink(exe_path, pathbuf, maxlen - 1);
+	if (slen == -1)
+		slen = 0;
+	return (lm_size_t)slen;
+}
+#endif
+
+LM_API lm_size_t
+LM_GetProcessPathEx(lm_pid_t     pid,
+		    lm_tchar_t  *pathbuf,
+		    lm_size_t    maxlen)
+{
+	lm_size_t len;
+
+	LM_ASSERT(pid != LM_PID_BAD &&
+		  pathbuf != LM_NULLPTR &&
+		  maxlen > 0);
+
+	len = _LM_GetProcessPathEx(pid, pathbuf, maxlen);
+
+	pathbuf[len] = LM_STR('\x00');
+
+	return len;
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_size_t
+_LM_GetProcessName(lm_tchar_t *namebuf,
+		   lm_size_t   maxlen)
+{
+	/* According to the Windows API Docs, GetModuleBaseName
+	   should not be called on the current process, instead
+	   you should get the full path with GetModuleFileName
+	   and find the last '\' character.
+
+	   MS Docs (https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmodulebasenamea):
+	   "To retrieve the base name of a module in the current
+	   process, use the GetModuleFileName function to retrieve
+	   the full module name and then use a function call such as
+	   strrchr(szmodulename, '\') to scan to the beginning of the
+	   base name within the module name string. This is more efficient
+	   and more reliable than calling GetModuleBaseName with a handle
+	   to the current process."
+	 */
+
+	lm_size_t len = 0;
+	lm_tchar_t path[LM_PATH_MAX];
+	lm_tchar_t *ptr;
+
+	if (!LM_GetProcessPath(path, LM_PATH_MAX))
+		return len;
+
+	ptr = LM_STRRCHR(path, LM_STR('\\'));
+	if (!ptr)
+		return len;
+
+	ptr = &ptr[1];
+	len = LM_STRLEN(ptr);
+	if (len >= maxlen)
+		len = maxlen - 1;
+
+	LM_STRNCPY(namebuf, ptr, len);
+	namebuf[len] = LM_STR('\x00');
+
+	return len;
+}
+#else
+LM_PRIVATE lm_size_t
+_LM_GetProcessName(lm_tchar_t *namebuf,
+		   lm_size_t   maxlen)
+{
+	return LM_GetProcessNameEx(LM_GetProcessId(), namebuf, maxlen);
+}
+#endif
+
+LM_API lm_size_t
+LM_GetProcessName(lm_tchar_t *namebuf,
+		  lm_size_t   maxlen)
+{
+	LM_ASSERT(namebuf != LM_NULLPTR && maxlen > 0);
+
+	return _LM_GetProcessName(namebuf, maxlen);
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_size_t
+_LM_GetProcessNameEx(lm_pid_t    pid,
+		     lm_tchar_t *namebuf,
+		     lm_size_t   maxlen)
+{
+	lm_size_t len = 0;
+	HANDLE hProcess;
+
+	if (!_LM_OpenProcess(pid, &hProcess))
+		return len;
+
+	len = (lm_size_t)GetModuleBaseName(hProcess, NULL, namebuf, maxlen);
+
+	_LM_CloseProcess(&hProcess);
+
+	return len;
+}
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_size_t
+_LM_GetProcessNameEx(lm_pid_t    pid,
+		     lm_tchar_t *namebuf,
+		     lm_size_t   maxlen)
+{
+	lm_size_t len = 0;
+	struct procstat *ps;
+	unsigned int nprocs = 0;
+	struct kinfo_proc *procs;
+
+	ps = procstat_open_sysctl();
+	if (!ps)
+		return len;
+
+	procs = procstat_getprocs(
+		ps, KERN_PROC_PID,
+		pid, &nprocs
+	);
+
+	if (procs && nprocs) {
+		len = LM_STRLEN(procs->ki_comm);
+		if (len >= maxlen)
+			len = maxlen - 1;
+
+		LM_STRNCPY(namebuf, procs->ki_comm, len);
+
+		procstat_freeprocs(ps, procs);
+	}
+
+	procstat_close(ps);
+
+	return len;
+}
+#else
+LM_PRIVATE lm_size_t
+_LM_GetProcessNameEx(lm_pid_t    pid,
+		     lm_tchar_t *namebuf,
+		     lm_size_t   maxlen)
+{
+	lm_size_t   len = 0;
+	size_t      buf_len;
+	lm_tchar_t *comm_line = NULL;
+	lm_tchar_t  comm_path[LM_PATH_MAX];
+	FILE       *comm_file;
+
+	LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path),
+		    LM_STR("%s/%d/comm"), LM_PROCFS, pid);
+
+	comm_file = LM_FOPEN(comm_path, "r");
+	if (!comm_file)
+		return len;
+
+	if ((len = LM_GETLINE(&comm_line, &buf_len, comm_file)) <= 0)
+		goto CLEAN_EXIT;
+
+	--len; /* remove new line */
+	if (len >= maxlen)
+		len = maxlen - 1;
+
+	LM_STRNCPY(namebuf, comm_line, len);
+CLEAN_EXIT:
+	LM_FREE(comm_line); /* the buffer should be freed even if getline fails (according to the getline man page) */
+	LM_FCLOSE(comm_file);
+	return len;
+}
+#endif
+
+LM_API lm_size_t
+LM_GetProcessNameEx(lm_pid_t     pid,
+		    lm_tchar_t  *namebuf,
+		    lm_size_t    maxlen)
+{
+	lm_size_t len;
+
+	LM_ASSERT(pid != LM_PID_BAD &&
+		  namebuf != LM_NULLPTR &&
+		  maxlen > 0);
+
+	len = _LM_GetProcessNameEx(pid, namebuf, maxlen);
+
+	namebuf[len] = LM_STR('\x00');
+
+	return len;
 }
 
 /********************************/
@@ -657,5 +690,90 @@ LM_GetSystemBits(lm_void_t)
 
 /********************************/
 
+LM_API lm_size_t
+LM_GetProcessBits(lm_void_t)
+{
+	return (lm_size_t)LM_BITS;
+}
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_void_t
+_LM_GetProcessBitsEx(lm_pid_t   pid,
+		     lm_size_t *bits)
+{
+	HANDLE hProcess;
+	BOOL IsWow64;
+	lm_size_t sysbits;
+
+	if (!_LM_OpenProcess(pid, &hProcess))
+		return;
+
+	if (IsWow64Process(hProcess, &IsWow64)) {
+		sysbits = LM_GetSystemBits();
+
+		if (sysbits == 32 || IsWow64)
+			*bits = 32;
+		else if (sysbits == 64)
+			*bits = 64;
+	}
+
+	_LM_CloseProcess(&hProcess);
+}
+#else
+LM_PRIVATE lm_size_t
+_LM_GetElfBits(lm_tchar_t *path)
+{
+	lm_size_t bits = 0;
+	int fd;
+	unsigned char elf_num;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return bits;
+
+	/*
+	 * ELF Magic:
+	 * 32 bits -> 0x7F, E, L, F, 1
+	 * 64 bits -> 0x7F, E, L, F, 2
+	 */
+
+	lseek(fd, EI_MAG3 + 1, SEEK_SET);
+	if (read(fd, &elf_num, sizeof(elf_num)) > 0 &&
+	    (elf_num == 1 || elf_num == 2))
+		bits = elf_num * 32;
+
+	close(fd);
+
+	return bits;
+}
+
+LM_PRIVATE lm_void_t
+_LM_GetProcessBitsEx(lm_pid_t   pid,
+		     lm_size_t *bits)
+{
+	lm_tchar_t path[LM_PATH_MAX];
+	lm_size_t elf_bits;
+
+	if (!LM_GetProcessPathEx(pid, path, LM_PATH_MAX))
+		return;
+
+	elf_bits = _LM_GetElfBits(path);
+	if (elf_bits)
+		*bits = elf_bits;
+}
 #endif
+
+LM_API lm_size_t
+LM_GetProcessBitsEx(lm_pid_t pid)
+{
+	lm_size_t bits = LM_BITS;
+
+	LM_ASSERT(pid != LM_PID_BAD);
+
+	_LM_GetProcessBitsEx(pid, &bits);
+
+	return bits;
+}
 

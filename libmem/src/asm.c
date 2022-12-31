@@ -4,6 +4,7 @@ LM_API lm_bool_t
 LM_Assemble(lm_cstring_t code,
 	    lm_inst_t   *inst)
 {
+	lm_bool_t  ret = LM_FALSE;
 	lm_byte_t *codebuf;
 
 	if (!LM_AssembleEx(code, LM_ARCH, LM_BITS, (lm_address_t)0, &codebuf))
@@ -51,8 +52,7 @@ LM_AssembleEx(lm_cstring_t code,
 	if (ks_open(ksarch, ksmode, &ks) != KS_ERR_OK)
 		return ret;
 
-	if (ks_asm(ks, code, (uint64_t)base_addr, &encode, &size, &count) != KS_ERR_OK)
-		goto CLEAN_EXIT;
+	ks_asm(ks, code, 0, &encode, &size, &count);
 
 	codebuf = (lm_byte_t *)LM_MALLOC(size);
 	if (!codebuf)
@@ -84,6 +84,7 @@ LM_FreeCodeBuffer(lm_byte_t **pcodebuf)
 LM_API lm_bool_t
 LM_Disassemble(lm_address_t code, lm_inst_t *inst)
 {
+	lm_bool_t ret = LM_FALSE;
 	lm_inst_t *insts;
 
 	LM_ASSERT(code != LM_ADDRESS_BAD && inst != LM_NULLPTR);
@@ -136,7 +137,7 @@ LM_DisassembleEx(lm_address_t code,
 	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
 		return ret;
 
-	inst_count = cs_disasm(cshandle, code, size, (uint64_t)base_addr, count, &csinsn);
+	inst_count = cs_disasm(cshandle, code, size, base_addr, count, &csinsn);
 	if (inst_count <= 0)
 		goto CLEAN_EXIT;
 
@@ -191,20 +192,20 @@ LM_CodeLength(lm_address_t code, lm_size_t minlength)
 /********************************/
 
 LM_API lm_size_t
-LM_CodeLengthEx(lm_process_t *pproc,
-		lm_address_t  code,
-		lm_size_t     minlength)
+LM_CodeLengthEx(lm_pid_t     pid,
+		lm_address_t code,
+		lm_size_t    minlength)
 {
 	lm_size_t length;
 	lm_inst_t inst;
 	lm_byte_t codebuf[LM_INST_SIZE];
 
-	LM_ASSERT(pproc != LM_NULLPTR &&
+	LM_ASSERT(pid != LM_PID_BAD &&
 		  code != LM_ADDRESS_BAD &&
 		  minlength > 0);
 
 	for (length = 0; length < minlength; code = (lm_address_t)LM_OFFSET(code, length)) {
-		LM_ReadMemoryEx(pproc, code, codebuf, sizeof(codebuf));
+		LM_ReadMemoryEx(pid, code, codebuf, sizeof(codebuf));
 		if (LM_Disassemble(codebuf, &inst) == LM_FALSE)
 			return 0;
 		length += inst.size;

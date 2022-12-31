@@ -1,11 +1,11 @@
 #include "internal.h"
 
 #if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_bool_t
-_LM_OpenProcess(lm_process_t *pproc,
-		HANDLE       *hProcess)
+LM_PRIVATE HANDLE
+_LM_OpenProcess(lm_pid_t pid,
+		HANDLE  *hProcess)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && hProcess != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD && hProcess != LM_NULLPTR);
 
 	if (pid == GetCurrentProcessId()) {
 		*hProcess = GetCurrentProcess();

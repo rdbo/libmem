@@ -42,7 +42,7 @@ file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
 set(LIBMEM_DEPS capstone keystone LIEF stdc++ m)
 
 if(NOT MSVC)
-	add_compile_options(-Wall -Wextra -Werror)
+	add_compile_options(-Wall -Wextra -Wpedantic)
 	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 		add_compile_options(-g -ggdb)
 	endif()

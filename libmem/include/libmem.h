@@ -203,6 +203,12 @@
 #define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)
 #define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
 #define LM_OFFSET(base, offset) (&((lm_byte_t *)base)[offset])
+#if LM_OS == LM_OS_WIN
+#	define _LM_VALID_PROCESS(proc) (proc.pid != LM_GetProcessId() && proc.handle != NULL)
+#else
+#	define _LM_VALID_PROCESS(proc) LM_TRUE
+#endif
+#define LM_VALID_PROCESS(proc) (proc.pid != LM_PID_BAD && _LM_VALID_PROCESS(proc))
 
 /* Flags */
 #if LM_OS == LM_OS_WIN
@@ -212,6 +218,7 @@
 #	define LM_PROT_RW  (PAGE_READWRITE)
 #	define LM_PROT_XR  (PAGE_EXECUTE_READ)
 #	define LM_PROT_XRW (PAGE_EXECUTE_READWRITE)
+#	define LM_PROCESS_ACCESS (PROCESS_ALL_ACCESS)
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
 #	define LM_PROT_R   (PROT_READ)
 #	define LM_PROT_W   (PROT_WRITE)
@@ -366,6 +373,13 @@ typedef int                lm_flags_t;
 #endif
 
 typedef struct {
+	lm_pid_t pid;
+#	if LM_OS == LM_OS_WIN
+	HANDLE   handle;
+#	endif
+} lm_process_t;
+
+typedef struct {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
@@ -415,12 +429,23 @@ LM_GetParentIdEx(lm_pid_t pid);
 LM_API lm_bool_t
 LM_IsProcessAlive(lm_pid_t pid);
 
+/* TODO: Make this function return lm_void_t, because it cannot fail */
+LM_API lm_bool_t
+LM_OpenProcess(lm_process_t *procbuf);
+
+LM_API lm_bool_t
+LM_OpenProcessEx(lm_pid_t      pid,
+		 lm_process_t *procbuf);
+
+LM_API lm_void_t
+LM_CloseProcess(lm_process_t *procbuf);
+
 LM_API lm_size_t
 LM_GetProcessPath(lm_tchar_t *pathbuf,
 		  lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetProcessPathEx(lm_pid_t     pid,
+LM_GetProcessPathEx(lm_process_t proc,
 		    lm_tchar_t  *pathbuf,
 		    lm_size_t    maxlen);
 
@@ -429,7 +454,7 @@ LM_GetProcessName(lm_tchar_t *namebuf,
 		  lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetProcessNameEx(lm_pid_t     pid,
+LM_GetProcessNameEx(lm_process_t proc,
 		    lm_tchar_t  *namebuf,
 		    lm_size_t    maxlen);
 
@@ -440,7 +465,7 @@ LM_API lm_size_t
 LM_GetProcessBits(lm_void_t);
 
 LM_API lm_size_t
-LM_GetProcessBitsEx(lm_pid_t pid);
+LM_GetProcessBitsEx(lm_process_t proc);
 
 /****************************************/
 
@@ -450,60 +475,60 @@ LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
 		 lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumThreadIdsEx(lm_pid_t   pid,
-		   lm_bool_t(*callback)(lm_tid_t   tid,
-					lm_void_t *arg),
-		   lm_void_t *arg);
+LM_EnumThreadIdsEx(lm_process_t proc,
+		   lm_bool_t  (*callback)(lm_tid_t   tid,
+					  lm_void_t *arg),
+		   lm_void_t   *arg);
 
 LM_API lm_tid_t
 LM_GetThreadId(lm_void_t);
 
 LM_API lm_tid_t
-LM_GetThreadIdEx(lm_pid_t pid);
+LM_GetThreadIdEx(lm_process_t proc);
 
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
+LM_EnumModules(lm_bool_t(*callback)(lm_module_t  mod,
 				    lm_tstring_t path,
 				    lm_void_t   *arg),
 	       lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumModulesEx(lm_pid_t   pid,
-		 lm_bool_t(*callback)(lm_module_t *pmod,
-				      lm_tstring_t path,
-				      lm_void_t   *arg),
-		 lm_void_t *arg);
+LM_EnumModulesEx(lm_process_t proc,
+		 lm_bool_t  (*callback)(lm_module_t  mod,
+					lm_tstring_t path,
+					lm_void_t   *arg),
+		 lm_void_t   *arg);
 
 LM_API lm_bool_t
 LM_FindModule(lm_tstring_t name,
 	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
-LM_FindModuleEx(lm_pid_t     pid,
+LM_FindModuleEx(lm_process_t proc,
 		lm_tstring_t name,
 		lm_module_t *modbuf);
 
 LM_API lm_size_t
-LM_GetModulePath(lm_module_t *pmod,
-		 lm_tchar_t  *pathbuf,
-		 lm_size_t    maxlen);
+LM_GetModulePath(lm_module_t mod,
+		 lm_tchar_t *pathbuf,
+		 lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetModulePathEx(lm_pid_t     pid,
-		   lm_module_t *pmod,
+LM_GetModulePathEx(lm_process_t proc,
+		   lm_module_t  mod,
 		   lm_tchar_t  *pathbuf,
 		   lm_size_t    maxlen);
 
 LM_API lm_size_t
-LM_GetModuleName(lm_module_t *pmod,
-		 lm_tchar_t  *namebuf,
-		 lm_size_t    maxlen);
+LM_GetModuleName(lm_module_t mod,
+		 lm_tchar_t *namebuf,
+		 lm_size_t   maxlen);
 
 LM_API lm_size_t
-LM_GetModuleNameEx(lm_pid_t     pid,
-		   lm_module_t *pmod,
+LM_GetModuleNameEx(lm_process_t proc,
+		   lm_module_t  mod,
 		   lm_tchar_t  *namebuf,
 		   lm_size_t    maxlen);
 
@@ -512,42 +537,42 @@ LM_LoadModule(lm_tstring_t path,
 	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
-LM_LoadModuleEx(lm_pid_t     pid,
+LM_LoadModuleEx(lm_process_t proc,
 		lm_tstring_t path,
 		lm_module_t *modbuf);
 
 LM_API lm_bool_t
-LM_UnloadModule(lm_module_t *pmod);
+LM_UnloadModule(lm_module_t mod);
 
 LM_API lm_bool_t
-LM_UnloadModuleEx(lm_pid_t     pid,
-		  lm_module_t *pmod);
+LM_UnloadModuleEx(lm_process_t proc,
+		  lm_module_t  mod);
 
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumSymbols(lm_module_t *pmod,
-	       lm_bool_t  (*callback)(lm_cstring_t symbol,
-				      lm_address_t addr,
-				      lm_void_t   *arg),
-	       lm_void_t   *arg);
+LM_EnumSymbols(lm_module_t mod,
+	       lm_bool_t (*callback)(lm_cstring_t symbol,
+	       			     lm_address_t addr,
+	       			     lm_void_t   *arg),
+	       lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumSymbolsEx(lm_pid_t     pid,
-		 lm_module_t *pmod,
+LM_EnumSymbolsEx(lm_process_t proc,
+		 lm_module_t  mod,
 	         lm_bool_t  (*callback)(lm_cstring_t symbol,
-					lm_address_t addr,
+		 			lm_address_t addr,
 					lm_void_t   *arg),
-		 lm_void_t   *arg);
+		 lm_void_t *arg);
 
 LM_API lm_address_t
-LM_FindSymbol(lm_module_t  *pmod,
-	      lm_cstring_t  symstr);
+LM_FindSymbol(lm_module_t  mod,
+	      lm_cstring_t symstr);
 
 LM_API lm_address_t
-LM_FindSymbolEx(lm_pid_t      pid,
-		lm_module_t  *pmod,
-		lm_cstring_t  symstr);
+LM_FindSymbolEx(lm_process_t proc,
+		lm_module_t  mod,
+		lm_cstring_t symstr);
 
 /****************************************/
 
@@ -557,17 +582,17 @@ LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 	     lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumPagesEx(lm_pid_t   pid,
-	       lm_bool_t(*callback)(lm_page_t  page,
-				    lm_void_t *arg),
-	       lm_void_t *arg);
+LM_EnumPagesEx(lm_process_t proc,
+	       lm_bool_t  (*callback)(lm_page_t  page,
+				      lm_void_t *arg),
+	       lm_void_t   *arg);
 
 LM_API lm_bool_t
 LM_GetPage(lm_address_t addr,
 	   lm_page_t   *page);
 
 LM_API lm_bool_t
-LM_GetPageEx(lm_pid_t     pid,
+LM_GetPageEx(lm_process_t proc,
 	     lm_address_t addr,
 	     lm_page_t   *page);
 
@@ -579,7 +604,7 @@ LM_ReadMemory(lm_address_t src,
 	      lm_size_t    size);
 
 LM_API lm_size_t
-LM_ReadMemoryEx(lm_pid_t     pid,
+LM_ReadMemoryEx(lm_process_t proc,
 		lm_address_t src,
 		lm_byte_t   *dst,
 		lm_size_t    size);
@@ -590,7 +615,7 @@ LM_WriteMemory(lm_address_t dst,
 	       lm_size_t    size);
 
 LM_API lm_size_t
-LM_WriteMemoryEx(lm_pid_t     pid,
+LM_WriteMemoryEx(lm_process_t proc,
 		 lm_address_t dst,
 		 lm_bstring_t src,
 		 lm_size_t    size);
@@ -601,7 +626,7 @@ LM_SetMemory(lm_byte_t *dst,
 	     lm_size_t  size);
 
 LM_API lm_size_t
-LM_SetMemoryEx(lm_pid_t     pid,
+LM_SetMemoryEx(lm_process_t proc,
 	       lm_address_t dst,
 	       lm_byte_t    byte,
 	       lm_size_t    size);
@@ -613,7 +638,7 @@ LM_ProtMemory(lm_address_t addr,
 	      lm_prot_t   *oldprot);
 
 LM_API lm_bool_t
-LM_ProtMemoryEx(lm_pid_t     pid,
+LM_ProtMemoryEx(lm_process_t proc,
 		lm_address_t addr,
 		lm_size_t    size,
 		lm_prot_t    prot,
@@ -624,20 +649,18 @@ LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot);
 
 LM_API lm_address_t
-LM_AllocMemoryEx(lm_pid_t  pid,
-		 lm_size_t size,
-		 lm_prot_t prot);
+LM_AllocMemoryEx(lm_process_t proc,
+		 lm_size_t    size,
+		 lm_prot_t    prot);
 
 LM_API lm_bool_t
 LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size);
 
 LM_API lm_bool_t
-LM_FreeMemoryEx(lm_pid_t     pid,
+LM_FreeMemoryEx(lm_process_t proc,
 		lm_address_t alloc,
 		lm_size_t    size);
-
-/****************************************/
 
 LM_API lm_address_t
 LM_DataScan(lm_bstring_t data,
@@ -646,7 +669,7 @@ LM_DataScan(lm_bstring_t data,
 	    lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_DataScanEx(lm_pid_t     pid,
+LM_DataScanEx(lm_process_t proc,
 	      lm_bstring_t data,
 	      lm_size_t    size,
 	      lm_address_t addr,
@@ -659,7 +682,7 @@ LM_PatternScan(lm_bstring_t pattern,
 	       lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_PatternScanEx(lm_pid_t     pid,
+LM_PatternScanEx(lm_process_t proc,
 		 lm_bstring_t pattern,
 		 lm_tstring_t mask,
 		 lm_address_t addr,
@@ -671,7 +694,7 @@ LM_SigScan(lm_tstring_t sig,
 	   lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_SigScanEx(lm_pid_t     pid,
+LM_SigScanEx(lm_process_t proc,
 	     lm_tstring_t sig,
 	     lm_address_t addr,
 	     lm_size_t    scansize);
@@ -689,13 +712,13 @@ LM_UnhookCode(lm_address_t  from,
 	      lm_size_t     size);
 
 LM_API lm_size_t
-LM_HookCodeEx(lm_pid_t      pid,
+LM_HookCodeEx(lm_process_t  proc,
 	      lm_address_t  from,
 	      lm_address_t  to,
 	      lm_address_t *ptrampoline);
 
 LM_API lm_bool_t
-LM_UnhookCodeEx(lm_pid_t      pid,
+LM_UnhookCodeEx(lm_process_t  proc,
 		lm_address_t  from,
 		lm_address_t *ptrampoline,
 		lm_size_t     size);
@@ -737,7 +760,7 @@ LM_CodeLength(lm_address_t code,
 	      lm_size_t minlength);
 
 LM_API lm_size_t
-LM_CodeLengthEx(lm_pid_t     pid,
+LM_CodeLengthEx(lm_process_t proc,
 		lm_address_t code,
 		lm_size_t minlength);
 

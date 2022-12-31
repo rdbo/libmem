@@ -9,7 +9,7 @@
 int
 main()
 {
-	lm_pid_t     pid;
+	lm_process_t proc;
 	lm_tchar_t   procname[LM_PATH_MAX];
 	lm_tchar_t   procpath[LM_PATH_MAX];
 	lm_pid_t     ppid;
@@ -41,26 +41,26 @@ main()
 
 	LM_PRINTF(LM_STR("[+] Test 2\n"));
 
-	pid = LM_FindProcessId(LM_STR(TEST1_NAME));
-	LM_GetProcessNameEx(pid, procname, LM_ARRLEN(procname));
-	LM_GetProcessPathEx(pid, procpath, LM_ARRLEN(procpath));
-	ppid = LM_GetParentIdEx(pid);
-	tid  = LM_GetThreadIdEx(pid);
-	bits = LM_GetProcessBitsEx(pid);
+	LM_OpenProcessEx(LM_FindProcessId(LM_STR(TEST1_NAME)), &proc);
+	LM_GetProcessNameEx(proc, procname, LM_ARRLEN(procname));
+	LM_GetProcessPathEx(proc, procpath, LM_ARRLEN(procpath));
+	ppid = LM_GetParentIdEx(proc.pid);
+	tid  = LM_GetThreadIdEx(proc);
+	bits = LM_GetProcessBitsEx(proc);
 
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), procname);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
-	LM_PRINTF(LM_STR("[*] PID:  %d\n"), pid);
+	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), bits);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	LM_FindModuleEx(pid, procpath, &mod);
-	LM_GetModuleNameEx(pid, &mod, modname, LM_ARRLEN(modname));
-	LM_GetModulePathEx(pid, &mod, modpath, LM_ARRLEN(modpath));
-	main_sym = LM_FindSymbolEx(pid, &mod, "main");
-	val_sym = LM_FindSymbolEx(pid, &mod, "val");
+	LM_FindModuleEx(proc, procpath, &mod);
+	LM_GetModuleNameEx(proc, mod, modname, LM_ARRLEN(modname));
+	LM_GetModulePathEx(proc, mod, modpath, LM_ARRLEN(modpath));
+	main_sym = LM_FindSymbolEx(proc, mod, "main");
+	val_sym = LM_FindSymbolEx(proc, mod, "val");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);
@@ -71,10 +71,10 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	/*
-	LM_LoadModuleEx(pid, LM_STR(LIBTEST_PATH), &libtest_mod);
-	LM_GetModuleNameEx(pid, libtest_mod, libtest_modname, LM_ARRLEN(libtest_modname));
-	LM_GetModulePathEx(pid, libtest_mod, libtest_modpath, LM_ARRLEN(libtest_modpath));
-	LM_UnloadModuleEx(pid, libtest_mod);
+	LM_LoadModuleEx(proc, LM_STR(LIBTEST_PATH), &libtest_mod);
+	LM_GetModuleNameEx(proc, libtest_mod, libtest_modname, LM_ARRLEN(libtest_modname));
+	LM_GetModulePathEx(proc, libtest_mod, libtest_modpath, LM_ARRLEN(libtest_modpath));
+	LM_UnloadModuleEx(proc, libtest_mod);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), libtest_modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), libtest_modpath);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), libtest_mod.base);
@@ -83,7 +83,7 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 	*/
 
-	LM_GetPageEx(pid, mod.base, &page);
+	LM_GetPageEx(proc, mod.base, &page);
 	LM_PRINTF(LM_STR("[*] Page Base:  %p\n"), page.base);
 	LM_PRINTF(LM_STR("[*] Page Size:  %p\n"), (void *)page.size);
 	LM_PRINTF(LM_STR("[*] Page End:   %p\n"), page.end);
@@ -91,17 +91,17 @@ main()
 	LM_PRINTF(LM_STR("[*] Page Flags: %d\n"), (int)page.flags);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	LM_ReadMemoryEx(pid, val_sym, (lm_byte_t *)&rdbuf, sizeof(rdbuf));
-	LM_WriteMemoryEx(pid, val_sym, (lm_bstring_t)&wrbuf, sizeof(wrbuf));
-	LM_ReadMemoryEx(pid, val_sym, (lm_byte_t *)&rdbuf2, sizeof(rdbuf));
-	data_scan = LM_DataScanEx(pid, scanme, sizeof(scanme), mod.base, mod.size);
-	pattern_scan = LM_PatternScanEx(pid, scanme, mask, mod.base, mod.size);
-	sig_scan = LM_SigScanEx(pid, signature, mod.base, mod.size);
-	alloc = LM_AllocMemoryEx(pid, 1, LM_PROT_RW);
-	LM_ProtMemoryEx(pid, alloc, 1, LM_PROT_XRW, &alloc_oldprot);
-	LM_GetPageEx(pid, alloc, &page);
+	LM_ReadMemoryEx(proc, val_sym, (lm_byte_t *)&rdbuf, sizeof(rdbuf));
+	LM_WriteMemoryEx(proc, val_sym, (lm_bstring_t)&wrbuf, sizeof(wrbuf));
+	LM_ReadMemoryEx(proc, val_sym, (lm_byte_t *)&rdbuf2, sizeof(rdbuf));
+	data_scan = LM_DataScanEx(proc, scanme, sizeof(scanme), mod.base, mod.size);
+	pattern_scan = LM_PatternScanEx(proc, scanme, mask, mod.base, mod.size);
+	sig_scan = LM_SigScanEx(proc, signature, mod.base, mod.size);
+	alloc = LM_AllocMemoryEx(proc, 1, LM_PROT_RW);
+	LM_ProtMemoryEx(proc, alloc, 1, LM_PROT_XRW, &alloc_oldprot);
+	LM_GetPageEx(proc, alloc, &page);
 	alloc_prot = page.prot;
-	LM_FreeMemoryEx(pid, alloc, 1);
+	LM_FreeMemoryEx(proc, alloc, 1);
 
 	LM_PRINTF(LM_STR("[*] Read Value:    %d\n"), rdbuf);
 	LM_PRINTF(LM_STR("[*] Written Value: %d\n"), wrbuf);
@@ -115,6 +115,8 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[-] Test 2\n"));
+
+	LM_CloseProcess(&proc);
 
 	return 0;
 }

@@ -40,14 +40,7 @@
 #	endif
 #endif
 
-#if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_bool_t
-_LM_OpenProcess(lm_pid_t pid,
-		HANDLE *hProcess);
-
-LM_PRIVATE lm_void_t
-_LM_CloseProcess(HANDLE *handle);
-#else
+#if LM_OS != LM_OS_WIN
 typedef struct {
 	 lm_int_t      syscall_num;
 	 lm_uintptr_t  arg0;
@@ -70,28 +63,28 @@ typedef struct {
 } _lm_libcall_data_t;
 
 LM_PRIVATE lm_bool_t
-_LM_SystemCallEx(lm_pid_t            pid,
+_LM_SystemCallEx(lm_process_t        proc,
 		 _lm_syscall_data_t *data,
 		 lm_uintptr_t       *syscall_ret);
 
 LM_PRIVATE lm_bool_t
-_LM_FindLibc(lm_pid_t     pid,
+_LM_FindLibc(lm_process_t proc,
 	     lm_module_t *libc_mod);
 
 LM_PRIVATE lm_bool_t
-_LM_LibraryCallEx(lm_pid_t           pid,
+_LM_LibraryCallEx(lm_process_t       proc,
 		 _lm_libcall_data_t *data,
 		 lm_uintptr_t       *call_ret);
 
 LM_PRIVATE lm_bool_t
-_LM_CallDlopen(lm_pid_t     pid,
+_LM_CallDlopen(lm_process_t proc,
 	       lm_tstring_t path,
 	       lm_int_t     mode,
 	       void       **plibhandle);
 
 LM_PRIVATE lm_bool_t
-_LM_CallDlclose(lm_pid_t pid,
-		void    *modhandle);
+_LM_CallDlclose(lm_process_t proc,
+		void *modhandle);
 #endif
 
 #endif

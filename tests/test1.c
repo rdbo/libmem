@@ -37,7 +37,7 @@ void hk_some_function(int a, int b)
 int
 main()
 {
-	lm_pid_t     pid;
+	lm_process_t proc;
 	lm_tchar_t   procname[LM_PATH_MAX];
 	lm_tchar_t   procpath[LM_PATH_MAX];
 	lm_pid_t     ppid;
@@ -69,7 +69,7 @@ main()
 
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
-	pid = LM_GetProcessId();
+	LM_OpenProcess(&proc);
 	LM_GetProcessName(procname, LM_ARRLEN(procname));
 	LM_GetProcessPath(procpath, LM_ARRLEN(procpath));
 	ppid = LM_GetParentId();
@@ -78,16 +78,16 @@ main()
 
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), procname);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
-	LM_PRINTF(LM_STR("[*] PID:  %d\n"), pid);
+	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), bits);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_FindModule(procpath, &mod);
-	LM_GetModuleName(&mod, modname, LM_ARRLEN(modname));
-	LM_GetModulePath(&mod, modpath, LM_ARRLEN(modpath));
-	main_sym = LM_FindSymbol(&mod, "main");
+	LM_GetModuleName(mod, modname, LM_ARRLEN(modname));
+	LM_GetModulePath(mod, modpath, LM_ARRLEN(modpath));
+	main_sym = LM_FindSymbol(mod, "main");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);
@@ -97,9 +97,9 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);
-	LM_GetModuleName(&libtest_mod, libtest_modname, LM_ARRLEN(libtest_modname));
-	LM_GetModulePath(&libtest_mod, libtest_modpath, LM_ARRLEN(libtest_modpath));
-	LM_UnloadModule(&libtest_mod);
+	LM_GetModuleName(libtest_mod, libtest_modname, LM_ARRLEN(libtest_modname));
+	LM_GetModulePath(libtest_mod, libtest_modpath, LM_ARRLEN(libtest_modpath));
+	LM_UnloadModule(libtest_mod);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), libtest_modname);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), libtest_modpath);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), libtest_mod.base);
@@ -181,6 +181,8 @@ main()
 	for (;;) {
 		LM_SLEEP(1);
 	}
+
+	LM_CloseProcess(&proc);
 
 	return 0;
 }

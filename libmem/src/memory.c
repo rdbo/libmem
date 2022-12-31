@@ -24,26 +24,16 @@ LM_ReadMemory(lm_address_t src,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_size_t
-_LM_ReadMemoryEx(lm_pid_t     pid,
+_LM_ReadMemoryEx(lm_process_t proc,
 		 lm_address_t src,
 		 lm_byte_t   *dst,
 		 lm_size_t    size)
 {
-	lm_size_t size = 0;
-	HANDLE hProcess;
-
-	if (!_LM_OpenProcess(pid, &hProcess))
-		return size;
-
-	size = (lm_size_t)ReadProcessMemory(hProcess, src, dst, size, NULL);
-
-	_LM_CloseProcess(&hProcess);
-
-	return size;
+	return (lm_size_t)ReadProcessMemory(proc.handle, src, dst, size, NULL);
 }
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 LM_PRIVATE lm_size_t
-_LM_ReadMemoryEx(lm_pid_t     pid,
+_LM_ReadMemoryEx(lm_process_t proc,
 		 lm_address_t src,
 		 lm_byte_t   *dst,
 		 lm_size_t    size)
@@ -56,7 +46,7 @@ _LM_ReadMemoryEx(lm_pid_t     pid,
 	iodst.iov_len  = size;
 	iosrc.iov_base = src;
 	iosrc.iov_len  = size;
-	rdsize = (lm_size_t)process_vm_readv(pid, &iodst, 1,
+	rdsize = (lm_size_t)process_vm_readv(proc.pid, &iodst, 1,
 					     &iosrc, 1, 0);
 
 	if (rdsize == -1)
@@ -66,7 +56,7 @@ _LM_ReadMemoryEx(lm_pid_t     pid,
 }
 #else
 LM_PRIVATE lm_size_t
-_LM_ReadMemoryEx(lm_pid_t     pid,
+_LM_ReadMemoryEx(lm_process_t proc,
 		 lm_address_t src,
 		 lm_byte_t   *dst,
 		 lm_size_t    size)
@@ -76,7 +66,7 @@ _LM_ReadMemoryEx(lm_pid_t     pid,
 	ssize_t rdsize;
 
 	LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path),
-		    LM_STR("%s/%d/mem"), LM_PROCFS, pid);
+		    LM_STR("%s/%d/mem"), LM_PROCFS, proc.pid);
 
 	fd = open(mem_path, O_RDONLY);
 	if (fd == -1)
@@ -93,17 +83,17 @@ _LM_ReadMemoryEx(lm_pid_t     pid,
 #endif
 
 LM_API lm_size_t
-LM_ReadMemoryEx(lm_pid_t     pid,
+LM_ReadMemoryEx(lm_process_t proc,
 		lm_address_t src,
 		lm_byte_t   *dst,
 		lm_size_t    size)
 {
-	LM_ASSERT(pid != LM_PID_BAD &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  src != LM_ADDRESS_BAD &&
 		  dst != LM_NULLPTR &&
 		  size > 0);
 
-	return _LM_ReadMemoryEx(pid, src, dst, size);
+	return _LM_ReadMemoryEx(proc, src, dst, size);
 }
 
 /********************************/
@@ -127,26 +117,17 @@ LM_WriteMemory(lm_address_t dst,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_size_t
-_LM_WriteMemoryEx(lm_pid_t     pid,
+_LM_WriteMemoryEx(lm_process_t proc,
 		  lm_address_t dst,
 		  lm_bstring_t src,
 		  lm_size_t    size)
 {
-	lm_size_t size = 0;
-	HANDLE hProcess;
-
-	if (!_LM_OpenProcess(pid, &hProcess))
-		return size;
-
-	size = (lm_size_t)WriteProcessMemory(hProcess, dst, src, size, NULL);
-
-	_LM_CloseProcess(pid, &hProcess);
-
-	return size;
+	return (lm_size_t)WriteProcessMemory(proc.handle, dst, src,
+					     size, NULL);
 }
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 LM_PRIVATE lm_size_t
-_LM_WriteMemoryEx(lm_pid_t     pid,
+_LM_WriteMemoryEx(lm_process_t proc,
 		  lm_address_t dst,
 		  lm_bstring_t src,
 		  lm_size_t    size)
@@ -159,7 +140,7 @@ _LM_WriteMemoryEx(lm_pid_t     pid,
 	iosrc.iov_len = size;
 	iodst.iov_base = dst;
 	iodst.iov_len = size;
-	wrsize = process_vm_writev(pid, &iosrc, 1, &iodst, 1, 0);
+	wrsize = process_vm_writev(proc.pid, &iosrc, 1, &iodst, 1, 0);
 
 	if (wrsize == -1)
 		return 0;
@@ -168,7 +149,7 @@ _LM_WriteMemoryEx(lm_pid_t     pid,
 }
 #else
 LM_PRIVATE lm_size_t
-_LM_WriteMemoryEx(lm_pid_t     pid,
+_LM_WriteMemoryEx(lm_process_t proc,
 		  lm_address_t dst,
 		  lm_bstring_t src,
 		  lm_size_t    size)
@@ -178,7 +159,7 @@ _LM_WriteMemoryEx(lm_pid_t     pid,
 	ssize_t wrsize;
 
 	LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path),
-		    LM_STR("%s/%d/mem"), LM_PROCFS, pid);
+		    LM_STR("%s/%d/mem"), LM_PROCFS, proc.pid);
 
 	fd = open(mem_path, O_WRONLY);
 	if (fd == -1)
@@ -195,17 +176,17 @@ _LM_WriteMemoryEx(lm_pid_t     pid,
 #endif
 
 LM_API lm_size_t
-LM_WriteMemoryEx(lm_pid_t     pid,
+LM_WriteMemoryEx(lm_process_t proc,
 		 lm_address_t dst,
 		 lm_bstring_t src,
 		 lm_size_t    size)
 {
-	LM_ASSERT(pid != LM_PID_BAD &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  dst != LM_ADDRESS_BAD &&
 		  src != LM_NULLPTR &&
 		  size > 0);
 
-	return _LM_WriteMemoryEx(pid, dst, src, size);
+	return _LM_WriteMemoryEx(proc, dst, src, size);
 }
 
 /********************************/
@@ -226,7 +207,7 @@ LM_SetMemory(lm_byte_t *dst,
 /********************************/
 
 LM_API lm_size_t
-LM_SetMemoryEx(lm_pid_t     pid,
+LM_SetMemoryEx(lm_process_t proc,
 	       lm_address_t dst,
 	       lm_byte_t    byte,
 	       lm_size_t    size)
@@ -241,7 +222,7 @@ LM_SetMemoryEx(lm_pid_t     pid,
 	if (LM_SetMemory(data, byte, size) != size)
 		return wrsize;
 	
-	wrsize = LM_WriteMemoryEx(pid, dst, data, size);
+	wrsize = LM_WriteMemoryEx(proc, dst, data, size);
 
 	LM_FREE(data);
 	return wrsize;
@@ -310,33 +291,24 @@ LM_ProtMemory(lm_address_t addr,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_ProtMemoryEx(lm_pid_t     pid,
+_LM_ProtMemoryEx(lm_process_t proc,
 		 lm_address_t addr,
 		 lm_size_t    size,
 		 lm_prot_t    prot,
 		 lm_prot_t   *oldprot)
 {
-	lm_bool_t ret = LM_FALSE;
 	DWORD old_prot;
-	HANDLE hProcess;
-
-	if (!_LM_OpenProcess(pid, &hProcess))
-		return ret;
-
-	if (!VirtualProtectEx(hProcess, addr, size, prot, &old_prot))
-		goto CLOSE_RET;
+	if (!VirtualProtectEx(proc.handle, addr, size, prot, &old_prot))
+		return LM_FALSE;
 
 	if (oldprot)
 		*oldprot = (lm_prot_t)old_prot;
 
-	ret = LM_TRUE;
-CLOSE_RET:
-	_LM_CloseProcess(&hProcess);
-	return ret;
+	return LM_TRUE;
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_ProtMemoryEx(lm_pid_t     pid,
+_LM_ProtMemoryEx(lm_process_t proc,
 		 lm_address_t addr,
 		 lm_size_t    size,
 		 lm_prot_t    prot,
@@ -348,7 +320,7 @@ _LM_ProtMemoryEx(lm_pid_t     pid,
 	if (oldprot) {
 		lm_page_t page;
 
-		if (!LM_GetPageEx(pid, addr, &page))
+		if (!LM_GetPageEx(proc, addr, &page))
 			return LM_FALSE;
 
 		*oldprot = page.prot;
@@ -364,7 +336,7 @@ _LM_ProtMemoryEx(lm_pid_t     pid,
 	data.arg1 = (lm_uintptr_t)size; /* len */
 	data.arg2 = (lm_uintptr_t)prot; /* prot */
 	data.arg3 = data.arg4 = data.arg5 = 0;
-	if (!_LM_SystemCallEx(pid, &data, &syscall_ret))
+	if (!_LM_SystemCallEx(proc, &data, &syscall_ret))
 		return LM_FALSE;
 
 	return syscall_ret != (lm_uintptr_t)-1 ? LM_TRUE : LM_FALSE;
@@ -372,17 +344,17 @@ _LM_ProtMemoryEx(lm_pid_t     pid,
 #endif
 
 LM_API lm_bool_t
-LM_ProtMemoryEx(lm_pid_t     pid,
+LM_ProtMemoryEx(lm_process_t proc,
 		lm_address_t addr,
 		lm_size_t    size,
 		lm_prot_t    prot,
 		lm_prot_t   *oldprot)
 {
-	LM_ASSERT(pid != LM_PID_BAD &&
+	LM_ASSERT(LM_VALID_PROCESS(proc) &&
 		  addr != LM_ADDRESS_BAD &&
 		  size > 0);
 
-	return _LM_ProtMemoryEx(pid, addr, size, prot, oldprot);
+	return _LM_ProtMemoryEx(proc, addr, size, prot, oldprot);
 }
 
 /********************************/
@@ -431,36 +403,30 @@ LM_AllocMemory(lm_size_t size,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_address_t
-_LM_AllocMemoryEx(lm_pid_t  pid,
-		  lm_size_t size,
-		  lm_prot_t prot)
+_LM_AllocMemoryEx(lm_process_t proc,
+		  lm_size_t    size,
+		  lm_prot_t    prot)
 {
-	lm_address_t alloc = LM_ADDRESS_BAD;
-	HANDLE hProcess;
+	lm_address_t alloc;
 
-	if (!_LM_OpenProcess(pid, &hProcess))
-		return alloc;
-
-	alloc = (lm_address_t)VirtualAllocEx(hProcess, NULL, size,
+	alloc = (lm_address_t)VirtualAllocEx(proc.handle, NULL, size,
 					     MEM_COMMIT | MEM_RESERVE, prot);
 	if (!alloc)
 		alloc = LM_ADDRESS_BAD;
-
-	_LM_CloseProcess(&hProcess);
 
 	return alloc;
 }
 #else
 LM_PRIVATE lm_address_t
-_LM_AllocMemoryEx(lm_pid_t  pid,
-		  lm_size_t size,
-		  lm_prot_t prot)
+_LM_AllocMemoryEx(lm_process_t proc,
+		  lm_size_t    size,
+		  lm_prot_t    prot)
 {
 	_lm_syscall_data_t data;
 	lm_uintptr_t       syscall_ret = (lm_uintptr_t)MAP_FAILED;
 
 #	if LM_OS == LM_OS_LINUX
-	lm_size_t bits = LM_GetProcessBitsEx(pid);
+	lm_size_t bits = LM_GetProcessBitsEx(proc);
 	if (bits == 64)
 		data.syscall_num = __NR_mmap;
 	else
@@ -476,7 +442,7 @@ _LM_AllocMemoryEx(lm_pid_t  pid,
 	data.arg4 = (lm_uintptr_t)-1; /* fd */
 	data.arg5 = (lm_uintptr_t)0; /* offset */
 
-	if (!_LM_SystemCallEx(pid, &data, &syscall_ret))
+	if (!_LM_SystemCallEx(proc, &data, &syscall_ret))
 		return LM_ADDRESS_BAD;
 
 	if (syscall_ret == (lm_uintptr_t)MAP_FAILED)
@@ -487,13 +453,13 @@ _LM_AllocMemoryEx(lm_pid_t  pid,
 #endif
 
 LM_API lm_address_t
-LM_AllocMemoryEx(lm_pid_t  pid,
-		 lm_size_t size,
-		 lm_prot_t prot)
+LM_AllocMemoryEx(lm_process_t proc,
+		 lm_size_t    size,
+		 lm_prot_t    prot)
 {
-	LM_ASSERT(pid != LM_PID_BAD && size > 0);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && size > 0);
 
-	return _LM_AllocMemoryEx(pid, size, prot);
+	return _LM_AllocMemoryEx(proc, size, prot);
 }
 
 /********************************/
@@ -527,26 +493,16 @@ LM_FreeMemory(lm_address_t alloc,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_FreeMemoryEx(lm_pid_t     pid,
+_LM_FreeMemoryEx(lm_process_t proc,
 		 lm_address_t alloc,
 		 lm_size_t    size)
 {
-	lm_bool_t ret = LM_FALSE;
-	HANDLE hProcess;
-
-	if (!_LM_OpenProcess(pid, &hProcess))
-		return ret;
-
-	ret = VirtualFreeEx(hProcess, alloc, 0, MEM_RELEASE) ?
+	return VirtualFreeEx(proc.handle, alloc, 0, MEM_RELEASE) ?
 		LM_TRUE : LM_FALSE;
-
-	_LM_CloseProcess(&hProcess);
-
-	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_FreeMemoryEx(lm_pid_t     pid,
+_LM_FreeMemoryEx(lm_process_t proc,
 		 lm_address_t alloc,
 		 lm_size_t    size)
 {
@@ -561,17 +517,17 @@ _LM_FreeMemoryEx(lm_pid_t     pid,
 	data.arg1 = (lm_uintptr_t)size;
 	data.arg2 = data.arg3 = data.arg4 = data.arg5 = 0;
 
-	return _LM_SystemCallEx(pid, &data, LM_NULLPTR);
+	return _LM_SystemCallEx(proc, &data, LM_NULLPTR);
 }
 #endif
 
 LM_API lm_bool_t
-LM_FreeMemoryEx(lm_pid_t     pid,
+LM_FreeMemoryEx(lm_process_t proc,
 		lm_address_t alloc,
 		lm_size_t    size)
 {
-	LM_ASSERT(pid != LM_PID_BAD && alloc != LM_ADDRESS_BAD);
+	LM_ASSERT(LM_VALID_PROCESS(proc) && alloc != LM_ADDRESS_BAD);
 
-	return _LM_FreeMemoryEx(pid, alloc, size);
+	return _LM_FreeMemoryEx(proc, alloc, size);
 }
 

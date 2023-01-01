@@ -355,7 +355,6 @@ LM_HookCodeEx(lm_process_t *pproc,
 	      lm_address_t *ptrampoline)
 {
 	lm_size_t  ret = 0;
-	lm_size_t  bits;
 	lm_byte_t *codebuf;
 	lm_prot_t  old_prot;
 	lm_size_t  codesize;
@@ -365,9 +364,7 @@ LM_HookCodeEx(lm_process_t *pproc,
 		  from != LM_ADDRESS_BAD &&
 		  to != LM_ADDRESS_BAD);
 
-	bits = LM_GetProcessBitsEx(pproc);
-
-	if (!(codesize = _LM_GenerateHook(from, to, bits, &codebuf)))
+	if (!(codesize = _LM_GenerateHook(from, to, pproc->bits, &codebuf)))
 		return ret;
 
 	/* Get minimum hook size that doesn't overwrite the existing instructions */

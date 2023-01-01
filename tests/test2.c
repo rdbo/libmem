@@ -10,8 +10,6 @@ int
 main()
 {
 	lm_process_t proc;
-	lm_tchar_t   procname[LM_PATH_MAX];
-	lm_tchar_t   procpath[LM_PATH_MAX];
 	lm_pid_t     ppid;
 	lm_tid_t     tid;
 	lm_size_t    bits;
@@ -41,22 +39,18 @@ main()
 
 	LM_PRINTF(LM_STR("[+] Test 2\n"));
 
-	LM_OpenProcessEx(LM_FindProcessId(LM_STR(TEST1_NAME)), &proc);
-	LM_GetProcessNameEx(&proc, procname, LM_ARRLEN(procname));
-	LM_GetProcessPathEx(&proc, procpath, LM_ARRLEN(procpath));
-	ppid = LM_GetParentIdEx(proc.pid);
+	LM_FindProcess(TEST1_NAME, &proc);
 	tid  = LM_GetThreadIdEx(&proc);
-	bits = LM_GetProcessBitsEx(&proc);
 
-	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), procname);
-	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
+	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), proc.name);
+	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), proc.path);
 	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
-	LM_PRINTF(LM_STR("[*] PPID: %d\n"), ppid);
+	LM_PRINTF(LM_STR("[*] PPID: %d\n"), proc.ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
-	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), bits);
+	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), proc.bits);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	LM_FindModuleEx(&proc, procpath, &mod);
+	LM_FindModuleEx(&proc, proc.path, &mod);
 	main_sym = LM_FindSymbolEx(&proc, &mod, "main");
 	val_sym = LM_FindSymbolEx(&proc, &mod, "val");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), mod.name);
@@ -113,8 +107,6 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[-] Test 2\n"));
-
-	LM_CloseProcess(&proc);
 
 	return 0;
 }

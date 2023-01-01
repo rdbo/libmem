@@ -275,15 +275,12 @@ _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 				   lm_void_t *arg),
 	      lm_void_t *arg)
 {
-	lm_bool_t ret = LM_FALSE;
 	lm_process_t proc;
 
-	if (LM_OpenProcess(&proc)) {
-		ret = LM_EnumPagesEx(&proc, callback, arg);
-		LM_CloseProcess(&proc);
-	}
+	if (!LM_GetProcess(&proc))
+		return LM_FALSE;
 
-	return ret;
+	return LM_EnumPagesEx(&proc, callback, arg);
 }
 #endif
 

@@ -684,8 +684,7 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 	lm_uintptr_t       syscall_ret = (lm_uintptr_t)MAP_FAILED;
 
 #	if LM_OS == LM_OS_LINUX
-	lm_size_t bits = LM_GetProcessBitsEx(pproc);
-	if (bits == 64)
+	if (pproc->bits == 64)
 		data.syscall_num = __NR_mmap;
 	else
 		data.syscall_num = __NR_mmap2;

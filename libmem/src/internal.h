@@ -266,6 +266,19 @@ You should also get your employer (if you work as a programmer) or school, if an
 LM_PRIVATE lm_tchar_t *
 _LM_GetNameFromPath(lm_tchar_t *path);
 
+LM_PRIVATE lm_size_t
+_LM_GetProcessPathEx(lm_process_t *pproc,
+		     lm_tchar_t   *pathbuf,
+		     lm_size_t     maxlen);
+
+LM_PRIVATE lm_void_t
+_LM_GetProcessBitsEx(lm_process_t *pproc,
+		     lm_size_t    *bits);
+
+LM_PRIVATE lm_size_t
+_LM_GetProcessPath(lm_tchar_t *pathbuf,
+		   lm_size_t   maxlen);
+
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_OpenProc(lm_process_t *pproc,

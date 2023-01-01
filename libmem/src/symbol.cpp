@@ -259,7 +259,7 @@ _LM_EnumSymbols(lm_module_t *pmod,
 				       lm_void_t   *arg),
 		lm_void_t   *arg)
 {
-	return _LM_EnumPeSyms(LM_GetProcessBits(), pmod->base, callback, arg);
+	return _LM_EnumPeSyms(LM_BITS, pmod->base, callback, arg);
 }
 #else
 #include <LIEF/ELF.hpp>
@@ -306,14 +306,12 @@ _LM_EnumSymbols(lm_module_t *pmod,
 				       lm_void_t   *arg),
 		lm_void_t   *arg)
 {
-	lm_bool_t    ret = LM_FALSE;
 	lm_process_t proc;
-	if (!LM_OpenProcess(&proc))
-		return ret;
 
-	ret = LM_EnumSymbolsEx(&proc, pmod, callback, arg);
-	LM_CloseProcess(&proc);
-	return ret;
+	if (!LM_GetProcess(&proc))
+		return LM_FALSE;
+
+	return LM_EnumSymbolsEx(&proc, pmod, callback, arg);
 }
 #endif
 
@@ -345,10 +343,8 @@ _LM_EnumSymbolsEx(lm_process_t *pproc,
 	if (alloc == LM_ADDRESS_BAD)
 		return ret;
 		
-	if (LM_ReadMemoryEx(pproc, mod.base, (lm_byte_t *)alloc, mod.size)) {
-		ret = _LM_EnumPeSyms(LM_GetProcessBitsEx(pproc), alloc,
-					callback, arg);
-	}
+	if (LM_ReadMemoryEx(pproc, mod.base, (lm_byte_t *)alloc, mod.size))
+		ret = _LM_EnumPeSyms(pproc->bits, alloc, callback, arg);
 
 	LM_FreeMemory(alloc, mod.size);
 
@@ -410,17 +406,12 @@ LM_PRIVATE lm_address_t
 _LM_FindSymbol(lm_module_t *pmod,
 	       lm_cstring_t symstr)
 {
-	lm_address_t symaddr = LM_ADDRESS_BAD;
 	lm_process_t proc;
 
-	if (!LM_OpenProcess(&proc))
-		return symaddr;
+	if (!LM_GetProcess(&proc))
+		return LM_ADDRESS_BAD;
 
-	symaddr = LM_FindSymbolEx(&proc, pmod, symstr);
-
-	LM_CloseProcess(&proc);
-
-	return symaddr;
+	return LM_FindSymbolEx(&proc, pmod, symstr);
 }
 #endif
 

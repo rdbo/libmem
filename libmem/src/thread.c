@@ -231,17 +231,13 @@ LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
 				      lm_void_t *arg),
 		 lm_void_t *arg)
 {
-	lm_bool_t ret = LM_FALSE;
 	lm_process_t proc;
 
-	LM_ASSERT(callback != LM_NULLPTR);	
+	LM_ASSERT(callback != LM_NULLPTR);
+	if (!LM_GetProcess(&proc))
+		return LM_FALSE;
 
-	if (LM_OpenProcess(&proc)) {
-		ret = LM_EnumThreadIdsEx(&proc, callback, arg);
-		LM_CloseProcess(&proc);
-	}
-
-	return ret;
+	return LM_EnumThreadIdsEx(&proc, callback, arg);
 }
 
 /********************************/
@@ -376,7 +372,12 @@ LM_PRIVATE lm_tid_t
 _LM_GetThreadId(lm_void_t)
 {
 	/* the process id and the thread id are the same (threads are also processes) */
-	return (lm_tid_t)LM_GetProcessId();
+	lm_process_t proc;
+
+	if (!LM_GetProcess(&proc))
+		return LM_TID_BAD;
+
+	return (lm_tid_t)proc.pid;
 }
 #endif
 

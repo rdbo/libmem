@@ -38,11 +38,8 @@ int
 main()
 {
 	lm_process_t proc;
-	lm_tchar_t   procname[LM_PATH_MAX];
-	lm_tchar_t   procpath[LM_PATH_MAX];
 	lm_pid_t     ppid;
 	lm_tid_t     tid;
-	lm_size_t    bits;
 	lm_module_t  mod;
 	lm_address_t main_sym;
 	lm_module_t  libtest_mod;
@@ -67,22 +64,18 @@ main()
 
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
-	LM_OpenProcess(&proc);
-	LM_GetProcessName(procname, LM_ARRLEN(procname));
-	LM_GetProcessPath(procpath, LM_ARRLEN(procpath));
-	ppid = LM_GetParentId();
+	LM_GetProcess(&proc);
 	tid  = LM_GetThreadId();
-	bits = LM_GetProcessBits();
 
-	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), procname);
-	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), procpath);
+	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), proc.name);
+	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), proc.path);
 	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
-	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), bits);
+	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), proc.bits);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	LM_FindModule(procpath, &mod);
+	LM_FindModule(proc.path, &mod);
 	main_sym = LM_FindSymbol(&mod, "main");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), mod.name);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), mod.path);
@@ -92,6 +85,7 @@ main()
 	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), main_sym);
 	LM_PRINTF(LM_STR("====================\n"));
 
+	/*
 	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);
 	LM_UnloadModule(&libtest_mod);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), libtest_mod.name);
@@ -100,6 +94,7 @@ main()
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)libtest_mod.size);
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), libtest_mod.end);
 	LM_PRINTF(LM_STR("====================\n"));
+	*/
 
 	LM_GetPage(mod.base, &page);
 	LM_PRINTF(LM_STR("[*] Page Base:  %p\n"), page.base);
@@ -175,8 +170,6 @@ main()
 	for (;;) {
 		LM_SLEEP(1);
 	}
-
-	LM_CloseProcess(&proc);
 
 	return 0;
 }

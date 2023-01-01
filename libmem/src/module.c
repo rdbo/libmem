@@ -228,17 +228,14 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 				    lm_void_t   *arg),
 	       lm_void_t *arg)
 {
-	lm_bool_t ret = LM_FALSE;
 	lm_process_t proc;
 
 	LM_ASSERT(callback != LM_NULLPTR);
 
-	if (LM_OpenProcess(&proc)) {
-		ret = LM_EnumModulesEx(&proc, callback, arg);
-		LM_CloseProcess(&proc);
-	}
+	if (!LM_GetProcess(&proc))
+		return LM_FALSE;
 
-	return ret;
+	return LM_EnumModulesEx(&proc, callback, arg);
 }
 
 /********************************/

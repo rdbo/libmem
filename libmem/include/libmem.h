@@ -589,7 +589,11 @@ typedef int                lm_flags_t;
 #endif
 
 typedef struct {
-	lm_pid_t pid;
+	lm_pid_t    pid;
+	lm_pid_t    ppid;
+	lm_size_t   bits;
+	lm_tchar_t  path[LM_PATH_MAX];
+	lm_tchar_t *name;
 } lm_process_t;
 
 typedef struct {
@@ -625,62 +629,29 @@ typedef lm_int_t lm_arch_t;
 
 /* libmem */
 LM_API lm_bool_t
-LM_EnumProcessIds(lm_bool_t(*callback)(lm_pid_t   pid,
-				       lm_void_t *arg),
+LM_EnumProcesses(lm_bool_t (*callback)(lm_process_t *pproc,
+				      lm_void_t    *arg),
 		  lm_void_t *arg);
 
-LM_API lm_pid_t
-LM_GetProcessId(lm_void_t);
-
-LM_API lm_pid_t
-LM_FindProcessId(lm_tstring_t procstr);
-
-LM_API lm_pid_t
-LM_GetParentId(lm_void_t);
-
-LM_API lm_pid_t
-LM_GetParentIdEx(lm_pid_t pid);
+LM_API lm_bool_t
+LM_GetProcess(lm_process_t *procbuf);
 
 LM_API lm_bool_t
-LM_IsProcessAlive(lm_pid_t pid);
-
-/* TODO: Make this function return lm_void_t, because it cannot fail */
-LM_API lm_bool_t
-LM_OpenProcess(lm_process_t *procbuf);
+LM_FindProcess(lm_tstring_t  procstr,
+	       lm_process_t *procbuf);
 
 LM_API lm_bool_t
-LM_OpenProcessEx(lm_pid_t      pid,
-		 lm_process_t *procbuf);
+LM_GetParent(lm_process_t *procbuf);
 
-LM_API lm_void_t
-LM_CloseProcess(lm_process_t *procbuf);
+LM_API lm_pid_t
+LM_GetParentEx(lm_process_t *pproc,
+	       lm_process_t *procbuf);
 
-LM_API lm_size_t
-LM_GetProcessPath(lm_tchar_t *pathbuf,
-		  lm_size_t   maxlen);
-
-LM_API lm_size_t
-LM_GetProcessPathEx(lm_process_t *pproc,
-		    lm_tchar_t   *pathbuf,
-		    lm_size_t     maxlen);
-
-LM_API lm_size_t
-LM_GetProcessName(lm_tchar_t *namebuf,
-		  lm_size_t   maxlen);
-
-LM_API lm_size_t
-LM_GetProcessNameEx(lm_process_t *pproc,
-		    lm_tchar_t   *namebuf,
-		    lm_size_t     maxlen);
+LM_API lm_bool_t
+LM_IsProcessAlive(lm_process_t *pproc);
 
 LM_API lm_size_t
 LM_GetSystemBits(lm_void_t);
-
-LM_API lm_size_t
-LM_GetProcessBits(lm_void_t);
-
-LM_API lm_size_t
-LM_GetProcessBitsEx(lm_process_t *pproc);
 
 /****************************************/
 

@@ -545,14 +545,11 @@ _LM_SystemCallEx(lm_process_t       *pproc,
 	lm_void_t   *regs = LM_NULLPTR;
 	lm_void_t   *old_regs = LM_NULLPTR;
 	lm_uintptr_t program_counter;
-	lm_size_t    bits;
 	lm_byte_t   *old_code;
 	
 	LM_ASSERT(pproc != LM_NULLPTR && data != LM_NULLPTR);
 
-	bits = LM_GetProcessBitsEx(pproc);
-
-	codesize = _LM_GenerateSyscall(bits, &codebuf);
+	codesize = _LM_GenerateSyscall(pproc->bits, &codebuf);
 	if (!codesize)
 		return ret;
 
@@ -572,7 +569,7 @@ _LM_SystemCallEx(lm_process_t       *pproc,
 	
 	/* setup injection registers and get the program counter,
 	   which is where the code will be injected */
-	_LM_SetupSyscallRegs(data, bits, regs, &program_counter);
+	_LM_SetupSyscallRegs(data, pproc->bits, regs, &program_counter);
 
 	/* save original code in a buffer and write the payload */
 	if (!_LM_PtraceRead(pproc->pid, program_counter, old_code, codesize) ||
@@ -835,14 +832,11 @@ _LM_LibraryCallEx(lm_process_t      *pproc,
 	lm_void_t   *regs = LM_NULLPTR;
 	lm_void_t   *old_regs = LM_NULLPTR;
 	lm_uintptr_t program_counter;
-	lm_size_t    bits;
 	lm_byte_t   *old_code;
 	
 	LM_ASSERT(pproc != LM_NULLPTR && data != LM_NULLPTR);
 
-	bits = LM_GetProcessBitsEx(pproc);
-
-	codesize = _LM_GenerateLibcall(bits, data->nargs, &codebuf);
+	codesize = _LM_GenerateLibcall(pproc->bits, data->nargs, &codebuf);
 	if (!codesize)
 		return ret;
 
@@ -862,7 +856,7 @@ _LM_LibraryCallEx(lm_process_t      *pproc,
 	
 	/* setup injection registers and get the program counter,
 	   which is where the code will be injected */
-	_LM_SetupLibcallRegs(data, bits, regs, &program_counter);
+	_LM_SetupLibcallRegs(data, pproc->bits, regs, &program_counter);
 
 	/* save original code in a buffer and write the payload */
 	if (!_LM_PtraceRead(pproc->pid, program_counter, old_code, codesize) ||

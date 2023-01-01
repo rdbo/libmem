@@ -252,7 +252,17 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 		 lm_byte_t    *dst,
 		 lm_size_t     size)
 {
-	return (lm_size_t)ReadProcessMemory(pproc->handle, src, dst, size, NULL);
+	lm_size_t rdsize = 0;
+	HANDLE hProcess;
+
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return rdsize;
+
+	rdsize = (lm_size_t)ReadProcessMemory(hProcess, src, dst, size, NULL);
+
+	_LM_CloseProc(&hProcess);
+
+	return rdsize;
 }
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 LM_PRIVATE lm_size_t
@@ -345,8 +355,18 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 		  lm_bstring_t  src,
 		  lm_size_t     size)
 {
-	return (lm_size_t)WriteProcessMemory(pproc->handle, dst, src,
-					     size, NULL);
+	lm_size_t wrsize = 0;
+	HANDLE hProcess;
+
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return wrsize;
+
+	wrsize = (lm_size_t)WriteProcessMemory(hProcess, dst, src,
+					       size, NULL);
+
+	_LM_CloseProc(&hProcess);
+
+	return wrsize;
 }
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 LM_PRIVATE lm_size_t
@@ -520,14 +540,23 @@ _LM_ProtMemoryEx(lm_process_t *pproc,
 		 lm_prot_t     prot,
 		 lm_prot_t    *oldprot)
 {
+	lm_bool_t ret = LM_FALSE;
 	DWORD old_prot;
-	if (!VirtualProtectEx(pproc->handle, addr, size, prot, &old_prot))
-		return LM_FALSE;
+	HANDLE hProcess;
+
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return ret
+
+	if (!VirtualProtectEx(hProcess, addr, size, prot, &old_prot))
+		goto CLOSE_RET;
 
 	if (oldprot)
 		*oldprot = (lm_prot_t)old_prot;
 
-	return LM_TRUE;
+	ret = LM_TRUE;
+CLOSE_RET:
+	_LM_CloseProc(&hProcess);
+	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t
@@ -630,12 +659,18 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 		  lm_size_t     size,
 		  lm_prot_t     prot)
 {
-	lm_address_t alloc;
+	lm_address_t alloc = LM_ADDRESS_BAD;
+	HANDLE hProcess;
 
-	alloc = (lm_address_t)VirtualAllocEx(pproc->handle, NULL, size,
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return alloc;
+
+	alloc = (lm_address_t)VirtualAllocEx(hProcess, NULL, size,
 					     MEM_COMMIT | MEM_RESERVE, prot);
 	if (!alloc)
 		alloc = LM_ADDRESS_BAD;
+
+	_LM_CloseProc(&hProcess);
 
 	return alloc;
 }
@@ -720,8 +755,17 @@ _LM_FreeMemoryEx(lm_process_t *pproc,
 		 lm_address_t  alloc,
 		 lm_size_t     size)
 {
-	return VirtualFreeEx(pproc->handle, alloc, 0, MEM_RELEASE) ?
+	lm_bool_t ret = LM_FALSE;
+	HANDLE hProcess;
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return ret;
+
+	ret = VirtualFreeEx(hProcess, alloc, 0, MEM_RELEASE) ?
 		LM_TRUE : LM_FALSE;
+
+	_LM_CloseProc(&hProcess);
+
+	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t

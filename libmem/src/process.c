@@ -589,7 +589,6 @@ LM_IsProcessAlive(lm_pid_t pid)
 LM_PRIVATE lm_bool_t
 _LM_OpenProcess(lm_process_t *procbuf)
 {
-	procbuf->handle = GetCurrentProcess();
 	return LM_TRUE;
 }
 #else
@@ -617,17 +616,6 @@ LM_PRIVATE lm_bool_t
 _LM_OpenProcessEx(lm_pid_t      pid,
 		  lm_process_t *procbuf)
 {
-	if (pid != LM_GetProcessId()) {
-		procbuf->handle = OpenProcess(LM_PROCESS_ACCESS,
-				      FALSE,
-				      pid);
-
-		if (!procbuf->handle)
-			return LM_FALSE;
-	} else {
-		procbuf->handle = GetCurrentProcess();
-	}
-
 	return LM_TRUE;
 }
 #else
@@ -655,10 +643,7 @@ LM_OpenProcessEx(lm_pid_t      pid,
 LM_PRIVATE lm_void_t
 _LM_CloseProcess(lm_process_t *procbuf)
 {
-	if (procbuf->handle && procbuf->pid != LM_GetProcessId())
-		CloseHandle(procbuf->handle);
 
-	procbuf->handle = (HANDLE)NULL;
 }
 #else
 LM_PRIVATE lm_void_t
@@ -728,8 +713,18 @@ _LM_GetProcessPathEx(lm_process_t *pproc,
 		     lm_tchar_t   *pathbuf,
 		     lm_size_t     maxlen)
 {
-	return (lm_size_t)GetModuleFileNameEx(pproc->handle, NULL,
-					      pathbuf, maxlen);
+	lm_size_t len = 0;
+	HANDLE hProcess;
+	
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return len;
+
+	len = (lm_size_t)GetModuleFileNameEx(hProcess, NULL,
+					     pathbuf, maxlen);
+
+	_LM_CloseProc(&hProcess);
+
+	return len;
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_size_t
@@ -878,7 +873,15 @@ _LM_GetProcessNameEx(lm_process_t *pproc,
 		     lm_tchar_t   *namebuf,
 		     lm_size_t     maxlen)
 {
-	len = (lm_size_t)GetModuleBaseName(pproc->handle, NULL, namebuf, maxlen);
+	lm_size_t len = 0;
+	HANDLE hProcess;
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return len;
+
+	len = (lm_size_t)GetModuleBaseName(hProcess, NULL, namebuf, maxlen);
+
+	_LM_CloseProc(&hProcess);
+
 	return len;
 }
 #elif LM_OS == LM_OS_BSD
@@ -1027,9 +1030,13 @@ _LM_GetProcessBitsEx(lm_process_t *pproc,
 {
 	BOOL IsWow64;
 	lm_size_t sysbits;
+	HANDLE hProcess;
 
-	if (!IsWow64Process(pproc->handle, &IsWow64))
+	if (!_LM_OpenProc(pproc, &hProcess))
 		return;
+
+	if (!IsWow64Process(hProcess, &IsWow64))
+		goto CLOSE_EXIT;
 
 	sysbits = LM_GetSystemBits();
 
@@ -1037,6 +1044,9 @@ _LM_GetProcessBitsEx(lm_process_t *pproc,
 		*bits = 32;
 	else if (sysbits == 64)
 		*bits = 64;
+
+CLOSE_EXIT:
+	_LM_CloseProc(&hProcess);
 }
 #else
 LM_PRIVATE lm_size_t

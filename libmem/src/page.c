@@ -304,6 +304,7 @@ typedef struct {
 	lm_process_t *pproc;
 	lm_bool_t(*callback)(lm_page_t page, lm_void_t *arg);
 	lm_void_t *arg;
+	HANDLE hProcess;
 } _lm_enum_pages_ex_t;
 
 LM_PRIVATE lm_bool_t
@@ -317,7 +318,7 @@ _LM_EnumPagesExCallback(lm_module_t  mod,
 	lm_page_t page;
 
 	for (addr = mod.base;
-	     VirtualQueryEx(parg->pproc->handle, addr, &mbi, sizeof(mbi));
+	     VirtualQueryEx(parg->hProcess, addr, &mbi, sizeof(mbi));
 	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;
 		page.size  = (lm_size_t)mbi.RegionSize;
@@ -340,13 +341,21 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 					lm_void_t *arg),
 		lm_void_t *arg)
 {
+	lm_bool_t ret = LM_FALSE;
 	_lm_enum_pages_ex_t data;
+
+	if (!_LM_OpenProc(pproc, &data.hProcess))
+		return ret;
 
 	data.pproc = pproc;
 	data.callback = callback;
 	data.arg = arg;
 
-	return _LM_EnumModulesEx(pproc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
+	ret = _LM_EnumModulesEx(pproc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
+
+	_LM_CloseProc(&data.hProcess);
+
+	return ret;
 }
 #else
 LM_PRIVATE lm_bool_t
@@ -516,8 +525,17 @@ _LM_GetPageEx(lm_process_t *pproc,
 	      lm_page_t    *page)
 {
 	MEMORY_BASIC_INFORMATION mbi;
+	HANDLE hProcess;
+	SIZE_T query_ret;
 
-	if (!VirtualQueryEx(pproc->handle, addr, &mbi, sizeof(mbi)))
+	if (!_LM_OpenProc(pproc, &hProcess))
+		return LM_FALSE;
+
+	query_ret = VirtualQueryEx(hProcess, addr, &mbi, sizeof(mbi));
+
+	_LM_CloseProc(&hProcess);
+
+	if (!query_ret)
 		return LM_FALSE;
 
 	page->base  = (lm_address_t)mbi.BaseAddress;

@@ -263,7 +263,14 @@ You should also get your employer (if you work as a programmer) or school, if an
 #	endif
 #endif
 
-#if LM_OS != LM_OS_WIN
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_bool_t
+_LM_OpenProc(lm_process_t *pproc,
+	     HANDLE       *hProcess);
+
+LM_PRIVATE lm_void_t
+_LM_CloseProc(HANDLE *handle);
+#else
 typedef struct {
 	 lm_int_t      syscall_num;
 	 lm_uintptr_t  arg0;

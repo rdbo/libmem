@@ -420,7 +420,7 @@ You should also get your employer (if you work as a programmer) or school, if an
 #define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
 #define LM_OFFSET(base, offset) (&((lm_byte_t *)base)[offset])
 #if LM_OS == LM_OS_WIN
-#	define _LM_VALID_PROCESS(proc) (proc.pid != LM_GetProcessId() && proc.handle != NULL)
+#	define _LM_VALID_PROCESS(proc) LM_TRUE
 #else
 #	define _LM_VALID_PROCESS(proc) LM_TRUE
 #endif
@@ -590,9 +590,6 @@ typedef int                lm_flags_t;
 
 typedef struct {
 	lm_pid_t pid;
-#	if LM_OS == LM_OS_WIN
-	HANDLE   handle;
-#	endif
 } lm_process_t;
 
 typedef struct {

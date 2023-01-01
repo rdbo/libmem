@@ -44,8 +44,6 @@ main()
 	lm_tid_t     tid;
 	lm_size_t    bits;
 	lm_module_t  mod;
-	lm_tchar_t   modname[LM_PATH_MAX];
-	lm_tchar_t   modpath[LM_PATH_MAX];
 	lm_address_t main_sym;
 	lm_module_t  libtest_mod;
 	lm_tchar_t   libtest_modname[LM_PATH_MAX];
@@ -85,11 +83,9 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_FindModule(procpath, &mod);
-	LM_GetModuleName(&mod, modname, LM_ARRLEN(modname));
-	LM_GetModulePath(&mod, modpath, LM_ARRLEN(modpath));
 	main_sym = LM_FindSymbol(&mod, "main");
-	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), modname);
-	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), modpath);
+	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), mod.name);
+	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), mod.path);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)mod.size);
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
@@ -97,11 +93,9 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);
-	LM_GetModuleName(&libtest_mod, libtest_modname, LM_ARRLEN(libtest_modname));
-	LM_GetModulePath(&libtest_mod, libtest_modpath, LM_ARRLEN(libtest_modpath));
 	LM_UnloadModule(&libtest_mod);
-	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), libtest_modname);
-	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), libtest_modpath);
+	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), libtest_mod.name);
+	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), libtest_mod.path);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), libtest_mod.base);
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)libtest_mod.size);
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), libtest_mod.end);

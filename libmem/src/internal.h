@@ -263,6 +263,9 @@ You should also get your employer (if you work as a programmer) or school, if an
 #	endif
 #endif
 
+LM_PRIVATE lm_tchar_t *
+_LM_GetNameFromPath(lm_tchar_t *path);
+
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_OpenProc(lm_process_t *pproc,

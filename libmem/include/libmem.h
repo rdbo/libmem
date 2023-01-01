@@ -482,7 +482,7 @@ You should also get your employer (if you work as a programmer) or school, if an
 #	define LM_PATH_MAX MAX_PATH
 #	define LM_PATH_SEP LM_STR('\\')
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
-#	define LM_PATH_MAX PATH_MAX
+#	define LM_PATH_MAX PATH_MAX /* TODO: Set LM_PATH_MAX as a constant value */
 #	ifndef _GNU_SOURCE
 #		define _GNU_SOURCE 1
 #	endif
@@ -596,6 +596,8 @@ typedef struct {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
+	lm_tchar_t   path[LM_PATH_MAX];
+	lm_tchar_t  *name;
 } lm_module_t;
 
 typedef struct {
@@ -703,14 +705,12 @@ LM_GetThreadIdEx(lm_process_t *pproc);
 
 LM_API lm_bool_t
 LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
-				    lm_tstring_t path,
 				    lm_void_t   *arg),
 	       lm_void_t *arg);
 
 LM_API lm_bool_t
 LM_EnumModulesEx(lm_process_t *pproc,
 		 lm_bool_t   (*callback)(lm_module_t *pmod,
-					 lm_tstring_t path,
 					 lm_void_t   *arg),
 		 lm_void_t    *arg);
 
@@ -722,28 +722,6 @@ LM_API lm_bool_t
 LM_FindModuleEx(lm_process_t *pproc,
 		lm_tstring_t  name,
 		lm_module_t  *modbuf);
-
-LM_API lm_size_t
-LM_GetModulePath(lm_module_t *pmod,
-		 lm_tchar_t  *pathbuf,
-		 lm_size_t    maxlen);
-
-LM_API lm_size_t
-LM_GetModulePathEx(lm_process_t *pproc,
-		   lm_module_t  *pmod,
-		   lm_tchar_t   *pathbuf,
-		   lm_size_t     maxlen);
-
-LM_API lm_size_t
-LM_GetModuleName(lm_module_t *pmod,
-		 lm_tchar_t  *namebuf,
-		 lm_size_t    maxlen);
-
-LM_API lm_size_t
-LM_GetModuleNameEx(lm_process_t *pproc,
-		   lm_module_t  *pmod,
-		   lm_tchar_t   *namebuf,
-		   lm_size_t     maxlen);
 
 LM_API lm_bool_t
 LM_LoadModule(lm_tstring_t path,

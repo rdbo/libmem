@@ -225,7 +225,6 @@ You should also get your employer (if you work as a programmer) or school, if an
 
 LM_API lm_bool_t
 LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
-				    lm_tstring_t path,
 				    lm_void_t   *arg),
 	       lm_void_t *arg)
 {
@@ -248,7 +247,6 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 LM_PRIVATE lm_bool_t
 _LM_EnumModulesEx(lm_process_t *pproc,
 		  lm_bool_t   (*callback)(lm_module_t *pmod,
-					  lm_tstring_t path,
 					  lm_void_t   *arg),
 		  lm_void_t    *arg)
 {
@@ -256,6 +254,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 	HANDLE hSnap;
 	MODULEENTRY32 entry;
 	lm_module_t mod;
+	lm_size_t path_len;
 
 	hSnap = CreateToolhelp32Snapshot(
 		TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
@@ -272,8 +271,15 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 			mod.base = (lm_address_t)entry.modBaseAddr;
 			mod.size = (lm_size_t)entry.modBaseSize;
 			mod.end  = (lm_address_t)LM_OFFSET(mod.base, mod.size);
+			path_len = LM_STRLEN(entry.szExePath);
+			if (path_len >= LM_ARRLEN(mod.path))
+				path_len = LM_ARRLEN(mod.path) - 1;
 
-			if (callback(&mod, entry.szExePath, arg) == LM_FALSE)
+			LM_STRNCPY(mod.path, entry.szExePath, path_len);
+			mod.path[path_len] = LM_STR('\x00');
+			mod.name = _LM_GetNameFromPath(mod.path);
+
+			if (callback(&mod, arg) == LM_FALSE)
 				break;
 		} while (Module32Next(hSnap, &entry));
 
@@ -288,7 +294,6 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 LM_PRIVATE lm_bool_t
 _LM_EnumModulesEx(lm_process_t *pproc,
 		  lm_bool_t   (*callback)(lm_module_t *pmod,
-					  lm_tstring_t path,
 					  lm_void_t   *arg),
 		  lm_void_t    *arg)
 {
@@ -301,8 +306,9 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 	regex_t      regex;
 	regmatch_t   matches[5];
 	lm_module_t  mod;
-	lm_tchar_t   path[LM_PATH_MAX] = { 0 };
 	lm_tstring_t curpath;
+
+	mod.path[0] = LM_STR('\x00');
 
 #	if LM_OS == LM_OS_BSD
 	if (regcomp(&regex, "^0x([a-z0-9]+)[[:blank:]]+0x([a-z0-9]+)[[:blank:]]+[^/]+(/.*)([[:blank:]])+[A-Z]+[[:blank:]]+.*$", REG_EXTENDED))
@@ -336,14 +342,16 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 		/* TODO: Group copies of base and path of first and new module conditions */
 
 		/* if it is the first module, copy the base and path */
-		if (LM_STRLEN(path) == 0) {
+		if (LM_STRLEN(mod.path) == 0) {
 			lm_size_t pathlen = LM_STRLEN(curpath);
 
-			if (pathlen >= LM_ARRLEN(path))
-				pathlen = LM_ARRLEN(path) - 1;
+			if (pathlen >= LM_ARRLEN(mod.path))
+				pathlen = LM_ARRLEN(mod.path) - 1;
 
-			LM_STRNCPY(path, curpath, pathlen);
-			path[pathlen] = LM_STR('\x00');
+			LM_STRNCPY(mod.path, curpath, pathlen);
+			mod.path[pathlen] = LM_STR('\x00');
+
+			mod.name = _LM_GetNameFromPath(mod.path);
 
 			mod.base = (lm_address_t)LM_STRTOP(
 				&maps_line[matches[1].rm_so], NULL, 16
@@ -351,22 +359,24 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 		}
 
 		/* if the module changes, run a callback and copy the new base and path */
-		if (LM_STRCMP(curpath, path)) {
+		if (LM_STRCMP(curpath, mod.path)) {
 			lm_size_t pathlen;
 
 			mod.size = (lm_size_t)(
 				(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
 			);
 
-			if (callback(&mod, path, arg) == LM_FALSE)
+			if (callback(&mod, arg) == LM_FALSE)
 				break;
 
 			pathlen = LM_STRLEN(curpath);
-			if (pathlen >= LM_ARRLEN(path))
-				pathlen = LM_ARRLEN(path) - 1;
+			if (pathlen >= LM_ARRLEN(mod.path))
+				pathlen = LM_ARRLEN(mod.path) - 1;
 
-			LM_STRNCPY(path, curpath, pathlen);
-			path[pathlen] = LM_STR('\x00');
+			LM_STRNCPY(mod.path, curpath, pathlen);
+			mod.path[pathlen] = LM_STR('\x00');
+
+			mod.name = _LM_GetNameFromPath(mod.path);
 
 			mod.base = (lm_address_t)LM_STRTOP(
 				&maps_line[matches[1].rm_so], NULL, 16
@@ -393,7 +403,6 @@ FREE_EXIT:
 LM_API lm_bool_t
 LM_EnumModulesEx(lm_process_t *pproc,
 		 lm_bool_t   (*callback)(lm_module_t *pmod,
-					 lm_tstring_t path,
 					 lm_void_t   *arg),
 		 lm_void_t    *arg)
 {
@@ -412,16 +421,15 @@ typedef struct {
 
 LM_PRIVATE lm_bool_t
 _LM_FindModuleCallback(lm_module_t *pmod,
-		       lm_tstring_t path,
 		       lm_void_t   *arg)
 {
 	_lm_find_mod_t *parg = (_lm_find_mod_t *)arg;
 	lm_size_t       pathlen;
 
-	pathlen = LM_STRLEN(path);
+	pathlen = LM_STRLEN(pmod->path);
 
 	if (pathlen >= parg->len) {
-		if (!LM_STRCMP(&path[pathlen - parg->len], parg->name)) {
+		if (!LM_STRCMP(&(pmod->path)[pathlen - parg->len], parg->name)) {
 			*(parg->modbuf) = *pmod;
 			return LM_FALSE;
 		}
@@ -471,141 +479,6 @@ LM_FindModuleEx(lm_process_t *pproc,
 		return LM_FALSE;
 
 	return arg.modbuf->size > 0 ? LM_TRUE : LM_FALSE;
-}
-
-/********************************/
-
-typedef struct {
-	lm_module_t *pmod;
-	lm_tstring_t pathbuf;
-	lm_size_t    maxlen;
-	lm_size_t    len;
-} _lm_get_mod_path_t;
-
-LM_PRIVATE lm_bool_t
-_LM_GetModulePathCallback(lm_module_t *pmod,
-			  lm_tstring_t path,
-			  lm_void_t   *arg)
-{
-	_lm_get_mod_path_t *parg = (_lm_get_mod_path_t *)arg;
-	
-	if (parg->pmod->base == pmod->base) {
-		parg->len = LM_STRLEN(path);
-		if (parg->len >= parg->maxlen)
-			parg->len = parg->maxlen - 1;
-		LM_STRNCPY(parg->pathbuf, path, parg->len);
-		parg->pathbuf[parg->len] = LM_STR('\x00');
-	}
-
-	return LM_TRUE;
-}
-
-LM_API lm_size_t
-LM_GetModulePath(lm_module_t *pmod,
-		 lm_tchar_t  *pathbuf,
-		 lm_size_t    maxlen)
-{
-	_lm_get_mod_path_t arg;
-
-	LM_ASSERT(pmod != LM_NULLPTR && pathbuf != LM_NULLPTR && maxlen > 0);
-
-	arg.pmod    = pmod;
-	arg.pathbuf = pathbuf;
-	arg.maxlen  = maxlen;
-	arg.len     = 0;
-
-	LM_EnumModules(_LM_GetModulePathCallback, (lm_void_t *)&arg);
-
-	return arg.len;
-}
-
-/********************************/
-
-LM_API lm_size_t
-LM_GetModulePathEx(lm_process_t *pproc,
-		   lm_module_t  *pmod,
-		   lm_tchar_t   *pathbuf,
-		   lm_size_t     maxlen)
-{
-	_lm_get_mod_path_t arg;
-
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  pmod != LM_NULLPTR &&
-		  pathbuf != LM_NULLPTR &&
-		  maxlen > 0);
-
-	arg.pmod    = pmod;
-	arg.pathbuf = pathbuf;
-	arg.maxlen  = maxlen;
-	arg.len     = 0;
-
-	LM_EnumModulesEx(pproc, _LM_GetModulePathCallback, (lm_void_t *)&arg);
-
-	return arg.len;
-}
-
-/********************************/
-
-LM_API lm_size_t
-LM_GetModuleName(lm_module_t *pmod,
-		 lm_tchar_t  *namebuf,
-		 lm_size_t    maxlen)
-{
-	lm_size_t   len = 0;
-	lm_tchar_t  path[LM_PATH_MAX];
-	lm_tchar_t *holder;
-
-	LM_ASSERT(pmod != LM_NULLPTR &&
-		  namebuf != LM_NULLPTR &&
-		  maxlen > 0);
-
-	if (!LM_GetModulePath(pmod, path, LM_PATH_MAX))
-		return len;
-
-	holder = LM_STRRCHR(path, LM_PATH_SEP);
-	holder = &holder[1]; /* don't include the path separator */
-
-	len = LM_STRLEN(holder);
-	if (len >= maxlen)
-		len = maxlen - 1;
-
-	LM_STRNCPY(namebuf, holder, len);
-	namebuf[len] = LM_STR('\x00');
-
-	return len;
-}
-
-/********************************/
-
-LM_API lm_size_t
-LM_GetModuleNameEx(lm_process_t *pproc,
-		   lm_module_t  *pmod,
-		   lm_tchar_t   *namebuf,
-		   lm_size_t     maxlen)
-{
-	lm_size_t   len = 0;
-	lm_tchar_t  path[LM_PATH_MAX];
-	lm_tchar_t *holder;
-
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  pmod != LM_NULLPTR &&
-		  namebuf != LM_NULLPTR &&
-		  maxlen > 0);
-
-	if (!LM_GetModulePathEx(pproc, pmod, path, LM_PATH_MAX))
-		return len;
-
-	holder = LM_STRRCHR(path, LM_PATH_SEP);
-	holder = &holder[1]; /* don't include the path separator */
-
-	len = LM_STRLEN(holder);
-	if (len >= maxlen)
-		len = maxlen - 1;
-
-	LM_STRNCPY(namebuf, holder, len);
-	namebuf[len] = LM_STR('\x00');
-
-	return len;
 }
 
 /********************************/
@@ -727,16 +600,12 @@ _LM_UnloadModule(lm_module_t *pmod)
 LM_PRIVATE lm_bool_t
 _LM_UnloadModule(lm_module_t *pmod)
 {
-	lm_tchar_t libpath[LM_PATH_MAX];
 	void *libhandle;
-
-	if (!LM_GetModulePath(pmod, libpath, LM_PATH_MAX))
-		return LM_FALSE;
 
 	/* reopen the library without loading, which gives us the
 	   handle that we can use to decrease the reference count
 	   and unload the library */
-	libhandle = dlopen(libpath, RTLD_NOLOAD);
+	libhandle = dlopen(pmod->path, RTLD_NOLOAD);
 
 	if (!libhandle)
 		return LM_FALSE;
@@ -818,12 +687,8 @@ _LM_UnloadModuleEx(lm_process_t *pproc,
 {
 	lm_bool_t ret = LM_FALSE;
 	void *modhandle;
-	lm_tchar_t modpath[LM_PATH_MAX];
 
-	if (!LM_GetModulePathEx(pproc, pmod, modpath, LM_PATH_MAX))
-		return ret;
-
-	if (!_LM_CallDlopen(pproc, modpath, RTLD_NOLOAD, &modhandle))
+	if (!_LM_CallDlopen(pproc, pmod->path, RTLD_NOLOAD, &modhandle))
 		return ret;
 
 	if (_LM_CallDlclose(pproc, modhandle) && _LM_CallDlclose(pproc, modhandle))

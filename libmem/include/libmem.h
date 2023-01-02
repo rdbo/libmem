@@ -361,7 +361,7 @@ typedef intptr_t           lm_intptr_t;
 typedef uintptr_t          lm_uintptr_t;
 typedef lm_void_t         *lm_voidptr_t;
 
-typedef lm_voidptr_t       lm_address_t;
+typedef lm_uintptr_t       lm_address_t;
 typedef lm_uintmax_t       lm_size_t;
 
 #if LM_CHARSET == LM_CHARSET_UC

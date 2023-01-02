@@ -23,16 +23,5 @@
 
 #include "internal.h"
 
-LM_PRIVATE lm_tchar_t *
-_LM_GetNameFromPath(lm_tchar_t *path)
-{
-	lm_tchar_t *name;
 
-	name = LM_STRRCHR(path, LM_PATH_SEP);
-	if (!name)
-		return path;
-
-	name = &name[1]; /* skip path separator */
-	return name;
-}
 

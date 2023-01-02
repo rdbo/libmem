@@ -50,7 +50,12 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			 * Source: https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/ns-tlhelp32-processentry32 */
 			if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
 				continue;
-			proc.name = _LM_GetNameFromPath(proc.path);
+
+			len = LM_STRLEN(entry.szExeFile);
+			if (len >= LM_ARRLEN(proc.name))
+				len = LM_ARRLEN(proc.name) - 1;
+
+			LM_STRNCPY(proc.name, entry.szExeFile, len);
 			proc.bits = _LM_GetProcessBitsEx(proc.pid);
 
 			if (callback(&proc, arg) == LM_FALSE)
@@ -75,6 +80,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 	unsigned int nprocs = 0;
 	struct kinfo_proc *procs;
 	lm_process_t proc;
+	lm_size_t    len;
 
 	ps = procstat_open_sysctl();
 	if (!ps)
@@ -93,7 +99,13 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			proc.ppid = (lm_pid_t)procs[i].ki_ppid;
 			if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
 				continue;
-			proc.name = _LM_GetNameFromPath(proc.path);
+
+			len = LM_STRLEN(procs[i].ki_comm);
+			if (len >= LM_ARRLEN(proc.name))
+				len = LM_ARRLEN(proc.name) - 1;
+
+			LM_STRNCPY(proc.name, procs[i].ki_comm, len);
+
 			proc.bits = LM_BITS;
 			proc.bits = _LM_GetProcessBitsEx(proc.path);
 
@@ -137,7 +149,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 		if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
 			continue;
 
-		proc.name = _LM_GetNameFromPath(proc.path);
+		if (!_LM_GetProcessNameEx(proc.pid, proc.name, LM_ARRLEN(proc.name)))
+			continue;
+
 		proc.bits = LM_BITS;
 		proc.bits = _LM_GetProcessBitsEx(proc.path);
 
@@ -173,7 +187,9 @@ _LM_GetProcess(lm_process_t *procbuf)
 	if (!_LM_GetProcessPath(procbuf->path, LM_ARRLEN(procbuf->path)))
 		return LM_FALSE;
 
-	procbuf->name = _LM_GetNameFromPath(procbuf->path);
+	if (!_LM_GetProcessName(procbuf->name, LM_ARRLEN(procbuf->name)))
+		return LM_FALSE;
+
 	procbuf->bits = LM_BITS;
 	return LM_TRUE;
 }
@@ -182,7 +198,7 @@ LM_API lm_bool_t
 LM_GetProcess(lm_process_t *procbuf)
 {
 	static lm_process_t self_proc = {
-		LM_PID_BAD, LM_PID_BAD, 0, "", LM_NULLPTR
+		LM_PID_BAD, LM_PID_BAD, 0, "", ""
 	};
 
 	LM_ASSERT(procbuf != LM_NULLPTR);
@@ -214,7 +230,6 @@ LM_PRIVATE lm_bool_t
 _LM_FindProcessCallback(lm_process_t *pproc,
 			lm_void_t    *arg)
 {
-	lm_process_t	  proc;
 	_lm_find_pid_t   *parg = (_lm_find_pid_t *)arg;
 	lm_size_t len;
 
@@ -538,6 +553,148 @@ _LM_GetProcessPathEx(lm_pid_t      pid,
 		slen = 0;
 	pathbuf[slen] = LM_STR('\x00');
 	return (lm_size_t)slen;
+}
+#endif
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_size_t
+_LM_GetProcessName(lm_tchar_t *namebuf,
+		   lm_size_t   maxlen)
+{
+	/* According to the Windows API Docs, GetModuleBaseName
+	   should not be called on the current process, instead
+	   you should get the full path with GetModuleFileName
+	   and find the last '\' character.
+	   MS Docs (https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmodulebasenamea):
+	   "To retrieve the base name of a module in the current
+	   process, use the GetModuleFileName function to retrieve
+	   the full module name and then use a function call such as
+	   strrchr(szmodulename, '\') to scan to the beginning of the
+	   base name within the module name string. This is more efficient
+	   and more reliable than calling GetModuleBaseName with a handle
+	   to the current process."
+	 */
+
+	lm_size_t len = 0;
+	lm_tchar_t path[LM_PATH_MAX];
+	lm_tchar_t *ptr;
+
+	if (!LM_GetProcessPath(path, LM_PATH_MAX))
+		return len;
+
+	ptr = LM_STRRCHR(path, LM_STR('\\'));
+	if (!ptr)
+		return len;
+
+	ptr = &ptr[1];
+	len = LM_STRLEN(ptr);
+	if (len >= maxlen)
+		len = maxlen - 1;
+
+	LM_STRNCPY(namebuf, ptr, len);
+	namebuf[len] = LM_STR('\x00');
+
+	return len;
+}
+#else
+LM_PRIVATE lm_size_t
+_LM_GetProcessName(lm_tchar_t *namebuf,
+		   lm_size_t   maxlen)
+{
+	return _LM_GetProcessNameEx(_LM_GetProcessId(), namebuf, maxlen);
+}
+#endif
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_size_t
+_LM_GetProcessNameEx(lm_pid_t    pid,
+		     lm_tchar_t *namebuf,
+		     lm_size_t   maxlen)
+{
+	lm_size_t len = 0;
+	HANDLE hProcess;
+
+	if (!_LM_OpenProc(pid, &hProcess))
+		return len;
+
+	len = (lm_size_t)GetModuleBaseName(hProcess, NULL, namebuf, maxlen);
+
+	_LM_CloseProcess(&hProcess);
+
+	namebuf[len] = LM_STR('\x00');
+
+	return len;
+}
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_size_t
+_LM_GetProcessNameEx(lm_pid_t    pid,
+		     lm_tchar_t *namebuf,
+		     lm_size_t   maxlen)
+{
+	lm_size_t len = 0;
+	struct procstat *ps;
+	unsigned int nprocs = 0;
+	struct kinfo_proc *procs;
+
+	ps = procstat_open_sysctl();
+	if (!ps)
+		return len;
+
+	procs = procstat_getprocs(
+		ps, KERN_PROC_PID,
+		pid, &nprocs
+	);
+
+	if (procs && nprocs) {
+		len = LM_STRLEN(procs->ki_comm);
+		if (len >= maxlen)
+			len = maxlen - 1;
+
+		LM_STRNCPY(namebuf, procs->ki_comm, len);
+		namebuf[len] = LM_STR('\x00');
+		procstat_freeprocs(ps, procs);
+	}
+
+	procstat_close(ps);
+
+	return len;
+}
+#else
+LM_PRIVATE lm_size_t
+_LM_GetProcessNameEx(lm_pid_t    pid,
+		     lm_tchar_t *namebuf,
+		     lm_size_t   maxlen)
+{
+	lm_size_t   len = 0;
+	size_t      buf_len;
+	lm_tchar_t *comm_line = NULL;
+	lm_tchar_t  comm_path[LM_PATH_MAX];
+	FILE       *comm_file;
+
+	LM_SNPRINTF(comm_path, LM_ARRLEN(comm_path),
+		    LM_STR("%s/%d/comm"), LM_PROCFS, pid);
+
+	comm_file = LM_FOPEN(comm_path, "r");
+	if (!comm_file)
+		return len;
+
+	if ((len = LM_GETLINE(&comm_line, &buf_len, comm_file)) <= 0)
+		goto CLEAN_EXIT;
+
+	--len; /* remove new line */
+	if (len >= maxlen)
+		len = maxlen - 1;
+
+	LM_STRNCPY(namebuf, comm_line, len);
+	namebuf[len] = LM_STR('\x00');
+CLEAN_EXIT:
+	LM_FREE(comm_line); /* the buffer should be freed even if getline fails (according to the getline man page) */
+	LM_FCLOSE(comm_file);
+	return len;
 }
 #endif
 

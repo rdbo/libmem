@@ -389,11 +389,11 @@ typedef int                lm_flags_t;
 #endif
 
 typedef struct {
-	lm_pid_t    pid;
-	lm_pid_t    ppid;
-	lm_size_t   bits;
-	lm_tchar_t  path[LM_PATH_MAX];
-	lm_tchar_t *name;
+	lm_pid_t   pid;
+	lm_pid_t   ppid;
+	lm_size_t  bits;
+	lm_tchar_t path[LM_PATH_MAX];
+	lm_tchar_t name[LM_PATH_MAX];
 } lm_process_t;
 
 typedef struct {
@@ -401,7 +401,7 @@ typedef struct {
 	lm_address_t end;
 	lm_size_t    size;
 	lm_tchar_t   path[LM_PATH_MAX];
-	lm_tchar_t  *name;
+	lm_tchar_t   name[LM_PATH_MAX];
 } lm_module_t;
 
 typedef struct {

@@ -23,6 +23,34 @@
 
 #include "internal.h"
 
+LM_PRIVATE lm_size_t
+_LM_GetNameFromPath(lm_tchar_t *path,
+		    lm_tchar_t *namebuf,
+		    lm_size_t   maxlen)
+{
+	lm_tchar_t *name;
+	lm_size_t   len = 0;
+
+	name = LM_STRRCHR(path, LM_PATH_SEP);
+	if (!name) {
+		namebuf[0] = LM_STRLEN('\x00');
+		return len;
+	}
+
+	name = &name[1]; /* skip path separator */
+
+	len = LM_STRLEN(name);
+	if (len >= maxlen)
+		len = maxlen - 1;
+
+	LM_STRNCPY(namebuf, name, len);
+	namebuf[len] = LM_STR('\x00');
+	
+	return name;
+}
+
+/********************************/
+
 LM_API lm_bool_t
 LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 				    lm_void_t   *arg),
@@ -74,7 +102,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 
 			LM_STRNCPY(mod.path, entry.szExePath, path_len);
 			mod.path[path_len] = LM_STR('\x00');
-			mod.name = _LM_GetNameFromPath(mod.path);
+			_LM_GetNameFromPath(mod.path, mod.name, LM_ARRLEN(mod.name));
 
 			if (callback(&mod, arg) == LM_FALSE)
 				break;
@@ -148,7 +176,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 			LM_STRNCPY(mod.path, curpath, pathlen);
 			mod.path[pathlen] = LM_STR('\x00');
 
-			mod.name = _LM_GetNameFromPath(mod.path);
+			_LM_GetNameFromPath(mod.path, mod.name, LM_ARRLEN(mod.name));
 
 			mod.base = (lm_address_t)LM_STRTOP(
 				&maps_line[matches[1].rm_so], NULL, 16
@@ -173,7 +201,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 			LM_STRNCPY(mod.path, curpath, pathlen);
 			mod.path[pathlen] = LM_STR('\x00');
 
-			mod.name = _LM_GetNameFromPath(mod.path);
+			_LM_GetNameFromPath(mod.path, mod.name, LM_ARRLEN(mod.name));
 
 			mod.base = (lm_address_t)LM_STRTOP(
 				&maps_line[matches[1].rm_so], NULL, 16

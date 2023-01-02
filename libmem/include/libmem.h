@@ -670,16 +670,16 @@ LM_HookCode(lm_address_t  from,
 	    lm_address_t  to,
 	    lm_address_t *ptrampoline);
 
-LM_API lm_bool_t
-LM_UnhookCode(lm_address_t  from,
-	      lm_address_t *ptrampoline,
-	      lm_size_t     size);
-
 LM_API lm_size_t
 LM_HookCodeEx(lm_process_t *pproc,
 	      lm_address_t  from,
 	      lm_address_t  to,
 	      lm_address_t *ptrampoline);
+
+LM_API lm_bool_t
+LM_UnhookCode(lm_address_t  from,
+	      lm_address_t *ptrampoline,
+	      lm_size_t     size);
 
 LM_API lm_bool_t
 LM_UnhookCodeEx(lm_process_t *pproc,

@@ -118,36 +118,6 @@ FREE_EXIT:
 
 /********************************/
 
-LM_API lm_bool_t
-LM_UnhookCode(lm_address_t  from,
-	      lm_address_t *ptrampoline,
-	      lm_size_t     size)
-{
-	lm_prot_t old_prot;
-	lm_address_t trampoline;
-
-	LM_ASSERT(from != LM_ADDRESS_BAD &&
-		  ptrampoline != LM_NULLPTR &&
-		  *ptrampoline != LM_ADDRESS_BAD &&
-		  size > 0);
-
-	trampoline = *ptrampoline;
-
-	if (!LM_ProtMemory(from, size, LM_PROT_XRW, &old_prot))
-		return LM_FALSE;
-
-	LM_WriteMemory(from, trampoline, size);
-
-	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
-	LM_FreeMemory(trampoline, size);
-
-	*ptrampoline = LM_ADDRESS_BAD;
-
-	return LM_TRUE;
-}
-
-/********************************/
-
 LM_API lm_size_t
 LM_HookCodeEx(lm_process_t *pproc,
 	      lm_address_t  from,
@@ -219,6 +189,36 @@ FREE_EXIT:
 	LM_FreeCodeBuffer(codebuf);
 
 	return ret;
+}
+
+/********************************/
+
+LM_API lm_bool_t
+LM_UnhookCode(lm_address_t  from,
+	      lm_address_t *ptrampoline,
+	      lm_size_t     size)
+{
+	lm_prot_t old_prot;
+	lm_address_t trampoline;
+
+	LM_ASSERT(from != LM_ADDRESS_BAD &&
+		  ptrampoline != LM_NULLPTR &&
+		  *ptrampoline != LM_ADDRESS_BAD &&
+		  size > 0);
+
+	trampoline = *ptrampoline;
+
+	if (!LM_ProtMemory(from, size, LM_PROT_XRW, &old_prot))
+		return LM_FALSE;
+
+	LM_WriteMemory(from, trampoline, size);
+
+	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
+	LM_FreeMemory(trampoline, size);
+
+	*ptrampoline = LM_ADDRESS_BAD;
+
+	return LM_TRUE;
 }
 
 /********************************/

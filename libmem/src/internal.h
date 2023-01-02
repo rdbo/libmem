@@ -24,7 +24,7 @@
 #ifndef LIBMEM_INTERNAL_H
 #define LIBMEM_INTERNAL_H
 
-#include <libmem.h>
+#include <libmem/libmem.h>
 
 #include <capstone/capstone.h>
 #include <keystone/keystone.h>

@@ -21,7 +21,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <libmem.h>
+#include <libmem/libmem.h>
 #include <Python.h>
 #include <structmember.h>
 

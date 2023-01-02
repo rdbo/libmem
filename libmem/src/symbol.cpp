@@ -22,7 +22,7 @@
  */
 
 #define LM_FORCE_LANG_CPP
-#include <libmem.h>
+#include <libmem/libmem.h>
 
 #if LM_OS == LM_OS_WIN
 #include <LIEF/PE.hpp>

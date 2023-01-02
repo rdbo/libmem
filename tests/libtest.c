@@ -1,4 +1,4 @@
-#include <libmem.h>
+#include <libmem/libmem.h>
 
 #if LM_CHARSET == LM_CHARSET_UC
 #define LM_PRINTF wprintf

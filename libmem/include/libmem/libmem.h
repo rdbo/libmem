@@ -380,6 +380,7 @@ typedef lm_wchar_t        *lm_wstring_t;
 typedef lm_tchar_t        *lm_tstring_t;
 typedef lm_tstring_t       lm_string_t;
 
+/*
 #if LM_OS == LM_OS_WIN
 typedef DWORD              lm_pid_t;
 typedef DWORD              lm_prot_t;
@@ -391,6 +392,12 @@ typedef lm_pid_t           lm_tid_t;
 typedef int                lm_prot_t;
 typedef int                lm_flags_t;
 #endif
+*/
+
+typedef lm_uint32_t        lm_pid_t;
+typedef lm_uint32_t        lm_tid_t;
+typedef lm_uint32_t        lm_prot_t;
+typedef lm_uint32_t        lm_flags_t;
 
 typedef struct {
 	lm_pid_t   pid;

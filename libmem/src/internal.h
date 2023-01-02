@@ -271,10 +271,6 @@ _LM_GetProcessPathEx(lm_pid_t      pid,
 		     lm_tchar_t   *pathbuf,
 		     lm_size_t     maxlen);
 
-LM_PRIVATE lm_void_t
-_LM_GetProcessBitsEx(lm_process_t *pproc,
-		     lm_size_t    *bits);
-
 LM_PRIVATE lm_size_t
 _LM_GetProcessPath(lm_tchar_t *pathbuf,
 		   lm_size_t   maxlen);
@@ -286,6 +282,9 @@ _LM_OpenProc(lm_process_t *pproc,
 
 LM_PRIVATE lm_void_t
 _LM_CloseProc(HANDLE *handle);
+
+LM_PRIVATE lm_size_t
+_LM_GetProcessBitsEx(lm_pid_t pid);
 #else
 typedef struct {
 	 lm_int_t      syscall_num;
@@ -307,6 +306,9 @@ typedef struct {
 	lm_uintptr_t   arg4;
 	lm_uintptr_t   arg5;
 } _lm_libcall_data_t;
+
+LM_PRIVATE lm_size_t
+_LM_GetProcessBitsEx(lm_tchar_t   *elfpath);
 
 LM_PRIVATE lm_bool_t
 _LM_SystemCallEx(lm_process_t       *pproc,

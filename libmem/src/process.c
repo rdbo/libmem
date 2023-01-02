@@ -248,10 +248,10 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			 * struct represents the name of the process, not the
 			 * full path of the executable.
 			 * Source: https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/ns-tlhelp32-processentry32 */
-			_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path));
+			if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
+				continue;
 			proc.name = _LM_GetNameFromPath(proc.path);
-			proc.bits = LM_BITS;
-			_LM_GetProcessBitsEx(&proc, &proc.bits);
+			proc.bits = _LM_GetProcessBitsEx(proc.pid);
 
 			if (callback(&proc, arg) == LM_FALSE)
 				break;
@@ -291,10 +291,11 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 		for (i = 0; i < nprocs; ++i) {
 			proc.pid = (lm_pid_t)procs[i].ki_pid;
 			proc.ppid = (lm_pid_t)procs[i].ki_ppid;
-			_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path));
+			if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
+				continue;
 			proc.name = _LM_GetNameFromPath(proc.path);
 			proc.bits = LM_BITS;
-			_LM_GetProcessBitsEx(&proc, &proc.bits);
+			proc.bits = _LM_GetProcessBitsEx(proc.path);
 
 			if (callback(&proc, arg) == LM_FALSE)
 				break;
@@ -333,10 +334,12 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			continue;
 
 		proc.ppid = _LM_GetParentIdEx(proc.pid);
-		_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path));
+		if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
+			continue;
+
 		proc.name = _LM_GetNameFromPath(proc.path);
 		proc.bits = LM_BITS;
-		_LM_GetProcessBitsEx(&proc, &proc.bits);
+		proc.bits = _LM_GetProcessBitsEx(proc.path);
 
 		if (callback(&proc, arg) == LM_FALSE)
 			break;
@@ -804,15 +807,15 @@ LM_GetSystemBits(lm_void_t)
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_void_t
-_LM_GetProcessBitsEx(lm_process_t *pproc,
-		     lm_size_t    *bits)
+LM_PRIVATE lm_size_t
+_LM_GetProcessBitsEx(lm_pid_t pid)
 {
 	BOOL IsWow64;
 	lm_size_t sysbits;
 	HANDLE hProcess;
+	lm_size_t bits = LM_BITS;
 
-	if (!_LM_OpenProc(pproc->pid, &hProcess))
+	if (!_LM_OpenProc(pid, &hProcess))
 		return;
 
 	if (!IsWow64Process(hProcess, &IsWow64))
@@ -821,12 +824,14 @@ _LM_GetProcessBitsEx(lm_process_t *pproc,
 	sysbits = LM_GetSystemBits();
 
 	if (sysbits == 32 || IsWow64)
-		*bits = 32;
+		bits = 32;
 	else if (sysbits == 64)
-		*bits = 64;
+		bits = 64;
 
 CLOSE_EXIT:
 	_LM_CloseProc(&hProcess);
+
+	return bits;
 }
 #else
 LM_PRIVATE lm_size_t
@@ -856,16 +861,17 @@ _LM_GetElfBits(lm_tchar_t *path)
 	return bits;
 }
 
-LM_PRIVATE lm_void_t
-_LM_GetProcessBitsEx(lm_process_t *pproc,
-		     lm_size_t    *bits)
+LM_PRIVATE lm_size_t
+_LM_GetProcessBitsEx(lm_tchar_t *elfpath)
 {
 	lm_tchar_t path[LM_PATH_MAX];
 	lm_size_t elf_bits;
 
-	elf_bits = _LM_GetElfBits(pproc->path);
-	if (elf_bits)
-		*bits = elf_bits;
+	elf_bits = _LM_GetElfBits(elfpath);
+	if (!elf_bits)
+		elf_bits = LM_BITS;
+
+	return elf_bits;
 }
 #endif
 

@@ -398,35 +398,45 @@ CLOSE_EXIT:
 
 /********************************/
 
-typedef struct {
-	lm_process_t *pproc;
-	lm_bool_t     is_alive;
-} _lm_is_proc_alive_t;
-
-LM_PRIVATE lm_bool_t
-_LM_IsProcessAliveCallback(lm_process_t *pproc,
-			   lm_void_t    *arg)
+#if LM_OS == LM_OS_WIN
+LM_API lm_bool_t
+_LM_IsProcessAlive(lm_process_t *pproc)
 {
-	_lm_is_proc_alive_t *parg = (_lm_is_proc_alive_t *)arg;
+	HANDLE hProcess;
 
-	if (parg->pproc->pid == pproc->pid) {
-		parg->is_alive = LM_TRUE;
+	/* _LM_OpenProc already checks if the process
+	 * has terminated by looking if it has an
+	 * exit code. */
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return LM_FALSE;
-	}
+
+	_LM_CloseProc(&hProcess);
 
 	return LM_TRUE;
 }
+#else
+LM_API lm_bool_t
+_LM_IsProcessAlive(lm_process_t *pproc)
+{
+	lm_tchar_t proc_path[LM_PATH_MAX];
+	DIR *pdir;
+
+	LM_SNPRINTF(proc_path, sizeof(proc_path),
+		    "%s/%d", LM_PROCFS, pproc->pid);
+
+	if (!(pdir = opendir(proc_path)))
+		return LM_FALSE;
+
+	closedir(pdir);
+
+	return LM_TRUE;
+}
+#endif
 
 LM_API lm_bool_t
 LM_IsProcessAlive(lm_process_t *pproc)
 {
-	_lm_is_proc_alive_t arg;
-	arg.pproc    = pproc;
-	arg.is_alive = LM_FALSE;
-
-	LM_EnumProcesses(_LM_IsProcessAliveCallback, (lm_void_t *)&arg);
-
-	return arg.is_alive;
+	return _LM_IsProcessAlive(pproc);
 }
 
 /********************************/

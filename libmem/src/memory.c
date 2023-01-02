@@ -255,7 +255,7 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 	lm_size_t rdsize = 0;
 	HANDLE hProcess;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return rdsize;
 
 	rdsize = (lm_size_t)ReadProcessMemory(hProcess, src, dst, size, NULL);
@@ -358,7 +358,7 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 	lm_size_t wrsize = 0;
 	HANDLE hProcess;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return wrsize;
 
 	wrsize = (lm_size_t)WriteProcessMemory(hProcess, dst, src,
@@ -544,7 +544,7 @@ _LM_ProtMemoryEx(lm_process_t *pproc,
 	DWORD old_prot;
 	HANDLE hProcess;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return ret
 
 	if (!VirtualProtectEx(hProcess, addr, size, prot, &old_prot))
@@ -662,7 +662,7 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 	lm_address_t alloc = LM_ADDRESS_BAD;
 	HANDLE hProcess;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return alloc;
 
 	alloc = (lm_address_t)VirtualAllocEx(hProcess, NULL, size,
@@ -756,7 +756,7 @@ _LM_FreeMemoryEx(lm_process_t *pproc,
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hProcess;
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return ret;
 
 	ret = VirtualFreeEx(hProcess, alloc, 0, MEM_RELEASE) ?

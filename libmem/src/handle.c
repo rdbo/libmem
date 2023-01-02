@@ -225,10 +225,10 @@ You should also get your employer (if you work as a programmer) or school, if an
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_OpenProc(lm_process_t *pproc,
+_LM_OpenProc(lm_pid_t      pid,
 	     HANDLE       *hProcess)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && hProcess != LM_NULLPTR);
+	LM_ASSERT(pid != LM_PID_BAD && hProcess != LM_NULLPTR);
 
 	if (pid == GetCurrentProcessId()) {
 		*hProcess = GetCurrentProcess();
@@ -238,7 +238,7 @@ _LM_OpenProc(lm_process_t *pproc,
 		/* the process is dead, but can still open handles */
 		if (*hProcess && GetExitCodeProcess(*hProcess) != STILL_ACTIVE) {
 			CloseHandle(*hProcess);
-			hProcess = NULL;
+			*hProcess = NULL;
 		}
 	}
 
@@ -246,13 +246,13 @@ _LM_OpenProc(lm_process_t *pproc,
 }
 
 LM_PRIVATE lm_void_t
-_LM_CloseProc(HANDLE *handle)
+_LM_CloseProc(HANDLE *hProcess)
 {
-	LM_ASSERT(handle != LM_NULLPTR);
+	LM_ASSERT(hProcess != LM_NULLPTR);
 
-	if (*handle)
-		CloseHandle(*handle);
+	if (*hProcess)
+		CloseHandle(*hProcess);
 
-	*handle = NULL;
+	*hProcess = NULL;
 }
 #endif

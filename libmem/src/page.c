@@ -341,7 +341,7 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 	lm_bool_t ret = LM_FALSE;
 	_lm_enum_pages_ex_t data;
 
-	if (!_LM_OpenProc(pproc, &data.hProcess))
+	if (!_LM_OpenProc(pproc->pid, &data.hProcess))
 		return ret;
 
 	data.pproc = pproc;
@@ -525,7 +525,7 @@ _LM_GetPageEx(lm_process_t *pproc,
 	HANDLE hProcess;
 	SIZE_T query_ret;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return LM_FALSE;
 
 	query_ret = VirtualQueryEx(hProcess, addr, &mbi, sizeof(mbi));

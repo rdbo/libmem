@@ -533,7 +533,7 @@ _LM_LoadModuleEx(lm_process_t *pproc,
 	if (!LM_WriteMemoryEx(pproc, modpath_addr, path, modpath_size))
 		goto FREE_EXIT;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		goto FREE_EXIT;
 
 	hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, modpath_addr, 0, NULL);
@@ -660,7 +660,7 @@ _LM_UnloadModuleEx(lm_process_t *pproc,
 	if (!hModule)
 		return ret;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return ret;
 
 	hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, hModule, 0, NULL);

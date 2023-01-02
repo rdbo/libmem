@@ -677,7 +677,7 @@ _LM_GetProcessPathEx(lm_process_t *pproc,
 	lm_size_t len = 0;
 	HANDLE hProcess;
 	
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return len;
 
 	len = (lm_size_t)GetModuleFileNameEx(hProcess, NULL,
@@ -812,7 +812,7 @@ _LM_GetProcessBitsEx(lm_process_t *pproc,
 	lm_size_t sysbits;
 	HANDLE hProcess;
 
-	if (!_LM_OpenProc(pproc, &hProcess))
+	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return;
 
 	if (!IsWow64Process(hProcess, &IsWow64))

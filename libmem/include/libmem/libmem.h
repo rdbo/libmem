@@ -539,24 +539,24 @@ LM_FindSymbolEx(lm_process_t *pproc,
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
+LM_EnumPages(lm_bool_t(*callback)(lm_page_t *ppage,
 				  lm_void_t *arg),
 	     lm_void_t *arg);
 
 LM_API lm_bool_t
 LM_EnumPagesEx(lm_process_t *pproc,
-	       lm_bool_t   (*callback)(lm_page_t  page,
+	       lm_bool_t   (*callback)(lm_page_t *ppage,
 				       lm_void_t *arg),
 	       lm_void_t    *arg);
 
 LM_API lm_bool_t
 LM_GetPage(lm_address_t addr,
-	   lm_page_t   *page);
+	   lm_page_t   *pagebuf);
 
 LM_API lm_bool_t
 LM_GetPageEx(lm_process_t *pproc,
 	     lm_address_t  addr,
-	     lm_page_t    *page);
+	     lm_page_t    *pagebuf);
 
 /****************************************/
 

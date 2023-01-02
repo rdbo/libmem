@@ -25,7 +25,7 @@
 
 #if LM_OS == LM_OS_WIN
 typedef struct {
-	lm_bool_t(*callback)(lm_page_t page, lm_void_t *arg);
+	lm_bool_t(*callback)(lm_page_t *ppage, lm_void_t *arg);
 	lm_void_t *arg;
 } _lm_enum_pages_t;
 
@@ -44,13 +44,11 @@ _LM_EnumPagesCallback(lm_module_t  mod,
 	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;
 		page.size  = (lm_size_t)mbi.RegionSize;
-		page.end   = (lm_address_t)(
-			&((lm_byte_t *)page.base)[page.size]
-		);
+		page.end   = (lm_address_t)LM_OFFSET(page.base, page.size);
 		page.prot  = mbi.Protect;
 		page.flags = mbi.Type;
 
-		if (parg->callback(page, parg->arg) == LM_FALSE)
+		if (parg->callback(&page, parg->arg) == LM_FALSE)
 			return LM_FALSE;
 	}
 
@@ -58,7 +56,7 @@ _LM_EnumPagesCallback(lm_module_t  mod,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
+_LM_EnumPages(lm_bool_t(*callback)(lm_page_t *ppage,
 				   lm_void_t *arg),
 	      lm_void_t *arg)
 {
@@ -71,7 +69,7 @@ _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
+_LM_EnumPages(lm_bool_t(*callback)(lm_page_t *ppage,
 				   lm_void_t *arg),
 	      lm_void_t *arg)
 {
@@ -85,7 +83,7 @@ _LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 #endif
 
 LM_API lm_bool_t
-LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
+LM_EnumPages(lm_bool_t(*callback)(lm_page_t *ppage,
 				  lm_void_t *arg),
 	     lm_void_t *arg)
 {
@@ -99,7 +97,7 @@ LM_EnumPages(lm_bool_t(*callback)(lm_page_t  page,
 #if LM_OS == LM_OS_WIN
 typedef struct {
 	lm_process_t *pproc;
-	lm_bool_t(*callback)(lm_page_t page, lm_void_t *arg);
+	lm_bool_t(*callback)(lm_page_t *ppage, lm_void_t *arg);
 	lm_void_t *arg;
 	HANDLE hProcess;
 } _lm_enum_pages_ex_t;
@@ -119,13 +117,11 @@ _LM_EnumPagesExCallback(lm_module_t  mod,
 	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;
 		page.size  = (lm_size_t)mbi.RegionSize;
-		page.end   = (lm_address_t)(
-			&((lm_byte_t *)page.base)[page.size]
-		);
+		page.end   = (lm_address_t)LM_OFFSET(page.base, page.size);
 		page.prot  = mbi.Protect;
 		page.flags = mbi.Type;
 
-		if (parg->callback(page, parg->arg) == LM_FALSE)
+		if (parg->callback(&page, parg->arg) == LM_FALSE)
 			return LM_FALSE;
 	}
 
@@ -134,7 +130,7 @@ _LM_EnumPagesExCallback(lm_module_t  mod,
 
 LM_PRIVATE lm_bool_t
 _LM_EnumPagesEx(lm_process_t *pproc,
-		lm_bool_t   (*callback)(lm_page_t  page,
+		lm_bool_t   (*callback)(lm_page_t *ppage,
 					lm_void_t *arg),
 		lm_void_t *arg)
 {
@@ -157,7 +153,7 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 #else
 LM_PRIVATE lm_bool_t
 _LM_EnumPagesEx(lm_process_t *pproc,
-		lm_bool_t   (*callback)(lm_page_t  page,
+		lm_bool_t   (*callback)(lm_page_t *ppage,
 					lm_void_t *arg),
 		lm_void_t   *arg)
 {
@@ -217,7 +213,7 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 			(lm_uintptr_t)page.end - (lm_uintptr_t)page.base
 		);
 
-		if (callback(page, arg) == LM_FALSE)
+		if (callback(&page, arg) == LM_FALSE)
 			break;
 	}
 
@@ -233,7 +229,7 @@ FREE_EXIT:
 
 LM_API lm_bool_t
 LM_EnumPagesEx(lm_process_t *pproc,
-	       lm_bool_t   (*callback)(lm_page_t  page,
+	       lm_bool_t   (*callback)(lm_page_t *ppage,
 				       lm_void_t *arg),
 	       lm_void_t    *arg)
 {
@@ -247,18 +243,18 @@ LM_EnumPagesEx(lm_process_t *pproc,
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_GetPage(lm_address_t addr,
-	    lm_page_t   *page)
+	    lm_page_t   *pagebuf)
 {
 	MEMORY_BASIC_INFORMATION mbi;
 
 	if (!VirtualQuery(addr, &mbi, sizeof(mbi)))
 		return LM_FALSE;
 
-	page->base  = (lm_address_t)mbi.BaseAddress;
-	page->size  = (lm_size_t)mbi.RegionSize;
-	page->end   = (lm_address_t)LM_OFFSET(page.base, page.size);
-	page->prot  = mbi.Protect;
-	page->flags = mbi.Type;
+	pagebuf->base  = (lm_address_t)mbi.BaseAddress;
+	pagebuf->size  = (lm_size_t)mbi.RegionSize;
+	pagebuf->end   = (lm_address_t)LM_OFFSET(page.base, page.size);
+	pagebuf->prot  = mbi.Protect;
+	pagebuf->flags = mbi.Type;
 
 	return LM_TRUE;
 }
@@ -269,14 +265,14 @@ typedef struct {
 } _lm_get_page_t;
 
 LM_PRIVATE lm_bool_t
-_LM_GetPageCallback(lm_page_t  page,
+_LM_GetPageCallback(lm_page_t *ppage,
 		    lm_void_t *arg)
 {
 	_lm_get_page_t *parg = (_lm_get_page_t *)arg;
 	
-	if ((lm_uintptr_t)parg->addr >= (lm_uintptr_t)page.base &&
-	    (lm_uintptr_t)parg->addr < (lm_uintptr_t)page.end) {
-		*parg->pagebuf = page;
+	if ((lm_uintptr_t)parg->addr >= (lm_uintptr_t)ppage->base &&
+	    (lm_uintptr_t)parg->addr < (lm_uintptr_t)ppage->end) {
+		*(parg->pagebuf) = *ppage;
 		return LM_FALSE;
 	}
 
@@ -285,22 +281,22 @@ _LM_GetPageCallback(lm_page_t  page,
 
 LM_PRIVATE lm_bool_t
 _LM_GetPage(lm_address_t addr,
-	    lm_page_t   *page)
+	    lm_page_t   *pagebuf)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
 
-	LM_ASSERT(addr != LM_ADDRESS_BAD && page != LM_NULLPTR);
+	LM_ASSERT(addr != LM_ADDRESS_BAD && pagebuf != LM_NULLPTR);
 
 	arg.addr = addr;
-	arg.pagebuf = page;
+	arg.pagebuf = pagebuf;
 	arg.pagebuf->base = LM_ADDRESS_BAD;
 	arg.pagebuf->size = 0;
 	arg.pagebuf->end  = LM_ADDRESS_BAD;
 
 	LM_EnumPages(_LM_GetPageCallback, (lm_void_t *)&arg);
 
-	ret = page->size > 0 ? LM_TRUE : LM_FALSE;
+	ret = arg.pagebuf->size > 0 ? LM_TRUE : LM_FALSE;
 
 	return ret;
 }
@@ -308,9 +304,9 @@ _LM_GetPage(lm_address_t addr,
 
 LM_API lm_bool_t
 LM_GetPage(lm_address_t addr,
-	   lm_page_t   *page)
+	   lm_page_t   *pagebuf)
 {
-	return _LM_GetPage(addr, page);
+	return _LM_GetPage(addr, pagebuf);
 }
 
 /********************************/
@@ -319,7 +315,7 @@ LM_GetPage(lm_address_t addr,
 LM_PRIVATE lm_bool_t
 _LM_GetPageEx(lm_process_t *pproc,
 	      lm_address_t  addr,
-	      lm_page_t    *page)
+	      lm_page_t    *pagebuf)
 {
 	MEMORY_BASIC_INFORMATION mbi;
 	HANDLE hProcess;
@@ -335,11 +331,11 @@ _LM_GetPageEx(lm_process_t *pproc,
 	if (!query_ret)
 		return LM_FALSE;
 
-	page->base  = (lm_address_t)mbi.BaseAddress;
-	page->size  = (lm_size_t)mbi.RegionSize;
-	page->end   = (lm_address_t)LM_OFFSET(page.base, page.size);
-	page->prot  = mbi.Protect;
-	page->flags = mbi.Type;
+	pagebuf->base  = (lm_address_t)mbi.BaseAddress;
+	pagebuf->size  = (lm_size_t)mbi.RegionSize;
+	pagebuf->end   = (lm_address_t)LM_OFFSET(pagebuf->base, pagebuf->size);
+	pagebuf->prot  = mbi.Protect;
+	pagebuf->flags = mbi.Type;
 
 	return LM_TRUE;	
 }
@@ -347,24 +343,24 @@ _LM_GetPageEx(lm_process_t *pproc,
 LM_PRIVATE lm_bool_t
 _LM_GetPageEx(lm_process_t *pproc,
 	      lm_address_t  addr,
-	      lm_page_t    *page)
+	      lm_page_t    *pagebuf)
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
 		  addr != LM_ADDRESS_BAD &&
-		  page != LM_NULLPTR);
+		  pagebuf != LM_NULLPTR);
 
 	arg.addr = addr;
-	arg.pagebuf = page;
+	arg.pagebuf = pagebuf;
 	arg.pagebuf->base = LM_ADDRESS_BAD;
 	arg.pagebuf->size = 0;
 	arg.pagebuf->end  = LM_ADDRESS_BAD;
 
 	LM_EnumPagesEx(pproc, _LM_GetPageCallback, (lm_void_t *)&arg);
 
-	ret = page->size > 0 ? LM_TRUE : LM_FALSE;
+	ret = arg.pagebuf->size > 0 ? LM_TRUE : LM_FALSE;
 	return ret;
 }
 #endif
@@ -372,8 +368,8 @@ _LM_GetPageEx(lm_process_t *pproc,
 LM_API lm_bool_t
 LM_GetPageEx(lm_process_t *pproc,
 	     lm_address_t  addr,
-	     lm_page_t    *page)
+	     lm_page_t    *pagebuf)
 {
-	return _LM_GetPageEx(pproc, addr, page);
+	return _LM_GetPageEx(pproc, addr, pagebuf);
 }
 

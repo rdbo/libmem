@@ -361,36 +361,24 @@ LM_PRIVATE lm_pid_t
 _LM_GetParentIdEx(lm_pid_t pid)
 {
 	lm_pid_t    ppid = LM_PID_BAD;	
-	lm_tchar_t  status_path[LM_PATH_MAX] = { 0 };
-	FILE       *status_file;
-	lm_tchar_t *status_line = NULL;
-	regex_t     regex;
+	lm_tchar_t  stat_path[LM_PATH_MAX] = { 0 };
+	FILE       *stat_file;
+	lm_tchar_t *stat_line = NULL;
 	size_t      buf_len;
-	regmatch_t  matches[2];
 
-	LM_SNPRINTF(status_path, LM_ARRLEN(status_path),
-		    LM_STR("%s/%d/status"), LM_PROCFS, pid);
+	LM_SNPRINTF(stat_path, LM_ARRLEN(stat_path),
+		    LM_STR("%s/%d/stat"), LM_PROCFS, pid);
 
-	status_file = LM_FOPEN(status_path, "r");
-	if (!status_file)
+	stat_file = LM_FOPEN(stat_path, "r");
+	if (!stat_file)
 		return ppid;
 
-	if (regcomp(&regex, "^PPid:[[:blank:]]+([0-9]+).*$", REG_EXTENDED))
-		goto CLOSE_EXIT;
+	if (LM_GETLINE(&stat_line, &buf_len, stat_file) > 0)
+		LM_SSCANF(stat_line, "%*d %*s %*c %d", &ppid);
 
-	while (LM_GETLINE(&status_line, &buf_len, status_file) > 0) {
-		if (regexec(&regex, status_line, LM_ARRLEN(matches), matches, 0))
-			continue;
-
-		status_line[matches[1].rm_eo] = '\x00';
-		ppid = LM_ATOI(&status_line[matches[1].rm_so]);
-		break;
-	}
-
-	regfree(&regex);
-	LM_FREE(status_line);
+	LM_FREE(stat_line);
 CLOSE_EXIT:
-	LM_FCLOSE(status_file);
+	LM_FCLOSE(stat_file);
 
 	return ppid;
 }

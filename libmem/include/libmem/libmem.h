@@ -174,6 +174,7 @@
 #define LM_CSNPRINTF snprintf
 #define LM_CSTRTOP   strtoul
 #define LM_CATOI     atoi
+#define LM_CSSCANF   sscanf
 
 #define LM_WSTR(str) L##str
 #define LM_WSTRCMP   wcscmp
@@ -187,6 +188,7 @@
 #define LM_WSNPRINTF snwprintf
 #define LM_WSTRTOP   wcstoul
 #define LM_WATOI     wtoi
+#define LM_WSSCANF   swscanf
 
 #if LM_CHARSET == LM_CHARSET_UC
 #	define LM_STR      LM_WSTR
@@ -201,6 +203,7 @@
 #	define LM_SNPRINTF LM_WSNPRINTF
 #	define LM_STRTOP   LM_WSTRTOP
 #	define LM_ATOI     LM_WATOI
+#	define LM_SSCANF   LM_WSSCANF
 #else
 #	define LM_STR      LM_CSTR
 #	define LM_STRCMP   LM_CSTRCMP
@@ -214,6 +217,7 @@
 #	define LM_SNPRINTF LM_CSNPRINTF
 #	define LM_STRTOP   LM_CSTRTOP
 #	define LM_ATOI     LM_CATOI
+#	define LM_SSCANF   LM_CSSCANF
 #endif
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
 #define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)

@@ -172,12 +172,8 @@ LM_PRIVATE lm_tid_t
 _LM_GetThreadId(lm_void_t)
 {
 	/* the process id and the thread id are the same (threads are also processes) */
-	lm_process_t proc;
 
-	if (!LM_GetProcess(&proc))
-		return LM_TID_BAD;
-
-	return (lm_tid_t)proc.pid;
+	return (lm_tid_t)gettid();
 }
 #endif
 

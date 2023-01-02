@@ -248,7 +248,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			 * struct represents the name of the process, not the
 			 * full path of the executable.
 			 * Source: https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/ns-tlhelp32-processentry32 */
-			_LM_GetProcessPathEx(&proc, proc.path, LM_ARRLEN(proc.path));
+			_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path));
 			proc.name = _LM_GetNameFromPath(proc.path);
 			proc.bits = LM_BITS;
 			_LM_GetProcessBitsEx(&proc, &proc.bits);
@@ -291,7 +291,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 		for (i = 0; i < nprocs; ++i) {
 			proc.pid = (lm_pid_t)procs[i].ki_pid;
 			proc.ppid = (lm_pid_t)procs[i].ki_ppid;
-			_LM_GetProcessPathEx(&proc, proc.path, LM_ARRLEN(proc.path));
+			_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path));
 			proc.name = _LM_GetNameFromPath(proc.path);
 			proc.bits = LM_BITS;
 			_LM_GetProcessBitsEx(&proc, &proc.bits);
@@ -333,7 +333,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			continue;
 
 		proc.ppid = _LM_GetParentIdEx(proc.pid);
-		_LM_GetProcessPathEx(&proc, proc.path, LM_ARRLEN(proc.path));
+		_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path));
 		proc.name = _LM_GetNameFromPath(proc.path);
 		proc.bits = LM_BITS;
 		_LM_GetProcessBitsEx(&proc, &proc.bits);
@@ -382,7 +382,7 @@ _LM_GetProcess(lm_process_t *pproc)
 	pproc->pid = (lm_pid_t)getpid();
 	pproc->ppid = (lm_pid_t)getppid();
 
-	if (!_LM_GetProcessPathEx(pproc, pproc->path, LM_ARRLEN(pproc->path)))
+	if (!_LM_GetProcessPathEx(pproc->pid, pproc->path, LM_ARRLEN(pproc->path)))
 		return LM_FALSE;
 
 	pproc->name = _LM_GetNameFromPath(pproc->path);
@@ -670,14 +670,14 @@ LM_GetProcessPath(lm_tchar_t *pathbuf,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_process_t *pproc,
+_LM_GetProcessPathEx(lm_pid_t      pid,
 		     lm_tchar_t   *pathbuf,
 		     lm_size_t     maxlen)
 {
 	lm_size_t len = 0;
 	HANDLE hProcess;
 	
-	if (!_LM_OpenProc(pproc->pid, &hProcess))
+	if (!_LM_OpenProc(pid, &hProcess))
 		return len;
 
 	len = (lm_size_t)GetModuleFileNameEx(hProcess, NULL,
@@ -707,7 +707,7 @@ _LM_GetProcessPathEx(lm_process_t *pproc,
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_process_t *pproc,
+_LM_GetProcessPathEx(lm_pid_t      pid,
 		     lm_tchar_t   *pathbuf,
 		     lm_size_t     maxlen)
 {
@@ -722,7 +722,7 @@ _LM_GetProcessPathEx(lm_process_t *pproc,
 
 	procs = procstat_getprocs(
 		ps, KERN_PROC_PID,
-		pproc->pid, &nprocs
+		pid, &nprocs
 	);
 
 	if (procs && nprocs) {
@@ -739,14 +739,14 @@ _LM_GetProcessPathEx(lm_process_t *pproc,
 }
 #else
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_process_t *pproc,
+_LM_GetProcessPathEx(lm_pid_t      pid,
 		     lm_tchar_t   *pathbuf,
 		     lm_size_t     maxlen)
 {
 	ssize_t slen;
 	lm_tchar_t exe_path[LM_PATH_MAX] = { 0 };
 	LM_SNPRINTF(exe_path, LM_ARRLEN(exe_path),
-		    LM_STR("%s/%d/exe"), LM_PROCFS, pproc->pid);
+		    LM_STR("%s/%d/exe"), LM_PROCFS, pid);
 	
 	/* readlink does not append a null terminator, so use maxlen - 1
 	   and append it later */

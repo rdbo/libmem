@@ -267,7 +267,7 @@ LM_PRIVATE lm_tchar_t *
 _LM_GetNameFromPath(lm_tchar_t *path);
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_process_t *pproc,
+_LM_GetProcessPathEx(lm_pid_t      pid,
 		     lm_tchar_t   *pathbuf,
 		     lm_size_t     maxlen);
 

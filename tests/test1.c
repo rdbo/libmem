@@ -38,7 +38,6 @@ int
 main()
 {
 	lm_process_t proc;
-	lm_pid_t     ppid;
 	lm_tid_t     tid;
 	lm_module_t  mod;
 	lm_address_t main_sym;
@@ -70,7 +69,7 @@ main()
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), proc.name);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), proc.path);
 	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
-	LM_PRINTF(LM_STR("[*] PPID: %d\n"), ppid);
+	LM_PRINTF(LM_STR("[*] PPID: %d\n"), proc.ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), proc.bits);
 	LM_PRINTF(LM_STR("====================\n"));

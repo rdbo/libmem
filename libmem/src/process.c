@@ -364,47 +364,31 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 
 /********************************/
 
-#if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_GetProcess(lm_process_t *pproc)
+_LM_GetProcess(lm_process_t *procbuf)
 {
-	pproc->pid = (lm_pid_t)GetCurrentProcessId();
-	pproc->ppid = _LM_GetParentIdEx(pproc);
+	procbuf->pid = _LM_GetProcessId();
+	procbuf->ppid = _LM_GetParentId();
 
-	if (!_LM_GetProcessPath(pproc->path, LM_ARRLEN(pproc->path)))
+	if (!_LM_GetProcessPath(procbuf->path, LM_ARRLEN(procbuf->path)))
 		return LM_FALSE;
 
-	pproc->name = _LM_GetNameFromPath(pproc->path);
-	pproc->bits = LM_BITS;
+	procbuf->name = _LM_GetNameFromPath(procbuf->path);
+	procbuf->bits = LM_BITS;
 	return LM_TRUE;
 }
-#else
-LM_PRIVATE lm_bool_t
-_LM_GetProcess(lm_process_t *pproc)
-{
-	pproc->pid = (lm_pid_t)getpid();
-	pproc->ppid = (lm_pid_t)getppid();
-
-	if (!_LM_GetProcessPathEx(pproc->pid, pproc->path, LM_ARRLEN(pproc->path)))
-		return LM_FALSE;
-
-	pproc->name = _LM_GetNameFromPath(pproc->path);
-	pproc->bits = LM_BITS;
-	return LM_TRUE;
-}
-#endif
 
 LM_API lm_bool_t
-LM_GetProcess(lm_process_t *pproc)
+LM_GetProcess(lm_process_t *procbuf)
 {
 	static lm_process_t self_proc = {
 		LM_PID_BAD, LM_PID_BAD, 0, "", LM_NULLPTR
 	};
 
-	LM_ASSERT(pproc != LM_NULLPTR);
+	LM_ASSERT(procbuf != LM_NULLPTR);
 
 	if (self_proc.pid != LM_PID_BAD) {
-		*pproc = self_proc;
+		*procbuf = self_proc;
 		return LM_TRUE;
 	}
 
@@ -413,9 +397,9 @@ LM_GetProcess(lm_process_t *pproc)
 		return LM_FALSE;
 	}
 
-	*pproc = self_proc;
+	*procbuf = self_proc;
 
-	return LM_TRUE;;
+	return LM_TRUE;
 }
 
 /********************************/
@@ -467,13 +451,25 @@ LM_FindProcess(lm_tstring_t  procstr,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_pid_t
+_LM_GetProcessId(lm_void_t)
+{
+	return (lm_pid_t)GetCurrentProcessId();
+}
+#else
+LM_PRIVATE lm_pid_t
+_LM_GetProcessId(lm_void_t)
+{
+	return (lm_pid_t)getpid();
+}
+#endif
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_pid_t
 _LM_GetParentId(lm_void_t)
 {
-	lm_process_t proc;
-	if (!LM_GetProcess(&proc))
-		return LM_PID_BAD;
-
-	return _LM_GetParentIdEx(proc.pid);
+	return _LM_GetParentIdEx(_LM_GetProcessId());
 }
 #else
 LM_PRIVATE lm_pid_t
@@ -482,12 +478,6 @@ _LM_GetParentId(lm_void_t)
 	return (lm_pid_t)getppid();
 }
 #endif
-
-LM_API lm_pid_t
-LM_GetParentId(lm_void_t)
-{
-	return _LM_GetParentId();
-}
 
 /********************************/
 
@@ -591,14 +581,6 @@ CLOSE_EXIT:
 }
 #endif
 
-LM_API lm_pid_t
-LM_GetParentIdEx(lm_pid_t pid)
-{
-	LM_ASSERT(pid != LM_PID_BAD);
-
-	return _LM_GetParentIdEx(pid);
-}
-
 /********************************/
 
 typedef struct {
@@ -650,9 +632,7 @@ LM_PRIVATE lm_size_t
 _LM_GetProcessPath(lm_tchar_t *pathbuf,
 		   lm_size_t   maxlen)
 {
-	/* TODO: REMOVE */
-
-	return 0;
+	return _LM_GetProcessPathEx(_LM_GetProcessId(), pathbuf, maxlen);
 }
 #endif
 
@@ -864,7 +844,6 @@ _LM_GetElfBits(lm_tchar_t *path)
 LM_PRIVATE lm_size_t
 _LM_GetProcessBitsEx(lm_tchar_t *elfpath)
 {
-	lm_tchar_t path[LM_PATH_MAX];
 	lm_size_t elf_bits;
 
 	elf_bits = _LM_GetElfBits(elfpath);

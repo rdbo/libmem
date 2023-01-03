@@ -30,26 +30,25 @@
 using namespace LIEF::PE;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPeSyms(lm_size_t    bits,
-	       lm_address_t modbase,
+_LM_EnumPeSyms(lm_module_t *pmod,
 	       lm_bool_t  (*callback)(lm_cstring_t symbol,
 				      lm_address_t addr,
 				      lm_void_t   *arg),
 	       lm_void_t *arg)
 {
-	/* TODO: Implement */
-	return LM_FALSE;
+	std::unique_ptr<const Binary> binary;
 
-	/*
-	if (!is_pe(modpath))
+	if (!is_pe(pmod->path))
 		return LM_FALSE;
 
-	std::unique_ptr<const PE::Binary> binary_pe = PE::Parser::parse(PE_PATH);
+	binary = Parser::parse(pmod->path);
 
-	for (const PE::ExportEntry &symbol : binary_pe->get_export().entries()) {
+	for (const ExportEntry &symbol : binary->get_export().entries()) {
+		if (!callback(symbol.name(), LM_OFFSET(pmod->base, symbol.value()), arg))
+			break;
 	}
+
 	return LM_TRUE;
-	*/
 }
 
 LM_PRIVATE lm_bool_t

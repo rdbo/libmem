@@ -329,7 +329,7 @@ extern "C" {
 #endif
 
 /* Types/Enums */
-typedef char               lm_char_t;
+typedef char               lm_cchar_t;
 typedef unsigned char      lm_uchar_t;
 typedef int                lm_int_t;
 typedef unsigned int       lm_uint_t;
@@ -369,16 +369,15 @@ typedef lm_uintptr_t       lm_address_t;
 typedef lm_uintmax_t       lm_size_t;
 
 #if LM_CHARSET == LM_CHARSET_UC
-typedef lm_wchar_t         lm_tchar_t;
+typedef lm_wchar_t         lm_char_t;
 #else
-typedef lm_char_t          lm_tchar_t;
+typedef lm_cchar_t         lm_char_t;
 #endif
 
 typedef lm_byte_t         *lm_bstring_t;
-typedef lm_char_t         *lm_cstring_t;
+typedef lm_cchar_t        *lm_cstring_t;
 typedef lm_wchar_t        *lm_wstring_t;
-typedef lm_tchar_t        *lm_tstring_t;
-typedef lm_tstring_t       lm_string_t;
+typedef lm_char_t         *lm_string_t;
 
 /*
 #if LM_OS == LM_OS_WIN
@@ -403,16 +402,16 @@ typedef struct {
 	lm_pid_t   pid;
 	lm_pid_t   ppid;
 	lm_size_t  bits;
-	lm_tchar_t path[LM_PATH_MAX];
-	lm_tchar_t name[LM_PATH_MAX];
+	lm_char_t path[LM_PATH_MAX];
+	lm_char_t name[LM_PATH_MAX];
 } lm_process_t;
 
 typedef struct {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
-	lm_tchar_t   path[LM_PATH_MAX];
-	lm_tchar_t   name[LM_PATH_MAX];
+	lm_char_t   path[LM_PATH_MAX];
+	lm_char_t   name[LM_PATH_MAX];
 } lm_module_t;
 
 typedef struct {
@@ -431,8 +430,8 @@ typedef struct {
 	lm_uint64_t address;
 	lm_uint16_t size;
 	lm_uint8_t  bytes[LM_INST_SIZE];
-	lm_char_t   mnemonic[32];
-	lm_char_t   op_str[160];
+	lm_cchar_t  mnemonic[32];
+	lm_cchar_t  op_str[160];
 	lm_void_t  *detail;
 } lm_inst_t;
 
@@ -448,7 +447,7 @@ LM_API lm_bool_t
 LM_GetProcess(lm_process_t *procbuf);
 
 LM_API lm_bool_t
-LM_FindProcess(lm_tstring_t  procstr,
+LM_FindProcess(lm_string_t   procstr,
 	       lm_process_t *procbuf);
 
 LM_API lm_bool_t
@@ -497,21 +496,21 @@ LM_EnumModulesEx(lm_process_t *pproc,
 		 lm_void_t    *arg);
 
 LM_API lm_bool_t
-LM_FindModule(lm_tstring_t name,
+LM_FindModule(lm_string_t  name,
 	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
 LM_FindModuleEx(lm_process_t *pproc,
-		lm_tstring_t  name,
+		lm_string_t   name,
 		lm_module_t  *modbuf);
 
 LM_API lm_bool_t
-LM_LoadModule(lm_tstring_t path,
+LM_LoadModule(lm_string_t  path,
 	      lm_module_t *modbuf);
 
 LM_API lm_bool_t
 LM_LoadModuleEx(lm_process_t *pproc,
-		lm_tstring_t  path,
+		lm_string_t   path,
 		lm_module_t  *modbuf);
 
 LM_API lm_bool_t
@@ -652,25 +651,25 @@ LM_DataScanEx(lm_process_t *pproc,
 
 LM_API lm_address_t
 LM_PatternScan(lm_bstring_t pattern,
-	       lm_tstring_t mask,
+	       lm_string_t  mask,
 	       lm_address_t addr,
 	       lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_PatternScanEx(lm_process_t *pproc,
 		 lm_bstring_t  pattern,
-		 lm_tstring_t  mask,
+		 lm_string_t   mask,
 		 lm_address_t  addr,
 		 lm_size_t     scansize);
 
 LM_API lm_address_t
-LM_SigScan(lm_tstring_t sig,
+LM_SigScan(lm_string_t  sig,
 	   lm_address_t addr,
 	   lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_SigScanEx(lm_process_t *pproc,
-	     lm_tstring_t  sig,
+	     lm_string_t   sig,
 	     lm_address_t  addr,
 	     lm_size_t     scansize);
 

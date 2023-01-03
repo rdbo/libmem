@@ -419,7 +419,7 @@ typedef struct {
 
 LM_PRIVATE lm_bool_t
 _LM_FindLibcCallback(lm_module_t *pmod,
-		     lm_tstring_t path,
+		     lm_string_t  path,
 		     lm_void_t   *arg)
 {
 	_lm_find_libc_t *parg = (_lm_find_libc_t *)arg;
@@ -466,7 +466,7 @@ _LM_GenerateLibcall(lm_size_t   bits,
 		    lm_size_t   nargs,
 		    lm_byte_t **pcodebuf)
 {
-	lm_char_t code[255];
+	lm_cchar_t code[255];
 
 	if (bits == 64) {
 		/* single stepping won't work, because the call instruction
@@ -703,7 +703,7 @@ FREE_CODEBUF_RET:
 
 LM_PRIVATE lm_bool_t
 _LM_CallDlopen(lm_process_t *pproc,
-	       lm_tstring_t  path,
+	       lm_string_t   path,
 	       lm_int_t      mode,
 	       void        **plibhandle)
 {
@@ -726,7 +726,7 @@ _LM_CallDlopen(lm_process_t *pproc,
 	}
 
 	/* it is LM_STRLEN(path) + 1 because the null terminator should also be written */
-	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t);
+	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_char_t);
 	modpath_addr = LM_AllocMemoryEx(pproc, modpath_size, LM_PROT_XRW);
 	if (modpath_addr == LM_ADDRESS_BAD)
 		return ret;

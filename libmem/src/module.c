@@ -24,11 +24,11 @@
 #include "internal.h"
 
 LM_PRIVATE lm_size_t
-_LM_GetNameFromPath(lm_tchar_t *path,
-		    lm_tchar_t *namebuf,
-		    lm_size_t   maxlen)
+_LM_GetNameFromPath(lm_char_t *path,
+		    lm_char_t *namebuf,
+		    lm_size_t  maxlen)
 {
-	lm_tchar_t *name;
+	lm_char_t *name;
 	lm_size_t   len = 0;
 
 	name = LM_STRRCHR(path, LM_PATH_SEP);
@@ -123,15 +123,15 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 		  lm_void_t    *arg)
 {
 	lm_bool_t    ret = LM_FALSE;
-	lm_tchar_t   maps_path[LM_PATH_MAX];
+	lm_char_t    maps_path[LM_PATH_MAX];
 	FILE        *maps_file;
-	lm_tchar_t  *maps_line = NULL;
+	lm_char_t   *maps_line = NULL;
 	lm_size_t    maps_line_len;
 	ssize_t      line_len;
 	regex_t      regex;
 	regmatch_t   matches[5];
 	lm_module_t  mod;
-	lm_tstring_t curpath;
+	lm_string_t  curpath;
 
 	mod.path[0] = LM_STR('\x00');
 
@@ -240,7 +240,7 @@ LM_EnumModulesEx(lm_process_t *pproc,
 
 typedef struct {
 	lm_module_t *modbuf;
-	lm_tstring_t name;
+	lm_string_t  name;
 	lm_size_t    len;
 } _lm_find_mod_t;
 
@@ -264,7 +264,7 @@ _LM_FindModuleCallback(lm_module_t *pmod,
 }
 
 LM_API lm_bool_t
-LM_FindModule(lm_tstring_t name,
+LM_FindModule(lm_string_t  name,
 	      lm_module_t *modbuf)
 {
 	_lm_find_mod_t arg;
@@ -286,7 +286,7 @@ LM_FindModule(lm_tstring_t name,
 
 LM_API lm_bool_t
 LM_FindModuleEx(lm_process_t *pproc,
-		lm_tstring_t  name,
+		lm_string_t   name,
 		lm_module_t  *modbuf)
 {
 	_lm_find_mod_t arg;
@@ -310,20 +310,20 @@ LM_FindModuleEx(lm_process_t *pproc,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_LoadModule(lm_tstring_t path)
+_LM_LoadModule(lm_string_t path)
 {
 	return LoadLibrary(path) ? LM_TRUE : LM_FALSE;
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_LoadModule(lm_tstring_t path)
+_LM_LoadModule(lm_string_t path)
 {
 	return dlopen(path, RTLD_LAZY) ? LM_TRUE : LM_FALSE;
 }
 #endif
 
 LM_API lm_bool_t
-LM_LoadModule(lm_tstring_t path,
+LM_LoadModule(lm_string_t  path,
 	      lm_module_t *modbuf)
 {
 	/* modbuf can be NULL. in that case, the module info won't be saved */
@@ -344,7 +344,7 @@ LM_LoadModule(lm_tstring_t path,
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_LoadModuleEx(lm_process_t *pproc,
-		 lm_tstring_t  path,
+		 lm_string_t   path,
 		 lm_module_t  *modbuf)
 {
 	lm_bool_t    ret = LM_FALSE;
@@ -353,7 +353,7 @@ _LM_LoadModuleEx(lm_process_t *pproc,
 	HANDLE       hProcess;
 	HANDLE       hThread;
 
-	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_tchar_t)
+	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_char_t)
 	modpath_addr = LM_AllocMemoryEx(pproc, modpath_size, LM_PROT_XRW);
 	if (modpath_addr == LM_ADDRESS_BAD)
 		return ret;
@@ -382,7 +382,7 @@ FREE_EXIT:
 #else
 LM_PRIVATE lm_bool_t
 _LM_LoadModuleEx(lm_process_t *pproc,
-		 lm_tstring_t  path,
+		 lm_string_t   path,
 		 lm_module_t  *modbuf)
 {
 	if (!_LM_CallDlopen(pproc, path, RTLD_LAZY, LM_NULLPTR))
@@ -397,7 +397,7 @@ _LM_LoadModuleEx(lm_process_t *pproc,
 
 LM_API lm_bool_t
 LM_LoadModuleEx(lm_process_t *pproc,
-		lm_tstring_t  path,
+		lm_string_t   path,
 		lm_module_t  *modbuf)
 {
 	LM_ASSERT(pproc != LM_NULLPTR && path != LM_NULLPTR);

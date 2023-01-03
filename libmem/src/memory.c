@@ -95,7 +95,7 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 		 lm_size_t     size)
 {
 	int fd;
-	lm_tchar_t mem_path[LM_PATH_MAX] = { 0 };
+	lm_char_t mem_path[LM_PATH_MAX] = { 0 };
 	ssize_t rdsize;
 
 	LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path),
@@ -198,7 +198,7 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 		  lm_size_t     size)
 {
 	int fd;
-	lm_tchar_t mem_path[LM_PATH_MAX] = { 0 };
+	lm_char_t mem_path[LM_PATH_MAX] = { 0 };
 	ssize_t wrsize;
 
 	LM_SNPRINTF(mem_path, LM_ARRLEN(mem_path),

@@ -30,7 +30,7 @@ _LM_GenerateHook(lm_address_t from,
 		 lm_size_t    bits,
 		 lm_byte_t  **pcodebuf)
 {
-	lm_char_t code[255];
+	lm_cchar_t code[255];
 	lm_size_t size;
 
 	if (bits == 64) {

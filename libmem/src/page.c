@@ -31,7 +31,7 @@ typedef struct {
 
 LM_PRIVATE lm_bool_t
 _LM_EnumPagesCallback(lm_module_t  mod,
-		      lm_tstring_t modpath,
+		      lm_string_t  modpath,
 		      lm_void_t   *arg)
 {
 	lm_address_t addr;
@@ -104,7 +104,7 @@ typedef struct {
 
 LM_PRIVATE lm_bool_t
 _LM_EnumPagesExCallback(lm_module_t  mod,
-			lm_tstring_t modpath,
+			lm_string_t  modpath,
 			lm_void_t   *arg)
 {
 	lm_address_t addr;
@@ -158,9 +158,9 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 		lm_void_t   *arg)
 {
 	lm_bool_t   ret = LM_FALSE;
-	lm_tchar_t *maps_line = NULL;
+	lm_char_t  *maps_line = NULL;
 	size_t      maps_line_len;
-	lm_tchar_t  maps_path[LM_PATH_MAX] = { 0 };
+	lm_char_t   maps_path[LM_PATH_MAX] = { 0 };
 	FILE       *maps_file;
 	regex_t     regex;
 	regmatch_t  matches[4];

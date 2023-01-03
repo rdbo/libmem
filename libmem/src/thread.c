@@ -123,7 +123,7 @@ _LM_EnumThreadIdsEx(lm_process_t *pproc,
 {
 	DIR *pdir;
 	struct dirent *pdirent;
-	lm_tchar_t task_path[LM_PATH_MAX] = { 0 };
+	lm_char_t task_path[LM_PATH_MAX] = { 0 };
 
 	LM_SNPRINTF(task_path, LM_ARRLEN(task_path),
 		    LM_STR("/proc/%d/task"), pproc->pid);

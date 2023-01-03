@@ -73,27 +73,27 @@ LM_PRIVATE lm_pid_t
 _LM_GetParentIdEx(lm_pid_t pid);
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessPath(lm_tchar_t *pathbuf,
-		   lm_size_t   maxlen);
+_LM_GetProcessPath(lm_char_t *pathbuf,
+		   lm_size_t  maxlen);
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessPathEx(lm_pid_t      pid,
-		     lm_tchar_t   *pathbuf,
-		     lm_size_t     maxlen);
+_LM_GetProcessPathEx(lm_pid_t   pid,
+		     lm_char_t *pathbuf,
+		     lm_size_t  maxlen);
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessName(lm_tchar_t *namebuf,
-		   lm_size_t   maxlen);
+_LM_GetProcessName(lm_char_t *namebuf,
+		   lm_size_t  maxlen);
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessNameEx(lm_pid_t    pid,
-		     lm_tchar_t *namebuf,
-		     lm_size_t   maxlen);
+_LM_GetProcessNameEx(lm_pid_t   pid,
+		     lm_char_t *namebuf,
+		     lm_size_t  maxlen);
 
 LM_PRIVATE lm_size_t
-_LM_GetNameFromPath(lm_tchar_t *path,
-		    lm_tchar_t *namebuf,
-		    lm_size_t   maxlen);
+_LM_GetNameFromPath(lm_char_t *path,
+		    lm_char_t *namebuf,
+		    lm_size_t  maxlen);
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
@@ -128,7 +128,7 @@ typedef struct {
 } _lm_libcall_data_t;
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessBitsEx(lm_tchar_t   *elfpath);
+_LM_GetProcessBitsEx(lm_char_t *elfpath);
 
 LM_PRIVATE lm_bool_t
 _LM_SystemCallEx(lm_process_t       *pproc,
@@ -146,7 +146,7 @@ _LM_LibraryCallEx(lm_process_t      *pproc,
 
 LM_PRIVATE lm_bool_t
 _LM_CallDlopen(lm_process_t *pproc,
-	       lm_tstring_t  path,
+	       lm_string_t   path,
 	       lm_int_t      mode,
 	       void        **plibhandle);
 

@@ -14,13 +14,13 @@ main()
 	lm_tid_t     tid;
 	lm_size_t    bits;
 	lm_module_t  mod;
-	lm_tchar_t   modname[LM_PATH_MAX];
-	lm_tchar_t   modpath[LM_PATH_MAX];
+	lm_char_t    modname[LM_PATH_MAX];
+	lm_char_t    modpath[LM_PATH_MAX];
 	lm_address_t main_sym;
 	/*
 	lm_module_t  libtest_mod;
-	lm_tchar_t   libtest_modname[LM_PATH_MAX];
-	lm_tchar_t   libtest_modpath[LM_PATH_MAX];
+	lm_char_t    libtest_modname[LM_PATH_MAX];
+	lm_char_t    libtest_modpath[LM_PATH_MAX];
 	*/
 	lm_page_t    page;
 	lm_address_t val_sym;
@@ -28,8 +28,8 @@ main()
 	lm_int32_t   rdbuf2;
 	lm_int32_t   wrbuf = 69;
 	lm_byte_t    scanme[] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0 };
-	lm_tchar_t   mask[] = LM_STR("xxxxxxxxxx");
-	lm_tchar_t   signature[] = LM_STR("10 20 30 40 50 60 70 80 90 A0");
+	lm_char_t    mask[] = LM_STR("xxxxxxxxxx");
+	lm_char_t    signature[] = LM_STR("10 20 30 40 50 60 70 80 90 A0");
 	lm_address_t data_scan;
 	lm_address_t pattern_scan;
 	lm_address_t sig_scan;

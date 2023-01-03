@@ -42,13 +42,13 @@ main()
 	lm_module_t  mod;
 	lm_address_t main_sym;
 	lm_module_t  libtest_mod;
-	lm_tchar_t   libtest_modname[LM_PATH_MAX];
-	lm_tchar_t   libtest_modpath[LM_PATH_MAX];
+	lm_char_t    libtest_modname[LM_PATH_MAX];
+	lm_char_t    libtest_modpath[LM_PATH_MAX];
 	lm_page_t    page;
 	lm_int32_t   rdbuf;
 	lm_int32_t   wrbuf = 1337;
-	lm_tchar_t   mask[] = LM_STR("xxxxxxxxxx");
-	lm_tchar_t   signature[] = LM_STR("10 20 30 40 50 60 70 80 90 A0");
+	lm_char_t    mask[] = LM_STR("xxxxxxxxxx");
+	lm_char_t    signature[] = LM_STR("10 20 30 40 50 60 70 80 90 A0");
 	lm_address_t data_scan;
 	lm_address_t pattern_scan;
 	lm_address_t sig_scan;

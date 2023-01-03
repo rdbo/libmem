@@ -142,7 +142,7 @@ LM_DataScanEx(lm_process_t *pproc,
 
 LM_API lm_address_t
 LM_PatternScan(lm_bstring_t pattern,
-	       lm_tstring_t mask,
+	       lm_string_t  mask,
 	       lm_address_t addr,
 	       lm_size_t    scansize)
 {
@@ -204,7 +204,7 @@ LM_PatternScan(lm_bstring_t pattern,
 LM_API lm_address_t
 LM_PatternScanEx(lm_process_t *pproc,
 		 lm_bstring_t  pattern,
-		 lm_tstring_t  mask,
+		 lm_string_t   mask,
 		 lm_address_t  addr,
 		 lm_size_t     scansize)
 {
@@ -269,21 +269,21 @@ LM_PatternScanEx(lm_process_t *pproc,
 /********************************/
 
 LM_PRIVATE lm_bool_t
-_LM_ParseSig(lm_tstring_t  sig,
+_LM_ParseSig(lm_string_t   sig,
 	     lm_bstring_t *ppattern,
-	     lm_tstring_t *pmask)
+	     lm_string_t  *pmask)
 {
 	lm_bool_t    ret = LM_FALSE;
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
-	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
+	lm_char_t   *mask = (lm_char_t *)LM_NULL;
 	lm_size_t    len = 0;
-	lm_tchar_t  *ptr;
+	lm_char_t   *ptr;
 	
 	for (ptr = sig; ptr; ptr = LM_STRCHR(ptr, LM_STR(' '))) {
 		lm_byte_t  *old_pattern = pattern;
-		lm_tchar_t *old_mask = mask;
+		lm_char_t  *old_mask = mask;
 		lm_byte_t   curbyte = 0;
-		lm_tchar_t  curchar = LM_MASK_UNKNOWN;
+		lm_char_t   curchar = LM_MASK_UNKNOWN;
 
 		pattern = (lm_byte_t *)LM_CALLOC(len + 1, sizeof(lm_byte_t));
 		if (old_pattern) {
@@ -298,7 +298,7 @@ _LM_ParseSig(lm_tstring_t  sig,
 			return ret;
 		}
 
-		mask = (lm_tchar_t *)LM_CALLOC(len + 2, sizeof(lm_tchar_t));
+		mask = (lm_char_t *)LM_CALLOC(len + 2, sizeof(lm_char_t));
 		if (old_mask) {
 			if (mask)
 				LM_STRNCPY(mask, old_mask, len);
@@ -332,13 +332,13 @@ _LM_ParseSig(lm_tstring_t  sig,
 }
 
 LM_API lm_address_t
-LM_SigScan(lm_tstring_t sig,
+LM_SigScan(lm_string_t  sig,
 	   lm_address_t addr,
 	   lm_size_t    scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
 	lm_bstring_t pattern = (lm_byte_t *)LM_NULL;
-	lm_tstring_t mask = (lm_tchar_t *)LM_NULL;
+	lm_string_t  mask = (lm_string_t)LM_NULL;
 
 	LM_ASSERT(sig != LM_NULLPTR && addr != LM_ADDRESS_BAD);
 
@@ -357,13 +357,13 @@ LM_SigScan(lm_tstring_t sig,
 
 LM_API lm_address_t
 LM_SigScanEx(lm_process_t *pproc,
-	     lm_tstring_t  sig,
+	     lm_string_t   sig,
 	     lm_address_t  addr,
 	     lm_size_t     scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
-	lm_tchar_t  *mask = (lm_tchar_t *)LM_NULL;
+	lm_char_t   *mask = (lm_char_t *)LM_NULL;
 
 	LM_ASSERT(pproc != LM_NULLPTR && sig != LM_NULLPTR &&
 		  addr != LM_NULLPTR && scansize > 0);

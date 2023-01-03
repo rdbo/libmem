@@ -104,7 +104,7 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_ReadMemory((lm_address_t)&val, (lm_byte_t *)&rdbuf, sizeof(rdbuf));
-	LM_WriteMemory((lm_address_t)&val, (lm_bstring_t)&wrbuf, sizeof(wrbuf));
+	LM_WriteMemory((lm_address_t)&val, (lm_bytearr_t)&wrbuf, sizeof(wrbuf));
 	data_scan = LM_DataScan(scanme, sizeof(scanme), (lm_address_t)&scanme[-10], sizeof(scanme) + 10);
 	pattern_scan = LM_PatternScan(scanme, mask, (lm_address_t)&scanme[-10], sizeof(scanme) + 10);
 	sig_scan = LM_SigScan(signature, (lm_address_t)&scanme[-10], sizeof(scanme) + 10);

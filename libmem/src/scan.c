@@ -24,7 +24,7 @@
 #include "internal.h"
 
 LM_API lm_address_t
-LM_DataScan(lm_bstring_t data,
+LM_DataScan(lm_bytearr_t data,
 	    lm_size_t    size,
 	    lm_address_t addr,
 	    lm_size_t    scansize)
@@ -81,7 +81,7 @@ LM_DataScan(lm_bstring_t data,
 
 LM_API lm_address_t
 LM_DataScanEx(lm_process_t *pproc,
-	      lm_bstring_t  data,
+	      lm_bytearr_t  data,
 	      lm_size_t     size,
 	      lm_address_t  addr,
 	      lm_size_t     scansize)
@@ -141,7 +141,7 @@ LM_DataScanEx(lm_process_t *pproc,
 /********************************/
 
 LM_API lm_address_t
-LM_PatternScan(lm_bstring_t pattern,
+LM_PatternScan(lm_bytearr_t pattern,
 	       lm_string_t  mask,
 	       lm_address_t addr,
 	       lm_size_t    scansize)
@@ -203,7 +203,7 @@ LM_PatternScan(lm_bstring_t pattern,
 
 LM_API lm_address_t
 LM_PatternScanEx(lm_process_t *pproc,
-		 lm_bstring_t  pattern,
+		 lm_bytearr_t  pattern,
 		 lm_string_t   mask,
 		 lm_address_t  addr,
 		 lm_size_t     scansize)
@@ -270,7 +270,7 @@ LM_PatternScanEx(lm_process_t *pproc,
 
 LM_PRIVATE lm_bool_t
 _LM_ParseSig(lm_string_t   sig,
-	     lm_bstring_t *ppattern,
+	     lm_bytearr_t *ppattern,
 	     lm_string_t  *pmask)
 {
 	lm_bool_t    ret = LM_FALSE;
@@ -337,7 +337,7 @@ LM_SigScan(lm_string_t  sig,
 	   lm_size_t    scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
-	lm_bstring_t pattern = (lm_byte_t *)LM_NULL;
+	lm_bytearr_t pattern = (lm_byte_t *)LM_NULL;
 	lm_string_t  mask = (lm_string_t)LM_NULL;
 
 	LM_ASSERT(sig != LM_NULLPTR && addr != LM_ADDRESS_BAD);

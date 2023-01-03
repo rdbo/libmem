@@ -374,7 +374,7 @@ typedef lm_wchar_t         lm_char_t;
 typedef lm_cchar_t         lm_char_t;
 #endif
 
-typedef lm_byte_t         *lm_bstring_t;
+typedef lm_byte_t         *lm_bytearr_t;
 typedef lm_cchar_t        *lm_cstring_t;
 typedef lm_wchar_t        *lm_wstring_t;
 typedef lm_char_t         *lm_string_t;
@@ -583,13 +583,13 @@ LM_ReadMemoryEx(lm_process_t *pproc,
 
 LM_API lm_size_t
 LM_WriteMemory(lm_address_t dst,
-	       lm_bstring_t src,
+	       lm_bytearr_t src,
 	       lm_size_t    size);
 
 LM_API lm_size_t
 LM_WriteMemoryEx(lm_process_t *pproc,
 		 lm_address_t  dst,
-		 lm_bstring_t  src,
+		 lm_bytearr_t  src,
 		 lm_size_t     size);
 
 LM_API lm_size_t
@@ -637,27 +637,27 @@ LM_FreeMemoryEx(lm_process_t *pproc,
 /****************************************/
 
 LM_API lm_address_t
-LM_DataScan(lm_bstring_t data,
+LM_DataScan(lm_bytearr_t data,
 	    lm_size_t    size,
 	    lm_address_t addr,
 	    lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_DataScanEx(lm_process_t *pproc,
-	      lm_bstring_t  data,
+	      lm_bytearr_t  data,
 	      lm_size_t     size,
 	      lm_address_t  addr,
 	      lm_size_t     scansize);
 
 LM_API lm_address_t
-LM_PatternScan(lm_bstring_t pattern,
+LM_PatternScan(lm_bytearr_t pattern,
 	       lm_string_t  mask,
 	       lm_address_t addr,
 	       lm_size_t    scansize);
 
 LM_API lm_address_t
 LM_PatternScanEx(lm_process_t *pproc,
-		 lm_bstring_t  pattern,
+		 lm_bytearr_t  pattern,
 		 lm_string_t   mask,
 		 lm_address_t  addr,
 		 lm_size_t     scansize);

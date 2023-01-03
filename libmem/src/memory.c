@@ -133,7 +133,7 @@ LM_ReadMemoryEx(lm_process_t *pproc,
 
 LM_API lm_size_t
 LM_WriteMemory(lm_address_t dst,
-	       lm_bstring_t src,
+	       lm_bytearr_t src,
 	       lm_size_t    size)
 {
 	lm_size_t i;
@@ -152,7 +152,7 @@ LM_WriteMemory(lm_address_t dst,
 LM_PRIVATE lm_size_t
 _LM_WriteMemoryEx(lm_process_t *pproc,
 		  lm_address_t  dst,
-		  lm_bstring_t  src,
+		  lm_bytearr_t  src,
 		  lm_size_t     size)
 {
 	lm_size_t wrsize = 0;
@@ -172,7 +172,7 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 LM_PRIVATE lm_size_t
 _LM_WriteMemoryEx(lm_process_t *pproc,
 		  lm_address_t  dst,
-		  lm_bstring_t  src,
+		  lm_bytearr_t  src,
 		  lm_size_t     size)
 {
 	struct iovec iosrc = { 0 };
@@ -194,7 +194,7 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 LM_PRIVATE lm_size_t
 _LM_WriteMemoryEx(lm_process_t *pproc,
 		  lm_address_t  dst,
-		  lm_bstring_t  src,
+		  lm_bytearr_t  src,
 		  lm_size_t     size)
 {
 	int fd;
@@ -221,7 +221,7 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 LM_API lm_size_t
 LM_WriteMemoryEx(lm_process_t *pproc,
 		 lm_address_t  dst,
-		 lm_bstring_t  src,
+		 lm_bytearr_t  src,
 		 lm_size_t     size)
 {
 	LM_ASSERT(pproc != LM_NULLPTR &&

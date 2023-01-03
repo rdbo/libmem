@@ -84,7 +84,7 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_ReadMemoryEx(&proc, val_sym, (lm_byte_t *)&rdbuf, sizeof(rdbuf));
-	LM_WriteMemoryEx(&proc, val_sym, (lm_bstring_t)&wrbuf, sizeof(wrbuf));
+	LM_WriteMemoryEx(&proc, val_sym, (lm_bytearr_t)&wrbuf, sizeof(wrbuf));
 	LM_ReadMemoryEx(&proc, val_sym, (lm_byte_t *)&rdbuf2, sizeof(rdbuf));
 	data_scan = LM_DataScanEx(&proc, scanme, sizeof(scanme), mod.base, mod.size);
 	pattern_scan = LM_PatternScanEx(&proc, scanme, mask, mod.base, mod.size);

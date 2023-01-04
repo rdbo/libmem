@@ -396,22 +396,21 @@ typedef int                lm_flags_t;
 typedef lm_uint32_t        lm_pid_t;
 typedef lm_uint32_t        lm_tid_t;
 typedef lm_uint32_t        lm_prot_t;
-typedef lm_uint32_t        lm_flags_t;
 
 typedef struct {
 	lm_pid_t   pid;
 	lm_pid_t   ppid;
 	lm_size_t  bits;
-	lm_char_t path[LM_PATH_MAX];
-	lm_char_t name[LM_PATH_MAX];
+	lm_char_t  path[LM_PATH_MAX];
+	lm_char_t  name[LM_PATH_MAX];
 } lm_process_t;
 
 typedef struct {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
-	lm_char_t   path[LM_PATH_MAX];
-	lm_char_t   name[LM_PATH_MAX];
+	lm_char_t    path[LM_PATH_MAX];
+	lm_char_t    name[LM_PATH_MAX];
 } lm_module_t;
 
 typedef struct {
@@ -419,7 +418,6 @@ typedef struct {
 	lm_address_t end;
 	lm_size_t    size;
 	lm_prot_t    prot;
-	lm_flags_t   flags;
 } lm_page_t;
 
 typedef lm_int_t lm_detour_t;

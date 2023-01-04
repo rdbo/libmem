@@ -46,7 +46,6 @@ _LM_EnumPagesCallback(lm_module_t  mod,
 		page.size  = (lm_size_t)mbi.RegionSize;
 		page.end   = (lm_address_t)LM_OFFSET(page.base, page.size);
 		page.prot  = mbi.Protect;
-		page.flags = mbi.Type;
 
 		if (parg->callback(&page, parg->arg) == LM_FALSE)
 			return LM_FALSE;
@@ -119,7 +118,6 @@ _LM_EnumPagesExCallback(lm_module_t  mod,
 		page.size  = (lm_size_t)mbi.RegionSize;
 		page.end   = (lm_address_t)LM_OFFSET(page.base, page.size);
 		page.prot  = mbi.Protect;
-		page.flags = mbi.Type;
 
 		if (parg->callback(&page, parg->arg) == LM_FALSE)
 			return LM_FALSE;
@@ -197,16 +195,11 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 		);
 
 		page.prot = 0;
-		page.flags = 0;
 		for (i = 0; i < (size_t)(matches[3].rm_eo - matches[3].rm_so); ++i) {
 			switch (maps_line[matches[3].rm_so + i]) {
 			case 'r': page.prot |= PROT_READ; break;
 			case 'w': page.prot |= PROT_WRITE; break;
 			case 'x': page.prot |= PROT_EXEC; break;
-#			if LM_OS != LM_OS_BSD
-			case 'p': page.flags |= MAP_PRIVATE; break;
-			case 's': page.flags |= MAP_SHARED; break;
-#			endif
 			}
 		}
 		page.size = (lm_size_t)(
@@ -254,7 +247,6 @@ _LM_GetPage(lm_address_t addr,
 	pagebuf->size  = (lm_size_t)mbi.RegionSize;
 	pagebuf->end   = (lm_address_t)LM_OFFSET(page.base, page.size);
 	pagebuf->prot  = mbi.Protect;
-	pagebuf->flags = mbi.Type;
 
 	return LM_TRUE;
 }
@@ -335,7 +327,6 @@ _LM_GetPageEx(lm_process_t *pproc,
 	pagebuf->size  = (lm_size_t)mbi.RegionSize;
 	pagebuf->end   = (lm_address_t)LM_OFFSET(pagebuf->base, pagebuf->size);
 	pagebuf->prot  = mbi.Protect;
-	pagebuf->flags = mbi.Type;
 
 	return LM_TRUE;	
 }

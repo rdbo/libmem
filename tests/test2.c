@@ -76,7 +76,6 @@ main()
 	LM_PRINTF(LM_STR("[*] Page Size:  %p\n"), (void *)page.size);
 	LM_PRINTF(LM_STR("[*] Page End:   %p\n"), (void *)page.end);
 	LM_PRINTF(LM_STR("[*] Page Prot:  %d\n"), (int)page.prot);
-	LM_PRINTF(LM_STR("[*] Page Flags: %d\n"), (int)page.flags);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_ReadMemoryEx(&proc, val_sym, (lm_byte_t *)&rdbuf, sizeof(rdbuf));

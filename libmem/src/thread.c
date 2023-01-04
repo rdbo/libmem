@@ -92,12 +92,12 @@ typedef struct {
 } _lm_enum_tids_t;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadIdsExCallback(lm_pid_t   pid,
-			    lm_void_t *arg)
+_LM_EnumThreadIdsExCallback(lm_process_t *pproc,
+			    lm_void_t    *arg)
 {
 	_lm_enum_tids_t *data = (_lm_enum_tids_t *)arg;
 	/* if the given pid owns the current pid, it is its thread */
-	if (LM_GetParentIdEx(pid) == data->pid)
+	if (pproc->ppid == data->pid)
 		data->callback((lm_tid_t)pid, data->arg);
 	return LM_TRUE;
 }
@@ -112,7 +112,7 @@ _LM_EnumThreadIdsEx(lm_process_t *pproc,
 	data.pid = pproc->pid;
 	data.callback = callback;
 	data.arg = arg;
-	return LM_EnumProcessIds(_LM_EnumThreadIdsExCallback, (lm_void_t *)&data);
+	return LM_EnumProcesses(_LM_EnumThreadIdsExCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t
@@ -173,7 +173,7 @@ _LM_GetThreadId(lm_void_t)
 {
 	/* the process id and the thread id are the same (threads are also processes) */
 
-	return (lm_tid_t)gettid();
+	return (lm_tid_t)getpid();
 }
 #endif
 

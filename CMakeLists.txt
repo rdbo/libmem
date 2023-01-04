@@ -50,12 +50,17 @@ endif()
 
 if (LIBMEM_BUILD_STATIC)
 	add_library(libmem STATIC ${LIBMEM_SRC})
+	add_custom_command(
+		TARGET libmem POST_BUILD
+		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+		COMMAND sh ${PROJECT_SOURCE_DIR}/makebundle.sh
+	)
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${LIEF_INC})
-set_target_properties(libmem PROPERTIES PREFIX "")
+set_target_properties(libmem PROPERTIES PREFIX "" POSITION_INDEPENDENT_CODE True)
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem capstone-engine keystone-engine lief-project)
 

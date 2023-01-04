@@ -98,7 +98,7 @@ _LM_EnumThreadIdsExCallback(lm_process_t *pproc,
 	_lm_enum_tids_t *data = (_lm_enum_tids_t *)arg;
 	/* if the given pid owns the current pid, it is its thread */
 	if (pproc->ppid == data->pid)
-		data->callback((lm_tid_t)pid, data->arg);
+		data->callback((lm_tid_t)pproc->pid, data->arg);
 	return LM_TRUE;
 }
 

@@ -2,14 +2,11 @@
 	path = capstone
 	url = https://github.com/capstone-engine/capstone
 	branch = v4
-	shallow = true
 [submodule "keystone"]
 	path = keystone
 	url = https://github.com/keystone-engine/keystone
 	branch = master
-	shallow = true
 [submodule "LIEF"]
 	path = LIEF
 	url = https://github.com/lief-project/LIEF
 	branch = master
-	shallow = true

@@ -527,22 +527,9 @@ LM_EnumSymbols(lm_module_t *pmod,
 				      lm_void_t   *arg),
 	       lm_void_t   *arg);
 
-LM_API lm_bool_t
-LM_EnumSymbolsEx(lm_process_t *pproc,
-		 lm_module_t  *pmod,
-	         lm_bool_t   (*callback)(lm_cstring_t symbol,
-					 lm_address_t addr,
-					 lm_void_t   *arg),
-		 lm_void_t    *arg);
-
 LM_API lm_address_t
 LM_FindSymbol(lm_module_t  *pmod,
 	      lm_cstring_t  symstr);
-
-LM_API lm_address_t
-LM_FindSymbolEx(lm_process_t *pproc,
-		lm_module_t  *pmod,
-		lm_cstring_t  symstr);
 
 /****************************************/
 

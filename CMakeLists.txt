@@ -64,6 +64,7 @@ if (LIBMEM_BUILD_TESTS)
 	set(TEST1_SRC "${TESTS_DIR}/test1.c")
 	set(TEST2_SRC "${TESTS_DIR}/test2.c")
 	set(LIBTEST_SRC "${TESTS_DIR}/libtest.c")
+	set(LIBTEST_PATH "${PROJECT_BINARY_DIR}/libtest${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
 	add_executable(test1 ${TEST1_SRC})
 	target_include_directories(test1 PUBLIC ${LIBMEM_INC})
@@ -72,12 +73,12 @@ if (LIBMEM_BUILD_TESTS)
 	add_library(libtest SHARED ${LIBTEST_SRC})
 	target_include_directories(libtest PUBLIC ${LIBMEM_INC})
 	set_target_properties(libtest PROPERTIES PREFIX "")
-	target_compile_definitions(test1 PUBLIC LIBTEST_PATH="${PROJECT_BINARY_DIR}/libtest${CMAKE_SHARED_LIBRARY_SUFFIX}")
+	target_compile_definitions(test1 PUBLIC LIBTEST_PATH="${LIBTEST_PATH}")
 
 	add_executable(test2 ${TEST2_SRC})
 	target_include_directories(test2 PUBLIC ${LIBMEM_INC})
 	target_link_libraries(test2 libmem)
-	target_compile_definitions(test2 PUBLIC LIBTEST_PATH="libtest${CMAKE_SHARED_LIBRARY_SUFFIX}" TEST1_NAME="test1${CMAKE_EXECUTABLE_SUFFIX}")
+	target_compile_definitions(test2 PUBLIC LIBTEST_PATH="${LIBTEST_PATH}" TEST1_NAME="test1${CMAKE_EXECUTABLE_SUFFIX}")
 
 endif()
 

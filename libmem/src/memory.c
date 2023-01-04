@@ -77,7 +77,7 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 
 	iodst.iov_base = dst;
 	iodst.iov_len  = size;
-	iosrc.iov_base = src;
+	iosrc.iov_base = (void *)src;
 	iosrc.iov_len  = size;
 	rdsize = (lm_size_t)process_vm_readv(pproc->pid, &iodst, 1,
 					     &iosrc, 1, 0);
@@ -181,7 +181,7 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 
 	iosrc.iov_base = src;
 	iosrc.iov_len = size;
-	iodst.iov_base = dst;
+	iodst.iov_base = (void *)dst;
 	iodst.iov_len = size;
 	wrsize = process_vm_writev(pproc->pid, &iosrc, 1, &iodst, 1, 0);
 
@@ -308,7 +308,7 @@ _LM_ProtMemory(lm_address_t addr,
 		(lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize)
 	);
 
-	if (mprotect(addr, size, prot))
+	if (mprotect((void *)addr, size, prot))
 		return LM_FALSE;
 
 	if (oldprot)
@@ -533,7 +533,7 @@ LM_PRIVATE lm_bool_t
 _LM_FreeMemory(lm_address_t alloc,
 	       lm_size_t    size)
 {
-	return munmap(alloc, size) ? LM_FALSE : LM_TRUE;
+	return munmap((void *)alloc, size) ? LM_FALSE : LM_TRUE;
 }
 #endif
 

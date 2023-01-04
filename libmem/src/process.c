@@ -374,10 +374,9 @@ _LM_GetParentIdEx(lm_pid_t pid)
 		return ppid;
 
 	if (LM_GETLINE(&stat_line, &buf_len, stat_file) > 0)
-		LM_SSCANF(stat_line, "%*d %*s %*c %d", &ppid);
+		LM_SSCANF(stat_line, "%*d %*s %*c %d", (int *)&ppid);
 
 	LM_FREE(stat_line);
-CLOSE_EXIT:
 	LM_FCLOSE(stat_file);
 
 	return ppid;

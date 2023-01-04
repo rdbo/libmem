@@ -78,7 +78,7 @@ _LM_EnumElfSyms(lm_module_t *pmod,
         lm_address_t base = (lm_address_t)0; /* base address for symbol offset */
         std::unique_ptr<const Binary> binary;
 
-        LM_ASSERT(modpath != LM_NULLPTR && callback != LM_NULLPTR);
+        LM_ASSERT(modpath != LM_NULLPTR && callback);
 
         if (!is_elf(modpath))
                 return LM_FALSE;
@@ -121,7 +121,7 @@ LM_EnumSymbols(lm_module_t *pmod,
 				      lm_void_t   *arg),
 	       lm_void_t   *arg)
 {
-	LM_ASSERT(pmod != LM_NULLPTR && callback != LM_NULLPTR);
+	LM_ASSERT(pmod != LM_NULLPTR && callback);
 
 	return _LM_EnumSymbols(pmod, callback, arg);
 }
@@ -171,7 +171,7 @@ LM_EnumSymbolsEx(lm_process_t *pproc,
 {
 	LM_ASSERT(pproc != LM_NULLPTR &&
 		  pmod != LM_NULLPTR &&
-		  callback != LM_NULLPTR);
+		  callback);
 
 	return _LM_EnumSymbolsEx(pproc, pmod, callback, arg);
 }

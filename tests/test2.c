@@ -10,12 +10,8 @@ int
 main()
 {
 	lm_process_t proc;
-	lm_pid_t     ppid;
 	lm_tid_t     tid;
-	lm_size_t    bits;
 	lm_module_t  mod;
-	lm_char_t    modname[LM_PATH_MAX];
-	lm_char_t    modpath[LM_PATH_MAX];
 	lm_address_t main_sym;
 	/*
 	lm_module_t  libtest_mod;
@@ -55,11 +51,11 @@ main()
 	val_sym = LM_FindSymbolEx(&proc, &mod, "val");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), mod.name);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), mod.path);
-	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);
+	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), (void *)mod.base);
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)mod.size);
-	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
-	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), main_sym);
-	LM_PRINTF(LM_STR("[*] Val Addr:    %p\n"), val_sym);
+	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), (void *)mod.end);
+	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), (void *)main_sym);
+	LM_PRINTF(LM_STR("[*] Val Addr:    %p\n"), (void *)val_sym);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	/*
@@ -76,9 +72,9 @@ main()
 	*/
 
 	LM_GetPageEx(&proc, mod.base, &page);
-	LM_PRINTF(LM_STR("[*] Page Base:  %p\n"), page.base);
+	LM_PRINTF(LM_STR("[*] Page Base:  %p\n"), (void *)page.base);
 	LM_PRINTF(LM_STR("[*] Page Size:  %p\n"), (void *)page.size);
-	LM_PRINTF(LM_STR("[*] Page End:   %p\n"), page.end);
+	LM_PRINTF(LM_STR("[*] Page End:   %p\n"), (void *)page.end);
 	LM_PRINTF(LM_STR("[*] Page Prot:  %d\n"), (int)page.prot);
 	LM_PRINTF(LM_STR("[*] Page Flags: %d\n"), (int)page.flags);
 	LM_PRINTF(LM_STR("====================\n"));
@@ -98,12 +94,12 @@ main()
 	LM_PRINTF(LM_STR("[*] Read Value:    %d\n"), rdbuf);
 	LM_PRINTF(LM_STR("[*] Written Value: %d\n"), wrbuf);
 	LM_PRINTF(LM_STR("[*] Real Value:    %d\n"), rdbuf2);
-	LM_PRINTF(LM_STR("[*] Data Scan:    %p\n"), data_scan);
-	LM_PRINTF(LM_STR("[*] Pattern Scan: %p\n"), pattern_scan);
-	LM_PRINTF(LM_STR("[*] Sig Scan:     %p\n"), sig_scan);
-	LM_PRINTF(LM_STR("[*] Alloc:    %p\n"), alloc);
-	LM_PRINTF(LM_STR("[*] Prot:     %d\n"), alloc_prot);
-	LM_PRINTF(LM_STR("[*] Old Prot: %d\n"), alloc_oldprot);
+	LM_PRINTF(LM_STR("[*] Data Scan:    %p\n"), (void *)data_scan);
+	LM_PRINTF(LM_STR("[*] Pattern Scan: %p\n"), (void *)pattern_scan);
+	LM_PRINTF(LM_STR("[*] Sig Scan:     %p\n"), (void *)sig_scan);
+	LM_PRINTF(LM_STR("[*] Alloc:    %p\n"), (void *)alloc);
+	LM_PRINTF(LM_STR("[*] Prot:     %d\n"), (int)alloc_prot);
+	LM_PRINTF(LM_STR("[*] Old Prot: %d\n"), (int)alloc_oldprot);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[-] Test 2\n"));

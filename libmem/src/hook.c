@@ -96,7 +96,7 @@ LM_HookCode(lm_address_t  from,
 		if (*ptrampoline == LM_ADDRESS_BAD)
 			goto FREE_EXIT;
 
-		LM_ReadMemory(from, *ptrampoline, alignedsize);
+		LM_ReadMemory(from, (lm_byte_t *)*ptrampoline, alignedsize);
 
 		/* place jump back code on trampoline after the
 		   original instructions */
@@ -186,7 +186,7 @@ LM_HookCodeEx(lm_process_t *pproc,
 
 	ret = alignedsize;
 FREE_EXIT:
-	LM_FreeCodeBuffer(codebuf);
+	LM_FreeCodeBuffer(&codebuf);
 
 	return ret;
 }
@@ -211,7 +211,7 @@ LM_UnhookCode(lm_address_t  from,
 	if (!LM_ProtMemory(from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;
 
-	LM_WriteMemory(from, trampoline, size);
+	LM_WriteMemory(from, (lm_bytearr_t)trampoline, size);
 
 	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
 	LM_FreeMemory(trampoline, size);
@@ -243,7 +243,7 @@ LM_UnhookCodeEx(lm_process_t *pproc,
 	if (!LM_ProtMemoryEx(pproc, from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;
 
-	LM_WriteMemoryEx(pproc, from, trampoline, size);
+	LM_WriteMemoryEx(pproc, from, (lm_bytearr_t)trampoline, size);
 
 	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
 	LM_FreeMemory(trampoline, size);

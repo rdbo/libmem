@@ -31,7 +31,7 @@ void hk_some_function(int a, int b)
 	printf("Hooked Some Function\n");
 	printf("Original A: %d\n", a);
 	printf("Original B: %d\n", b);
-	return some_function_orig(420, 917);
+	some_function_orig(420, 917);
 }
 
 int
@@ -41,9 +41,11 @@ main()
 	lm_tid_t     tid;
 	lm_module_t  mod;
 	lm_address_t main_sym;
+	/*
 	lm_module_t  libtest_mod;
 	lm_char_t    libtest_modname[LM_PATH_MAX];
 	lm_char_t    libtest_modpath[LM_PATH_MAX];
+	*/
 	lm_page_t    page;
 	lm_int32_t   rdbuf;
 	lm_int32_t   wrbuf = 1337;
@@ -56,6 +58,7 @@ main()
 	lm_prot_t    alloc_prot;
 	lm_prot_t    alloc_oldprot;
 	lm_inst_t    inst;
+	lm_cchar_t   code[255];
 	lm_size_t    asm_count;
 	lm_size_t    disasm_count;
 	lm_size_t    disasm_bytes = 0;
@@ -78,10 +81,10 @@ main()
 	main_sym = LM_FindSymbol(&mod, "main");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), mod.name);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), mod.path);
-	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), mod.base);
+	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), (void *)mod.base);
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)mod.size);
-	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), mod.end);
-	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), main_sym);
+	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), (void *)mod.end);
+	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), (void *)main_sym);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	/*
@@ -96,9 +99,9 @@ main()
 	*/
 
 	LM_GetPage(mod.base, &page);
-	LM_PRINTF(LM_STR("[*] Page Base:  %p\n"), page.base);
+	LM_PRINTF(LM_STR("[*] Page Base:  %p\n"), (void *)page.base);
 	LM_PRINTF(LM_STR("[*] Page Size:  %p\n"), (void *)page.size);
-	LM_PRINTF(LM_STR("[*] Page End:   %p\n"), page.end);
+	LM_PRINTF(LM_STR("[*] Page End:   %p\n"), (void *)page.end);
 	LM_PRINTF(LM_STR("[*] Page Prot:  %d\n"), (int)page.prot);
 	LM_PRINTF(LM_STR("[*] Page Flags: %d\n"), (int)page.flags);
 	LM_PRINTF(LM_STR("====================\n"));
@@ -118,19 +121,19 @@ main()
 	LM_PRINTF(LM_STR("[*] Written Value: %d\n"), wrbuf);
 	LM_PRINTF(LM_STR("[*] Real Value:    %d\n"), val);
 	LM_PRINTF(LM_STR("[*] ScanMe Addr:  %p\n"), (void *)scanme);
-	LM_PRINTF(LM_STR("[*] Data Scan:    %p\n"), data_scan);
-	LM_PRINTF(LM_STR("[*] Pattern Scan: %p\n"), pattern_scan);
-	LM_PRINTF(LM_STR("[*] Sig Scan:     %p\n"), sig_scan);
-	LM_PRINTF(LM_STR("[*] Alloc:    %p\n"), alloc);
-	LM_PRINTF(LM_STR("[*] Prot:     %d\n"), alloc_prot);
-	LM_PRINTF(LM_STR("[*] Old Prot: %d\n"), alloc_oldprot);
+	LM_PRINTF(LM_STR("[*] Data Scan:    %p\n"), (void *)data_scan);
+	LM_PRINTF(LM_STR("[*] Pattern Scan: %p\n"), (void *)pattern_scan);
+	LM_PRINTF(LM_STR("[*] Sig Scan:     %p\n"), (void *)sig_scan);
+	LM_PRINTF(LM_STR("[*] Alloc:    %p\n"), (void *)alloc);
+	LM_PRINTF(LM_STR("[*] Prot:     %d\n"), (int)alloc_prot);
+	LM_PRINTF(LM_STR("[*] Old Prot: %d\n"), (int)alloc_oldprot);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[*] Dissassembly (main):\n"));
 	LM_ProtMemory((lm_address_t)main, LM_PROT_XRW, 100, LM_NULLPTR);
 	for (disasm_count = 0; disasm_count < 5; ++disasm_count) {
 		memset((void *)&inst, 0x0, sizeof(inst));
-		LM_Disassemble((lm_address_t)LM_OFFSET(main, disasm_bytes), &inst);
+		LM_Disassemble((lm_address_t)LM_OFFSET(main_sym, disasm_bytes), &inst);
 		LM_PRINTF(LM_STR("%s %s\n"), inst.mnemonic, inst.op_str);
 		disasm_bytes += inst.size;
 	}
@@ -140,8 +143,9 @@ main()
 
 	/* Reassemble the bytes from the disassembly */
 	LM_PRINTF(LM_STR("[*] Assembly:\n"));
-	LM_PRINTF(LM_STR("%s %s: "), inst.mnemonic, inst.op_str);
-	LM_Assemble(inst.bytes, &inst);
+	LM_SNPRINTF(code, sizeof(code), LM_STR("%s %s"), inst.mnemonic, inst.op_str);
+	LM_PRINTF(LM_STR("%s: "), code);
+	LM_Assemble(code, &inst);
 	for (asm_count = 0; asm_count < inst.size; ++asm_count) {
 		printf("0x%02x ", inst.bytes[asm_count]);
 	}

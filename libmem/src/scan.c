@@ -52,7 +52,7 @@ LM_DataScan(lm_bytearr_t data,
 			LM_ProtMemory(oldpage.base, oldpage.size,
 				      oldpage.prot, (lm_prot_t *)LM_NULL);
 
-			if (!LM_GetPage(ptr, &oldpage))
+			if (!LM_GetPage((lm_address_t)ptr, &oldpage))
 				break;
 			
 			LM_ProtMemory(oldpage.base, oldpage.size,
@@ -91,7 +91,7 @@ LM_DataScanEx(lm_process_t *pproc,
 	lm_page_t    oldpage;
 
 	LM_ASSERT(pproc != LM_NULLPTR && data != LM_NULLPTR &&
-		  size > 0 && addr != LM_NULLPTR && scansize > 0);
+		  size > 0 && addr != LM_ADDRESS_BAD && scansize > 0);
 
 	if (!LM_GetPageEx(pproc, addr, &oldpage))
 		return match;
@@ -109,7 +109,7 @@ LM_DataScanEx(lm_process_t *pproc,
 			LM_ProtMemoryEx(pproc, oldpage.base, oldpage.size,
 					oldpage.prot, (lm_prot_t *)LM_NULL);
 
-			if (!LM_GetPageEx(pproc, ptr, &oldpage))
+			if (!LM_GetPageEx(pproc, (lm_address_t)ptr, &oldpage))
 				break;
 			
 			LM_ProtMemoryEx(pproc, oldpage.base, oldpage.size,
@@ -174,7 +174,7 @@ LM_PatternScan(lm_bytearr_t pattern,
 			LM_ProtMemory(oldpage.base, oldpage.size,
 				      oldpage.prot, (lm_prot_t *)LM_NULL);
 
-			if (!LM_GetPage(ptr, &oldpage))
+			if (!LM_GetPage((lm_address_t)ptr, &oldpage))
 				break;
 			
 			LM_ProtMemory(oldpage.base, oldpage.size,
@@ -237,7 +237,7 @@ LM_PatternScanEx(lm_process_t *pproc,
 			LM_ProtMemoryEx(pproc, oldpage.base, oldpage.size,
 					oldpage.prot, (lm_prot_t *)LM_NULL);
 
-			if (!LM_GetPageEx(pproc, ptr, &oldpage))
+			if (!LM_GetPageEx(pproc, (lm_address_t)ptr, &oldpage))
 				break;
 			
 			LM_ProtMemoryEx(pproc, oldpage.base, oldpage.size,
@@ -247,7 +247,7 @@ LM_PatternScanEx(lm_process_t *pproc,
 		for (i = 0; check && i < size; ++i) {
 			lm_byte_t b;
 
-			LM_ReadMemoryEx(pproc, &ptr[i], &b, sizeof(b));
+			LM_ReadMemoryEx(pproc, (lm_address_t)&ptr[i], &b, sizeof(b));
 
 			if (LM_CHKMASK(mask[i]) && b != pattern[i])
 				check = LM_FALSE;
@@ -366,7 +366,7 @@ LM_SigScanEx(lm_process_t *pproc,
 	lm_char_t   *mask = (lm_char_t *)LM_NULL;
 
 	LM_ASSERT(pproc != LM_NULLPTR && sig != LM_NULLPTR &&
-		  addr != LM_NULLPTR && scansize > 0);
+		  addr != LM_ADDRESS_BAD && scansize > 0);
 
 	if (!_LM_ParseSig(sig, &pattern, &mask))
 		return match;

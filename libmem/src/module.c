@@ -33,7 +33,7 @@ _LM_GetNameFromPath(lm_char_t *path,
 
 	name = LM_STRRCHR(path, LM_PATH_SEP);
 	if (!name) {
-		namebuf[0] = LM_STRLEN('\x00');
+		namebuf[0] = LM_STR('\x00');
 		return len;
 	}
 
@@ -46,7 +46,7 @@ _LM_GetNameFromPath(lm_char_t *path,
 	LM_STRNCPY(namebuf, name, len);
 	namebuf[len] = LM_STR('\x00');
 	
-	return name;
+	return len;
 }
 
 /********************************/

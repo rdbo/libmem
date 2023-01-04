@@ -297,9 +297,9 @@ LM_PRIVATE lm_size_t
 _LM_GenerateSyscall(lm_size_t bits, lm_byte_t **pcodebuf)
 {
 	if (bits == 64)
-		return LM_AssembleEx("syscall", LM_ARCH, bits, LM_NULLPTR, pcodebuf);
+		return LM_AssembleEx("syscall", LM_ARCH, bits, LM_ADDRESS_BAD, pcodebuf);
 
-	return LM_AssembleEx("int 80", LM_ARCH, bits, LM_NULLPTR, pcodebuf);
+	return LM_AssembleEx("int 80", LM_ARCH, bits, LM_ADDRESS_BAD, pcodebuf);
 }
 
 LM_PRIVATE lm_uintptr_t
@@ -419,12 +419,11 @@ typedef struct {
 
 LM_PRIVATE lm_bool_t
 _LM_FindLibcCallback(lm_module_t *pmod,
-		     lm_string_t  path,
 		     lm_void_t   *arg)
 {
 	_lm_find_libc_t *parg = (_lm_find_libc_t *)arg;
 
-	if (!regexec(&parg->regex, path, 0, NULL, 0)) {
+	if (!regexec(&parg->regex, pmod->path, 0, NULL, 0)) {
 		parg->libc_mod = *pmod;
 		return LM_FALSE;
 	}
@@ -438,7 +437,7 @@ _LM_FindLibc(lm_process_t *pproc,
 {
 	_lm_find_libc_t arg;
 
-	if (regcomp(&arg.regex, ".*/libc[\.\-].*", REG_EXTENDED))
+	if (regcomp(&arg.regex, ".*/libc[.-].*", REG_EXTENDED))
 		return LM_FALSE;
 
 	/* (debugging) using patched version of dlopen that has been LD_PRELOAD'ed.
@@ -496,7 +495,7 @@ _LM_GenerateLibcall(lm_size_t   bits,
 		LM_CSNPRINTF(code, sizeof(code), "call eax ; int3");
 	}
 
-	return LM_AssembleEx(code, LM_ARCH, bits, LM_NULLPTR, pcodebuf);
+	return LM_AssembleEx(code, LM_ARCH, bits, LM_ADDRESS_BAD, pcodebuf);
 }
 
 LM_PRIVATE lm_void_t
@@ -731,7 +730,7 @@ _LM_CallDlopen(lm_process_t *pproc,
 	if (modpath_addr == LM_ADDRESS_BAD)
 		return ret;
 
-	if (!LM_WriteMemoryEx(pproc, modpath_addr, path, modpath_size))
+	if (!LM_WriteMemoryEx(pproc, modpath_addr, (lm_bytearr_t)path, modpath_size))
 		goto FREE_RET;
 
 	data.func_addr = (lm_uintptr_t)dlopen_addr;
@@ -744,7 +743,7 @@ _LM_CallDlopen(lm_process_t *pproc,
 	if (!modhandle)
 		ret = LM_FALSE;
 	else if (plibhandle)
-		*plibhandle = modhandle;
+		*plibhandle = (void *)modhandle;
 FREE_RET:
 	LM_FreeMemoryEx(pproc, modpath_addr, modpath_size);
 	return ret;

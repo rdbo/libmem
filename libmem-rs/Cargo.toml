@@ -11,7 +11,4 @@ name = "libmem"
 [[bin]]
 name = "tests"
 
-[build-dependencies]
-cmake = "0.1"
-
 [dependencies]

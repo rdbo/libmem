@@ -15,7 +15,7 @@ pub struct lm_process_t {
     pid : u32,
     ppid : u32,
     bits : usize,
-    /* OBS: if lm_char_t is a wchar_t, these variables won't work. Use Multibyte. */
+    // OBS: if lm_char_t is a wchar_t, these variables won't work. Use Multibyte
     path : [u8; LM_PATH_MAX],
     name : [u8; LM_PATH_MAX]
 }
@@ -42,16 +42,18 @@ impl lm_process_t {
     }
 }
 
-/* Raw libmem calls */
+// Raw libmem calls
 mod libmem_c {
     use crate::*;
 
+    // link against 'mem' (the lib prefix is appended automatically)
+    #[link(name = "mem")]
     extern "C" {
         pub(super) fn LM_GetProcess(pproc : *mut lm_process_t) -> i32;
     }
 }
 
-/* Rustified libmem calls */
+// Rustified libmem calls
 pub fn LM_GetProcess() -> Option<lm_process_t> {
     let mut proc = lm_process_t { pid: LM_PID_BAD, ppid: LM_PID_BAD, bits: 0, path: [0; 512], name: [0; 512] };
     unsafe {

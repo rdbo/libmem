@@ -7,10 +7,11 @@ edition = "2021"
 
 [lib]
 name = "libmem"
-rustc-link-search = "../build"
 
 [[bin]]
 name = "tests"
 
+[build-dependencies]
+cmake = "0.1"
 
 [dependencies]

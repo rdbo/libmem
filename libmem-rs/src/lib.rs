@@ -46,7 +46,6 @@ impl lm_process_t {
 mod libmem_c {
     use crate::*;
 
-    #[link(name = "libmem", kind = "static")]
     extern "C" {
         pub(super) fn LM_GetProcess(pproc : *mut lm_process_t) -> i32;
     }

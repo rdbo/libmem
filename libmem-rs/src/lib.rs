@@ -4,11 +4,7 @@
 
 /* Note: the types and structures must be
  * the same size and aligned with their C variations */
-const LM_FALSE : i32 = 0;
-const LM_TRUE : i32 = 1;
 const LM_PATH_MAX : usize = 512;
-const LM_PID_BAD : u32 = 0;
-const LM_ADDRESS_BAD : usize = 0;
 
 #[repr(C)]
 pub struct lm_process_t {
@@ -55,9 +51,9 @@ mod libmem_c {
 
 // Rustified libmem calls
 pub fn LM_GetProcess() -> Option<lm_process_t> {
-    let mut proc = lm_process_t { pid: LM_PID_BAD, ppid: LM_PID_BAD, bits: 0, path: [0; 512], name: [0; 512] };
+    let mut proc = lm_process_t { pid: 0, ppid: 0, bits: 0, path: [0;LM_PATH_MAX], name: [0;LM_PATH_MAX] };
     unsafe {
-        if libmem_c::LM_GetProcess(&mut proc as *mut lm_process_t) == LM_TRUE {
+        if libmem_c::LM_GetProcess(&mut proc as *mut lm_process_t) != 0 {
             return Some(proc);
         }
     }

@@ -25,6 +25,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use std::fmt;
+
 /* Note: the types and structures must be
  * the same size and aligned with their C variations */
 const LM_FALSE : i32 = 0;
@@ -66,6 +68,10 @@ fn string_from_cstring(cstring : &[u8]) -> String {
 }
 
 impl lm_process_t {
+    pub fn new() -> Self {
+        Self { pid: 0, ppid: 0, bits: 0, name: [0;LM_PATH_MAX], path: [0;LM_PATH_MAX] }
+    }
+
     pub fn get_pid(&self) -> u32 {
         self.pid
     }
@@ -87,6 +93,12 @@ impl lm_process_t {
     }
 }
 
+impl fmt::Display for lm_process_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "lm_process_t {{ pid: {}, ppid: {}, bits: {}, path: {}, name: {} }}", self.get_pid(), self.get_ppid(), self.get_bits(), self.get_path(), self.get_name())
+    }
+}
+
 // Raw libmem calls
 mod libmem_c {
     use crate::*;
@@ -96,6 +108,9 @@ mod libmem_c {
     extern "C" {
         pub(super) fn LM_EnumProcesses(callback : extern "C" fn(*const lm_process_t, *mut ()) -> i32, arg : *mut ()) -> i32;
         pub(super) fn LM_GetProcess(pproc : *mut lm_process_t) -> i32;
+        // The rust compiler says that using a *const [u8] is not FFI-safe and
+        // suggests that a raw pointer is used instead
+        pub(super) fn LM_FindProcess(procstr : *const (), pproc : *mut lm_process_t) -> i32;
     }
 }
 
@@ -111,9 +126,10 @@ extern "C" fn _LM_EnumProcessesCallback(pproc : *const lm_process_t, arg : *mut 
 pub fn LM_EnumProcesses() -> Vec<lm_process_t> {
     let mut proc_list : Vec<lm_process_t> = Vec::new();
     unsafe {
-        let arg = &mut proc_list as *mut Vec<lm_process_t>;
-        let arg = arg as *mut ();
-        if libmem_c::LM_EnumProcesses(_LM_EnumProcessesCallback, arg) == LM_FALSE {
+        let callback = _LM_EnumProcessesCallback;
+        let arg = &mut proc_list as *mut Vec<lm_process_t> as *mut ();
+
+        if libmem_c::LM_EnumProcesses(callback, arg) == LM_FALSE {
             proc_list.clear();
         }
     }
@@ -122,13 +138,28 @@ pub fn LM_EnumProcesses() -> Vec<lm_process_t> {
 }
 
 pub fn LM_GetProcess() -> Option<lm_process_t> {
-    let mut proc = lm_process_t {
-        pid: 0, ppid: 0, bits: 0,
-        path: [0;LM_PATH_MAX], name: [0;LM_PATH_MAX]
-    };
+    let mut proc = lm_process_t::new();
 
     unsafe {
-        if libmem_c::LM_GetProcess(&mut proc as *mut lm_process_t) != LM_FALSE {
+        let procbuf = &mut proc as *mut lm_process_t;
+        if libmem_c::LM_GetProcess(procbuf) != LM_FALSE {
+            Some(proc)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_FindProcess(procstr : &str) -> Option<lm_process_t> {
+    let mut proc = lm_process_t::new(); 
+    let mut procstr = String::from(procstr);
+    procstr.push('\x00'); // push a null terminator
+
+    unsafe {
+        let procstr = procstr.as_bytes() as *const [u8] as *const ();
+        let procbuf = &mut proc as *mut lm_process_t;
+
+        if libmem_c::LM_FindProcess(procstr, procbuf) != LM_FALSE {
             Some(proc)
         } else {
             None

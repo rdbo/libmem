@@ -1,13 +1,11 @@
 use libmem::*;
 
+fn separator() {
+    println!("====================");
+}
+
 fn main() {
-    println!("test");
-    let process = LM_GetProcess().unwrap();
-    println!("Process ID: {}", process.get_pid());
-    println!("Process Parent PID: {}", process.get_ppid());
-    println!("Process Bits: {}", process.get_bits());
-    println!("Process Path: {}", process.get_path());
-    println!("Process Name: {}", process.get_name());
+    println!("[*] libmem-rs tests");
 
     let mut counter = 0;
     for proc in LM_EnumProcesses() {
@@ -17,4 +15,16 @@ fn main() {
             break;
         }
     }
+
+    separator();
+
+    let cur_proc = LM_GetProcess().unwrap();
+    println!("[*] Current Process: {}", cur_proc);
+
+    separator();
+
+    let proc = LM_FindProcess("dwm").unwrap();
+    println!("[*] Remote Process: {}", proc);
+
+    separator();
 }

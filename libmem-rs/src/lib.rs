@@ -26,6 +26,7 @@
 #![allow(non_snake_case)]
 
 use std::fmt;
+use std::ffi::CString;
 
 /* Note: the types and structures must be
  * the same size and aligned with their C variations */
@@ -110,7 +111,8 @@ mod libmem_c {
         pub(super) fn LM_GetProcess(procbuf : *mut lm_process_t) -> i32;
         // The rust compiler says that using a *const [u8] is not FFI-safe and
         // suggests that a raw pointer is used instead
-        pub(super) fn LM_FindProcess(procstr : *const (), procbuf : *mut lm_process_t) -> i32;
+        pub(super) fn LM_FindProcess(procstr : *const u8, procbuf : *mut lm_process_t) -> i32;
+    }
 }
 
 // Rustified libmem calls
@@ -151,11 +153,14 @@ pub fn LM_GetProcess() -> Option<lm_process_t> {
 
 pub fn LM_FindProcess(procstr : &str) -> Option<lm_process_t> {
     let mut proc = lm_process_t::new(); 
-    let mut procstr = String::from(procstr);
-    procstr.push('\x00'); // push a null terminator
+    let procstr = match CString::new(procstr.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
 
     unsafe {
-        let procstr = procstr.as_bytes() as *const [u8] as *const ();
+        let procstr : *const u8 = procstr.as_ptr().cast();
         let procbuf = &mut proc as *mut lm_process_t;
 
         if libmem_c::LM_FindProcess(procstr, procbuf) != LM_FALSE {

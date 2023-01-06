@@ -107,11 +107,10 @@ mod libmem_c {
     #[link(name = "mem")]
     extern "C" {
         pub(super) fn LM_EnumProcesses(callback : extern "C" fn(*const lm_process_t, *mut ()) -> i32, arg : *mut ()) -> i32;
-        pub(super) fn LM_GetProcess(pproc : *mut lm_process_t) -> i32;
+        pub(super) fn LM_GetProcess(procbuf : *mut lm_process_t) -> i32;
         // The rust compiler says that using a *const [u8] is not FFI-safe and
         // suggests that a raw pointer is used instead
-        pub(super) fn LM_FindProcess(procstr : *const (), pproc : *mut lm_process_t) -> i32;
-    }
+        pub(super) fn LM_FindProcess(procstr : *const (), procbuf : *mut lm_process_t) -> i32;
 }
 
 // Rustified libmem calls

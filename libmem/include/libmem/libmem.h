@@ -450,13 +450,6 @@ LM_FindProcess(lm_string_t   procstr,
 	       lm_process_t *procbuf);
 
 LM_API lm_bool_t
-LM_GetParent(lm_process_t *procbuf);
-
-LM_API lm_pid_t
-LM_GetParentEx(lm_process_t *pproc,
-	       lm_process_t *procbuf);
-
-LM_API lm_bool_t
 LM_IsProcessAlive(lm_process_t *pproc);
 
 LM_API lm_size_t

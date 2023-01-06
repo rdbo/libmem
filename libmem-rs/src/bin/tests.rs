@@ -27,4 +27,7 @@ fn main() {
     println!("[*] Remote Process: {}", proc);
 
     separator();
+
+    let parent = LM_GetParent().unwrap();
+    println!("[*] Parent Process: {}", parent);
 }

@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright (C) 2022    Rdbo
+ * Copyright (C) 2023    Rdbo
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -40,6 +40,7 @@ type lm_string_t = *const lm_char_t;
 type lm_cstring_t = *const lm_cchar_t;
 type lm_size_t = usize;
 type lm_address_t = usize;
+type lm_prot_t = u32
 
 const LM_FALSE : lm_bool_t = 0;
 const LM_TRUE : lm_bool_t = 1;
@@ -183,6 +184,16 @@ impl fmt::Display for lm_symbol_t {
     }
 }
 
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Copy)]
+pub struct lm_page_t {
+    base : lm_address_t,
+    end : lm_address_t,
+    size : lm_size_t,
+    prot : lm_prot_t
+}
+
 // Raw libmem calls
 mod libmem_c {
     use crate::*;
@@ -215,6 +226,8 @@ mod libmem_c {
         #[allow(improper_ctypes)] // permit lm_symbol_t, which has a String
         pub(super) fn LM_EnumSymbols(pmod : *const lm_module_t, callback : extern "C" fn(*const lm_symbol_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
         pub(super) fn LM_FindSymbolAddress(pmod : *const lm_module_t, name : lm_cstring_t) -> lm_address_t;
+        /****************************************/
+
     }
 }
 

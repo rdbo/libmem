@@ -32,24 +32,15 @@ use std::ffi::CString;
  * the same size and aligned with their C variations */
 type lm_bool_t = i32;
 type lm_pid_t = u32;
+type lm_tid_t = u32;
 type lm_char_t = u8;
+type lm_string_t = *const lm_char_t;
 type lm_size_t = usize;
+type lm_address_t = usize;
 
 const LM_FALSE : lm_bool_t = 0;
 const LM_TRUE : lm_bool_t = 1;
 const LM_PATH_MAX : lm_size_t = 512;
-
-#[repr(C)]
-#[derive(Clone)]
-#[derive(Copy)]
-pub struct lm_process_t {
-    pid : lm_pid_t,
-    ppid : lm_pid_t,
-    bits : lm_size_t,
-    // OBS: if lm_char_t is a wchar_t, these variables won't work. Use Multibyte
-    path : [lm_char_t; LM_PATH_MAX],
-    name : [lm_char_t; LM_PATH_MAX]
-}
 
 fn string_from_cstring(cstring : &[u8]) -> String {
     // This function finds the null terminator from
@@ -71,6 +62,18 @@ fn string_from_cstring(cstring : &[u8]) -> String {
     }
 
     String::from_utf8_lossy(&cstring).to_string()
+}
+
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Copy)]
+pub struct lm_process_t {
+    pid : lm_pid_t,
+    ppid : lm_pid_t,
+    bits : lm_size_t,
+    // OBS: if lm_char_t is a wchar_t, these variables won't work. Use Multibyte
+    path : [lm_char_t; LM_PATH_MAX],
+    name : [lm_char_t; LM_PATH_MAX]
 }
 
 impl lm_process_t {
@@ -105,6 +108,49 @@ impl fmt::Display for lm_process_t {
     }
 }
 
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Copy)]
+pub struct lm_module_t {
+    base : lm_address_t,
+    end : lm_address_t,
+    size : lm_size_t,
+    path : [lm_char_t;LM_PATH_MAX],
+    name : [lm_char_t;LM_PATH_MAX]
+}
+
+impl lm_module_t {
+    pub fn new() -> Self {
+        Self { base: 0, end: 0, size: 0, path: [0;LM_PATH_MAX], name: [0;LM_PATH_MAX] }
+    }
+
+    pub fn get_base(&self) -> usize {
+        self.base
+    }
+
+    pub fn get_end(&self) -> usize {
+        self.end
+    }
+
+    pub fn get_size(&self) -> usize {
+        self.size
+    }
+
+    pub fn get_path(&self) -> String {
+        string_from_cstring(&self.path)
+    }
+
+    pub fn get_name(&self) -> String {
+        string_from_cstring(&self.name)
+    }
+}
+
+impl fmt::Display for lm_module_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "lm_module_t {{ base: {:#x}, end: {:#x}, size: {:#x}, path: {}, name: {} }}", self.get_base(), self.get_end(), self.get_size(), self.get_path(), self.get_name())
+    }
+}
+
 // Raw libmem calls
 mod libmem_c {
     use crate::*;
@@ -114,10 +160,25 @@ mod libmem_c {
     extern "C" {
         pub(super) fn LM_EnumProcesses(callback : extern "C" fn(*const lm_process_t, *mut ()) -> i32, arg : *mut ()) -> lm_bool_t;
         pub(super) fn LM_GetProcess(procbuf : *mut lm_process_t) -> lm_bool_t;
-        // The rust compiler says that using a *const [u8] is not FFI-safe and
-        // suggests that a raw pointer is used instead
-        pub(super) fn LM_FindProcess(procstr : *const u8, procbuf : *mut lm_process_t) -> lm_bool_t;
+        pub(super) fn LM_FindProcess(procstr : lm_string_t, procbuf : *mut lm_process_t) -> lm_bool_t;
         pub(super) fn LM_IsProcessAlive(pproc : *const lm_process_t) -> lm_bool_t;
+        pub(super) fn LM_GetSystemBits() -> lm_size_t;
+        /****************************************/
+        pub(super) fn LM_EnumThreadIds(callback : extern "C" fn(lm_tid_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_EnumThreadIdsEx(pproc : *const lm_process_t, callback : extern "C" fn(lm_tid_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_GetThreadId() -> lm_tid_t;
+        pub(super) fn LM_GetThreadIdEx(pproc : *const lm_process_t) -> lm_tid_t;
+        /****************************************/
+        pub(super) fn LM_EnumModules(callback : extern "C" fn(*const lm_module_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_EnumModulesEx(pproc : *const lm_process_t, callback : extern "C" fn(*const lm_module_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_FindModule(name : lm_string_t, modbuf : *mut lm_module_t) -> lm_bool_t;
+        pub(super) fn LM_FindModuleEx(pproc : *const lm_process_t, name : lm_string_t, modbuf : *mut lm_module_t) -> lm_bool_t;
+
+        pub(super) fn LM_LoadModule(modpath : lm_string_t, modbuf : *mut lm_module_t) -> lm_bool_t;
+        pub(super) fn LM_LoadModuleEx(pproc : *const lm_process_t, modpath : lm_string_t, modbuf : *mut lm_module_t) -> lm_bool_t;
+
+        pub(super) fn LM_UnloadModule(pmod : *const lm_module_t) -> lm_bool_t;
+        pub(super) fn LM_UnloadModuleEx(pproc : *const lm_process_t, pmod : *const lm_module_t) -> lm_bool_t;
     }
 }
 
@@ -166,7 +227,7 @@ pub fn LM_FindProcess(procstr : &str) -> Option<lm_process_t> {
     };
 
     unsafe {
-        let procstr : *const u8 = procstr.as_ptr().cast();
+        let procstr : lm_string_t = procstr.as_ptr().cast();
         let procbuf = &mut proc as *mut lm_process_t;
 
         if libmem_c::LM_FindProcess(procstr, procbuf) != LM_FALSE {
@@ -177,12 +238,210 @@ pub fn LM_FindProcess(procstr : &str) -> Option<lm_process_t> {
     }
 }
 
-pub fn LM_IsProcessAlive(pproc : &lm_process_t) -> bool{
+pub fn LM_IsProcessAlive(pproc : &lm_process_t) -> bool {
     unsafe {
         let pproc = pproc as *const lm_process_t;
         match libmem_c::LM_IsProcessAlive(pproc) {
             LM_FALSE => false,
             _ => true
+        }
+    }
+}
+
+pub fn LM_GetSystemBits() -> usize {
+    unsafe {
+        libmem_c::LM_GetSystemBits() as usize
+    }
+}
+
+/****************************************/
+
+extern "C" fn LM_EnumThreadIdsCallback(tid : lm_tid_t, arg : *mut ()) -> lm_bool_t {
+    let thread_list_ptr = arg as *mut Vec<lm_tid_t>;
+    unsafe {
+        (*thread_list_ptr).push(tid);
+    }
+    LM_TRUE
+}
+
+pub fn LM_EnumThreadIds() -> Vec<lm_tid_t> {
+    let mut thread_list : Vec<lm_tid_t> = Vec::new();
+    unsafe {
+        let callback = LM_EnumThreadIdsCallback;
+        let arg = &mut thread_list as *mut Vec<lm_tid_t> as *mut ();
+        if libmem_c::LM_EnumThreadIds(callback, arg) == LM_FALSE {
+            thread_list.clear();
+        }
+    }
+
+    thread_list
+}
+
+pub fn LM_EnumThreadIdsEx(pproc : &lm_process_t) -> Vec<lm_tid_t> {
+    let mut thread_list : Vec<lm_tid_t> = Vec::new();
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let callback = LM_EnumThreadIdsCallback;
+        let arg = &mut thread_list as *mut Vec<lm_tid_t> as *mut ();
+        if libmem_c::LM_EnumThreadIdsEx(pproc, callback, arg) == LM_FALSE {
+            thread_list.clear();
+        }
+    }
+
+    thread_list
+}
+
+pub fn LM_GetThreadId() -> lm_tid_t {
+    unsafe {
+        libmem_c::LM_GetThreadId()
+    }
+}
+
+pub fn LM_GetThreadIdEx(pproc : &lm_process_t) -> lm_tid_t {
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        libmem_c::LM_GetThreadIdEx(pproc)
+    }
+}
+
+/****************************************/
+
+extern "C" fn LM_EnumModulesCallback(pmod : *const lm_module_t, arg : *mut ()) -> lm_bool_t {
+    let module_list_ptr = arg as *mut Vec<lm_module_t>;
+    unsafe {
+        (*module_list_ptr).push(*pmod);
+    }
+    LM_TRUE
+}
+
+pub fn LM_EnumModules() -> Vec<lm_module_t> {
+    let mut module_list : Vec<lm_module_t> = Vec::new();
+    unsafe {
+        let callback = LM_EnumModulesCallback;
+        let arg = &mut module_list as *mut Vec<lm_module_t> as *mut ();
+        if libmem_c::LM_EnumModules(callback, arg) == LM_FALSE {
+            module_list.clear();
+        }
+    }
+
+    module_list
+}
+
+pub fn LM_EnumModulesEx(pproc : &lm_process_t) -> Vec<lm_module_t> {
+    let mut module_list : Vec<lm_module_t> = Vec::new();
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let callback = LM_EnumModulesCallback;
+        let arg = &mut module_list as *mut Vec<lm_module_t> as *mut ();
+        if libmem_c::LM_EnumModulesEx(pproc, callback, arg) == LM_FALSE {
+            module_list.clear();
+        }
+    }
+
+    module_list
+}
+
+pub fn LM_FindModule(name : &str) -> Option<lm_module_t> {
+    let mut module = lm_module_t::new(); 
+    let name = match CString::new(name.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let name : lm_string_t = name.as_ptr().cast();
+        let modbuf = &mut module as *mut lm_module_t;
+
+        if libmem_c::LM_FindModule(name, modbuf) != LM_FALSE {
+            Some(module)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_FindModuleEx(pproc : &lm_process_t, name : &str) -> Option<lm_module_t> {
+    let mut module = lm_module_t::new(); 
+    let name = match CString::new(name.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let name : lm_string_t = name.as_ptr().cast();
+        let modbuf = &mut module as *mut lm_module_t;
+
+        if libmem_c::LM_FindModuleEx(pproc, name, modbuf) != LM_FALSE {
+            Some(module)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_LoadModule(modpath : &str) -> Option<lm_module_t> {
+    let mut module = lm_module_t::new();
+    let modpath = match CString::new(modpath.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let modpath : lm_string_t = modpath.as_ptr().cast();
+        let modbuf = &mut module as *mut lm_module_t;
+
+        if libmem_c::LM_LoadModule(modpath, modbuf) != LM_FALSE {
+            Some(module)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_LoadModuleEx(pproc : &lm_process_t, modpath : &str) -> Option<lm_module_t> {
+    let mut module = lm_module_t::new();
+    let modpath = match CString::new(modpath.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let modpath : lm_string_t = modpath.as_ptr().cast();
+        let modbuf = &mut module as *mut lm_module_t;
+
+        if libmem_c::LM_LoadModuleEx(pproc, modpath, modbuf) != LM_FALSE {
+            Some(module)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_UnloadModule(pmod : &lm_module_t) -> Result<(), &'static str>{
+    unsafe {
+        let pmod = pmod as *const lm_module_t;
+        if libmem_c::LM_UnloadModule(pmod) != LM_FALSE {
+            Ok(())
+        } else {
+            Err("LM_UnloadModule failed internally")
+        }
+    }
+}
+
+pub fn LM_UnloadModuleEx(pproc : &lm_process_t, pmod : &lm_module_t) -> Result<(), &'static str>{
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let pmod = pmod as *const lm_module_t;
+        if libmem_c::LM_UnloadModuleEx(pproc, pmod) != LM_FALSE {
+            Ok(())
+        } else {
+            Err("LM_UnloadModuleEx failed internally")
         }
     }
 }

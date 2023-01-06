@@ -6,9 +6,25 @@
 #define LM_PRINTF printf
 #endif
 
+lm_bool_t _LM_EnumProcessesCallback(lm_process_t *pproc,
+				    lm_void_t    *arg)
+{
+	lm_size_t *counter = (lm_size_t *)arg;
+
+	LM_PRINTF(LM_STR("PID: %d | PPID: %d | Bits: %lu | Name: %s | Path: %s\n"),
+		  pproc->pid, pproc->ppid, pproc->bits, pproc->name, pproc->path);
+
+	*counter += 1;
+	if (*counter >= 5)
+		return LM_FALSE;
+
+	return LM_TRUE;
+}
+
 int
 main()
 {
+	lm_size_t    counter = 0;
 	lm_process_t proc;
 	lm_tid_t     tid;
 	lm_module_t  mod;
@@ -34,6 +50,9 @@ main()
 	lm_prot_t    alloc_oldprot;
 
 	LM_PRINTF(LM_STR("[+] Test 2\n"));
+
+	LM_EnumProcesses(_LM_EnumProcessesCallback, (lm_void_t *)&counter);
+	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_FindProcess(TEST1_NAME, &proc);
 	tid  = LM_GetThreadIdEx(&proc);

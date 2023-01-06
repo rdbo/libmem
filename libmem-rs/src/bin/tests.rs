@@ -9,7 +9,7 @@ fn main() {
 
     let mut counter = 0;
     for proc in LM_EnumProcesses() {
-        println!("{} | {} | {} | {} | {}", proc.get_pid(), proc.get_ppid(), proc.get_bits(), proc.get_path(), proc.get_name());
+        println!("{}", proc);
         counter += 1;
         if counter >= 5 {
             break;

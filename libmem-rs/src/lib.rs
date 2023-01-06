@@ -43,6 +43,7 @@ type lm_address_t = usize;
 
 const LM_FALSE : lm_bool_t = 0;
 const LM_TRUE : lm_bool_t = 1;
+const LM_ADDRESS_BAD : lm_address_t = 0;
 const LM_PATH_MAX : lm_size_t = 512;
 
 fn string_from_cstring(cstring : &[u8]) -> String {
@@ -213,6 +214,7 @@ mod libmem_c {
         /****************************************/
         #[allow(improper_ctypes)] // permit lm_symbol_t, which has a String
         pub(super) fn LM_EnumSymbols(pmod : *const lm_module_t, callback : extern "C" fn(*const lm_symbol_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_FindSymbolAddress(pmod : *const lm_module_t, name : lm_cstring_t) -> lm_address_t;
     }
 }
 
@@ -510,5 +512,22 @@ pub fn LM_EnumSymbols(pmod : &lm_module_t) -> Vec<lm_symbol_t> {
     }
 
     symbol_list
+}
+
+pub fn LM_FindSymbolAddress(pmod : &lm_module_t, name : &str) -> Option<usize> {
+    let name = match CString::new(name.as_bytes()) {
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let pmod = pmod as *const lm_module_t;
+        let name : lm_cstring_t = name.as_ptr().cast();
+
+        match libmem_c::LM_FindSymbolAddress(pmod, name) {
+            LM_ADDRESS_BAD => None,
+            val => Some(val)
+        }
+    }
 }
 

@@ -4,6 +4,11 @@ fn separator() {
     println!("====================");
 }
 
+#[no_mangle]
+pub extern "C" fn some_function() {
+
+}
+
 fn main() {
     println!("[*] libmem-rs tests");
 
@@ -129,6 +134,12 @@ fn main() {
             break;
         }
     }
+
+    separator();
+
+    let some_function_addr = LM_FindSymbolAddress(&cur_module, "some_function").unwrap();
+    println!("[*] Address of 'some_function': {:p}", some_function as *const ());
+    println!("[*] Symbol Address Lookup:      {:#x}", some_function_addr);
 
     separator();
 }

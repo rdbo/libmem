@@ -20,6 +20,28 @@ pub struct lm_process_t {
     name : [u8; LM_PATH_MAX]
 }
 
+fn string_from_cstring(cstring : &[u8]) -> String {
+    // This function finds the null terminator from
+    // a vector and deletes everything after that
+    let mut cstring = cstring.to_vec();
+    let mut null_index = 0;
+
+    for i in 0..cstring.len() {
+        if cstring[i] == 0 {
+            null_index = i;
+            break;
+        }
+    }
+
+    if null_index == 0 {
+        cstring.clear();
+    } else {
+        cstring = cstring[0..null_index].to_vec();
+    }
+
+    String::from_utf8_lossy(&cstring).to_string()
+}
+
 impl lm_process_t {
     pub fn get_pid(&self) -> u32 {
         self.pid
@@ -34,11 +56,11 @@ impl lm_process_t {
     }
 
     pub fn get_path(&self) -> String {
-        String::from_utf8_lossy(&self.path).to_string()
+        string_from_cstring(&self.path)
     }
 
     pub fn get_name(&self) -> String {
-        String::from_utf8_lossy(&self.name).to_string()
+        string_from_cstring(&self.name)
     }
 }
 

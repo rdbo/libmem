@@ -433,11 +433,17 @@ LM_PRIVATE lm_size_t
 _LM_GetProcessPath(lm_char_t *pathbuf,
 		   lm_size_t  maxlen)
 {
+	lm_size_t len;
 	HMODULE hModule = GetModuleHandle(NULL);
 	if (!hModule)
 		return len;
 
-	return (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
+	len = (lm_size_t)GetModuleFileName(hModule, pathbuf, maxlen);
+	if (len >= maxlen)
+		len = maxlen - 1;
+
+	pathbuf[len] = LM_STR('\x00');
+	return len;
 }
 #else
 LM_PRIVATE lm_size_t
@@ -447,19 +453,6 @@ _LM_GetProcessPath(lm_char_t *pathbuf,
 	return _LM_GetProcessPathEx(_LM_GetProcessId(), pathbuf, maxlen);
 }
 #endif
-
-LM_API lm_size_t
-LM_GetProcessPath(lm_char_t *pathbuf,
-		  lm_size_t  maxlen)
-{
-	lm_size_t len;
-
-	LM_ASSERT(pathbuf != LM_NULLPTR && maxlen > 0);
-
-	len = _LM_GetProcessPath(pathbuf, maxlen);
-	pathbuf[len] = LM_STR('\x00');
-	return len;
-}
 
 /********************************/
 
@@ -579,7 +572,7 @@ _LM_GetProcessName(lm_char_t *namebuf,
 	lm_char_t  path[LM_PATH_MAX];
 	lm_char_t *ptr;
 
-	if (!LM_GetProcessPath(path, LM_PATH_MAX))
+	if (!_LM_GetProcessPath(path, LM_PATH_MAX))
 		return len;
 
 	ptr = LM_STRRCHR(path, LM_STR('\\'));

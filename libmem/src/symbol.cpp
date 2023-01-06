@@ -31,11 +31,11 @@ using namespace LIEF::PE;
 
 LM_PRIVATE lm_bool_t
 _LM_EnumPeSyms(lm_module_t *pmod,
-	       lm_bool_t  (*callback)(lm_cstring_t symbol,
-				      lm_address_t addr,
+	       lm_bool_t  (*callback)(lm_symbol_t *psymbol,
 				      lm_void_t   *arg),
 	       lm_void_t *arg)
 {
+	lm_symbol_t sym;
 	std::unique_ptr<const Binary> binary;
 
 	if (!is_pe(pmod->path))
@@ -44,7 +44,9 @@ _LM_EnumPeSyms(lm_module_t *pmod,
 	binary = Parser::parse(pmod->path);
 
 	for (const ExportEntry &symbol : binary->get_export().entries()) {
-		if (!callback(symbol.name(), LM_OFFSET(pmod->base, symbol.value()), arg))
+		sym.name = symbol.name().c_str();
+		sym.address = LM_OFFSET(pmod->base, symbol.value());
+		if (!callback(&sym, arg))
 			break;
 	}
 
@@ -53,8 +55,7 @@ _LM_EnumPeSyms(lm_module_t *pmod,
 
 LM_PRIVATE lm_bool_t
 _LM_EnumSymbols(lm_module_t *pmod,
-		lm_bool_t  (*callback)(lm_cstring_t symbol,
-				       lm_address_t addr,
+		lm_bool_t  (*callback)(lm_symbol_t *psymbol,
 				       lm_void_t   *arg),
 		lm_void_t   *arg)
 {
@@ -67,14 +68,12 @@ using namespace LIEF::ELF;
 
 LM_PRIVATE lm_bool_t
 _LM_EnumElfSyms(lm_module_t *pmod,
-		lm_bool_t  (*callback)(lm_cstring_t symbol,
-				       lm_address_t addr,
+		lm_bool_t  (*callback)(lm_symbol_t *psymbol,
 				       lm_void_t   *arg),
 		lm_void_t   *arg)
 {
-	lm_cstring_t symstr;
-        lm_address_t addr;
-        lm_address_t base = (lm_address_t)0; /* base address for symbol offset */
+	lm_symbol_t sym;
+	lm_address_t base = (lm_address_t)0; /* base address for symbol offset */
         std::unique_ptr<const Binary> binary;
 
         LM_ASSERT(pmod != LM_NULLPTR && callback);
@@ -88,9 +87,9 @@ _LM_EnumElfSyms(lm_module_t *pmod,
                 base = pmod->base;
 
         for (const Symbol &symbol : binary->exported_symbols()) {
-                symstr = (lm_cstring_t)symbol.name().c_str();
-                addr = (lm_address_t)(&((lm_byte_t *)base)[symbol.value()]);
-                if (!callback(symstr, addr, arg))
+                sym.name = (lm_cstring_t)symbol.name().c_str();
+                sym.address = (lm_address_t)LM_OFFSET(base, symbol.value());
+                if (!callback(&sym, arg))
                         break;
         }
 
@@ -99,8 +98,7 @@ _LM_EnumElfSyms(lm_module_t *pmod,
 
 LM_PRIVATE lm_bool_t
 _LM_EnumSymbols(lm_module_t *pmod,
-		lm_bool_t  (*callback)(lm_cstring_t symbol,
-				       lm_address_t addr,
+		lm_bool_t  (*callback)(lm_symbol_t *psymbol,
 				       lm_void_t   *arg),
 		lm_void_t   *arg)
 {
@@ -110,8 +108,7 @@ _LM_EnumSymbols(lm_module_t *pmod,
 
 LM_API lm_bool_t
 LM_EnumSymbols(lm_module_t *pmod,
-	       lm_bool_t  (*callback)(lm_cstring_t symbol,
-				      lm_address_t addr,
+	       lm_bool_t  (*callback)(lm_symbol_t *psymbol,
 				      lm_void_t   *arg),
 	       lm_void_t   *arg)
 {
@@ -121,20 +118,14 @@ LM_EnumSymbols(lm_module_t *pmod,
 }
 /********************************/
 
-typedef struct {
-	lm_cstring_t symbol;
-	lm_address_t addr;
-} _lm_find_symbol_t;
-
 LM_PRIVATE lm_bool_t
-_LM_FindSymbolCallback(lm_cstring_t symbol,
-		       lm_address_t addr,
-		       lm_void_t   *arg)
+_LM_FindSymbolAddressCallback(lm_symbol_t *psymbol,
+			      lm_void_t   *arg)
 {
-	_lm_find_symbol_t *parg = (_lm_find_symbol_t *)arg;
+	lm_symbol_t *parg = (lm_symbol_t *)arg;
 
-	if (!LM_STRCMP(symbol, parg->symbol)) {
-		parg->addr = addr;
+	if (!LM_STRCMP(psymbol->name, parg->name)) {
+		parg->address = psymbol->address;
 		return LM_FALSE;
 	}
 
@@ -142,18 +133,18 @@ _LM_FindSymbolCallback(lm_cstring_t symbol,
 }
 
 LM_API lm_address_t
-LM_FindSymbol(lm_module_t  *pmod,
-	      lm_cstring_t  symstr)
+LM_FindSymbolAddress(lm_module_t  *pmod,
+		     lm_cstring_t  name)
 {
-	_lm_find_symbol_t arg;
+	lm_symbol_t arg;
 
-	LM_ASSERT(pmod != LM_NULLPTR && symstr != LM_NULLPTR);
+	LM_ASSERT(pmod != LM_NULLPTR && name != LM_NULLPTR);
 
-	arg.symbol = symstr;
-	arg.addr   = LM_ADDRESS_BAD;
+	arg.name = name;
+	arg.address = LM_ADDRESS_BAD;
 
-	LM_EnumSymbols(pmod, _LM_FindSymbolCallback, (lm_void_t *)&arg);
+	LM_EnumSymbols(pmod, _LM_FindSymbolAddressCallback, (lm_void_t *)&arg);
 
-	return arg.addr;
+	return arg.address;
 }
 

@@ -42,8 +42,6 @@ main()
 	lm_module_t  mod;
 	lm_address_t main_sym;
 	lm_module_t  libtest_mod;
-	lm_char_t    libtest_modname[LM_PATH_MAX];
-	lm_char_t    libtest_modpath[LM_PATH_MAX];
 	lm_page_t    page;
 	lm_int32_t   rdbuf;
 	lm_int32_t   wrbuf = 1337;
@@ -76,7 +74,7 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_FindModule(proc.path, &mod);
-	main_sym = LM_FindSymbol(&mod, "main");
+	main_sym = LM_FindSymbolAddress(&mod, "main");
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), mod.name);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), mod.path);
 	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), (void *)mod.base);
@@ -89,9 +87,9 @@ main()
 	LM_UnloadModule(&libtest_mod);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), libtest_mod.name);
 	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), libtest_mod.path);
-	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), libtest_mod.base);
+	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), (void *)libtest_mod.base);
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)libtest_mod.size);
-	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), libtest_mod.end);
+	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), (void *)libtest_mod.end);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_GetPage(mod.base, &page);

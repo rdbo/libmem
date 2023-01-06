@@ -717,9 +717,9 @@ _LM_CallDlopen(lm_process_t *pproc,
 	if (!_LM_FindLibc(pproc, &libc_mod))
 		return ret;
 
-	dlopen_addr = LM_FindSymbol(&libc_mod, "__libc_dlopen_mode");
+	dlopen_addr = LM_FindSymbolAddress(&libc_mod, "__libc_dlopen_mode");
 	if (dlopen_addr == LM_ADDRESS_BAD) {
-		dlopen_addr = LM_FindSymbol(&libc_mod, "dlopen");
+		dlopen_addr = LM_FindSymbolAddress(&libc_mod, "dlopen");
 		if (dlopen_addr == LM_ADDRESS_BAD)
 			return ret;
 	}
@@ -763,9 +763,9 @@ _LM_CallDlclose(lm_process_t *pproc,
 	if (!_LM_FindLibc(pproc, &libc_mod))
 		return ret;
 
-	dlclose_addr = LM_FindSymbol(&libc_mod, "__libc_dlclose");
+	dlclose_addr = LM_FindSymbolAddress(&libc_mod, "__libc_dlclose");
 	if (dlclose_addr == LM_ADDRESS_BAD) {
-		dlclose_addr = LM_FindSymbol(&libc_mod, "dlclose");
+		dlclose_addr = LM_FindSymbolAddress(&libc_mod, "dlclose");
 		if (dlclose_addr == LM_ADDRESS_BAD)
 			return ret;
 	}

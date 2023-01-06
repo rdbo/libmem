@@ -99,8 +99,8 @@ fn main() {
 
     separator();
 
-    let module = LM_LoadModule("/usr/local/lib/libtest.so").unwrap();
-    println!("[*] Module Loaded into Current Process: {}", module);
+    let libmodule = LM_LoadModule("/usr/local/lib/libtest.so").unwrap();
+    println!("[*] Module Loaded into Current Process: {}", libmodule);
 
     separator();
 
@@ -117,5 +117,19 @@ fn main() {
     // TODO: Test LM_UnloadModuleEx
 
     // separator();
+
+    println!("[*] Current Process - Symbol Enumeration");
+    println!("[*] Module: {}", cur_module.get_name());
+    let mut counter = 0;
+    for symbol in LM_EnumSymbols(&cur_module) {
+        println!("{}", symbol);
+
+        counter += 1;
+        if counter >= 5 {
+            break;
+        }
+    }
+
+    separator();
 }
 

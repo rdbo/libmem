@@ -26,15 +26,18 @@
 #![allow(non_snake_case)]
 
 use std::fmt;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 /* Note: the types and structures must be
- * the same size and aligned with their C variations */
+ * the same size and aligned with their C variations.
+ * They can have member parameters after the C fields. */
 type lm_bool_t = i32;
 type lm_pid_t = u32;
 type lm_tid_t = u32;
 type lm_char_t = u8;
+type lm_cchar_t = u8;
 type lm_string_t = *const lm_char_t;
+type lm_cstring_t = *const lm_cchar_t;
 type lm_size_t = usize;
 type lm_address_t = usize;
 
@@ -151,6 +154,34 @@ impl fmt::Display for lm_module_t {
     }
 }
 
+#[repr(C)]
+#[allow(improper_ctypes)] // Permit String
+pub struct lm_symbol_t {
+    name : lm_cstring_t,
+    address : lm_address_t,
+    name_str : String // The 'name' field data is deleted after the callback returns. This field will contain a copy of it when it was still there
+}
+
+impl lm_symbol_t {
+    pub fn new() -> Self {
+        Self { name: 0 as lm_cstring_t, address: 0, name_str: String::new() }
+    }
+
+    pub fn get_name(&self) -> &String {
+        &self.name_str
+    }
+
+    pub fn get_address(&self) -> usize {
+        self.address
+    }
+}
+
+impl fmt::Display for lm_symbol_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "lm_symbol_t {{ name: {}, address: {:#x} }}", self.get_name(), self.get_address())
+    }
+}
+
 // Raw libmem calls
 mod libmem_c {
     use crate::*;
@@ -179,6 +210,9 @@ mod libmem_c {
 
         pub(super) fn LM_UnloadModule(pmod : *const lm_module_t) -> lm_bool_t;
         pub(super) fn LM_UnloadModuleEx(pproc : *const lm_process_t, pmod : *const lm_module_t) -> lm_bool_t;
+        /****************************************/
+        #[allow(improper_ctypes)] // permit lm_symbol_t, which has a String
+        pub(super) fn LM_EnumSymbols(pmod : *const lm_module_t, callback : extern "C" fn(*const lm_symbol_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
     }
 }
 
@@ -444,5 +478,37 @@ pub fn LM_UnloadModuleEx(pproc : &lm_process_t, pmod : &lm_module_t) -> Result<(
             Err("LM_UnloadModuleEx failed internally")
         }
     }
+}
+
+/****************************************/
+
+extern "C" fn LM_EnumSymbolsCallback(psymbol : *const lm_symbol_t, arg : *mut ()) -> lm_bool_t {
+    let symbol_list_ptr = arg as *mut Vec<lm_symbol_t>;
+    unsafe {
+        let name_str = match CStr::from_ptr((*psymbol).name.cast()).to_str() {
+            Ok(s) => s,
+            Err(_e) => return LM_TRUE
+        };
+
+        let mut new_symbol = lm_symbol_t::new();
+        new_symbol.name_str = String::from(name_str).to_string();
+        new_symbol.address = (*psymbol).address; 
+        (*symbol_list_ptr).push(new_symbol);
+    }
+    LM_TRUE
+}
+
+pub fn LM_EnumSymbols(pmod : &lm_module_t) -> Vec<lm_symbol_t> {
+    let mut symbol_list : Vec<lm_symbol_t> = Vec::new();
+    unsafe {
+        let pmod = pmod as *const lm_module_t;
+        let callback = LM_EnumSymbolsCallback;
+        let arg = &mut symbol_list as *mut Vec<lm_symbol_t> as *mut ();
+        if libmem_c::LM_EnumSymbols(pmod, callback, arg) == LM_FALSE {
+            symbol_list.clear();
+        }
+    }
+
+    symbol_list
 }
 

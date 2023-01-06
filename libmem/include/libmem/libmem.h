@@ -421,7 +421,16 @@ typedef struct {
 	lm_prot_t    prot;
 } lm_page_t;
 
-typedef lm_int_t lm_detour_t;
+typedef struct {
+	/* README: This struct should only be used to interact with
+	 * LM_EnumSymbols, because the 'name' field only lives until
+	 * the callback returns. Copying it to somewhere outside the
+	 * callback function would not be a good idea. The address
+	 * will be still correct. That's why the API function
+	 * LM_FindSymbolAddress works just fine. */
+	lm_cstring_t name;
+	lm_address_t address;
+} lm_symbol_t;
 
 /* Based from instruction struct from capstone.h */
 typedef struct {
@@ -516,14 +525,13 @@ LM_UnloadModuleEx(lm_process_t *pproc,
 
 LM_API lm_bool_t
 LM_EnumSymbols(lm_module_t *pmod,
-	       lm_bool_t  (*callback)(lm_cstring_t symbol,
-				      lm_address_t addr,
+	       lm_bool_t  (*callback)(lm_symbol_t *psymbol,
 				      lm_void_t   *arg),
 	       lm_void_t   *arg);
 
 LM_API lm_address_t
-LM_FindSymbol(lm_module_t  *pmod,
-	      lm_cstring_t  symstr);
+LM_FindSymbolAddress(lm_module_t *pmod,
+		     lm_cstring_t name);
 
 /****************************************/
 

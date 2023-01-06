@@ -25,4 +25,7 @@ fn main() {
 
     let proc = LM_FindProcess("dwm").unwrap();
     println!("[*] Remote Process: {}", proc);
+
+    let is_alive = LM_IsProcessAlive(&proc);
+    println!("[*] Is the remote process alive? {}", if is_alive { "yes" } else { "no" });
 }

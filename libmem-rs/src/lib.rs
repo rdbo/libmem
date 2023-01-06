@@ -30,20 +30,25 @@ use std::ffi::CString;
 
 /* Note: the types and structures must be
  * the same size and aligned with their C variations */
-const LM_FALSE : i32 = 0;
-const LM_TRUE : i32 = 1;
-const LM_PATH_MAX : usize = 512;
+type lm_bool_t = i32;
+type lm_pid_t = u32;
+type lm_char_t = u8;
+type lm_size_t = usize;
+
+const LM_FALSE : lm_bool_t = 0;
+const LM_TRUE : lm_bool_t = 1;
+const LM_PATH_MAX : lm_size_t = 512;
 
 #[repr(C)]
 #[derive(Clone)]
 #[derive(Copy)]
 pub struct lm_process_t {
-    pid : u32,
-    ppid : u32,
-    bits : usize,
+    pid : lm_pid_t,
+    ppid : lm_pid_t,
+    bits : lm_size_t,
     // OBS: if lm_char_t is a wchar_t, these variables won't work. Use Multibyte
-    path : [u8; LM_PATH_MAX],
-    name : [u8; LM_PATH_MAX]
+    path : [lm_char_t; LM_PATH_MAX],
+    name : [lm_char_t; LM_PATH_MAX]
 }
 
 fn string_from_cstring(cstring : &[u8]) -> String {
@@ -107,11 +112,12 @@ mod libmem_c {
     // link against 'mem' (the lib prefix is appended automatically)
     #[link(name = "mem")]
     extern "C" {
-        pub(super) fn LM_EnumProcesses(callback : extern "C" fn(*const lm_process_t, *mut ()) -> i32, arg : *mut ()) -> i32;
-        pub(super) fn LM_GetProcess(procbuf : *mut lm_process_t) -> i32;
+        pub(super) fn LM_EnumProcesses(callback : extern "C" fn(*const lm_process_t, *mut ()) -> i32, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_GetProcess(procbuf : *mut lm_process_t) -> lm_bool_t;
         // The rust compiler says that using a *const [u8] is not FFI-safe and
         // suggests that a raw pointer is used instead
-        pub(super) fn LM_FindProcess(procstr : *const u8, procbuf : *mut lm_process_t) -> i32;
+        pub(super) fn LM_FindProcess(procstr : *const u8, procbuf : *mut lm_process_t) -> lm_bool_t;
+        pub(super) fn LM_IsProcessAlive(pproc : *const lm_process_t) -> lm_bool_t;
     }
 }
 
@@ -167,6 +173,16 @@ pub fn LM_FindProcess(procstr : &str) -> Option<lm_process_t> {
             Some(proc)
         } else {
             None
+        }
+    }
+}
+
+pub fn LM_IsProcessAlive(pproc : &lm_process_t) -> bool{
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        match libmem_c::LM_IsProcessAlive(pproc) {
+            LM_FALSE => false,
+            _ => true
         }
     }
 }

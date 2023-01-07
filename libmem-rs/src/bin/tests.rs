@@ -27,7 +27,6 @@ fn main() {
     separator();
 
     println!("[*] Process Enumeration");
-
     print_n(LM_EnumProcesses(), 5);
 
     separator();
@@ -126,6 +125,11 @@ fn main() {
 
     print_n(LM_EnumPages(), 5);
     
+    separator();
+
+    println!("[*] Current Process - Page at: {:#x}", cur_module.get_base());
+    println!("{}", LM_GetPage(cur_module.get_base()).unwrap());
+
     separator();
 }
 

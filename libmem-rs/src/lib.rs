@@ -239,7 +239,7 @@ impl lm_page_t {
 
 impl fmt::Display for lm_page_t {
     fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "lm_symbol_t {{ base: {:#x}, end: {:#x}, size: {:#x}, prot: {} }}", self.get_base(), self.get_end(), self.get_size(), protection_string(self.get_prot()))
+        write!(f, "lm_page_t {{ base: {:#x}, end: {:#x}, size: {:#x}, prot: {} }}", self.get_base(), self.get_end(), self.get_size(), protection_string(self.get_prot()))
     }
 }
 
@@ -278,6 +278,9 @@ mod libmem_c {
         /****************************************/
         pub(super) fn LM_EnumPages(callback : extern "C" fn(*const lm_page_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
         pub(super) fn LM_EnumPagesEx(pproc : *const lm_process_t, callback : extern "C" fn(*const lm_page_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_GetPage(addr : lm_address_t, pagebuf : *mut lm_page_t) -> lm_bool_t;
+        pub(super) fn LM_GetPageEx(pproc : *const lm_process_t, addr : lm_address_t, pagebuf : *mut lm_page_t) -> lm_bool_t;
+        /****************************************/
     }
 }
 
@@ -630,4 +633,37 @@ pub fn LM_EnumPagesEx(pproc : &lm_process_t) -> Vec<lm_page_t> {
 
     page_list
 }
+
+pub fn LM_GetPage(addr : usize) -> Option<lm_page_t> {
+    let mut page = lm_page_t::new(); 
+
+    unsafe {
+        let addr = addr as lm_address_t;
+        let pagebuf = &mut page as *mut lm_page_t;
+
+        if libmem_c::LM_GetPage(addr, pagebuf) != LM_FALSE {
+            Some(page)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_GetPageEx(pproc : &lm_process_t, addr : usize) -> Option<lm_page_t> {
+    let mut page = lm_page_t::new(); 
+
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let addr = addr as lm_address_t;
+        let pagebuf = &mut page as *mut lm_page_t;
+
+        if libmem_c::LM_GetPageEx(pproc, addr, pagebuf) != LM_FALSE {
+            Some(page)
+        } else {
+            None
+        }
+    }
+}
+
+/****************************************/
 

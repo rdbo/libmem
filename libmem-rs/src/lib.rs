@@ -94,19 +94,6 @@ fn string_from_cstring(cstring : &[u8]) -> String {
     String::from_utf8_lossy(&cstring).to_string()
 }
 
-fn protection_string(prot : lm_prot_t) -> &'static str {
-    match prot {
-        LM_PROT_X => "LM_PROT_X",
-        LM_PROT_R => "LM_PROT_R",
-        LM_PROT_W => "LM_PROT_W",
-        LM_PROT_XR => "LM_PROT_XR",
-        LM_PROT_XW => "LM_PROT_XW",
-        LM_PROT_RW => "LM_PROT_RW",
-        LM_PROT_XRW => "LM_PROT_XRW",
-        _ => "LM_PROT_NONE"
-    }
-}
-
 #[repr(C)]
 #[derive(Clone)]
 #[derive(Copy)]
@@ -256,7 +243,7 @@ impl lm_page_t {
 
 impl fmt::Display for lm_page_t {
     fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "lm_page_t {{ base: {:#x}, end: {:#x}, size: {:#x}, prot: {} }}", self.get_base(), self.get_end(), self.get_size(), protection_string(self.get_prot()))
+        write!(f, "lm_page_t {{ base: {:#x}, end: {:#x}, size: {:#x}, prot: {} }}", self.get_base(), self.get_end(), self.get_size(), self.get_prot())
     }
 }
 

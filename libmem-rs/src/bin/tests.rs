@@ -131,5 +131,10 @@ fn main() {
     println!("{}", LM_GetPage(cur_module.get_base()).unwrap());
 
     separator();
+
+    println!("[*] Remote Process - Page at: {:#x}", module.get_base());
+    println!("{}", LM_GetPageEx(&proc, module.get_base()).unwrap());
+
+    separator();
 }
 

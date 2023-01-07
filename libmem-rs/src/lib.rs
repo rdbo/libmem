@@ -42,21 +42,35 @@ pub type lm_pid_t = u32;
 pub type lm_tid_t = u32;
 pub type lm_size_t = usize;
 pub type lm_address_t = usize;
-pub type lm_prot_t = u32;
 pub type lm_byte_t = u8;
+
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Copy)]
+#[derive(Debug)]
+pub enum lm_prot_t {
+    LM_PROT_NONE = 0b000,
+    LM_PROT_X    = 0b001,
+    LM_PROT_R    = 0b010,
+    LM_PROT_W    = 0b100,
+    LM_PROT_XR   = 0b011,
+    LM_PROT_XW   = 0b101,
+    LM_PROT_RW   = 0b110,
+    LM_PROT_XRW  = 0b111
+}
+
+impl fmt::Display for lm_prot_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+pub use crate::lm_prot_t::*;
 
 const LM_FALSE : lm_bool_t = 0;
 const LM_TRUE : lm_bool_t = 1;
 const LM_ADDRESS_BAD : lm_address_t = 0;
 const LM_PATH_MAX : lm_size_t = 512;
-pub const LM_PROT_NONE : lm_prot_t = 0;
-pub const LM_PROT_X : lm_prot_t = 1 << 0;
-pub const LM_PROT_R : lm_prot_t = 1 << 1;
-pub const LM_PROT_W : lm_prot_t = 1 << 2;
-pub const LM_PROT_XR : lm_prot_t = LM_PROT_X | LM_PROT_R;
-pub const LM_PROT_XW : lm_prot_t = LM_PROT_X | LM_PROT_W;
-pub const LM_PROT_RW : lm_prot_t = LM_PROT_R | LM_PROT_W;
-pub const LM_PROT_XRW : lm_prot_t = LM_PROT_X | LM_PROT_R | LM_PROT_W;
 
 fn string_from_cstring(cstring : &[u8]) -> String {
     // This function finds the null terminator from

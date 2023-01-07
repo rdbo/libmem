@@ -286,6 +286,8 @@ mod libmem_c {
         pub(super) fn LM_ReadMemoryEx(pproc : *const lm_process_t, src : lm_address_t, dst : *mut u8, size : lm_size_t) -> lm_size_t;
         pub(super) fn LM_WriteMemory(dst : lm_address_t, src : *const u8, size : lm_size_t) -> lm_size_t;
         pub(super) fn LM_WriteMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, src : *const u8, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_SetMemory(dst : lm_address_t, byte : u8, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_SetMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, byte : u8, size : lm_size_t) -> lm_size_t;
     }
 }
 
@@ -722,7 +724,6 @@ pub fn LM_WriteMemory<T>(dst : usize, value : &T) -> Result<(), &'static str> {
 pub fn LM_WriteMemoryEx<T>(pproc : &lm_process_t, dst : usize, value : &T) -> Result<(), &'static str> {
     unsafe {
         let pproc = pproc as *const lm_process_t;
-        let dst = dst as lm_address_t;
         let src = value as *const T as *const u8;
         let size = mem::size_of::<T>() as lm_size_t;
 
@@ -730,6 +731,27 @@ pub fn LM_WriteMemoryEx<T>(pproc : &lm_process_t, dst : usize, value : &T) -> Re
             Ok(())
         } else {
             Err("LM_WriteMemoryEx failed internally")
+        }
+    }
+}
+
+pub fn LM_SetMemory(dst : usize, byte : u8, size : usize) -> Result<(), &'static str> {
+    unsafe {
+        if libmem_c::LM_SetMemory(dst, byte, size) == size {
+            Ok(())
+        } else {
+            Err("LM_SetMemory failed internally")
+        }
+    }
+}
+
+pub fn LM_SetMemoryEx(pproc : &lm_process_t, dst : usize, byte : u8, size : usize) -> Result<(), &'static str> {
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        if libmem_c::LM_SetMemoryEx(pproc, dst, byte, size) == size {
+            Ok(())
+        } else {
+            Err("LM_SetMemoryEx failed internally")
         }
     }
 }

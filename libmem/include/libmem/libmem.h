@@ -597,9 +597,9 @@ LM_WriteMemoryEx(lm_process_t *pproc,
 		 lm_size_t     size);
 
 LM_API lm_size_t
-LM_SetMemory(lm_byte_t *dst,
-	     lm_byte_t  byte,
-	     lm_size_t  size);
+LM_SetMemory(lm_address_t dst,
+	     lm_byte_t    byte,
+	     lm_size_t    size);
 
 LM_API lm_size_t
 LM_SetMemoryEx(lm_process_t *pproc,

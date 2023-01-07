@@ -274,14 +274,14 @@ LM_WriteMemoryEx(lm_process_t *pproc,
 /********************************/
 
 LM_API lm_size_t
-LM_SetMemory(lm_byte_t *dst,
-	     lm_byte_t  byte,
-	     lm_size_t  size)
+LM_SetMemory(lm_address_t dst,
+	     lm_byte_t    byte,
+	     lm_size_t    size)
 {
 	lm_size_t i;
 
 	for (i = 0; i < size; ++i)
-		dst[i] = byte;
+		*(lm_byte_t *)LM_OFFSET(dst, i) = byte;
 	
 	return i;
 }

@@ -1,5 +1,6 @@
 use libmem::*;
 use std::fmt;
+use std::mem;
 
 fn separator() {
     println!("====================");
@@ -155,7 +156,7 @@ fn main() {
 
     // separator();
 
-    let value = 69;
+    let value : i32 = 69;
     LM_WriteMemory(number_addr, &value).unwrap();
     println!("[*] Value to write: {}", value);
     println!("[*] Number Value: {}", number);
@@ -165,6 +166,18 @@ fn main() {
     // TODO: Add tests for LM_WriteMemoryEx
 
     // separator();
+
+    let buffer : [u8;10] = [0;10];
+    println!("[*] Buffer Original: {:?}", buffer);
+    LM_SetMemory(buffer.as_ptr() as usize, 255, buffer.len() * mem::size_of::<u8>());
+    println!("[*] Buffer After LM_SetMemory: {:?}", buffer);
+
+    separator();
+
+    // TODO: Add tests for LM_SetMemoryEx
+
+    // separator();
+
 
 }
 

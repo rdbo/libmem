@@ -28,14 +28,7 @@ fn main() {
 
     println!("[*] Process Enumeration");
 
-    let mut counter = 0;
-    for proc in LM_EnumProcesses() {
-        println!("{}", proc);
-        counter += 1;
-        if counter >= 5 {
-            break;
-        }
-    }
+    print_n(LM_EnumProcesses(), 5);
 
     separator();
 
@@ -81,28 +74,12 @@ fn main() {
     separator();
 
     println!("[*] Current Process - Module Enumeration");
-    let mut counter = 0;
-    for module in LM_EnumModules() {
-        println!("{}", module);
-
-        counter += 1;
-        if counter >= 5 {
-            break;
-        }
-    }
+    print_n(LM_EnumModules(), 5);
 
     separator();
 
     println!("[*] Remote Process - Module Enumeration");
-    let mut counter = 0;
-    for module in LM_EnumModulesEx(&proc) {
-        println!("{}", module);
-
-        counter += 1;
-        if counter >= 5 {
-            break;
-        }
-    }
+    print_n(LM_EnumModulesEx(&proc), 5);
 
     separator();
 
@@ -137,15 +114,7 @@ fn main() {
 
     println!("[*] Current Process - Symbol Enumeration");
     println!("[*] Module: {}", cur_module.get_name());
-    let mut counter = 0;
-    for symbol in LM_EnumSymbols(&cur_module) {
-        println!("{}", symbol);
-
-        counter += 1;
-        if counter >= 5 {
-            break;
-        }
-    }
+    print_n(LM_EnumSymbols(&cur_module), 5);
 
     separator();
 

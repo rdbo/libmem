@@ -133,6 +133,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 	lm_module_t  mod;
 	lm_string_t  curpath;
 
+	mod.size = 0;
 	mod.path[0] = LM_STR('\x00');
 
 #	if LM_OS == LM_OS_BSD
@@ -191,8 +192,10 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 				(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
 			);
 
-			if (callback(&mod, arg) == LM_FALSE)
+			if (callback(&mod, arg) == LM_FALSE) {
+				mod.size = 0; /* prevent last module callback */
 				break;
+			}
 
 			pathlen = LM_STRLEN(curpath);
 			if (pathlen >= LM_ARRLEN(mod.path))
@@ -215,6 +218,9 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 		);
 	}
 
+	/* run a callback for the last module */
+	if (mod.size != 0)
+		callback(&mod, arg);
 
 	ret = LM_TRUE;
 

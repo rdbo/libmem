@@ -232,21 +232,24 @@
 
 /* Flags */
 #if LM_OS == LM_OS_WIN
-#	define LM_PROT_R   (PAGE_READONLY)
-#	define LM_PROT_W   (PAGE_WRITECOPY)
-#	define LM_PROT_X   (PAGE_EXECUTE)
-#	define LM_PROT_RW  (PAGE_READWRITE)
-#	define LM_PROT_XR  (PAGE_EXECUTE_READ)
-#	define LM_PROT_XRW (PAGE_EXECUTE_READWRITE)
+#	define _LM_PROT_R   (PAGE_READONLY)
+#	define _LM_PROT_W   (PAGE_WRITECOPY)
+#	define _LM_PROT_X   (PAGE_EXECUTE)
+#	define _LM_PROT_XR  (PAGE_EXECUTE_READ)
+#	define _LM_PROT_XW  (PAGE_EXECUTE_WRITECOPY)
+#	define _LM_PROT_RW  (PAGE_READWRITE)
+#	define _LM_PROT_XRW (PAGE_EXECUTE_READWRITE)
 #	define LM_PROCESS_ACCESS (PROCESS_ALL_ACCESS)
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_BSD || LM_OS == LM_OS_ANDROID
-#	define LM_PROT_R   (PROT_READ)
-#	define LM_PROT_W   (PROT_WRITE)
-#	define LM_PROT_X   (PROT_EXEC)
-#	define LM_PROT_RW  (PROT_READ | PROT_WRITE)
-#	define LM_PROT_XR  (PROT_EXEC | PROT_READ)
-#	define LM_PROT_XRW (PROT_EXEC | PROT_READ | PROT_WRITE)
+#	define _LM_PROT_R   (PROT_READ)
+#	define _LM_PROT_W   (PROT_WRITE)
+#	define _LM_PROT_X   (PROT_EXEC)
+#	define _LM_PROT_XR  (PROT_EXEC | PROT_READ)
+#	define _LM_PROT_XW  (PROT_EXEC | PROT_WRITE)
+#	define _LM_PROT_RW  (PROT_READ | PROT_WRITE)
+#	define _LM_PROT_XRW (PROT_EXEC | PROT_READ | PROT_WRITE)
 #endif
+#define _LM_PROT_NONE (0)
 
 /* Imports/Exports */
 #if defined(LM_EXPORT)
@@ -396,6 +399,20 @@ typedef int                lm_flags_t;
 
 typedef lm_uint32_t        lm_pid_t;
 typedef lm_uint32_t        lm_tid_t;
+
+enum {
+	LM_PROT_NONE = 0,
+
+	LM_PROT_X = (1 << 0),
+	LM_PROT_R = (1 << 1),
+	LM_PROT_W = (1 << 2),
+
+	LM_PROT_XR = LM_PROT_X | LM_PROT_R,
+	LM_PROT_XW = LM_PROT_X | LM_PROT_W,
+	LM_PROT_RW = LM_PROT_R | LM_PROT_W,
+	LM_PROT_XRW = LM_PROT_X | LM_PROT_R | LM_PROT_W
+};
+
 typedef lm_uint32_t        lm_prot_t;
 
 typedef struct {

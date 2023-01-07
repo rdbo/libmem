@@ -28,6 +28,45 @@
 #	define __NR_mmap2 192
 #endif
 
+LM_PRIVATE lm_prot_t
+_LM_GetRealProt(lm_prot_t prot)
+{
+	lm_prot_t real_prot;
+	switch (prot) {
+	case LM_PROT_NONE: real_prot = _LM_PROT_NONE; break;
+	case LM_PROT_X: real_prot = _LM_PROT_X; break;
+	case LM_PROT_R: real_prot = _LM_PROT_R; break;
+	case LM_PROT_W: real_prot = _LM_PROT_W; break;
+	case LM_PROT_XR: real_prot = _LM_PROT_XR; break;
+	case LM_PROT_XW: real_prot = _LM_PROT_XW; break;
+	case LM_PROT_RW: real_prot = _LM_PROT_RW; break;
+	case LM_PROT_XRW: real_prot = _LM_PROT_XRW; break;
+	default: real_prot = _LM_PROT_NONE; break;
+	}
+
+	return real_prot;
+}
+
+LM_PRIVATE lm_prot_t
+_LM_GetProt(lm_prot_t real_prot)
+{
+	lm_prot_t prot;
+	switch (real_prot) {
+	case _LM_PROT_X: prot = LM_PROT_X; break;
+	case _LM_PROT_R: prot = LM_PROT_R; break;
+	case _LM_PROT_W: prot = LM_PROT_W; break;
+	case _LM_PROT_XR: prot = LM_PROT_XR; break;
+	case _LM_PROT_XW: prot = LM_PROT_XW; break;
+	case _LM_PROT_RW: prot = LM_PROT_RW; break;
+	case _LM_PROT_XRW: prot = LM_PROT_XRW; break;
+	default: prot = LM_PROT_NONE; break;
+	}
+
+	return prot;
+}
+
+/********************************/
+
 LM_API lm_size_t
 LM_ReadMemory(lm_address_t src,
 	      lm_byte_t   *dst,
@@ -282,11 +321,11 @@ _LM_ProtMemory(lm_address_t addr,
 {
 	DWORD old_prot;
 
-	if (!VirtualProtect(addr, size, prot, &old_prot))
+	if (!VirtualProtect(addr, size, _LM_GetRealProt(prot), &old_prot))
 		return LM_FALSE
 
 	if (oldprot)
-		*oldprot = (lm_prot_t)old_prot;
+		*oldprot = _LM_GetProt((lm_prot_t)old_prot);
 
 	return LM_TRUE;
 }
@@ -308,11 +347,11 @@ _LM_ProtMemory(lm_address_t addr,
 		(lm_uintptr_t)addr & (lm_uintptr_t)(-pagesize)
 	);
 
-	if (mprotect((void *)addr, size, prot))
+	if (mprotect((void *)addr, size, _LM_GetRealProt(prot)))
 		return LM_FALSE;
 
 	if (oldprot)
-		*oldprot = page.prot;
+		*oldprot = _LM_GetProt(page.prot);
 
 	return LM_TRUE;
 }
@@ -347,11 +386,11 @@ _LM_ProtMemoryEx(lm_process_t *pproc,
 	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return ret
 
-	if (!VirtualProtectEx(hProcess, addr, size, prot, &old_prot))
+	if (!VirtualProtectEx(hProcess, addr, size, _LM_GetRealProt(prot), &old_prot))
 		goto CLOSE_RET;
 
 	if (oldprot)
-		*oldprot = (lm_prot_t)old_prot;
+		*oldprot = _LM_GetProt((lm_prot_t)old_prot);
 
 	ret = LM_TRUE;
 CLOSE_RET:
@@ -386,7 +425,7 @@ _LM_ProtMemoryEx(lm_process_t *pproc,
 
 	data.arg0 = (lm_uintptr_t)addr; /* addr */
 	data.arg1 = (lm_uintptr_t)size; /* len */
-	data.arg2 = (lm_uintptr_t)prot; /* prot */
+	data.arg2 = (lm_uintptr_t)_LM_GetRealProt(prot); /* prot */
 	data.arg3 = data.arg4 = data.arg5 = 0;
 	if (!_LM_SystemCallEx(pproc, &data, &syscall_ret))
 		return LM_FALSE;
@@ -418,7 +457,7 @@ _LM_AllocMemory(lm_size_t size,
 {
 	lm_address_t alloc;
 
-	alloc = (lm_address_t)VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, prot);
+	alloc = (lm_address_t)VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, _LM_GetRealProt(prot));
 	if (!alloc)
 		alloc = LM_ADDRESS_BAD;
 
@@ -432,7 +471,7 @@ _LM_AllocMemory(lm_size_t size,
 	lm_address_t alloc;
 
 	alloc = (lm_address_t)(
-		mmap(NULL, size, prot, MAP_PRIVATE | MAP_ANON, -1, 0)
+		mmap(NULL, size, _LM_GetRealProt(prot), MAP_PRIVATE | MAP_ANON, -1, 0)
 	);
 
 	if (alloc == (lm_address_t)MAP_FAILED)
@@ -466,7 +505,7 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 		return alloc;
 
 	alloc = (lm_address_t)VirtualAllocEx(hProcess, NULL, size,
-					     MEM_COMMIT | MEM_RESERVE, prot);
+					     MEM_COMMIT | MEM_RESERVE, _LM_GetRealProt(prot));
 	if (!alloc)
 		alloc = LM_ADDRESS_BAD;
 
@@ -494,7 +533,7 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 
 	data.arg0 = 0; /* addr */
 	data.arg1 = (lm_uintptr_t)size; /* length */
-	data.arg2 = (lm_uintptr_t)prot; /* prot */
+	data.arg2 = (lm_uintptr_t)_LM_GetRealProt(prot); /* prot */
 	data.arg3 = (lm_uintptr_t)(MAP_PRIVATE | MAP_ANON); /* flags */
 	data.arg4 = (lm_uintptr_t)-1; /* fd */
 	data.arg5 = (lm_uintptr_t)0; /* offset */

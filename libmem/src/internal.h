@@ -95,6 +95,12 @@ _LM_GetNameFromPath(lm_char_t *path,
 		    lm_char_t *namebuf,
 		    lm_size_t  maxlen);
 
+LM_PRIVATE lm_prot_t
+_LM_GetRealProt(lm_prot_t prot); /* turn libmem flags into OS-specific flags */
+
+LM_PRIVATE lm_prot_t
+_LM_GetProt(lm_prot_t prot); /* turn OS-specific flags into libmem flags */
+
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_OpenProc(lm_process_t *pproc,

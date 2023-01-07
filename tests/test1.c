@@ -123,7 +123,7 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[*] Dissassembly (main):\n"));
-	LM_ProtMemory((lm_address_t)main, LM_PROT_XRW, 100, LM_NULLPTR);
+	LM_ProtMemory((lm_address_t)main, 100, LM_PROT_XRW, LM_NULLPTR);
 	for (disasm_count = 0; disasm_count < 5; ++disasm_count) {
 		memset((void *)&inst, 0x0, sizeof(inst));
 		LM_Disassemble((lm_address_t)LM_OFFSET(main_sym, disasm_bytes), &inst);

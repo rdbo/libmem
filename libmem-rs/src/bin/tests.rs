@@ -169,7 +169,7 @@ fn main() {
 
     let buffer : [u8;10] = [0;10];
     println!("[*] Buffer Original: {:?}", buffer);
-    LM_SetMemory(buffer.as_ptr() as usize, 255, buffer.len() * mem::size_of::<u8>());
+    LM_SetMemory(buffer.as_ptr() as usize, 255, buffer.len() * mem::size_of::<u8>()).unwrap();
     println!("[*] Buffer After LM_SetMemory: {:?}", buffer);
 
     separator();

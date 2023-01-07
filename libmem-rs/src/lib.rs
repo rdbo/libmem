@@ -27,6 +27,7 @@
 
 use std::fmt;
 use std::ffi::{CStr, CString};
+use std::mem;
 
 /* Note: the types and structures must be
  * the same size and aligned with their C variations.
@@ -281,6 +282,8 @@ mod libmem_c {
         pub(super) fn LM_GetPage(addr : lm_address_t, pagebuf : *mut lm_page_t) -> lm_bool_t;
         pub(super) fn LM_GetPageEx(pproc : *const lm_process_t, addr : lm_address_t, pagebuf : *mut lm_page_t) -> lm_bool_t;
         /****************************************/
+        pub(super) fn LM_ReadMemory(src : lm_address_t, dst : *mut u8, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_ReadMemoryEx(pproc : *const lm_process_t, src : lm_address_t, dst : *mut u8, size : lm_size_t) -> lm_size_t;
     }
 }
 
@@ -666,4 +669,20 @@ pub fn LM_GetPageEx(pproc : &lm_process_t, addr : usize) -> Option<lm_page_t> {
 }
 
 /****************************************/
+
+pub fn LM_ReadMemory<T>(src : usize) -> Option<T> {
+    let read_data : T;
+
+    unsafe {
+        let src = src as lm_address_t;
+        let dst = &mut read_data as *mut T as *mut u8;
+        let size = mem::size_of::<T>() as lm_size_t;
+
+        if libmem_c::LM_ReadMemory(src, dst, size) == size {
+            Some(read_data)
+        } else {
+            None
+        }
+    }
+}
 

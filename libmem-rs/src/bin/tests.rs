@@ -142,5 +142,7 @@ fn main() {
     println!("{}", LM_GetPageEx(&proc, module.get_base()).unwrap());
 
     separator();
+
+    let number = 1337;
 }
 

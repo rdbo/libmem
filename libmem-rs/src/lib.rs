@@ -84,6 +84,7 @@ fn protection_string(prot : lm_prot_t) -> &'static str {
         LM_PROT_W => "LM_PROT_W",
         LM_PROT_XR => "LM_PROT_XR",
         LM_PROT_XW => "LM_PROT_XW",
+        LM_PROT_RW => "LM_PROT_RW",
         LM_PROT_XRW => "LM_PROT_XRW",
         _ => "LM_PROT_NONE"
     }
@@ -276,6 +277,7 @@ mod libmem_c {
         pub(super) fn LM_FindSymbolAddress(pmod : *const lm_module_t, name : lm_cstring_t) -> lm_address_t;
         /****************************************/
         pub(super) fn LM_EnumPages(callback : extern "C" fn(*const lm_page_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_EnumPagesEx(pproc : *const lm_process_t, callback : extern "C" fn(*const lm_page_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
     }
 }
 
@@ -608,6 +610,20 @@ pub fn LM_EnumPages() -> Vec<lm_page_t> {
         let callback = LM_EnumPagesCallback;
         let arg = &mut page_list as *mut Vec<lm_page_t> as *mut ();
         if libmem_c::LM_EnumPages(callback, arg) == LM_FALSE {
+            page_list.clear();
+        }
+    }
+
+    page_list
+}
+
+pub fn LM_EnumPagesEx(pproc : &lm_process_t) -> Vec<lm_page_t> {
+    let mut page_list : Vec<lm_page_t> = Vec::new();
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let callback = LM_EnumPagesCallback;
+        let arg = &mut page_list as *mut Vec<lm_page_t> as *mut ();
+        if libmem_c::LM_EnumPagesEx(pproc, callback, arg) == LM_FALSE {
             page_list.clear();
         }
     }

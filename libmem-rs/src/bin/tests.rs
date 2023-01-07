@@ -123,8 +123,14 @@ fn main() {
 
     separator();
 
+    println!("[*] Current Process - Page Enumeration");
     print_n(LM_EnumPages(), 5);
-    
+   
+    separator();
+
+    println!("[*] Remote Process - Page Enumeration");
+    print_n(LM_EnumPagesEx(&proc), 5);
+
     separator();
 
     println!("[*] Current Process - Page at: {:#x}", cur_module.get_base());

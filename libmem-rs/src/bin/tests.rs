@@ -43,7 +43,7 @@ fn main() {
     separator();
 
     let is_alive = LM_IsProcessAlive(&proc);
-    println!("[*] Is the remote process alive? {}", if is_alive { "yes" } else { "no" });
+    println!("[*] Is the Remote Process Alive? {}", if is_alive { "yes" } else { "no" });
 
     separator();
 
@@ -52,19 +52,11 @@ fn main() {
 
     separator();
 
-    print!("[*] Current Process Threads: ");
-    for tid in LM_EnumThreadIds() {
-        print!("{} ", tid);
-    }
-    println!();
+    println!("[*] Current Process Threads: {:?}", LM_EnumThreadIds());
 
     separator();
 
-    print!("[*] Remote Process Threads: ");
-    for tid in LM_EnumThreadIdsEx(&proc) {
-        print!("{} ", tid);
-    }
-    println!();
+    println!("[*] Remote Process Threads: {:?}", LM_EnumThreadIdsEx(&proc));
 
     separator();
 

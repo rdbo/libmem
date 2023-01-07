@@ -178,6 +178,16 @@ fn main() {
 
     // separator();
 
+    let old_prot = LM_ProtMemory(some_function_addr, 0x1000, LM_PROT_XRW).unwrap();
+    println!("[*] Original Protection of '{:#x}': {}", some_function_addr, old_prot);
+    let prot = LM_ProtMemory(some_function_addr, 0x1000, old_prot).unwrap();
+    println!("[*] Reverted Protection (from '{}' back to '{}')", prot, old_prot);
 
+    separator();
+
+    let old_prot = LM_ProtMemoryEx(&proc, module.get_base(), 0x1000, LM_PROT_XRW).unwrap();
+    println!("[*] Remote - Original Protection of '{:#x}': {}", module.get_base(), old_prot);
+    let prot = LM_ProtMemoryEx(&proc, module.get_base(), 0x1000, old_prot).unwrap();
+    println!("[*] Remote - Reverted Protection (from '{}' back to '{}')", prot, old_prot);
 }
 

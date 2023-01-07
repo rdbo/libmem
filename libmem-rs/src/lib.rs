@@ -288,6 +288,8 @@ mod libmem_c {
         pub(super) fn LM_WriteMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, src : *const u8, size : lm_size_t) -> lm_size_t;
         pub(super) fn LM_SetMemory(dst : lm_address_t, byte : u8, size : lm_size_t) -> lm_size_t;
         pub(super) fn LM_SetMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, byte : u8, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_ProtMemory(addr : lm_address_t, size : lm_size_t, prot : lm_prot_t, oldprot : *mut lm_prot_t) -> lm_bool_t;
+        pub(super) fn LM_ProtMemoryEx(pproc : *const lm_process_t, addr : lm_address_t, size : lm_size_t, prot : lm_prot_t, oldprot : *mut lm_prot_t) -> lm_bool_t;
     }
 }
 
@@ -752,6 +754,31 @@ pub fn LM_SetMemoryEx(pproc : &lm_process_t, dst : usize, byte : u8, size : usiz
             Ok(())
         } else {
             Err("LM_SetMemoryEx failed internally")
+        }
+    }
+}
+
+pub fn LM_ProtMemory(addr : usize, size : usize, prot : u32) -> Option<u32> {
+    let mut oldprot = LM_PROT_NONE;
+    unsafe {
+        let poldprot = &mut oldprot as *mut lm_prot_t;
+        if libmem_c::LM_ProtMemory(addr, size, prot, poldprot) != LM_FALSE {
+            Some(oldprot)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_ProtMemoryEx(pproc : &lm_process_t, addr : usize, size : usize, prot : u32) -> Option<u32> {
+    let mut oldprot = LM_PROT_NONE;
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let poldprot = &mut oldprot as *mut lm_prot_t;
+        if libmem_c::LM_ProtMemoryEx(pproc, addr, size, prot, poldprot) != LM_FALSE {
+            Some(oldprot)
+        } else {
+            None
         }
     }
 }

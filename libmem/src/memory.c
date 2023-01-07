@@ -351,7 +351,7 @@ _LM_ProtMemory(lm_address_t addr,
 		return LM_FALSE;
 
 	if (oldprot)
-		*oldprot = _LM_GetProt(page.prot);
+		*oldprot = page.prot;
 
 	return LM_TRUE;
 }

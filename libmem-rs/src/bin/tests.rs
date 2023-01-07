@@ -148,5 +148,23 @@ fn main() {
     let read_number : i32 = LM_ReadMemory(number_addr).unwrap();
     println!("[*] Number Value: {}", number);
     println!("[*] Read Number Value: {}", read_number);
+
+    separator();
+
+    // TODO: Add tests for LM_ReadMemoryEx
+
+    // separator();
+
+    let value = 69;
+    LM_WriteMemory(number_addr, &value).unwrap();
+    println!("[*] Value to write: {}", value);
+    println!("[*] Number Value: {}", number);
+
+    separator();
+
+    // TODO: Add tests for LM_WriteMemoryEx
+
+    // separator();
+
 }
 

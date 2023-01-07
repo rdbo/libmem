@@ -143,6 +143,10 @@ fn main() {
 
     separator();
 
-    let number = 1337;
+    let number : i32 = 1337;
+    let number_addr = &number as *const i32 as usize;
+    let read_number : i32 = LM_ReadMemory(number_addr).unwrap();
+    println!("[*] Number Value: {}", number);
+    println!("[*] Read Number Value: {}", read_number);
 }
 

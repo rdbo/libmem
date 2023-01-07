@@ -186,10 +186,14 @@ fn main() {
 
     let alloc = LM_AllocMemory(0x1000, LM_PROT_XRW).unwrap();
     println!("[*] Allocated Memory: {:#x}", alloc);
+    LM_FreeMemory(alloc, 0x1000).unwrap();
+    println!("[*] Freed Memory");
 
     separator();
 
     let alloc = LM_AllocMemoryEx(&proc, 0x1000, LM_PROT_XRW).unwrap();
     println!("[*] Remote - Allocated Memory: {:#x}", alloc);
+    LM_FreeMemoryEx(&proc, alloc, 0x1000).unwrap();
+    println!("[*] Remote - Freed Memory");
 }
 

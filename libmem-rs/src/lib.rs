@@ -292,6 +292,8 @@ mod libmem_c {
         pub(super) fn LM_ProtMemoryEx(pproc : *const lm_process_t, addr : lm_address_t, size : lm_size_t, prot : lm_prot_t, oldprot : *mut lm_prot_t) -> lm_bool_t;
         pub(super) fn LM_AllocMemory(size : lm_size_t, prot : lm_prot_t) -> lm_address_t;
         pub(super) fn LM_AllocMemoryEx(pproc : *const lm_process_t, size : lm_size_t, prot : lm_prot_t) -> lm_address_t;
+        pub(super) fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> lm_bool_t;
+        pub(super) fn LM_FreeMemoryEx(pproc : *const lm_process_t, alloc : lm_address_t, size : lm_size_t) -> lm_bool_t;
     }
 }
 
@@ -804,6 +806,27 @@ pub fn LM_AllocMemoryEx(pproc : &lm_process_t, size : usize, prot : u32) -> Opti
             Some(alloc)
         } else {
             None
+        }
+    }
+}
+
+pub fn LM_FreeMemory(alloc : usize, size : usize) -> Result<(), &'static str> {
+    unsafe {
+        if libmem_c::LM_FreeMemory(alloc, size) != LM_FALSE {
+            Ok(())
+        } else {
+            Err("LM_FreeMemory failed internally")
+        }
+    }
+}
+
+pub fn LM_FreeMemoryEx(pproc : &lm_process_t, alloc : usize, size : usize) -> Result<(), &'static str> {
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        if libmem_c::LM_FreeMemoryEx(pproc, alloc, size) != LM_FALSE {
+            Ok(())
+        } else {
+            Err("LM_FreeMemory failed internally")
         }
     }
 }

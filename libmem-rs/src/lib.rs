@@ -290,6 +290,8 @@ mod libmem_c {
         pub(super) fn LM_SetMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, byte : u8, size : lm_size_t) -> lm_size_t;
         pub(super) fn LM_ProtMemory(addr : lm_address_t, size : lm_size_t, prot : lm_prot_t, oldprot : *mut lm_prot_t) -> lm_bool_t;
         pub(super) fn LM_ProtMemoryEx(pproc : *const lm_process_t, addr : lm_address_t, size : lm_size_t, prot : lm_prot_t, oldprot : *mut lm_prot_t) -> lm_bool_t;
+        pub(super) fn LM_AllocMemory(size : lm_size_t, prot : lm_prot_t) -> lm_address_t;
+        pub(super) fn LM_AllocMemoryEx(pproc : *const lm_process_t, size : lm_size_t, prot : lm_prot_t) -> lm_address_t;
     }
 }
 
@@ -777,6 +779,29 @@ pub fn LM_ProtMemoryEx(pproc : &lm_process_t, addr : usize, size : usize, prot :
         let poldprot = &mut oldprot as *mut lm_prot_t;
         if libmem_c::LM_ProtMemoryEx(pproc, addr, size, prot, poldprot) != LM_FALSE {
             Some(oldprot)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_AllocMemory(size : usize, prot : u32) -> Option<usize> {
+    unsafe {
+        let alloc = libmem_c::LM_AllocMemory(size, prot);
+        if alloc != LM_ADDRESS_BAD {
+            Some(alloc)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_AllocMemoryEx(pproc : &lm_process_t, size : usize, prot : u32) -> Option<usize> {
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let alloc = libmem_c::LM_AllocMemoryEx(pproc, size, prot);
+        if alloc != LM_ADDRESS_BAD {
+            Some(alloc)
         } else {
             None
         }

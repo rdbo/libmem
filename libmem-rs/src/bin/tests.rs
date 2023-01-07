@@ -181,5 +181,15 @@ fn main() {
     println!("[*] Remote - Original Protection of '{:#x}': {}", module.get_base(), old_prot);
     let prot = LM_ProtMemoryEx(&proc, module.get_base(), 0x1000, old_prot).unwrap();
     println!("[*] Remote - Reverted Protection (from '{}' back to '{}')", prot, old_prot);
+
+    separator();
+
+    let alloc = LM_AllocMemory(0x1000, LM_PROT_XRW).unwrap();
+    println!("[*] Allocated Memory: {:#x}", alloc);
+
+    separator();
+
+    let alloc = LM_AllocMemoryEx(&proc, 0x1000, LM_PROT_XRW).unwrap();
+    println!("[*] Remote - Allocated Memory: {:#x}", alloc);
 }
 

@@ -40,12 +40,20 @@ type lm_string_t = *const lm_char_t;
 type lm_cstring_t = *const lm_cchar_t;
 type lm_size_t = usize;
 type lm_address_t = usize;
-type lm_prot_t = u32
+type lm_prot_t = u32;
 
 const LM_FALSE : lm_bool_t = 0;
 const LM_TRUE : lm_bool_t = 1;
 const LM_ADDRESS_BAD : lm_address_t = 0;
 const LM_PATH_MAX : lm_size_t = 512;
+pub const LM_PROT_NONE : lm_prot_t = 0;
+pub const LM_PROT_X : lm_prot_t = 1 << 0;
+pub const LM_PROT_R : lm_prot_t = 1 << 1;
+pub const LM_PROT_W : lm_prot_t = 1 << 2;
+pub const LM_PROT_XR : lm_prot_t = LM_PROT_X | LM_PROT_R;
+pub const LM_PROT_XW : lm_prot_t = LM_PROT_X | LM_PROT_W;
+pub const LM_PROT_RW : lm_prot_t = LM_PROT_R | LM_PROT_W;
+pub const LM_PROT_XRW : lm_prot_t = LM_PROT_X | LM_PROT_R | LM_PROT_W;
 
 fn string_from_cstring(cstring : &[u8]) -> String {
     // This function finds the null terminator from
@@ -67,6 +75,18 @@ fn string_from_cstring(cstring : &[u8]) -> String {
     }
 
     String::from_utf8_lossy(&cstring).to_string()
+}
+
+fn protection_string(prot : lm_prot_t) -> &'static str {
+    match prot {
+        LM_PROT_X => "LM_PROT_X",
+        LM_PROT_R => "LM_PROT_R",
+        LM_PROT_W => "LM_PROT_W",
+        LM_PROT_XR => "LM_PROT_XR",
+        LM_PROT_XW => "LM_PROT_XW",
+        LM_PROT_XRW => "LM_PROT_XRW",
+        _ => "LM_PROT_NONE"
+    }
 }
 
 #[repr(C)]
@@ -194,6 +214,34 @@ pub struct lm_page_t {
     prot : lm_prot_t
 }
 
+impl lm_page_t {
+    pub fn new() -> Self {
+        Self { base: LM_ADDRESS_BAD, end: LM_ADDRESS_BAD, size: 0, prot: LM_PROT_NONE }
+    }
+
+    pub fn get_base(&self) -> usize {
+        self.base
+    }
+
+    pub fn get_end(&self) -> usize {
+        self.end
+    }
+
+    pub fn get_size(&self) -> usize {
+        self.size
+    }
+
+    pub fn get_prot(&self) -> u32 {
+        self.prot
+    }
+}
+
+impl fmt::Display for lm_page_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "lm_symbol_t {{ base: {:#x}, end: {:#x}, size: {:#x}, prot: {} }}", self.get_base(), self.get_end(), self.get_size(), protection_string(self.get_prot()))
+    }
+}
+
 // Raw libmem calls
 mod libmem_c {
     use crate::*;
@@ -227,12 +275,12 @@ mod libmem_c {
         pub(super) fn LM_EnumSymbols(pmod : *const lm_module_t, callback : extern "C" fn(*const lm_symbol_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
         pub(super) fn LM_FindSymbolAddress(pmod : *const lm_module_t, name : lm_cstring_t) -> lm_address_t;
         /****************************************/
-
+        pub(super) fn LM_EnumPages(callback : extern "C" fn(*const lm_page_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
     }
 }
 
 // Rustified libmem calls
-extern "C" fn _LM_EnumProcessesCallback(pproc : *const lm_process_t, arg : *mut ()) -> i32 {
+extern "C" fn _LM_EnumProcessesCallback(pproc : *const lm_process_t, arg : *mut ()) -> lm_bool_t {
     let proc_list_ptr = arg as *mut Vec<lm_process_t>;
     unsafe {
         (*proc_list_ptr).push(*pproc);
@@ -542,5 +590,28 @@ pub fn LM_FindSymbolAddress(pmod : &lm_module_t, name : &str) -> Option<usize> {
             val => Some(val)
         }
     }
+}
+
+/****************************************/
+
+extern "C" fn LM_EnumPagesCallback(ppage : *const lm_page_t, arg : *mut ()) -> lm_bool_t {
+    let page_list_ptr = arg as *mut Vec<lm_page_t>;
+    unsafe {
+        (*page_list_ptr).push(*ppage);
+    }
+    LM_TRUE
+}
+
+pub fn LM_EnumPages() -> Vec<lm_page_t> {
+    let mut page_list : Vec<lm_page_t> = Vec::new();
+    unsafe {
+        let callback = LM_EnumPagesCallback;
+        let arg = &mut page_list as *mut Vec<lm_page_t> as *mut ();
+        if libmem_c::LM_EnumPages(callback, arg) == LM_FALSE {
+            page_list.clear();
+        }
+    }
+
+    page_list
 }
 

@@ -1,4 +1,5 @@
 use libmem::*;
+use std::fmt;
 
 fn separator() {
     println!("====================");
@@ -7,6 +8,17 @@ fn separator() {
 #[no_mangle]
 pub extern "C" fn some_function() {
 
+}
+
+fn print_n<T>(vec : Vec<T>, n : usize)
+where T : fmt::Display {
+    for i in 0..n {
+        if i > vec.len() {
+            break;
+        }
+
+        println!("{}", vec[i]);
+    }
 }
 
 fn main() {
@@ -141,6 +153,10 @@ fn main() {
     println!("[*] Address of 'some_function': {:p}", some_function as *const ());
     println!("[*] Symbol Address Lookup:      {:#x}", some_function_addr);
 
+    separator();
+
+    print_n(LM_EnumPages(), 5);
+    
     separator();
 }
 

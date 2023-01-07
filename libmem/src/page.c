@@ -183,7 +183,7 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 	if (!maps_file)
 		goto FREE_EXIT;
 
-	while (LM_GETLINE(&maps_line, &maps_line_len, maps_file)) {
+	while (LM_GETLINE(&maps_line, &maps_line_len, maps_file) > 0) {
 		if (regexec(&regex, maps_line, LM_ARRLEN(matches), matches, 0))
 			continue;
 

@@ -57,7 +57,7 @@ fn main() {
     let func_addr = some_function as *const () as lm_address_t;
     let hk_addr = hk_some_function as *const () as lm_address_t;
     println!("[*] Hooking 'some_function'");
-    println!("[*] Original Address: {:#x}", func_addr;
+    println!("[*] Original Address: {:#x}", func_addr);
 
     let trampoline = LM_HookCode(func_addr, hk_addr).unwrap();
     println!("[*] Trampoline: {:#x?}", trampoline);

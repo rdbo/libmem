@@ -112,6 +112,16 @@ After installing, follow the the proper `Usage` section for your programming lan
 Add `#include <libmem/libmem.h>` (C) or `#include <libmem/libmem.hpp>` (C++) to your source code
 Link the generated libmem library against your binary (`libmem.so` for Unix-like or `libmem.dll` for Windows)
 
+## Usage (Rust)
+Add the following line to your `Cargo.toml` under `[dependencies]`:
+```
+libmem = "0.1.0"
+```
+Import libmem in your Rust source code:
+```rust
+use libmem::*;
+```
+
 ## Usage (Python)
 Make sure to have Python >= 3.6 active  
 Either install the `libmem` package from PyPi by running the following command:  

@@ -37,6 +37,7 @@ type lm_char_t = u8;
 type lm_cchar_t = u8;
 type lm_string_t = *const lm_char_t;
 type lm_cstring_t = *const lm_cchar_t;
+type lm_bytearr_t = *const lm_byte_t;
 
 pub type lm_pid_t = u32;
 pub type lm_tid_t = u32;
@@ -285,18 +286,21 @@ mod libmem_c {
         pub(super) fn LM_GetPage(addr : lm_address_t, pagebuf : *mut lm_page_t) -> lm_bool_t;
         pub(super) fn LM_GetPageEx(pproc : *const lm_process_t, addr : lm_address_t, pagebuf : *mut lm_page_t) -> lm_bool_t;
         /****************************************/
-        pub(super) fn LM_ReadMemory(src : lm_address_t, dst : *mut u8, size : lm_size_t) -> lm_size_t;
-        pub(super) fn LM_ReadMemoryEx(pproc : *const lm_process_t, src : lm_address_t, dst : *mut u8, size : lm_size_t) -> lm_size_t;
-        pub(super) fn LM_WriteMemory(dst : lm_address_t, src : *const u8, size : lm_size_t) -> lm_size_t;
-        pub(super) fn LM_WriteMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, src : *const u8, size : lm_size_t) -> lm_size_t;
-        pub(super) fn LM_SetMemory(dst : lm_address_t, byte : u8, size : lm_size_t) -> lm_size_t;
-        pub(super) fn LM_SetMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, byte : u8, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_ReadMemory(src : lm_address_t, dst : *mut lm_byte_t, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_ReadMemoryEx(pproc : *const lm_process_t, src : lm_address_t, dst : *mut lm_byte_t, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_WriteMemory(dst : lm_address_t, src : *const lm_byte_t, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_WriteMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, src : *const lm_byte_t, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_SetMemory(dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_SetMemoryEx(pproc : *const lm_process_t, dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> lm_size_t;
         pub(super) fn LM_ProtMemory(addr : lm_address_t, size : lm_size_t, prot : lm_prot_t, oldprot : *mut lm_prot_t) -> lm_bool_t;
         pub(super) fn LM_ProtMemoryEx(pproc : *const lm_process_t, addr : lm_address_t, size : lm_size_t, prot : lm_prot_t, oldprot : *mut lm_prot_t) -> lm_bool_t;
         pub(super) fn LM_AllocMemory(size : lm_size_t, prot : lm_prot_t) -> lm_address_t;
         pub(super) fn LM_AllocMemoryEx(pproc : *const lm_process_t, size : lm_size_t, prot : lm_prot_t) -> lm_address_t;
         pub(super) fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> lm_bool_t;
         pub(super) fn LM_FreeMemoryEx(pproc : *const lm_process_t, alloc : lm_address_t, size : lm_size_t) -> lm_bool_t;
+        /****************************************/
+        pub(super) fn LM_DataScan(data : lm_bytearr_t, size : lm_size_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
+        pub(super) fn LM_DataScanEx(pproc : *const lm_process_t, data : lm_bytearr_t, size : lm_size_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
     }
 }
 
@@ -686,7 +690,7 @@ pub fn LM_ReadMemory<T>(src : lm_address_t) -> Option<T> {
 
     unsafe {
         let src = src as lm_address_t;
-        let dst = read_data.as_mut_ptr() as *mut u8;
+        let dst = read_data.as_mut_ptr() as *mut lm_byte_t;
         let size = mem::size_of::<T>() as lm_size_t;
 
         if libmem_c::LM_ReadMemory(src, dst, size) == size {
@@ -703,7 +707,7 @@ pub fn LM_ReadMemoryEx<T>(pproc : &lm_process_t, src : lm_address_t) -> Option<T
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let src = src as lm_address_t;
-        let dst = read_data.as_mut_ptr() as *mut u8;
+        let dst = read_data.as_mut_ptr() as *mut lm_byte_t;
         let size = mem::size_of::<T>() as lm_size_t;
 
         if libmem_c::LM_ReadMemoryEx(pproc, src, dst, size) == size {
@@ -717,7 +721,7 @@ pub fn LM_ReadMemoryEx<T>(pproc : &lm_process_t, src : lm_address_t) -> Option<T
 pub fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Result<(), &'static str> {
     unsafe {
         let dst = dst as lm_address_t;
-        let src = value as *const T as *const u8;
+        let src = value as *const T as *const lm_byte_t;
         let size = mem::size_of::<T>() as lm_size_t;
 
         if libmem_c::LM_WriteMemory(dst, src, size) == size {
@@ -731,7 +735,7 @@ pub fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Result<(), &'static 
 pub fn LM_WriteMemoryEx<T>(pproc : &lm_process_t, dst : lm_address_t, value : &T) -> Result<(), &'static str> {
     unsafe {
         let pproc = pproc as *const lm_process_t;
-        let src = value as *const T as *const u8;
+        let src = value as *const T as *const lm_byte_t;
         let size = mem::size_of::<T>() as lm_size_t;
 
         if libmem_c::LM_WriteMemoryEx(pproc, dst, src, size) == size {
@@ -828,6 +832,31 @@ pub fn LM_FreeMemoryEx(pproc : &lm_process_t, alloc : lm_address_t, size : lm_si
             Ok(())
         } else {
             Err("LM_FreeMemory failed internally")
+        }
+    }
+}
+
+/****************************************/
+
+pub fn LM_DataScan(data : &[lm_byte_t], addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+    unsafe {
+        let size = data.len();
+        let data = data.as_ptr() as lm_bytearr_t;
+        match libmem_c::LM_DataScan(data, size, addr, scansize) {
+            LM_ADDRESS_BAD => None,
+            scanaddr => Some(scanaddr)
+        }
+    }
+}
+
+pub fn LM_DataScanEx(pproc : &lm_process_t, data : &[lm_byte_t], addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let size = data.len();
+        let data = data.as_ptr() as lm_bytearr_t;
+        match libmem_c::LM_DataScanEx(pproc, data, size, addr, scansize) {
+            LM_ADDRESS_BAD => None,
+            scanaddr => Some(scanaddr)
         }
     }
 }

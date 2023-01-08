@@ -195,5 +195,21 @@ fn main() {
     println!("[*] Remote - Allocated Memory: {:#x}", alloc);
     LM_FreeMemoryEx(&proc, alloc, 0x1000).unwrap();
     println!("[*] Remote - Freed Memory");
+
+    separator();
+
+    let scan_me : [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    let scan_me_addr = scan_me.as_ptr() as lm_address_t;
+    let scan_start = scan_me_addr - 0x10; // start the scan before the 'scan_me' address
+    let scan_size = 0xFF;
+    let scan_addr = LM_DataScan(&scan_me, scan_start, scan_size).unwrap();
+    println!("[*] Real ScanMe Address: {:#x}", scan_me_addr);
+    println!("[*] Data Scan Address: {:#x}", scan_addr);
+
+    separator();
+
+    // TODO: Test LM_DataScanEx
+
+    // separator();
 }
 

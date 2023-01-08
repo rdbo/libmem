@@ -1,6 +1,6 @@
 [package]
 name = "libmem"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["rdbo"]
 edition = "2021"
 # rust-version: "1.64.0"

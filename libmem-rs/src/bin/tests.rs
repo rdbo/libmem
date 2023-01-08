@@ -96,7 +96,7 @@ fn main() {
 
     separator();
 
-    let module = LM_FindModuleEx(&proc, "firefox-esr").unwrap();
+    let module = LM_FindModuleEx(&proc, &proc.get_name()).unwrap();
     println!("[*] Remote Process Module: {}", module);
 
     separator();

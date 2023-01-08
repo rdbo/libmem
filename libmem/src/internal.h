@@ -82,15 +82,6 @@ _LM_GetProcessPathEx(lm_pid_t   pid,
 		     lm_size_t  maxlen);
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessName(lm_char_t *namebuf,
-		   lm_size_t  maxlen);
-
-LM_PRIVATE lm_size_t
-_LM_GetProcessNameEx(lm_pid_t   pid,
-		     lm_char_t *namebuf,
-		     lm_size_t  maxlen);
-
-LM_PRIVATE lm_size_t
 _LM_GetNameFromPath(lm_char_t *path,
 		    lm_char_t *namebuf,
 		    lm_size_t  maxlen);

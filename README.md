@@ -1,4 +1,4 @@
-![libmem-logo](LOGO.png)  
+![libmem-logo](https://raw.githubusercontent.com/rdbo/libmem/master/LOGO.png)  
 ### Made by rdbo
 #  
 

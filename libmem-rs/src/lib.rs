@@ -303,6 +303,8 @@ mod libmem_c {
         pub(super) fn LM_DataScanEx(pproc : *const lm_process_t, data : lm_bytearr_t, size : lm_size_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
         pub(super) fn LM_PatternScan(pattern : lm_bytearr_t, mask : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
         pub(super) fn LM_PatternScanEx(pproc : *const lm_process_t, pattern : lm_bytearr_t, mask : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
+        pub(super) fn LM_SigScan(sig : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
+        pub(super) fn LM_SigScanEx(pproc : *const lm_process_t, sig : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
     }
 }
 
@@ -892,6 +894,39 @@ pub fn LM_PatternScanEx(pproc : &lm_process_t, pattern : &[u8], mask : &str, add
         let pattern = pattern.as_ptr() as lm_bytearr_t;
         let mask = mask.as_ptr() as lm_string_t;
         match libmem_c::LM_PatternScanEx(pproc, pattern, mask, addr, scansize) {
+            LM_ADDRESS_BAD => None,
+            scanaddr => Some(scanaddr)
+        }
+    }
+}
+
+pub fn LM_SigScan(sig : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+    let sig = match CString::new(sig.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let sig = sig.as_ptr() as lm_string_t;
+        match libmem_c::LM_SigScan(sig, addr, scansize) {
+            LM_ADDRESS_BAD => None,
+            scanaddr => Some(scanaddr)
+        }
+    }
+}
+
+pub fn LM_SigScanEx(pproc : &lm_process_t, sig : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+    let sig = match CString::new(sig.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let sig = sig.as_ptr() as lm_string_t;
+        match libmem_c::LM_SigScanEx(pproc, sig, addr, scansize) {
             LM_ADDRESS_BAD => None,
             scanaddr => Some(scanaddr)
         }

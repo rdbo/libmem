@@ -204,13 +204,15 @@ fn main() {
     let scan_size = 0xFF;
     let data_scan = LM_DataScan(&scan_me, scan_start, scan_size).unwrap();
     let pattern_scan = LM_PatternScan(&scan_me, "xxxx?xxxx?", scan_start, scan_size).unwrap();
+    let sig_scan = LM_SigScan("01 02 03 04 ?? 06 07 08 09 ??", scan_start, scan_size).unwrap();
     println!("[*] Real ScanMe Address: {:#x}", scan_me_addr);
     println!("[*] Data Scan Address: {:#x}", data_scan);
     println!("[*] Pattern Scan Address: {:#x}", pattern_scan);
+    println!("[*] Signature Scan Address: {:#x}", sig_scan);
 
     separator();
 
-    // TODO: Test LM_DataScanEx, LM_PatternScanEx
+    // TODO: Test LM_DataScanEx, LM_PatternScanEx, LM_SigScanEx
 
     // separator();
 }

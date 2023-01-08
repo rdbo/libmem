@@ -305,6 +305,11 @@ mod libmem_c {
         pub(super) fn LM_PatternScanEx(pproc : *const lm_process_t, pattern : lm_bytearr_t, mask : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
         pub(super) fn LM_SigScan(sig : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
         pub(super) fn LM_SigScanEx(pproc : *const lm_process_t, sig : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
+        /****************************************/
+        pub(super) fn LM_HookCode(from : lm_address_t, to : lm_address_t, ptrampoline : *mut lm_address_t) -> lm_size_t;
+        pub(super) fn LM_HookCodeEx(pproc : *const lm_process_t, from : lm_address_t, to : lm_address_t, ptrampoline : *mut lm_address_t) -> lm_size_t;
+        pub(super) fn LM_UnhookCode(from : lm_address_t, trampoline : lm_address_t, size : lm_size_t) -> lm_bool_t;
+        pub(super) fn LM_UnhookCodeEx(pproc : *const lm_process_t, from : lm_address_t, trampoline : lm_address_t, size : lm_size_t) -> lm_bool_t;
     }
 }
 
@@ -929,6 +934,58 @@ pub fn LM_SigScanEx(pproc : &lm_process_t, sig : &str, addr : lm_address_t, scan
         match libmem_c::LM_SigScanEx(pproc, sig, addr, scansize) {
             LM_ADDRESS_BAD => None,
             scanaddr => Some(scanaddr)
+        }
+    }
+}
+
+/****************************************/
+
+pub fn LM_HookCode(from : lm_address_t, to : lm_address_t) -> Option<(lm_address_t, lm_size_t)> {
+    let mut trampoline = LM_ADDRESS_BAD;
+
+    unsafe {
+        let ptrampoline = &mut trampoline as *mut lm_address_t;
+        let size = libmem_c::LM_HookCode(from, to, ptrampoline);
+        if size > 0 {
+            Some((trampoline, size))
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_HookCodeEx(pproc : &lm_process_t, from : lm_address_t, to : lm_address_t) -> Option<(lm_address_t, lm_size_t)> {
+    let mut trampoline = LM_ADDRESS_BAD;
+
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let ptrampoline = &mut trampoline as *mut lm_address_t;
+        let size = libmem_c::LM_HookCodeEx(pproc, from, to, ptrampoline);
+        if size > 0 {
+            Some((trampoline, size))
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_UnhookCode(from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Result<(), &'static str> {
+    unsafe {
+        if libmem_c::LM_UnhookCode(from, trampoline.0, trampoline.1) != LM_FALSE {
+            Ok(())
+        } else {
+            Err("LM_UnhookCode failed internally")
+        }
+    }
+}
+
+pub fn LM_UnhookCodeEx(pproc : &lm_process_t, from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Result<(), &'static str> {
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        if libmem_c::LM_UnhookCodeEx(pproc, from, trampoline.0, trampoline.1) != LM_FALSE {
+            Ok(())
+        } else {
+            Err("LM_UnhookCode failed internally")
         }
     }
 }

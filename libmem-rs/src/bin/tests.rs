@@ -8,7 +8,21 @@ fn separator() {
 
 #[no_mangle]
 pub extern "C" fn some_function() {
+    println!("[*] Some Function Called!");
+}
 
+static mut TRAMPOLINE : (lm_address_t, lm_size_t) = (0, 0);
+
+#[no_mangle]
+pub extern "C" fn hk_some_function() {
+    println!("[*] Some Function Hooked!");
+
+    // OBS: Calling the trampoline is crashing the program,
+    // although the trampoline is correct and so is the hook
+    let orig_func = unsafe {
+        mem::transmute::<*const (), extern "C" fn()>(TRAMPOLINE.0 as *const ())
+    };
+    orig_func();
 }
 
 fn print_n<T>(vec : Vec<T>, n : usize)
@@ -213,6 +227,30 @@ fn main() {
     separator();
 
     // TODO: Test LM_DataScanEx, LM_PatternScanEx, LM_SigScanEx
+
+    // separator();
+
+    println!("[*] Hooking 'some_function'");
+    println!("[*] Original Address: {:#x}", some_function_addr);
+
+    // TODO: Make trampoline operations safe
+    unsafe {
+        TRAMPOLINE = LM_HookCode(some_function_addr, hk_some_function as *const () as lm_address_t).unwrap();
+        println!("[*] Trampoline: {:#x?}", TRAMPOLINE);
+    }
+
+    some_function();
+
+    unsafe {
+        LM_UnhookCode(some_function_addr, TRAMPOLINE).unwrap();
+    }
+
+    println!("[*] Unhooked 'some_function'");
+    some_function();
+
+    separator();
+
+    // TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx
 
     // separator();
 }

@@ -260,5 +260,8 @@ fn main() {
     println!("[*] Assembled Instruction: {}", inst);
 
     separator();
+
+    let inst = LM_Disassemble(some_function_addr).unwrap();
+    println!("[*] Disassembled Instruction: {}", inst);
 }
 

@@ -348,6 +348,7 @@ mod libmem_c {
         pub(super) fn LM_UnhookCodeEx(pproc : *const lm_process_t, from : lm_address_t, trampoline : lm_address_t, size : lm_size_t) -> lm_bool_t;
         /****************************************/
         pub(super) fn LM_Assemble(code : lm_cstring_t, inst : *mut lm_inst_t) -> lm_bool_t;
+        pub(super) fn LM_Disassemble(code : lm_address_t, inst : *mut lm_inst_t) -> lm_bool_t;
     }
 }
 
@@ -1043,6 +1044,19 @@ pub fn LM_Assemble(code : &str) -> Option<lm_inst_t> {
         let pinst = &mut inst as *mut lm_inst_t;
 
         if libmem_c::LM_Assemble(code, pinst) != LM_FALSE {
+            Some(inst)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {
+    let mut inst = lm_inst_t::new();
+    unsafe {
+        let pinst = &mut inst as *mut lm_inst_t;
+
+        if libmem_c::LM_Disassemble(code, pinst) != LM_FALSE {
             Some(inst)
         } else {
             None

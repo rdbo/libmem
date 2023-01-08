@@ -72,6 +72,7 @@ const LM_FALSE : lm_bool_t = 0;
 const LM_TRUE : lm_bool_t = 1;
 const LM_ADDRESS_BAD : lm_address_t = 0;
 const LM_PATH_MAX : lm_size_t = 512;
+const LM_INST_SIZE : usize = 16;
 
 fn string_from_cstring(cstring : &[u8]) -> String {
     // This function finds the null terminator from
@@ -248,6 +249,41 @@ impl fmt::Display for lm_page_t {
     }
 }
 
+#[repr(C)]
+pub struct lm_inst_t {
+    id : u32,
+    address : u64,
+    size : u16,
+    bytes : [u8;LM_INST_SIZE],
+    mnemonic : [lm_cchar_t;32],
+    op_str : [lm_cchar_t;160],
+    detail : *mut ()
+}
+
+impl lm_inst_t {
+    pub fn new() -> Self {
+        Self {
+            id: 0,
+            address: 0,
+            size: 0,
+            bytes: [0;LM_INST_SIZE],
+            mnemonic: [0;32],
+            op_str: [0;160],
+            detail: 0 as *mut ()
+        }
+    }
+
+    pub fn get_bytes(&self) -> &[u8] {
+        &self.bytes[0..self.size as usize]
+    }
+}
+
+impl fmt::Display for lm_inst_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} -> {:x?}", string_from_cstring(&self.mnemonic), string_from_cstring(&self.op_str), self.get_bytes())
+    }
+}
+
 // Raw libmem calls
 mod libmem_c {
     use crate::*;
@@ -310,6 +346,8 @@ mod libmem_c {
         pub(super) fn LM_HookCodeEx(pproc : *const lm_process_t, from : lm_address_t, to : lm_address_t, ptrampoline : *mut lm_address_t) -> lm_size_t;
         pub(super) fn LM_UnhookCode(from : lm_address_t, trampoline : lm_address_t, size : lm_size_t) -> lm_bool_t;
         pub(super) fn LM_UnhookCodeEx(pproc : *const lm_process_t, from : lm_address_t, trampoline : lm_address_t, size : lm_size_t) -> lm_bool_t;
+        /****************************************/
+        pub(super) fn LM_Assemble(code : lm_cstring_t, inst : *mut lm_inst_t) -> lm_bool_t;
     }
 }
 
@@ -986,6 +1024,28 @@ pub fn LM_UnhookCodeEx(pproc : &lm_process_t, from : lm_address_t, trampoline : 
             Ok(())
         } else {
             Err("LM_UnhookCode failed internally")
+        }
+    }
+}
+
+/****************************************/
+
+pub fn LM_Assemble(code : &str) -> Option<lm_inst_t> {
+    let mut inst = lm_inst_t::new();
+    let code = match CString::new(code.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let code = code.as_ptr() as lm_cstring_t;
+        let pinst = &mut inst as *mut lm_inst_t;
+
+        if libmem_c::LM_Assemble(code, pinst) != LM_FALSE {
+            Some(inst)
+        } else {
+            None
         }
     }
 }

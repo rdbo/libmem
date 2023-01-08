@@ -255,5 +255,10 @@ fn main() {
     // TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx
 
     // separator();
+
+    let inst = LM_Assemble("mov eax, ebx").unwrap();
+    println!("[*] Assembled Instruction: {}", inst);
+
+    separator();
 }
 

@@ -93,9 +93,9 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 ### Windows
 **Note**: If you download a binary version of libmem in the GitHub releases, you only need to install the Windows SDK. Building is not necessary, just add `libmem/include` to your project's include directories and link it against the binary you downloaded.
 
-- Install the Windows SDK: ![Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - ![Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
-- Install ![Visual Studio]() 2015 or newer (with C++ support and CMake)
-- Install ![Git Bash](https://git-scm.com/downloads)
+- Install the Windows SDK: [Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - [Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
+- Install [Visual Studio](https://visualstudio.microsoft.com/) 2015 or newer (with C++ support and CMake)
+- Install [Git Bash](https://git-scm.com/downloads)
 - Run `Git Bash`
 - Continue reading at `Build and Install`
 
@@ -131,18 +131,20 @@ Initialize and update the submodules:
 git submodule init
 git submodule update
 ```
-Compile libmem:
+Generate the CMake cache:
 ```
 mkdir build
 cd build
 cmake ..
-make -j 4
 ```
+
+Compile libmem
+*Windows*: `nmake -j 4`
+*Unix-like*: `make -j 4`
+
 Install libmem:
-```
-# Run as root
-make install
-```
+*Windows*: `nmake install`
+*Unix-like*: `make install`
 After installing, follow the the proper `Usage` section for your programming language
 
 ## Usage (C/C++)

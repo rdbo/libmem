@@ -27,6 +27,8 @@ int main()
 	printf("[*] Module Size: %p\n", mod.size);
 	printf("[*] Module End:  %p\n", mod.end);
 	printf("[*] Main Addr:   %p\n"), main_sym);
+
+    return 0;
 }
 ```
 
@@ -41,6 +43,15 @@ fn hk_some_function() {
 }
 
 fn main() {
+    // reading/writing memory
+    let number : i32 = 0;
+    let number_addr = &number as *const i32 as lm_address_t;
+    let value : i32 = 1337;
+    LM_WriteMemory(number_addr, &value).unwrap(); // write 1337 to number
+    let read_number : i32 = LM_ReadMemory(number_addr).unwrap();
+    println!("[*] Number Value: {}", read_number); // it will show 1337
+
+    // hooking/detouring functions
     let func_addr = some_function as *const () as lm_address_t;
     let hk_addr = hk_some_function as *const () as lm_address_t;
     println!("[*] Hooking 'some_function'");
@@ -61,8 +72,15 @@ fn main() {
 ```
 
 ### Python
-```
+```py
+# Assemble/Disassemble code
+print("[*] Assembly")
+inst = LM_Assemble("mov eax, ebx")
+print(f"{code} : {inst.bytes}")
 
+print("[*] Disassembly:")
+inst = LM_Disassemble(bytearray(b"\x55"))
+print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 ```
 
 ## Installing

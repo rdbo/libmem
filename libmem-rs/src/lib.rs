@@ -301,6 +301,8 @@ mod libmem_c {
         /****************************************/
         pub(super) fn LM_DataScan(data : lm_bytearr_t, size : lm_size_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
         pub(super) fn LM_DataScanEx(pproc : *const lm_process_t, data : lm_bytearr_t, size : lm_size_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
+        pub(super) fn LM_PatternScan(pattern : lm_bytearr_t, mask : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
+        pub(super) fn LM_PatternScanEx(pproc : *const lm_process_t, pattern : lm_bytearr_t, mask : lm_string_t, addr : lm_address_t, scansize : lm_size_t) -> lm_address_t;
     }
 }
 
@@ -855,6 +857,41 @@ pub fn LM_DataScanEx(pproc : &lm_process_t, data : &[lm_byte_t], addr : lm_addre
         let size = data.len();
         let data = data.as_ptr() as lm_bytearr_t;
         match libmem_c::LM_DataScanEx(pproc, data, size, addr, scansize) {
+            LM_ADDRESS_BAD => None,
+            scanaddr => Some(scanaddr)
+        }
+    }
+}
+
+pub fn LM_PatternScan(pattern : &[u8], mask : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+    let mask = match CString::new(mask.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let pattern = pattern.as_ptr() as lm_bytearr_t;
+        let mask = mask.as_ptr() as lm_string_t;
+        match libmem_c::LM_PatternScan(pattern, mask, addr, scansize) {
+            LM_ADDRESS_BAD => None,
+            scanaddr => Some(scanaddr)
+        }
+    }
+}
+
+pub fn LM_PatternScanEx(pproc : &lm_process_t, pattern : &[u8], mask : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+    let mask = match CString::new(mask.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return None
+    };
+
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        let pattern = pattern.as_ptr() as lm_bytearr_t;
+        let mask = mask.as_ptr() as lm_string_t;
+        match libmem_c::LM_PatternScanEx(pproc, pattern, mask, addr, scansize) {
             LM_ADDRESS_BAD => None,
             scanaddr => Some(scanaddr)
         }

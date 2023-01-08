@@ -202,13 +202,15 @@ fn main() {
     let scan_me_addr = scan_me.as_ptr() as lm_address_t;
     let scan_start = scan_me_addr - 0x10; // start the scan before the 'scan_me' address
     let scan_size = 0xFF;
-    let scan_addr = LM_DataScan(&scan_me, scan_start, scan_size).unwrap();
+    let data_scan = LM_DataScan(&scan_me, scan_start, scan_size).unwrap();
+    let pattern_scan = LM_PatternScan(&scan_me, "xxxx?xxxx?", scan_start, scan_size).unwrap();
     println!("[*] Real ScanMe Address: {:#x}", scan_me_addr);
-    println!("[*] Data Scan Address: {:#x}", scan_addr);
+    println!("[*] Data Scan Address: {:#x}", data_scan);
+    println!("[*] Pattern Scan Address: {:#x}", pattern_scan);
 
     separator();
 
-    // TODO: Test LM_DataScanEx
+    // TODO: Test LM_DataScanEx, LM_PatternScanEx
 
     // separator();
 }

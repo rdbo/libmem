@@ -110,7 +110,7 @@ After installing, follow the the proper `Usage` section for your programming lan
 ## Usage (C/C++)
 
 Add `#include <libmem/libmem.h>` (C) or `#include <libmem/libmem.hpp>` (C++) to your source code
-Link the generated libmem library against your binary (`libmem.so`/`libmem.a` for Unix-like or `libmem.dll`/`libmem.lib` for Windows)
+Link the generated libmem library against your binary (`libmem.so` for Unix-like or `libmem.dll` for Windows)
 
 ## Usage (Python)
 Make sure to have Python >= 3.6 active  

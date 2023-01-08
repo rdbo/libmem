@@ -153,7 +153,7 @@ main()
 
 	some_function(10, 10);
 
-	LM_UnhookCode((lm_address_t)some_function, (lm_address_t *)&some_function_orig, tramp_size);
+	LM_UnhookCode((lm_address_t)some_function, (lm_address_t *)some_function_orig, tramp_size);
 
 	printf("\nUnhooked\n\n");
 	some_function(5, 5);

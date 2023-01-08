@@ -89,6 +89,39 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 ```
 
 ## Installing
+
+### Windows
+**Note**: If you download a binary version of libmem in the GitHub releases, you only need to install the Windows SDK. Building is not necessary, just add `libmem/include` to your project's include directories and link it against the binary you downloaded.
+
+- Install the Windows SDK: ![Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - ![Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
+- Install ![Visual Studio]() 2015 or newer (with C++ support and CMake)
+- Install ![Git Bash](https://git-scm.com/downloads)
+- Run `Git Bash`
+- Continue reading at `Build and Install`
+
+### Linux
+**Note**: The following commands are for Debian/Ubuntu based distributions. Make sure to find the appropriate commands for your Linux distribution.
+
+1. Open a terminal
+2. Install GCC, G++, Git, CMake, and the Linux headers:
+
+        ```
+        sudo apt install gcc g++ git cmake linux-headers
+        ```
+3. Continue reading at `Build and Install`
+
+### FreeBSD
+
+1. Install GCC, G++, Git and CMake (run as root):
+
+        ```
+        pkg install gcc g++ git cmake
+        ```
+2. Continue reading at `Build and Install`
+
+### Build and Install
+**Note**: Run the following commands on Git Bash (Windows) or a terminal (Linux/FreeBSD).
+
 Clone the repository:
 ```
 git clone https://github.com/rdbo/libmem
@@ -102,7 +135,7 @@ Compile libmem:
 ```
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+cmake ..
 make -j 4
 ```
 Install libmem:
@@ -114,8 +147,9 @@ After installing, follow the the proper `Usage` section for your programming lan
 
 ## Usage (C/C++)
 
-Add `#include <libmem/libmem.h>` (C) or `#include <libmem/libmem.hpp>` (C++) to your source code
-Link the generated libmem library against your binary (`libmem.so` for Unix-like or `libmem.dll` for Windows)
+Add `#include <libmem/libmem.h>` (C) or `#include <libmem/libmem.hpp>` (C++) to your source code.
+Link the generated libmem library against your binary (`libmem.so` for Unix-like or `libmem.dll` for Windows).
+*For GCC-like compilers*: add the flag `-lmem` to your compiler and it should link it.
 
 ## Usage (Rust)
 Add the following line to your `Cargo.toml` under `[dependencies]`:

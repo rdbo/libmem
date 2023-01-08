@@ -100,6 +100,11 @@ endif()
 
 target_link_libraries(libmem ${LIBMEM_DEPS})
 
+if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
+else()
+	set(CMAKE_INSTALL_PREFIX "/usr")
+endif()
+
 install(TARGETS libmem
 	LIBRARY DESTINATION lib)
 

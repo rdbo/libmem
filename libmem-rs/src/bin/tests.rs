@@ -19,10 +19,12 @@ pub extern "C" fn hk_some_function() {
 
     // OBS: Calling the trampoline is crashing the program,
     // although the trampoline is correct and so is the hook
+    /*
     let orig_func = unsafe {
         mem::transmute::<*const (), extern "C" fn()>(TRAMPOLINE.0 as *const ())
     };
     orig_func();
+    */
 }
 
 fn print_n<T>(vec : Vec<T>, n : usize)

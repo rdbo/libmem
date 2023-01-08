@@ -97,7 +97,7 @@ Compile libmem:
 ```
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr
 make -j 4
 ```
 Install libmem:

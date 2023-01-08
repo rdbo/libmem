@@ -106,7 +106,7 @@ fn main() {
 
     separator();
 
-    // TODO: Test LM_LoadModuleEx
+    // TODO: Add tests for LM_LoadModuleEx
     
     // separator();
 
@@ -116,7 +116,7 @@ fn main() {
 
     // separator();
 
-    // TODO: Test LM_UnloadModuleEx
+    // TODO: Add tests for LM_UnloadModuleEx
 
     // separator();
 
@@ -228,7 +228,7 @@ fn main() {
 
     separator();
 
-    // TODO: Test LM_DataScanEx, LM_PatternScanEx, LM_SigScanEx
+    // TODO: Add tests LM_DataScanEx, LM_PatternScanEx, LM_SigScanEx
 
     // separator();
 
@@ -263,5 +263,15 @@ fn main() {
 
     let inst = LM_Disassemble(some_function_addr).unwrap();
     println!("[*] Disassembled Instruction: {}", inst);
+
+    separator();
+
+    let minsize = 0x5;
+    let alignedsize = LM_CodeLength(some_function_addr, 0x10).unwrap();
+    println!("[*] Aligned Size (minimum: {:#x}): {:#x}", minsize, alignedsize);
+
+    separator();
+
+    // TODO: Add tests for LM_CodeLengthEx
 }
 

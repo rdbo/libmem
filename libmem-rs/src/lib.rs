@@ -349,6 +349,8 @@ mod libmem_c {
         /****************************************/
         pub(super) fn LM_Assemble(code : lm_cstring_t, inst : *mut lm_inst_t) -> lm_bool_t;
         pub(super) fn LM_Disassemble(code : lm_address_t, inst : *mut lm_inst_t) -> lm_bool_t;
+        pub(super) fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
+        pub(super) fn LM_CodeLengthEx(pproc : *const lm_process_t, code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
     }
 }
 
@@ -1060,6 +1062,25 @@ pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {
             Some(inst)
         } else {
             None
+        }
+    }
+}
+
+pub fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t> {
+    unsafe {
+        match libmem_c::LM_CodeLength(code, minlength) {
+            0 => None,
+            len => Some(len)
+        }
+    }
+}
+
+pub fn LM_CodeLengthEx(pproc : &lm_process_t, code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t> {
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+        match libmem_c::LM_CodeLengthEx(pproc, code, minlength) {
+            0 => None,
+            len => Some(len)
         }
     }
 }

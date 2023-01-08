@@ -143,8 +143,11 @@ Compile libmem
 *Unix-like*: `make -j 4`
 
 Install libmem:
+
 *Windows*: `nmake install`
+
 *Unix-like*: `make install`
+
 After installing, follow the the proper `Usage` section for your programming language
 
 ## Usage (C/C++)

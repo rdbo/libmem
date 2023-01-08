@@ -34,6 +34,8 @@ int main()
 
 ### Rust
 ```rust
+use libmem::*;
+
 fn some_function() {
     // ...
 }
@@ -73,6 +75,8 @@ fn main() {
 
 ### Python
 ```py
+from libmem import *
+
 # Assemble/Disassemble code
 print("[*] Assembly")
 inst = LM_Assemble("mov eax, ebx")

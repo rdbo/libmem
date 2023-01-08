@@ -27,15 +27,15 @@ LM_API lm_bool_t
 LM_Assemble(lm_cstring_t code,
 	    lm_inst_t   *inst)
 {
-	lm_bool_t  ret = LM_FALSE;
-	lm_byte_t *codebuf;
+	lm_bool_t    ret = LM_FALSE;
+	lm_bytearr_t codebuf;
 
 	if (!LM_AssembleEx(code, LM_ARCH, LM_BITS, (lm_address_t)0, &codebuf))
 		return ret;
 
 	ret = LM_Disassemble((lm_address_t)codebuf, inst);
 
-	LM_FreeCodeBuffer(&codebuf);
+	LM_FreeCodeBuffer(codebuf);
 
 	ret = LM_TRUE;
 
@@ -45,11 +45,11 @@ LM_Assemble(lm_cstring_t code,
 /********************************/
 
 LM_API lm_size_t
-LM_AssembleEx(lm_cstring_t code,
-	      lm_arch_t    arch,
-	      lm_size_t    bits,
-	      lm_address_t base_addr,
-	      lm_byte_t  **pcodebuf)
+LM_AssembleEx(lm_cstring_t  code,
+	      lm_arch_t     arch,
+	      lm_size_t     bits,
+	      lm_address_t  base_addr,
+	      lm_bytearr_t *pcodebuf)
 {
 	lm_size_t      ret = 0;
 	ks_engine     *ks;
@@ -58,7 +58,7 @@ LM_AssembleEx(lm_cstring_t code,
 	unsigned char *encode;
 	size_t         size;
 	size_t         count;
-	lm_byte_t     *codebuf;
+	lm_bytearr_t   codebuf;
 
 	LM_ASSERT(code != LM_NULLPTR && pcodebuf != LM_NULLPTR);
 
@@ -80,7 +80,7 @@ LM_AssembleEx(lm_cstring_t code,
 	if (ks_asm(ks, code, base_addr, &encode, &size, &count) != KS_ERR_OK)
 		goto CLEAN_EXIT;
 
-	codebuf = (lm_byte_t *)LM_MALLOC(size);
+	codebuf = (lm_bytearr_t)LM_MALLOC(size);
 	if (!codebuf)
 		goto FREE_RET;
 
@@ -98,11 +98,10 @@ CLEAN_EXIT:
 /********************************/
 
 LM_API lm_void_t
-LM_FreeCodeBuffer(lm_byte_t **pcodebuf)
+LM_FreeCodeBuffer(lm_bytearr_t codebuf)
 {
-	if (*pcodebuf)
-		LM_FREE(*pcodebuf);
-	*pcodebuf = (lm_byte_t *)LM_NULLPTR;
+	if (codebuf)
+		LM_FREE(codebuf);
 }
 
 /********************************/
@@ -121,7 +120,7 @@ LM_Disassemble(lm_address_t code,
 
 	*inst = *insts;
 
-	LM_FreeInstructions(&insts);
+	LM_FreeInstructions(insts);
 
 	return LM_TRUE;
 }
@@ -188,12 +187,10 @@ CLEAN_EXIT:
 /********************************/
 
 LM_API lm_void_t
-LM_FreeInstructions(lm_inst_t **pinsts)
+LM_FreeInstructions(lm_inst_t *insts)
 {
-	if (*pinsts)
-		LM_FREE(*pinsts);
-
-	*pinsts = (lm_inst_t *)LM_NULLPTR;
+	if (insts)
+		LM_FREE(insts);
 }
 
 /********************************/

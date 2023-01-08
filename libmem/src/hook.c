@@ -25,10 +25,10 @@
 
 #if LM_ARCH == LM_ARCH_X86
 LM_PRIVATE lm_size_t
-_LM_GenerateHook(lm_address_t from,
-		 lm_address_t to,
-		 lm_size_t    bits,
-		 lm_byte_t  **pcodebuf)
+_LM_GenerateHook(lm_address_t  from,
+		 lm_address_t  to,
+		 lm_size_t     bits,
+		 lm_bytearr_t *pcodebuf)
 {
 	lm_cchar_t code[255];
 	lm_size_t size;
@@ -56,9 +56,10 @@ _LM_GenerateHook(lm_address_t from,
 }
 #elif LM_ARCH == LM_ARCH_ARM
 LM_PRIVATE lm_size_t
-_LM_GenerateHook(lm_address_t from,
-		 lm_address_t to,
-		 lm_byte_t  **pcodebuf)
+_LM_GenerateHook(lm_address_t  from,
+		 lm_address_t  to,
+		 lm_size_t     bits,
+		 lm_bytearr_t *pcodebuf)
 {
 	/* TODO: Implement */
 	return 0;
@@ -70,11 +71,11 @@ LM_HookCode(lm_address_t  from,
 	    lm_address_t  to,
 	    lm_address_t *ptrampoline)
 {
-	lm_size_t  ret = 0;
-	lm_byte_t *codebuf;
-	lm_prot_t  old_prot;
-	lm_size_t  codesize;
-	lm_size_t  alignedsize;
+	lm_size_t    ret = 0;
+	lm_bytearr_t codebuf;
+	lm_prot_t    old_prot;
+	lm_size_t    codesize;
+	lm_size_t    alignedsize;
 
 	LM_ASSERT(from != LM_ADDRESS_BAD && to != LM_ADDRESS_BAD);
 
@@ -111,7 +112,7 @@ LM_HookCode(lm_address_t  from,
 
 	ret = alignedsize;
 FREE_EXIT:
-	LM_FreeCodeBuffer(&codebuf);
+	LM_FreeCodeBuffer(codebuf);
 
 	return ret;
 }
@@ -124,11 +125,11 @@ LM_HookCodeEx(lm_process_t *pproc,
 	      lm_address_t  to,
 	      lm_address_t *ptrampoline)
 {
-	lm_size_t  ret = 0;
-	lm_byte_t *codebuf;
-	lm_prot_t  old_prot;
-	lm_size_t  codesize;
-	lm_size_t  alignedsize;
+	lm_size_t    ret = 0;
+	lm_bytearr_t codebuf;
+	lm_prot_t    old_prot;
+	lm_size_t    codesize;
+	lm_size_t    alignedsize;
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
 		  from != LM_ADDRESS_BAD &&
@@ -186,7 +187,7 @@ LM_HookCodeEx(lm_process_t *pproc,
 
 	ret = alignedsize;
 FREE_EXIT:
-	LM_FreeCodeBuffer(&codebuf);
+	LM_FreeCodeBuffer(codebuf);
 
 	return ret;
 }

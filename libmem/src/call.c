@@ -294,7 +294,7 @@ _LM_PtraceStep(lm_pid_t pid)
 }
 
 LM_PRIVATE lm_size_t
-_LM_GenerateSyscall(lm_size_t bits, lm_byte_t **pcodebuf)
+_LM_GenerateSyscall(lm_size_t bits, lm_bytearr_t *pcodebuf)
 {
 	if (bits == 64)
 		return LM_AssembleEx("syscall", LM_ARCH, bits, LM_ADDRESS_BAD, pcodebuf);
@@ -340,7 +340,7 @@ _LM_SystemCallEx(lm_process_t       *pproc,
 		 lm_uintptr_t       *syscall_ret)
 {
 	lm_bool_t    ret = LM_FALSE;
-	lm_byte_t   *codebuf;
+	lm_bytearr_t codebuf;
 	lm_size_t    codesize;
 	lm_void_t   *regs = LM_NULLPTR;
 	lm_void_t   *old_regs = LM_NULLPTR;
@@ -356,7 +356,6 @@ _LM_SystemCallEx(lm_process_t       *pproc,
 	old_code = LM_MALLOC(codesize);
 	if (!old_code)
 		goto FREE_CODEBUF_RET;
-
 
 	if (!_LM_PtraceAttach(pproc->pid))
 		goto FREE_OLDCODE_RET;
@@ -407,7 +406,7 @@ DETACH_RET:
 FREE_OLDCODE_RET:
 	LM_FREE(old_code);
 FREE_CODEBUF_RET:
-	LM_FreeCodeBuffer(&codebuf);
+	LM_FreeCodeBuffer(codebuf);
 
 	return ret;
 }
@@ -461,9 +460,9 @@ _LM_FindLibc(lm_process_t *pproc,
 }
 
 LM_PRIVATE lm_size_t
-_LM_GenerateLibcall(lm_size_t   bits,
-		    lm_size_t   nargs,
-		    lm_byte_t **pcodebuf)
+_LM_GenerateLibcall(lm_size_t     bits,
+		    lm_size_t     nargs,
+		    lm_bytearr_t *pcodebuf)
 {
 	lm_cchar_t code[255];
 
@@ -626,7 +625,7 @@ _LM_LibraryCallEx(lm_process_t      *pproc,
 		 lm_uintptr_t       *call_ret)
 {
 	lm_bool_t    ret = LM_FALSE;
-	lm_byte_t   *codebuf;
+	lm_bytearr_t codebuf;
 	lm_size_t    codesize;
 	lm_void_t   *regs = LM_NULLPTR;
 	lm_void_t   *old_regs = LM_NULLPTR;
@@ -694,7 +693,7 @@ DETACH_RET:
 FREE_OLDCODE_RET:
 	LM_FREE(old_code);
 FREE_CODEBUF_RET:
-	LM_FreeCodeBuffer(&codebuf);
+	LM_FreeCodeBuffer(codebuf);
 
 	return ret;
 

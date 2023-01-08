@@ -708,14 +708,14 @@ LM_Assemble(lm_cstring_t code,
 	    lm_inst_t   *inst);
 
 LM_API lm_size_t
-LM_AssembleEx(lm_cstring_t code,
-	      lm_arch_t    arch,
-	      lm_size_t    bits,
-	      lm_address_t base_addr,
-	      lm_byte_t  **pcodebuf);
+LM_AssembleEx(lm_cstring_t  code,
+	      lm_arch_t     arch,
+	      lm_size_t     bits,
+	      lm_address_t  base_addr,
+	      lm_bytearr_t *pcodebuf);
 
 LM_API lm_void_t
-LM_FreeCodeBuffer(lm_byte_t **pcodebuf);
+LM_FreeCodeBuffer(lm_bytearr_t pcodebuf);
 
 LM_API lm_bool_t
 LM_Disassemble(lm_address_t code,
@@ -731,7 +731,7 @@ LM_DisassembleEx(lm_address_t code,
 		 lm_inst_t  **pinsts);
 
 LM_API lm_void_t
-LM_FreeInstructions(lm_inst_t **pinsts);
+LM_FreeInstructions(lm_inst_t *insts);
 
 LM_API lm_size_t
 LM_CodeLength(lm_address_t code,

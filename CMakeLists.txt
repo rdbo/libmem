@@ -101,7 +101,7 @@ endif()
 target_link_libraries(libmem ${LIBMEM_DEPS})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
-	set(CMAKE_INSTALL_PREFIX "C:\\Program Files\\libmem")
+	set(CMAKE_INSTALL_PREFIX "$ENV{ProgramFiles}\\libmem")
 	execute_process(COMMAND mkdir "${CMAKE_INSTALL_PREFIX}")
 	execute_process(COMMAND setx /M PATH "%PATH%;${CMAKE_INSTALL_PREFIX}\\include;${CMAKE_INSTALL_PREFIX}\\lib")
 else()

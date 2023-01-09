@@ -53,7 +53,7 @@ fn main() {
 
     separator();
 
-    let proc = LM_FindProcess("firefox-esr").unwrap();
+    let proc = LM_FindProcess("test1").unwrap();
     println!("[*] Remote Process: {}", proc);
 
     separator();

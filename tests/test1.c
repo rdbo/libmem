@@ -147,13 +147,15 @@ main()
 
 	LM_PRINTF(LM_STR("[*] Some Function Hook:\n"));
 
-	tramp_size = LM_HookCode(some_function, hk_some_function, (lm_address_t *)&some_function_orig);
+	tramp_size = LM_HookCode((lm_address_t)some_function,
+				 (lm_address_t)hk_some_function,
+				 (lm_address_t *)&some_function_orig);
 
 	LM_PRINTF(LM_STR("[*] Some Function Trampoline: %p\n"), (void *)some_function_orig);
 
 	some_function(10, 10);
 
-	LM_UnhookCode((lm_address_t)some_function, (lm_address_t *)some_function_orig, tramp_size);
+	LM_UnhookCode((lm_address_t)some_function, (lm_address_t)some_function_orig, tramp_size);
 
 	printf("\nUnhooked\n\n");
 	some_function(5, 5);

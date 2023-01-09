@@ -4,6 +4,12 @@ include(ExternalProject)
 
 project(libmem)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
+	set(CMAKE_GENERATOR "NMake Makefiles")
+else()
+	set(CMAKE_GENERATOR "Unix Makefiles")
+endif()
+
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 
 option(LIBMEM_BUILD_TESTS "Build tests" ON) # builds the optional libmem test libraries.

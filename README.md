@@ -95,18 +95,20 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 - Install the Windows SDK: [Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - [Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
 - Install [Visual Studio](https://visualstudio.microsoft.com/) 2015 or newer (with C++ support and CMake)
+- Install [CMake](https://cmake.org/download)
+- Install [Python 3](https://python.org/downloads) (Check the option to add Python to PATH) (Use [Python 3.8.9](https://python.org/downloads/release/python-389) for Windows 7)
 - Install [Git Bash](https://git-scm.com/downloads)
-- Run a Visual Studio Developer Console as Administrator
+- Run a Visual Studio `Developer Command Prompt` as Administrator
 - Continue reading at `Build and Install`
 
 ### Linux
 **Note**: The following commands are for Debian/Ubuntu based distributions. Make sure to find the appropriate commands for your Linux distribution.
 
 1. Open a terminal
-2. Install GCC, G++, Git, CMake, and the Linux headers:
+2. Install GCC, G++, Git, CMake, Make, Python 3, and the Linux headers:
 
         ```
-        sudo apt install gcc g++ git cmake linux-headers
+        sudo apt install gcc g++ git cmake make python3 linux-headers
         ```
 3. Continue reading at `Build and Install`
 
@@ -115,7 +117,7 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 1. Install GCC, G++, Git and CMake (run as root):
 
         ```
-        pkg install gcc g++ git cmake
+        pkg install gcc g++ git cmake make python3
         ```
 2. Continue reading at `Build and Install`
 
@@ -139,7 +141,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 ```
 
 Compile libmem
-*Windows*: `nmake -j 4`
+*Windows*: `nmake`
 *Unix-like*: `make -j 4`
 
 Install libmem:
@@ -159,7 +161,7 @@ Link the generated libmem library against your binary (`libmem.so` for Unix-like
 ## Usage (Rust)
 Add the following line to your `Cargo.toml` under `[dependencies]`:
 ```toml
-libmem = "0.1.0"
+libmem = "0.1"
 ```
 Import libmem in your Rust source code:
 ```rust

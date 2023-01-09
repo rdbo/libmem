@@ -96,7 +96,7 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 - Install the Windows SDK: [Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - [Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
 - Install [Visual Studio](https://visualstudio.microsoft.com/) 2015 or newer (with C++ support and CMake)
 - Install [Git Bash](https://git-scm.com/downloads)
-- Run `Git Bash`
+- Run a Visual Studio Developer Console as Administrator
 - Continue reading at `Build and Install`
 
 ### Linux

@@ -135,7 +135,7 @@ Generate the CMake cache:
 ```
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 ```
 
 Compile libmem

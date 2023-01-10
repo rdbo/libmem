@@ -62,9 +62,9 @@ _LM_EnumSymbols(lm_module_t *pmod,
 	return _LM_EnumPeSyms(pmod, callback, arg);
 }
 #else
-#include <elfio/elfio.hpp>
+#include <LIEF/ELF.hpp>
 
-using namespace ELFIO;
+using namespace LIEF::ELF;
 
 LM_PRIVATE lm_bool_t
 _LM_EnumElfSyms(lm_module_t *pmod,
@@ -74,44 +74,26 @@ _LM_EnumElfSyms(lm_module_t *pmod,
 {
 	lm_symbol_t sym;
 	lm_address_t base = (lm_address_t)0; /* base address for symbol offset */
-	elfio reader;
+        std::unique_ptr<const Binary> binary;
 
-	if (!reader.load(pmod->path))
-		return LM_FALSE;
+        LM_ASSERT(pmod != LM_NULLPTR && callback);
 
-	if (reader.get_type() != ET_EXEC)
-		base = pmod->base;
+        if (!is_elf(pmod->path))
+                return LM_FALSE;
 
-	for (Elf_Half i = 0; i < reader.sections.size(); ++i) {
-		section* psec =  reader.sections[i];
-		if (psec->get_type() != SHT_SYMTAB)
-			continue;
+        binary = Parser::parse(pmod->path);
 
-		const symbol_section_accessor symbols(reader, psec);
-		for (unsigned int j = 0; j < symbols.get_symbols_num(); ++j) {
-			std::string   name;
-			Elf64_Addr    value;
-			Elf_Xword     size;
-			unsigned char bind;
-			unsigned char type;
-			Elf_Half      section_index;
-			unsigned char other;
-			lm_symbol_t   sym;
+        if (binary->header().file_type() != E_TYPE::ET_EXEC)
+                base = pmod->base;
 
-			symbols.get_symbol(
-				j, name, value, size, bind, type,
-				section_index, other
-			);
+        for (const Symbol &symbol : binary->exported_symbols()) {
+                sym.name = (lm_cstring_t)symbol.name().c_str();
+                sym.address = (lm_address_t)LM_OFFSET(base, symbol.value());
+                if (!callback(&sym, arg))
+                        break;
+        }
 
-			sym.name = (lm_cstring_t)name.c_str();
-			sym.address = (lm_address_t)LM_OFFSET(base, value);
-			if (!callback(&sym, arg))
-				goto EXIT;
-		}
-	}
-
-EXIT:
-	return LM_TRUE;
+        return LM_TRUE;
 }
 
 LM_PRIVATE lm_bool_t

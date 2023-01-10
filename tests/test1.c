@@ -81,7 +81,6 @@ main()
 	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)mod.size);
 	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), (void *)mod.end);
 	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), (void *)main_sym);
-	LM_PRINTF(LM_STR("[*] Real Main:   %p\n"), (void *)main);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);

@@ -28,21 +28,24 @@ LM_PRIVATE lm_bool_t
 _LM_OpenProc(lm_pid_t      pid,
 	     HANDLE       *hProcess)
 {
+	DWORD exit_code;
+
 	LM_ASSERT(pid != LM_PID_BAD && hProcess != LM_NULLPTR);
 
 	if (pid == GetCurrentProcessId()) {
 		*hProcess = GetCurrentProcess();
+		return LM_TRUE
 	} else {
 		*hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
 		/* the process is dead, but can still open handles */
-		if (*hProcess && GetExitCodeProcess(*hProcess) != STILL_ACTIVE) {
+		if (*hProcess && GetExitCodeProcess(*hProcess) && exit_code != STILL_ACTIVE) {
 			CloseHandle(*hProcess);
 			*hProcess = NULL;
 		}
 	}
 
-	return hProcess;
+	return hProcess ? LM_TRUE : LM_FALSE;
 }
 
 LM_PRIVATE lm_void_t

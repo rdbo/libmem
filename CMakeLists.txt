@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.24)
 
-include(ExternalProject)
-
-project(libmem)
-
 if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
 	set(CMAKE_GENERATOR "NMake Makefiles")
 else()
 	set(CMAKE_GENERATOR "Unix Makefiles")
 endif()
+
+include(ExternalProject)
+
+project(libmem)
 
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 

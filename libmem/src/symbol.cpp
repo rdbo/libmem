@@ -96,7 +96,6 @@ _LM_EnumElfSyms(lm_module_t *pmod,
 			unsigned char type;
 			Elf_Half      section_index;
 			unsigned char other;
-			lm_symbol_t   sym;
 
 			symbols.get_symbol(
 				j, name, value, size, bind, type,

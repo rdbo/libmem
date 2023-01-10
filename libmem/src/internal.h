@@ -94,8 +94,8 @@ _LM_GetProt(lm_prot_t prot); /* turn OS-specific flags into libmem flags */
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_OpenProc(lm_process_t *pproc,
-	     HANDLE       *hProcess);
+_LM_OpenProc(lm_pid_t pid,
+	     HANDLE  *hProcess);
 
 LM_PRIVATE lm_void_t
 _LM_CloseProc(HANDLE *handle);

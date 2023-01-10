@@ -26,10 +26,22 @@ set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DI
 set(ELFIO_DIR "${PROJECT_SOURCE_DIR}/ELFIO")
 set(ELFIO_INC "${ELFIO_DIR}")
 
+set(ENMA_DIR "${PROJECT_SOURCE_DIR}/enma_pe")
+set(ENMA_INC "${ENMA_DIR}/include")
+file(GLOB_RECURSE ENMA_SRC "${ENMA_DIR}/enma_pe/*.cpp")
+
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
 set(LIBMEM_DEPS capstone keystone stdc++ m)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
+	include_directories(${ENMA_INC})
+	add_library(enma STATIC ${ENMA_SRC})
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} enma)
+else()
+	include_directories(${ELFIO_INC})
+endif()
 
 if(NOT MSVC)
 	add_compile_options(-Wall -Wextra -Wpedantic)
@@ -49,7 +61,7 @@ else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${ELFIO_INC})
+include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC})
 set_target_properties(libmem PROPERTIES PREFIX "" POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem capstone-engine keystone-engine)

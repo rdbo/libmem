@@ -9,3 +9,6 @@
 [submodule "ELFIO"]
 	path = ELFIO
 	url = https://github.com/serge1/ELFIO
+[submodule "enma_pe"]
+	path = enma_pe
+	url = https://github.com/jnastarot/enma_pe

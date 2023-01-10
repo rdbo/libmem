@@ -34,7 +34,7 @@ _LM_OpenProc(lm_pid_t      pid,
 
 	if (pid == GetCurrentProcessId()) {
 		*hProcess = GetCurrentProcess();
-		return LM_TRUE
+		return LM_TRUE;
 	} else {
 		*hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 

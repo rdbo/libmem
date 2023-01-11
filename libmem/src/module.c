@@ -331,7 +331,7 @@ _LM_LoadModuleEx(lm_process_t *pproc,
 	HANDLE       hProcess;
 	HANDLE       hThread;
 
-	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_char_t)
+	modpath_size = (LM_STRLEN(path) + 1) * sizeof(lm_char_t);
 	modpath_addr = LM_AllocMemoryEx(pproc, modpath_size, LM_PROT_XRW);
 	if (modpath_addr == LM_ADDRESS_BAD)
 		return ret;
@@ -394,7 +394,7 @@ _LM_UnloadModule(lm_module_t *pmod)
 			  (LPTSTR)pmod->base, &hModule);
 
 	if (!hModule)
-		return LM_FALSE:
+		return LM_FALSE;
 
 	FreeLibrary(hModule);
 	return LM_TRUE;

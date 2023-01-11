@@ -43,7 +43,7 @@
 
 #ifndef LM_OS
 #	if (defined(WIN32) || defined(_WIN32) || defined(__WIN32)) \
-		&& !defined(__CYGWIN__) && !defined(linux)
+		|| defined(__CYGWIN__)
 #		define LM_OS LM_OS_WIN
 #	elif defined(__ANDROID__)
 #		define LM_OS LM_OS_ANDROID

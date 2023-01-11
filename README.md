@@ -139,22 +139,18 @@ Initialize and update the submodules:
 git submodule init
 git submodule update
 ```
-Generate the CMake cache:
+Generate the CMake cache and compile libmem:
 ```
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j 4
 ```
 
-Compile libmem
-*Windows*: `nmake`
-*Unix-like*: `make -j 4`
-
-Install libmem:
-
-*Windows*: `nmake install`
-
-*Unix-like*: `make install`
+Install libmem (run as root or as Administrator):
+```
+make install
+```
 
 After installing, follow the the proper `Usage` section for your programming language
 
@@ -200,11 +196,11 @@ All:
 - libmath (used in keystone)
 
 Windows:  
-- Windows SDK (-luser32, -lpsapi)  
-  
+- Windows SDK (-luser32, -lpsapi) 
+
 Linux/Android:  
-- libdl (-ldl)  
-  
+- libdl (-ldl)
+
 BSD:  
 - libdl (-ldl)  
 - libkvm (-lkvm)

@@ -44,7 +44,7 @@ _LM_EnumPeSyms(lm_module_t *pmod,
 	binary = Parser::parse(pmod->path);
 
 	for (const ExportEntry &symbol : binary->get_export().entries()) {
-		sym.name = symbol.name().c_str();
+		sym.name = (lm_cstring_t)symbol.name().c_str();
 		sym.address = (lm_address_t)LM_OFFSET(pmod->base, symbol.value());
 		if (!callback(&sym, arg))
 			break;

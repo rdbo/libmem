@@ -93,39 +93,40 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 ### Windows
 **Note**: If you download a binary version of libmem in the GitHub releases, you only need to install the Windows SDK. Building is not necessary, just add `libmem/include` to your project's include directories and link it against the binary you downloaded.
 
-- Install the Windows SDK: [Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - [Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
-- Download [Cygwin](https://cygwin.com)
-- Install the following packages on the Cygwin Installer (along with the default ones):
+1. Install the Windows SDK: [Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - [Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
 
-        ```
+2. Download [Cygwin](https://cygwin.com)
+
+3. Install the following packages on the Cygwin Installer (along with the default ones):
+
         Devel/git       (tested v2.39.0-1)
         Devel/gcc-core  (tested v11.3.0-1)
         Devel/gcc-g++   (tested v11.3.0-1)
         Devel/make      (tested v4.4-1)
         Devel/cmake     (tested v3.23.2-1)
         Python/python38 (tested v3.8.12)
-        ```
-- Run a `Cygwin64 Terminal` or `Cygwin Terminal` for 32 bits as Administrator
-- Continue reading at `Build and Install`
+
+4. Run a `Cygwin64 Terminal` or `Cygwin Terminal` for 32 bits as Administrator
+
+5. Continue reading at `Build and Install`
 
 ### Linux
 **Note**: The following commands are for Debian/Ubuntu based distributions. Make sure to find the appropriate commands for your Linux distribution.
 
 1. Open a terminal
+
 2. Install GCC, G++, Git, CMake, Make, Python 3, and the Linux headers:
 
-        ```
         sudo apt install gcc g++ git cmake make python3 linux-headers
-        ```
+
 3. Continue reading at `Build and Install`
 
 ### FreeBSD
 
 1. Install GCC, G++, Git and CMake (run as root):
 
-        ```
         pkg install gcc g++ git cmake make python3
-        ```
+
 2. Continue reading at `Build and Install`
 
 ### Build and Install

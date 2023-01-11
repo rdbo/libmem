@@ -384,7 +384,7 @@ _LM_ProtMemoryEx(lm_process_t *pproc,
 	HANDLE hProcess;
 
 	if (!_LM_OpenProc(pproc->pid, &hProcess))
-		return ret
+		return ret;
 
 	if (!VirtualProtectEx(hProcess, addr, size, _LM_GetRealProt(prot), &old_prot))
 		goto CLOSE_RET;

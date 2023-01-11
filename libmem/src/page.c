@@ -247,7 +247,7 @@ _LM_GetPage(lm_address_t addr,
 
 	pagebuf->base  = (lm_address_t)mbi.BaseAddress;
 	pagebuf->size  = (lm_size_t)mbi.RegionSize;
-	pagebuf->end   = (lm_address_t)LM_OFFSET(page.base, page.size);
+	pagebuf->end   = (lm_address_t)LM_OFFSET(pagebuf->base, pagebuf->size);
 	pagebuf->prot  = _LM_GetProt((lm_prot_t)mbi.Protect);
 
 	return LM_TRUE;

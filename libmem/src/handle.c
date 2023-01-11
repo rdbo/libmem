@@ -39,7 +39,7 @@ _LM_OpenProc(lm_pid_t      pid,
 		*hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
 		/* the process is dead, but can still open handles */
-		if (*hProcess && GetExitCodeProcess(*hProcess) && exit_code != STILL_ACTIVE) {
+		if (*hProcess && GetExitCodeProcess(*hProcess, &exit_code) && exit_code != STILL_ACTIVE) {
 			CloseHandle(*hProcess);
 			*hProcess = NULL;
 		}

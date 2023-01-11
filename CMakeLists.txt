@@ -106,7 +106,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN
 		set(CMAKE_INSTALL_PREFIX "$ENV{ProgramFiles}\\libmem")
 	else(${})
 		execute_process(COMMAND cygpath -u "$PROGRAMFILES"
-				OUTPUT CMAKE_INSTALL_PREFIX)
+				OUTPUT_VARIABLE CMAKE_INSTALL_PREFIX)
 	endif()
 	execute_process(COMMAND mkdir "${CMAKE_INSTALL_PREFIX}")
 else()

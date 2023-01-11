@@ -39,7 +39,7 @@ set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMA
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
-set(LIBMEM_DEPS capstone keystone LIEF stdc++ m)
+set(LIBMEM_DEPS capstone keystone LIEF)
 
 if(NOT MSVC)
 	add_compile_options(-Wall -Wextra -Wpedantic)
@@ -89,11 +89,10 @@ endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
 	set(LIBMEM_DEPS ${LIBMEM_DEPS} user32 psapi)
-
 elseif(${CMAKE_SYSTEM_NAME} MATCHES Linux OR ${CMAKE_SYSTEM_NAME} MATCHES Android)
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} dl)
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} dl stdc++ m)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES FreeBSD)
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} dl kvm procstat elf)
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} dl kvm procstat elf stdc++ m)
 else()
 	message(FATAL_ERROR "[!] Unsupported platform")
 endif()

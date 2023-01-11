@@ -48,13 +48,15 @@ if(NOT MSVC)
 	endif()
 endif()
 
-if (LIBMEM_BUILD_STATIC AND NOT ${CMAKE_SYSTEM_NAME} MATCHES Windows)
+if (LIBMEM_BUILD_STATIC)
 	add_library(libmem STATIC ${LIBMEM_SRC})
-	add_custom_command(
-		TARGET libmem POST_BUILD
-		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-		COMMAND sh ${PROJECT_SOURCE_DIR}/makebundle.sh
-	)
+	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES Windows)
+		add_custom_command(
+			TARGET libmem POST_BUILD
+			WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+			COMMAND sh ${PROJECT_SOURCE_DIR}/makebundle.sh
+		)
+	endif()
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()

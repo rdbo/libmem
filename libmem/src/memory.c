@@ -322,7 +322,7 @@ _LM_ProtMemory(lm_address_t addr,
 	DWORD old_prot;
 
 	if (!VirtualProtect(addr, size, _LM_GetRealProt(prot), &old_prot))
-		return LM_FALSE
+		return LM_FALSE;
 
 	if (oldprot)
 		*oldprot = _LM_GetProt((lm_prot_t)old_prot);

@@ -96,6 +96,7 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 - Install the Windows SDK: [Windows 7](https://www.microsoft.com/en-us/download/details.aspx?id=8279) - [Windows 10/11](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
 - Download [Cygwin](https://cygwin.com)
 - Install the following packages on the Cygwin Installer (along with the default ones):
+
         ```
         Devel/git       (tested v2.39.0-1)
         Devel/gcc-core  (tested v11.3.0-1)

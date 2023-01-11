@@ -461,7 +461,8 @@ LM_PRIVATE lm_size_t
 _LM_GetProcessPath(lm_char_t *pathbuf,
 		   lm_size_t  maxlen)
 {
-	lm_size_t len;
+	lm_size_t len = 0;
+
 	HMODULE hModule = GetModuleHandle(NULL);
 	if (!hModule)
 		return len;
@@ -630,7 +631,7 @@ _LM_GetProcessBitsEx(lm_pid_t pid)
 	lm_size_t bits = LM_BITS;
 
 	if (!_LM_OpenProc(pid, &hProcess))
-		return;
+		return bits;
 
 	if (!IsWow64Process(hProcess, &IsWow64))
 		goto CLOSE_EXIT;

@@ -347,7 +347,7 @@ _LM_LoadModuleEx(lm_process_t *pproc,
 	_LM_CloseProc(&hProcess);
 
 	if (!hThread)
-		goto FREE_RET;
+		goto FREE_EXIT;
 
 	WaitForSingleObject(hThread, INFINITE);
 	CloseHandle(hThread);

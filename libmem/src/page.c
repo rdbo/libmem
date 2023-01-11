@@ -64,7 +64,7 @@ _LM_EnumPages(lm_bool_t(*callback)(lm_page_t *ppage,
 	data.callback = callback;
 	data.arg = arg;
 
-	return _LM_EnumModules(_LM_EnumPagesCallback, (lm_void_t *)&data);
+	return LM_EnumModules(_LM_EnumPagesCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t
@@ -142,7 +142,7 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 	data.callback = callback;
 	data.arg = arg;
 
-	ret = _LM_EnumModulesEx(pproc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
+	ret = LM_EnumModulesEx(pproc, _LM_EnumPagesExCallback, (lm_void_t *)&data);
 
 	_LM_CloseProc(&data.hProcess);
 

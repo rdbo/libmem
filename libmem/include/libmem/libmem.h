@@ -280,7 +280,7 @@
 #define LM_FALSE   (0)
 #define LM_TRUE    (1)
 #define LM_MAX     (-1UL)
-#define LM_PID_BAD ((lm_pid_t)-1)
+#define LM_PID_BAD ((lm_pid_t)LM_NULL) /* tecnically, PID = 0 exists, but should probably never be accessed anyways, unlike the last possible PID, which was the previous error value for lm_pid_t */
 #define LM_TID_BAD ((lm_tid_t)LM_NULL)
 #define LM_ADDRESS_BAD ((lm_address_t)LM_NULL)
 #define LM_MASK_KNOWN    LM_STR('x')

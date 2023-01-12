@@ -62,7 +62,7 @@ else()
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${LIEF_INC})
-set_target_properties(libmem PROPERTIES PREFIX "" POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
+set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem capstone-engine keystone-engine lief-project)
 

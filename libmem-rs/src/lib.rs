@@ -289,7 +289,7 @@ mod libmem_c {
     use crate::*;
 
     // link against 'mem' (the lib prefix is appended automatically)
-    #[link(name = "mem")]
+    #[link(name = "libmem")]
     extern "C" {
         pub(super) fn LM_EnumProcesses(callback : extern "C" fn(*const lm_process_t, *mut ()) -> i32, arg : *mut ()) -> lm_bool_t;
         pub(super) fn LM_GetProcess(procbuf : *mut lm_process_t) -> lm_bool_t;

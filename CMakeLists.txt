@@ -116,5 +116,9 @@ endif()
 install(TARGETS libmem
 	LIBRARY DESTINATION lib)
 
+install(TARGETS libmem
+	FILES_MATCHING PATTERN "*.dll"
+	DESTINATION lib)
+
 install(DIRECTORY ${LIBMEM_INC}/libmem DESTINATION include)
 

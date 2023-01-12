@@ -30,7 +30,7 @@ LM_Assemble(lm_cstring_t code,
 	lm_bool_t    ret = LM_FALSE;
 	lm_bytearr_t codebuf;
 
-	if (!LM_AssembleEx(code, LM_ARCH, LM_BITS, (lm_address_t)0, &codebuf))
+	if (!LM_AssembleEx(code, LM_BITS, (lm_address_t)0, &codebuf))
 		return ret;
 
 	ret = LM_Disassemble((lm_address_t)codebuf, inst);
@@ -46,7 +46,6 @@ LM_Assemble(lm_cstring_t code,
 
 LM_API lm_size_t
 LM_AssembleEx(lm_cstring_t  code,
-	      lm_arch_t     arch,
 	      lm_size_t     bits,
 	      lm_address_t  base_addr,
 	      lm_bytearr_t *pcodebuf)
@@ -62,9 +61,8 @@ LM_AssembleEx(lm_cstring_t  code,
 
 	LM_ASSERT(code != LM_NULLPTR && pcodebuf != LM_NULLPTR);
 
-	switch (arch) {
+	switch (LM_ARCH) {
 	case LM_ARCH_X86: ksarch = KS_ARCH_X86; break;
-	case LM_ARCH_ARM: ksarch = KS_ARCH_ARM; break;
 	default: return ret;
 	}
 
@@ -114,7 +112,7 @@ LM_Disassemble(lm_address_t code,
 
 	LM_ASSERT(code != LM_ADDRESS_BAD && inst != LM_NULLPTR);
 
-	if (!LM_DisassembleEx(code, LM_ARCH, LM_BITS,
+	if (!LM_DisassembleEx(code, LM_BITS,
 			      LM_INST_SIZE, 1, (lm_address_t)0, &insts))
 		return LM_FALSE;
 
@@ -129,7 +127,6 @@ LM_Disassemble(lm_address_t code,
 
 LM_API lm_size_t
 LM_DisassembleEx(lm_address_t code,
-		 lm_arch_t    arch,
 		 lm_size_t    bits,
 		 lm_size_t    size,
 		 lm_size_t    count,
@@ -147,9 +144,8 @@ LM_DisassembleEx(lm_address_t code,
 
 	LM_ASSERT(code != LM_ADDRESS_BAD && pinsts != LM_NULLPTR);
 
-	switch (arch) {
+	switch (LM_ARCH) {
 	case LM_ARCH_X86: csarch = CS_ARCH_X86; break;
-	case LM_ARCH_ARM: csarch = CS_ARCH_ARM; break;
 	default: return ret;
 	}
 

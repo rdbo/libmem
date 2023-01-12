@@ -43,7 +43,7 @@ _LM_GenerateHook(lm_address_t  from,
 		LM_CSNPRINTF(code, sizeof(code), "jmp %p", (void *)to);
 	}
 
-	size = LM_AssembleEx(code, LM_ARCH, bits, from, pcodebuf);
+	size = LM_AssembleEx(code, bits, from, pcodebuf);
 
 	/* replace nops with jump address */
 	if (size > 0 && bits == 64) {

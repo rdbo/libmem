@@ -297,9 +297,9 @@ LM_PRIVATE lm_size_t
 _LM_GenerateSyscall(lm_size_t bits, lm_bytearr_t *pcodebuf)
 {
 	if (bits == 64)
-		return LM_AssembleEx("syscall", LM_ARCH, bits, LM_ADDRESS_BAD, pcodebuf);
+		return LM_AssembleEx("syscall", bits, LM_ADDRESS_BAD, pcodebuf);
 
-	return LM_AssembleEx("int 80", LM_ARCH, bits, LM_ADDRESS_BAD, pcodebuf);
+	return LM_AssembleEx("int 80", bits, LM_ADDRESS_BAD, pcodebuf);
 }
 
 LM_PRIVATE lm_uintptr_t
@@ -494,7 +494,7 @@ _LM_GenerateLibcall(lm_size_t     bits,
 		LM_CSNPRINTF(code, sizeof(code), "call eax ; int3");
 	}
 
-	return LM_AssembleEx(code, LM_ARCH, bits, LM_ADDRESS_BAD, pcodebuf);
+	return LM_AssembleEx(code, bits, LM_ADDRESS_BAD, pcodebuf);
 }
 
 LM_PRIVATE lm_void_t

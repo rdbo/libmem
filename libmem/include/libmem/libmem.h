@@ -57,6 +57,7 @@
 
 /* Architecture */
 #define LM_ARCH_X86 0
+/*
 #define LM_ARCH_ARM 1
 
 #if defined(LM_FORCE_ARCH_X86)
@@ -76,6 +77,8 @@
 #		define LM_ARCH LM_ARCH_ARM
 #	endif
 #endif
+*/
+#define LM_ARCH LM_ARCH_X86
 
 /* Bits */
 #if defined(LM_FORCE_BITS_64)
@@ -709,7 +712,6 @@ LM_Assemble(lm_cstring_t code,
 
 LM_API lm_size_t
 LM_AssembleEx(lm_cstring_t  code,
-	      lm_arch_t     arch,
 	      lm_size_t     bits,
 	      lm_address_t  base_addr,
 	      lm_bytearr_t *pcodebuf);
@@ -723,7 +725,6 @@ LM_Disassemble(lm_address_t code,
 
 LM_API lm_size_t
 LM_DisassembleEx(lm_address_t code,
-		 lm_arch_t    arch,
 		 lm_size_t    bits,
 		 lm_size_t    size,
 		 lm_size_t    count,

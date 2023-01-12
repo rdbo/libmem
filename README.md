@@ -105,7 +105,11 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 6. Run a Visual Studio `Developer Command Prompt` as Administrator
 
-7. Continue reading at `Build and Install`
+7. Run the following command to append libmem's destination directory to your `%PATH%` user variable:
+
+        setx PATH "%PATH%;%ProgramFiles%\libmem\include;%ProgramFiles%\libmem\lib"
+
+8. Continue reading at `Build and Install`
 
 ### Linux
 **Note**: The following commands are for Debian/Ubuntu based distributions. Make sure to find the appropriate commands for your Linux distribution.

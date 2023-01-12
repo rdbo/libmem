@@ -103,7 +103,7 @@ target_link_libraries(libmem ${LIBMEM_DEPS})
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-		cmake_path(CMAKE_INSTALL_PREFIX "$ENV{ProgramFiles}")
+		cmake_path(SET CMAKE_INSTALL_PREFIX "$ENV{ProgramFiles}")
 	else(${})
 		execute_process(COMMAND cygpath -u "$PROGRAMFILES"
 				OUTPUT_VARIABLE CMAKE_INSTALL_PREFIX)

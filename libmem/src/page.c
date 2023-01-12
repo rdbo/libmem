@@ -30,8 +30,7 @@ typedef struct {
 } _lm_enum_pages_t;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPagesCallback(lm_module_t  mod,
-		      lm_string_t  modpath,
+_LM_EnumPagesCallback(lm_module_t *pmod,
 		      lm_void_t   *arg)
 {
 	lm_address_t addr;
@@ -39,7 +38,7 @@ _LM_EnumPagesCallback(lm_module_t  mod,
 	MEMORY_BASIC_INFORMATION mbi;
 	lm_page_t page;
 
-	for (addr = mod.base;
+	for (addr = pmod->base;
 	     VirtualQuery(addr, &mbi, sizeof(mbi));
 	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;
@@ -102,16 +101,15 @@ typedef struct {
 } _lm_enum_pages_ex_t;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPagesExCallback(lm_module_t  mod,
-			lm_string_t  modpath,
+_LM_EnumPagesExCallback(lm_module_t *pmod,
 			lm_void_t   *arg)
 {
 	lm_address_t addr;
-	_lm_enum_pages_ex_t *parg = (_lm_enum_pages_t *)arg;
+	_lm_enum_pages_ex_t *parg = (_lm_enum_pages_ex_t *)arg;
 	MEMORY_BASIC_INFORMATION mbi;
 	lm_page_t page;
 
-	for (addr = mod.base;
+	for (addr = pmod->base;
 	     VirtualQueryEx(parg->hProcess, addr, &mbi, sizeof(mbi));
 	     addr = (lm_address_t)LM_OFFSET(mbi.BaseAddress, mbi.RegionSize)) {
 		page.base  = (lm_address_t)mbi.BaseAddress;

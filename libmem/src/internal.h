@@ -29,8 +29,8 @@
 #include <capstone/capstone.h>
 #include <keystone/keystone.h>
 #if LM_OS == LM_OS_WIN
-#	include <TlHelp32.h>
-#	include <Psapi.h>
+#	include <tlhelp32.h>
+#	include <psapi.h>
 #else
 #	include <dirent.h>
 #	include <errno.h>

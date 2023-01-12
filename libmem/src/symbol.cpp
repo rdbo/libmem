@@ -35,8 +35,6 @@ _LM_EnumPeSyms(lm_module_t *pmod,
 				      lm_void_t   *arg),
 	       lm_void_t *arg)
 {
-	return LM_FALSE;
-	/*
 	lm_symbol_t sym;
 	std::unique_ptr<const Binary> binary;
 
@@ -53,7 +51,6 @@ _LM_EnumPeSyms(lm_module_t *pmod,
 	}
 
 	return LM_TRUE;
-	*/
 }
 
 LM_PRIVATE lm_bool_t

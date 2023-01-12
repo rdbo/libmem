@@ -1,0 +1,7 @@
+set(CMAKE_SYSTEM_NAME Windows)
+set(WIN32 1)
+set(MINGW 1)
+
+set(MINGW_PREFIX "x86_64-w64-mingw32" CACHE STRING "")
+find_program(CMAKE_C_COMPILER NAMES ${MINGW_PREFIX}-gcc)
+find_program(CMAKE_CXX_COMPILER NAMES ${MINGW_PREFIX}-g++)

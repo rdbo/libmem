@@ -138,18 +138,24 @@ Initialize and update the submodules:
 git submodule init
 git submodule update
 ```
-Generate the CMake cache and compile libmem:
+Generate the CMake cache:
 ```
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j 4
 ```
 
+Compile libmem:
+
+*Windows*: `nmake`
+
+*Unix-like*: `make -j 4`
+
 Install libmem (run as root or as Administrator):
-```
-make install
-```
+
+*Windows*: `nmake install`
+
+*Unix-like*: `make install`
 
 After installing, follow the the proper `Usage` section for your programming language
 

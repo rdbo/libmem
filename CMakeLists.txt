@@ -103,11 +103,12 @@ target_link_libraries(libmem ${LIBMEM_DEPS})
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-		set(CMAKE_INSTALL_PREFIX "$ENV{ProgramFiles}\\libmem")
+		cmake_path(CMAKE_INSTALL_PREFIX "$ENV{ProgramFiles}")
 	else(${})
 		execute_process(COMMAND cygpath -u "$PROGRAMFILES"
 				OUTPUT_VARIABLE CMAKE_INSTALL_PREFIX)
 	endif()
+	set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/libmem")
 	execute_process(COMMAND mkdir "${CMAKE_INSTALL_PREFIX}")
 else()
 	set(CMAKE_INSTALL_PREFIX "/usr")

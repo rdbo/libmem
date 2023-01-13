@@ -255,21 +255,26 @@
 #define _LM_PROT_NONE (0)
 
 /* Imports/Exports */
+#if LM_COMPILER == LM_COMPILER_MSVC
+#	define LM_API_EXPORT __declspec(dllexport)
+#elif LM_COMPILER == LM_COMPILER_CC
+#	define LM_API_EXPORT __attribute__((visibility("default")))
+#endif
+
+#if LM_COMPILER == LM_COMPILER_MSVC
+#	define LM_API_IMPORT __declspec(dllimport)
+#elif LM_COMPILER == LM_COMPILER_CC
+#	define LM_API_IMPORT extern
+#endif
+
 #if defined(LM_EXPORT)
-#	if LM_COMPILER == LM_COMPILER_MSVC
-#		define LM_API __declspec(dllexport)
-#	elif LM_COMPILER == LM_COMPILER_CC
-#		define LM_API __attribute__((visibility("default")))
-#	endif
+#	define LM_API LM_API_EXPORT
 #elif defined(LM_IMPORT)
-#	if LM_COMPILER == LM_COMPILER_MSVC
-#		define LM_API __declspec(dllimport)
-#	elif LM_COMPILER == LM_COMPILER_CC
-#		define LM_API extern
-#	endif
+#	define LM_API LM_API_IMPORT
 #else
 #	define LM_API
 #endif
+
 #define LM_PRIVATE
 
 /* Others */

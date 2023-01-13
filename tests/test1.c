@@ -34,7 +34,7 @@ void hk_some_function(int a, int b)
 	some_function_orig(420, 917);
 }
 
-int
+LM_API_EXPORT int
 main()
 {
 	lm_process_t proc;

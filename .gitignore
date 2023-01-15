@@ -1,3 +1,5 @@
 build*/
 *.swp
 libmem-rs/target/
+libmem-py/dist
+libmem-py/src/libmem.*

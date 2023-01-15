@@ -38,9 +38,25 @@ static PyMemberDef py_lm_process_members[] = {
 	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), READONLY, "Process ID" },
 	{ "ppid", T_INT, offsetof(py_lm_process_obj, proc.ppid), READONLY, "Parent Process ID" },
 	{ "bits", T_ULONG, offsetof(py_lm_process_obj, proc.bits), READONLY, "Process Bits" },
-	{ "path", T_STRING, offsetof(py_lm_process_obj, proc.path), READONLY, "Process Executable Path" },
-	{ "name", T_STRING, offsetof(py_lm_process_obj, proc.name), READONLY, "Process Name" },
 	{ NULL }
+};
+
+PyObject *
+py_lm_process_get_path(PyObject *self, void *closure)
+{
+	return PyUnicode_FromString(((py_lm_process_obj *)self)->proc.path);
+}
+
+PyObject *
+py_lm_process_get_name(PyObject *self, void *closure)
+{
+	return PyUnicode_FromString(((py_lm_process_obj *)self)->proc.path);
+}
+
+static PyGetSetDef py_lm_process_accessors[] = {
+	{ "path", py_lm_process_get_path, NULL, NULL, NULL },
+	{ "name", py_lm_process_get_name, NULL, NULL, NULL },
+	{ NULL, NULL, NULL, NULL, NULL }
 };
 
 static PyTypeObject py_lm_process_t = {
@@ -51,7 +67,8 @@ static PyTypeObject py_lm_process_t = {
 	.tp_itemsize = 0,
 	.tp_flags = Py_TPFLAGS_DEFAULT,
 	.tp_new = PyType_GenericNew,
-	.tp_members = py_lm_process_members
+	.tp_members = py_lm_process_members,
+	.tp_getset = py_lm_process_accessors
 };
 
 /****************************************/

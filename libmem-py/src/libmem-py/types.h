@@ -28,6 +28,8 @@
 #include <Python.h>
 #include <structmember.h>
 
+#define T_SIZE T_ULONG
+
 /* lm_process_t */
 typedef struct {
 	PyObject_HEAD
@@ -37,7 +39,7 @@ typedef struct {
 static PyMemberDef py_lm_process_members[] = {
 	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), READONLY, "Process ID" },
 	{ "ppid", T_INT, offsetof(py_lm_process_obj, proc.ppid), READONLY, "Parent Process ID" },
-	{ "bits", T_ULONG, offsetof(py_lm_process_obj, proc.bits), READONLY, "Process Bits" },
+	{ "bits", T_SIZE, offsetof(py_lm_process_obj, proc.bits), READONLY, "Process Bits" },
 	{ NULL }
 };
 
@@ -50,7 +52,14 @@ py_lm_process_get_path(PyObject *self, void *closure)
 PyObject *
 py_lm_process_get_name(PyObject *self, void *closure)
 {
-	return PyUnicode_FromString(((py_lm_process_obj *)self)->proc.path);
+	return PyUnicode_FromString(((py_lm_process_obj *)self)->proc.name);
+}
+
+PyObject *
+py_lm_process_str(PyObject *self)
+{
+	py_lm_process_obj *pyproc = (py_lm_process_obj *)self;
+	return PyUnicode_FromFormat("lm_process_t { pid: %d, ppid: %d, bits: %zu, path: %s, name: %s }", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.path, pyproc->proc.name);
 }
 
 static PyGetSetDef py_lm_process_accessors[] = {
@@ -68,7 +77,8 @@ static PyTypeObject py_lm_process_t = {
 	.tp_flags = Py_TPFLAGS_DEFAULT,
 	.tp_new = PyType_GenericNew,
 	.tp_members = py_lm_process_members,
-	.tp_getset = py_lm_process_accessors
+	.tp_getset = py_lm_process_accessors,
+	.tp_str = py_lm_process_str
 };
 
 /****************************************/

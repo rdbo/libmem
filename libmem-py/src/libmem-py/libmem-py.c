@@ -26,6 +26,39 @@
 #include <structmember.h>
 #include "types.h"
 
+lm_bool_t
+_py_LM_EnumProcessesCallback(lm_process_t *pproc,
+			     lm_void_t    *arg)
+{
+	PyObject *pylist = (PyObject *)arg;
+	py_lm_process_obj *pyproc;
+
+	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
+	pyproc->proc = *pproc;
+
+	PyList_Append(pylist, (PyObject *)pyproc);
+
+	return LM_TRUE;
+}
+
+static PyObject *
+py_LM_EnumProcesses(PyObject *self,
+		    PyObject *args)
+{
+	PyObject *pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumProcesses(_py_LM_EnumProcessesCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
 static PyObject *
 py_LM_FindProcess(PyObject *self,
 		  PyObject *args)
@@ -54,6 +87,7 @@ py_LM_FindProcess(PyObject *self,
 /****************************************/
 
 static PyMethodDef libmem_methods[] = {
+	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_FindProcess", py_LM_FindProcess, METH_VARARGS, "Searches for an existing process" },
 	{ NULL, NULL, 0, NULL }
 };

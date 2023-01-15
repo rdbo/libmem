@@ -165,9 +165,13 @@ After installing, follow the the proper `Usage` section for your programming lan
 
 ## Usage (C/C++)
 
-Add `#include <libmem/libmem.h>` (C) or `#include <libmem/libmem.hpp>` (C++) to your source code.
+Add `#include <libmem/libmem.h>` (C/C++) or `#include <libmem/libmem.hpp>` (C++) to your source code.
 Link the generated libmem library against your binary (`libmem.so` for Unix-like or `libmem.dll` for Windows).
 *For GCC-like compilers*: add the flag `-llibmem` to your compiler and it should link it.
+```c
+#include <libmem/libmem.h> /* C/C++ */
+#include <libmem/libmem.hpp> /* Force C++ */
+```
 
 ## Usage (Rust)
 Add the following line to your `Cargo.toml` under `[dependencies]`:

@@ -90,7 +90,7 @@ typedef struct {
 } py_lm_thread_obj;
 
 static PyMemberDef py_lm_thread_members[] = {
-	{ "tid", T_INT, offsetof(py_lm_thread_obj, thread.pid), READONLY, "Thread ID" },
+	{ "tid", T_INT, offsetof(py_lm_thread_obj, thread.tid), READONLY, "Thread ID" },
 	{ NULL }
 };
 

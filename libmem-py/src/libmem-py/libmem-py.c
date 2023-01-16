@@ -160,7 +160,7 @@ _py_LM_EnumThreadsCallback(lm_thread_t *pthr,
 	py_lm_thread_obj *pythread;
 
 	pythread = (py_lm_thread_obj *)PyObject_CallObject((PyObject *)&py_lm_thread_t, NULL);
-	pythread->thread = *pthread;
+	pythread->thread = *pthr;
 
 	PyList_Append(pylist, (PyObject *)pythread);
 

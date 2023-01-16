@@ -68,16 +68,21 @@ fn main() {
 
     separator();
 
-    println!("[*] Current Process Threads: {:?}", LM_EnumThreadIds());
+    println!("[*] Current Process Threads: {:?}", LM_EnumThreads());
 
     separator();
 
-    println!("[*] Remote Process Threads: {:?}", LM_EnumThreadIdsEx(&proc));
+    println!("[*] Remote Process Threads: {:?}", LM_EnumThreadsEx(&proc));
 
     separator();
 
-    println!("[*] Current Thread ID: {}", LM_GetThreadId());
-    println!("[*] Remote Process Thread ID: {}", LM_GetThreadIdEx(&proc));
+    let thread = LM_GetThread().unwrap();
+    println!("[*] Current Thread ID: {}", thread);
+    println!("[*] Remote Process Thread ID: {}", LM_GetThreadEx(&proc).unwrap());
+
+    separator();
+
+    println!("[*] Process From Thread '{}': {}", thread, LM_GetThreadProcess(&thread).unwrap());
 
     separator();
 

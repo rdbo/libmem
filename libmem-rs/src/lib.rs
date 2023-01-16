@@ -68,6 +68,8 @@ impl fmt::Display for lm_prot_t {
 
 pub use crate::lm_prot_t::*;
 
+const LM_PID_BAD : lm_pid_t = 0;
+const LM_TID_BAD : lm_tid_t = 0;
 const LM_FALSE : lm_bool_t = 0;
 const LM_TRUE : lm_bool_t = 1;
 const LM_ADDRESS_BAD : lm_address_t = 0;
@@ -99,6 +101,7 @@ fn string_from_cstring(cstring : &[u8]) -> String {
 #[repr(C)]
 #[derive(Clone)]
 #[derive(Copy)]
+#[derive(Debug)]
 pub struct lm_process_t {
     pid : lm_pid_t,
     ppid : lm_pid_t,
@@ -110,7 +113,7 @@ pub struct lm_process_t {
 
 impl lm_process_t {
     pub fn new() -> Self {
-        Self { pid: 0, ppid: 0, bits: 0, name: [0;LM_PATH_MAX], path: [0;LM_PATH_MAX] }
+        Self { pid: LM_PID_BAD, ppid: LM_PID_BAD, bits: 0, name: [0;LM_PATH_MAX], path: [0;LM_PATH_MAX] }
     }
 
     pub fn get_pid(&self) -> lm_pid_t {
@@ -140,9 +143,38 @@ impl fmt::Display for lm_process_t {
     }
 }
 
+/****************************************/
+
 #[repr(C)]
 #[derive(Clone)]
 #[derive(Copy)]
+#[derive(Debug)]
+pub struct lm_thread_t {
+    tid : lm_tid_t
+}
+
+impl lm_thread_t {
+    pub fn new() -> Self {
+        Self { tid: LM_TID_BAD }
+    }
+
+    pub fn get_tid(&self) -> lm_tid_t {
+        self.tid
+    }
+}
+
+impl fmt::Display for lm_thread_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "lm_thread_t {{ tid: {} }}", self.get_tid())
+    }
+}
+
+/****************************************/
+
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Copy)]
+#[derive(Debug)]
 pub struct lm_module_t {
     base : lm_address_t,
     end : lm_address_t,
@@ -153,7 +185,7 @@ pub struct lm_module_t {
 
 impl lm_module_t {
     pub fn new() -> Self {
-        Self { base: 0, end: 0, size: 0, path: [0;LM_PATH_MAX], name: [0;LM_PATH_MAX] }
+        Self { base: LM_ADDRESS_BAD, end: LM_ADDRESS_BAD, size: 0, path: [0;LM_PATH_MAX], name: [0;LM_PATH_MAX] }
     }
 
     pub fn get_base(&self) -> lm_address_t {
@@ -183,8 +215,11 @@ impl fmt::Display for lm_module_t {
     }
 }
 
+/****************************************/
+
 #[repr(C)]
 #[allow(improper_ctypes)] // Permit String
+#[derive(Debug)]
 pub struct lm_symbol_t {
     name : lm_cstring_t,
     address : lm_address_t,
@@ -193,7 +228,7 @@ pub struct lm_symbol_t {
 
 impl lm_symbol_t {
     pub fn new() -> Self {
-        Self { name: 0 as lm_cstring_t, address: 0, name_str: String::new() }
+        Self { name: 0 as lm_cstring_t, address: LM_ADDRESS_BAD, name_str: String::new() }
     }
 
     pub fn get_name(&self) -> &String {
@@ -211,9 +246,12 @@ impl fmt::Display for lm_symbol_t {
     }
 }
 
+/****************************************/
+
 #[repr(C)]
 #[derive(Clone)]
 #[derive(Copy)]
+#[derive(Debug)]
 pub struct lm_page_t {
     base : lm_address_t,
     end : lm_address_t,
@@ -249,7 +287,10 @@ impl fmt::Display for lm_page_t {
     }
 }
 
+/****************************************/
+
 #[repr(C)]
+#[derive(Debug)]
 pub struct lm_inst_t {
     id : u32,
     address : u64,
@@ -297,10 +338,11 @@ mod libmem_c {
         pub(super) fn LM_IsProcessAlive(pproc : *const lm_process_t) -> lm_bool_t;
         pub(super) fn LM_GetSystemBits() -> lm_size_t;
         /****************************************/
-        pub(super) fn LM_EnumThreadIds(callback : extern "C" fn(lm_tid_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
-        pub(super) fn LM_EnumThreadIdsEx(pproc : *const lm_process_t, callback : extern "C" fn(lm_tid_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
-        pub(super) fn LM_GetThreadId() -> lm_tid_t;
-        pub(super) fn LM_GetThreadIdEx(pproc : *const lm_process_t) -> lm_tid_t;
+        pub(super) fn LM_EnumThreads(callback : extern "C" fn(*const lm_thread_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_EnumThreadsEx(pproc : *const lm_process_t, callback : extern "C" fn(*const lm_thread_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
+        pub(super) fn LM_GetThread(thrbuf : *mut lm_thread_t) -> lm_bool_t;
+        pub(super) fn LM_GetThreadEx(pproc : *const lm_process_t, thrbuf : *mut lm_thread_t) -> lm_bool_t;
+        pub(super) fn LM_GetThreadProcess(pthr : *const lm_thread_t, procbuf : *mut lm_process_t) -> lm_bool_t;
         /****************************************/
         pub(super) fn LM_EnumModules(callback : extern "C" fn(*const lm_module_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
         pub(super) fn LM_EnumModulesEx(pproc : *const lm_process_t, callback : extern "C" fn(*const lm_module_t, *mut ()) -> lm_bool_t, arg : *mut ()) -> lm_bool_t;
@@ -428,20 +470,20 @@ pub fn LM_GetSystemBits() -> lm_size_t {
 
 /****************************************/
 
-extern "C" fn LM_EnumThreadIdsCallback(tid : lm_tid_t, arg : *mut ()) -> lm_bool_t {
-    let thread_list_ptr = arg as *mut Vec<lm_tid_t>;
+extern "C" fn LM_EnumThreadsCallback(pthr : *const lm_thread_t, arg : *mut ()) -> lm_bool_t {
+    let thread_list_ptr = arg as *mut Vec<lm_thread_t>;
     unsafe {
-        (*thread_list_ptr).push(tid);
+        (*thread_list_ptr).push(*pthr);
     }
     LM_TRUE
 }
 
-pub fn LM_EnumThreadIds() -> Vec<lm_tid_t> {
-    let mut thread_list : Vec<lm_tid_t> = Vec::new();
+pub fn LM_EnumThreads() -> Vec<lm_thread_t> {
+    let mut thread_list : Vec<lm_thread_t> = Vec::new();
     unsafe {
-        let callback = LM_EnumThreadIdsCallback;
-        let arg = &mut thread_list as *mut Vec<lm_tid_t> as *mut ();
-        if libmem_c::LM_EnumThreadIds(callback, arg) == LM_FALSE {
+        let callback = LM_EnumThreadsCallback;
+        let arg = &mut thread_list as *mut Vec<lm_thread_t> as *mut ();
+        if libmem_c::LM_EnumThreads(callback, arg) == LM_FALSE {
             thread_list.clear();
         }
     }
@@ -449,13 +491,13 @@ pub fn LM_EnumThreadIds() -> Vec<lm_tid_t> {
     thread_list
 }
 
-pub fn LM_EnumThreadIdsEx(pproc : &lm_process_t) -> Vec<lm_tid_t> {
-    let mut thread_list : Vec<lm_tid_t> = Vec::new();
+pub fn LM_EnumThreadsEx(pproc : &lm_process_t) -> Vec<lm_thread_t> {
+    let mut thread_list : Vec<lm_thread_t> = Vec::new();
     unsafe {
         let pproc = pproc as *const lm_process_t;
-        let callback = LM_EnumThreadIdsCallback;
-        let arg = &mut thread_list as *mut Vec<lm_tid_t> as *mut ();
-        if libmem_c::LM_EnumThreadIdsEx(pproc, callback, arg) == LM_FALSE {
+        let callback = LM_EnumThreadsCallback;
+        let arg = &mut thread_list as *mut Vec<lm_thread_t> as *mut ();
+        if libmem_c::LM_EnumThreadsEx(pproc, callback, arg) == LM_FALSE {
             thread_list.clear();
         }
     }
@@ -463,16 +505,41 @@ pub fn LM_EnumThreadIdsEx(pproc : &lm_process_t) -> Vec<lm_tid_t> {
     thread_list
 }
 
-pub fn LM_GetThreadId() -> lm_tid_t {
+pub fn LM_GetThread() -> Option<lm_thread_t> {
+    let mut thread = lm_thread_t::new();
     unsafe {
-        libmem_c::LM_GetThreadId()
+        let thrbuf = &mut thread as *mut lm_thread_t;
+        if libmem_c::LM_GetThread(thrbuf) != LM_FALSE {
+            Some(thread)
+        } else {
+            None
+        }
     }
 }
 
-pub fn LM_GetThreadIdEx(pproc : &lm_process_t) -> lm_tid_t {
+pub fn LM_GetThreadEx(pproc : &lm_process_t) -> Option<lm_thread_t> {
+    let mut thread = lm_thread_t::new();
     unsafe {
         let pproc = pproc as *const lm_process_t;
-        libmem_c::LM_GetThreadIdEx(pproc)
+        let thrbuf = &mut thread as *mut lm_thread_t;
+        if libmem_c::LM_GetThreadEx(pproc, thrbuf) != LM_FALSE {
+            Some(thread)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_GetThreadProcess(pthr : &lm_thread_t) -> Option<lm_process_t> {
+    let mut proc = lm_process_t::new();
+    unsafe {
+        let pthr = pthr as *const lm_thread_t;
+        let procbuf = &mut proc as *mut lm_process_t;
+        if libmem_c::LM_GetThreadProcess(pthr, procbuf) != LM_FALSE {
+            Some(proc)
+        } else {
+            None
+        }
     }
 }
 

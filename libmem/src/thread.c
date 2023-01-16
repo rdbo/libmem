@@ -256,17 +256,15 @@ LM_GetThreadProcess(lm_thread_t  *pthr,
 	/* TODO: Optimize this function (there should be a way of
 	 * directly opening processes by PID to avoid enumerating
 	 * them all the time) */
-	lm_pid_t pid;
-	lm_process_t proc;
 
-	proc.bits = 0; /* this will be used to check if the process was found */
-
-	pid = _LM_GetPidFromThread(pthr);
-	if (pid == LM_PID_BAD)
+	procbuf->pid = _LM_GetPidFromThread(pthr);
+	if (procbuf->pid == LM_PID_BAD)
 		return LM_FALSE;
 
-	LM_EnumProcesses(_LM_GetThreadProcessCallback, (lm_void_t *)&proc);
+	procbuf->bits = 0; /* this will be used to check if the process was found */
 
-	return proc.bits != 0 ? LM_TRUE : LM_FALSE;
+	LM_EnumProcesses(_LM_GetThreadProcessCallback, (lm_void_t *)procbuf);
+
+	return procbuf->bits != 0 ? LM_TRUE : LM_FALSE;
 }
 

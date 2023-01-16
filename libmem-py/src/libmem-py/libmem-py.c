@@ -78,6 +78,28 @@ py_LM_GetProcess(PyObject *self,
 /****************************************/
 
 static PyObject *
+py_LM_GetProcessEx(PyObject *self,
+		   PyObject *args)
+{
+	lm_pid_t pid;
+	lm_process_t proc;
+	py_lm_process_obj *pyproc;
+
+	if (!PyArg_ParseTuple(args, "i", &pid))
+		return NULL;
+
+	if (!LM_GetProcessEx(pid, &proc))
+		return Py_BuildValue("");
+
+	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
+	pyproc->proc = proc;
+
+	return (PyObject *)pyproc;
+}
+
+/****************************************/
+
+static PyObject *
 py_LM_FindProcess(PyObject *self,
 		  PyObject *args)
 {
@@ -130,18 +152,10 @@ py_LM_GetSystemBits(PyObject *self,
 
 /****************************************/
 
-static PyObject *
-py_LM_EnumThreadsIds(PyObject *self,
-		     PyObject *args)
-{
-
-}
-
-/****************************************/
-
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
+	{ "LM_GetProcessEx", py_LM_GetProcessEx, METH_VARARGS, "Gets information about a process from a process ID" },
 	{ "LM_FindProcess", py_LM_FindProcess, METH_VARARGS, "Searches for an existing process" },
 	{ "LM_IsProcessAlive", py_LM_IsProcessAlive, METH_VARARGS, "Checks if a process is alive" },
 	{ "LM_GetSystemBits", py_LM_GetSystemBits, METH_VARARGS, "Checks if a process is alive" },

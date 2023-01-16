@@ -21,6 +21,12 @@ print(curproc)
 
 separator()
 
+print("[*] Parent Process of Current Process")
+parent_proc = LM_GetProcessEx(curproc.ppid)
+print(parent_proc)
+
+separator()
+
 print("[*] Remote Process")
 proc = LM_FindProcess("firefox-esr")
 print(proc)

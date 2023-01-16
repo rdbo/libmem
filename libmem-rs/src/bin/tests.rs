@@ -59,7 +59,7 @@ fn main() {
     separator();
 
     let is_alive = LM_IsProcessAlive(&proc);
-    println!("[*] Is the Remote Process Alive? {}", if is_alive { "yes" } else { "no" });
+    println!("[*] Is the Remote Process Alive? {}", if is_alive { "Yes" } else { "No" });
 
     separator();
 

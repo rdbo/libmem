@@ -224,6 +224,7 @@ BSD:
 ```
 LM_EnumProcesses
 LM_GetProcess
+LM_GetProcessEx
 LM_FindProcess
 LM_IsProcessAlive
 LM_GetSystemBits

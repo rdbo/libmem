@@ -26,6 +26,13 @@
 #include <structmember.h>
 #include "types.h"
 
+#define DECL_GLOBAL(var) { \
+	/* make sure that 'pymod' and 'global' are declared */ \
+	global = (PyObject *)PyLong_FromLong((long)var); \
+	PyObject_SetAttrString(pymod, #var, global); \
+	Py_DECREF(global); \
+}
+
 static lm_bool_t
 _py_LM_EnumProcessesCallback(lm_process_t *pproc,
 			     lm_void_t    *arg)
@@ -579,6 +586,7 @@ PyMODINIT_FUNC
 PyInit_libmem(void)
 {
 	PyObject *pymod;
+	PyObject *global; /* used in the DECL_GLOBAL macro */
 
 	if (PyType_Ready(&py_lm_process_t) < 0)
 		goto ERR_PYMOD;
@@ -632,6 +640,15 @@ PyInit_libmem(void)
 	if (PyModule_AddObject(pymod, "lm_page_t",
 			       (PyObject *)&py_lm_page_t) < 0)
 		goto ERR_PAGE;
+
+	/* global variables */
+	DECL_GLOBAL(LM_PROT_X);
+	DECL_GLOBAL(LM_PROT_R);
+	DECL_GLOBAL(LM_PROT_W);
+	DECL_GLOBAL(LM_PROT_XR);
+	DECL_GLOBAL(LM_PROT_XW);
+	DECL_GLOBAL(LM_PROT_RW);
+	DECL_GLOBAL(LM_PROT_XRW);
 
 	goto EXIT; /* no errors */
 

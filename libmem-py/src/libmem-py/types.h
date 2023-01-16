@@ -206,3 +206,107 @@ static PyTypeObject py_lm_symbol_t = {
 	.tp_repr = py_lm_symbol_str
 };
 
+/****************************************/
+
+/* lm_prot_t */
+typedef struct {
+	PyObject_HEAD
+	lm_prot_t prot;
+} py_lm_prot_obj;
+
+int
+py_lm_prot_init(PyObject *self,
+		PyObject *args,
+		PyObject *kwds)
+{
+	lm_prot_t prot;
+	py_lm_prot_obj *pyprot = (py_lm_prot_obj *)self;
+
+	if (!PyArg_ParseTuple(args, "i", &prot))
+		return -1;
+
+	pyprot->prot = prot;
+
+	return 0;
+}
+
+PyObject *
+py_lm_prot_str(PyObject *self)
+{
+	py_lm_prot_obj *pyprot = (py_lm_prot_obj *)self;
+	const char *protstr;
+
+	switch (pyprot->prot) {
+	case LM_PROT_X: protstr = "LM_PROT_X"; break;
+	case LM_PROT_R: protstr = "LM_PROT_R"; break;
+	case LM_PROT_W: protstr = "LM_PROT_W"; break;
+	case LM_PROT_XR: protstr = "LM_PROT_XR"; break;
+	case LM_PROT_XW: protstr = "LM_PROT_XW"; break;
+	case LM_PROT_RW: protstr = "LM_PROT_RW"; break;
+	case LM_PROT_XRW: protstr = "LM_PROT_XRW"; break;
+	default: protstr = "LM_PROT_NONE"; break;
+	}
+
+	return PyUnicode_FromFormat("<lm_prot_t { prot: %s }>", protstr);
+}
+
+static PyTypeObject py_lm_prot_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_prot_t",
+	.tp_doc = "Stores memory protection flags",
+	.tp_basicsize = sizeof(py_lm_prot_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_str = py_lm_prot_str,
+	.tp_repr = py_lm_prot_str,
+	.tp_init = py_lm_prot_init
+};
+
+/****************************************/
+
+/* lm_page_t */
+typedef struct {
+	PyObject_HEAD
+	lm_page_t page;
+	py_lm_prot_obj *prot;
+} py_lm_page_obj;
+
+static PyMemberDef py_lm_page_members[] = {
+	{ "base", T_SIZE, offsetof(py_lm_page_obj, page.base), READONLY, "Page Base Address" },
+	{ "end", T_SIZE, offsetof(py_lm_page_obj, page.end), READONLY, "Page End Address" },
+	{ "size", T_SIZE, offsetof(py_lm_page_obj, page.size), READONLY, "Page Size" },
+	{ "prot", T_OBJECT, offsetof(py_lm_page_obj, prot), READONLY, "Page Protection Flags" },
+	{ NULL }
+};
+
+PyObject *
+py_lm_page_str(PyObject *self)
+{
+	py_lm_page_obj *pypage = (py_lm_page_obj *)self;
+	PyObject *pyprotstr;
+	const char *protstr;
+	PyObject *fmtstr;
+
+	pyprotstr = PyObject_Str((PyObject *)pypage->prot);
+	protstr = PyUnicode_AsUTF8(pyprotstr);
+	fmtstr = PyUnicode_FromFormat("<lm_page_t { base: %p, end: %p, size: %p, prot: %s }>", (void *)pypage->page.base, (void *)pypage->page.end, (void *)pypage->page.size, protstr);
+
+	Py_DECREF(pyprotstr); /* delete protection string object */
+
+	return fmtstr;
+}
+
+static PyTypeObject py_lm_page_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_page_t",
+	.tp_doc = "Stores information about a page",
+	.tp_basicsize = sizeof(py_lm_page_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_page_members,
+	.tp_str = py_lm_page_str,
+	.tp_repr = py_lm_page_str
+};
+

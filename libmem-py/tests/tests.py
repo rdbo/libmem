@@ -95,3 +95,8 @@ print("[*] Py_BytesMain Address: " + hex(symaddr))
 
 separator()
 
+page = lm_prot_t(0b111)
+print(page)
+
+separator()
+

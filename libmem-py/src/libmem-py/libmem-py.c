@@ -563,7 +563,7 @@ static PyMethodDef libmem_methods[] = {
 	/****************************************/
 	{ "LM_EnumSymbols", py_LM_EnumSymbols, METH_VARARGS, "Lists all symbols from a module" },
 	{ "LM_FindSymbolAddress", py_LM_FindSymbolAddress, METH_VARARGS, "Searches for a symbols in a module" },
-
+	/****************************************/
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -592,6 +592,12 @@ PyInit_libmem(void)
 	if (PyType_Ready(&py_lm_symbol_t) < 0)
 		goto ERR_PYMOD;
 
+	if (PyType_Ready(&py_lm_prot_t) < 0)
+		goto ERR_PYMOD;
+
+	if (PyType_Ready(&py_lm_page_t) < 0)
+		goto ERR_PYMOD;
+
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
 		goto ERR_PYMOD;
@@ -617,9 +623,24 @@ PyInit_libmem(void)
 			       (PyObject *)&py_lm_symbol_t) < 0)
 		goto ERR_SYMBOL;
 
+	Py_INCREF(&py_lm_prot_t);
+	if (PyModule_AddObject(pymod, "lm_prot_t",
+			       (PyObject *)&py_lm_prot_t) < 0)
+		goto ERR_PROT;
+
+	Py_INCREF(&py_lm_page_t);
+	if (PyModule_AddObject(pymod, "lm_page_t",
+			       (PyObject *)&py_lm_page_t) < 0)
+		goto ERR_PAGE;
 
 	goto EXIT; /* no errors */
 
+ERR_PROT:
+	Py_DECREF(&py_lm_prot_t);
+	Py_DECREF(pymod);
+ERR_PAGE:
+	Py_DECREF(&py_lm_page_t);
+	Py_DECREF(pymod);
 ERR_SYMBOL:
 	Py_DECREF(&py_lm_symbol_t);
 	Py_DECREF(pymod);

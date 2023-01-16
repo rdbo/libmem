@@ -28,12 +28,12 @@ print(parent_proc)
 separator()
 
 print("[*] Remote Process")
-proc = LM_FindProcess("firefox-esr")
+proc = LM_FindProcess("test1")
 print(proc)
 
 separator()
 
-print("[*] Is Remote Process Alive? " + "Yes" if LM_IsProcessAlive(proc) else "No")
+print("[*] Is Remote Process Alive? " + ("Yes" if LM_IsProcessAlive(proc) else "No"))
 
 separator()
 

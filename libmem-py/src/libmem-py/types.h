@@ -59,7 +59,7 @@ PyObject *
 py_lm_process_str(PyObject *self)
 {
 	py_lm_process_obj *pyproc = (py_lm_process_obj *)self;
-	return PyUnicode_FromFormat("lm_process_t { pid: %d, ppid: %d, bits: %zu, path: %s, name: %s }", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.path, pyproc->proc.name);
+	return PyUnicode_FromFormat("<lm_process_t { pid: %d, ppid: %d, bits: %zu, path: %s, name: %s }>", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.path, pyproc->proc.name);
 }
 
 static PyGetSetDef py_lm_process_accessors[] = {
@@ -78,7 +78,8 @@ static PyTypeObject py_lm_process_t = {
 	.tp_new = PyType_GenericNew,
 	.tp_members = py_lm_process_members,
 	.tp_getset = py_lm_process_accessors,
-	.tp_str = py_lm_process_str
+	.tp_str = py_lm_process_str,
+	.tp_repr = py_lm_process_str
 };
 
 /****************************************/
@@ -98,7 +99,7 @@ PyObject *
 py_lm_thread_str(PyObject *self)
 {
 	py_lm_thread_obj *pythread = (py_lm_thread_obj *)self;
-	return PyUnicode_FromFormat("lm_thread_t { tid: %d }", pythread->thread.tid);
+	return PyUnicode_FromFormat("<lm_thread_t { tid: %d }>", pythread->thread.tid);
 }
 
 static PyTypeObject py_lm_thread_t = {
@@ -110,7 +111,8 @@ static PyTypeObject py_lm_thread_t = {
 	.tp_flags = Py_TPFLAGS_DEFAULT,
 	.tp_new = PyType_GenericNew,
 	.tp_members = py_lm_thread_members,
-	.tp_str = py_lm_thread_str
+	.tp_str = py_lm_thread_str,
+	.tp_repr = py_lm_thread_str
 };
 
 #endif

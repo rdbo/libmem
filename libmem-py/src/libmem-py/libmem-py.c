@@ -152,6 +152,41 @@ py_LM_GetSystemBits(PyObject *self,
 
 /****************************************/
 
+static lm_bool_t
+_py_LM_EnumThreadsCallback(lm_thread_t *pthr,
+			   lm_void_t   *arg)
+{
+	PyObject *pylist = (PyObject *)arg;
+	py_lm_thread_obj *pythread;
+
+	pythread = (py_lm_thread_obj *)PyObject_CallObject((PyObject *)&py_lm_thread_t, NULL);
+	pythread->thread = *pthread;
+
+	PyList_Append(pylist, (PyObject *)pythread);
+
+	return LM_TRUE;
+}
+
+static PyObject *
+py_LM_EnumThreads(PyObject *self,
+		  PyObject *args)
+{
+	PyObject *pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumThreads(_py_LM_EnumThreadsCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -160,6 +195,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_IsProcessAlive", py_LM_IsProcessAlive, METH_VARARGS, "Checks if a process is alive" },
 	{ "LM_GetSystemBits", py_LM_GetSystemBits, METH_VARARGS, "Checks if a process is alive" },
 	/****************************************/
+	{ "LM_EnumThreads", py_LM_EnumThreads, METH_NOARGS, "Lists all threads from the calling process" },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -189,8 +225,16 @@ PyInit_libmem(void)
 			       (PyObject *)&py_lm_process_t) < 0)
 		goto ERR_PROCESS;
 
+	Py_INCREF(&py_lm_thread_t);
+	if (PyModule_AddObject(pymod, "lm_thread_t",
+			       (PyObject *)&py_lm_thread_t) < 0)
+		goto ERR_THREAD;
+
 	goto EXIT; /* no errors */
 
+ERR_THREAD:
+	Py_DECREF(&py_lm_thread_t);
+	Py_DECREF(pymod);
 ERR_PROCESS:
 	Py_DECREF(&py_lm_process_t);
 	Py_DECREF(pymod);

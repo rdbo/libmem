@@ -83,7 +83,35 @@ static PyTypeObject py_lm_process_t = {
 
 /****************************************/
 
+/* lm_thread_t */
+typedef struct {
+	PyObject_HEAD
+	lm_thread_t thread;
+} py_lm_thread_obj;
 
+static PyMemberDef py_lm_thread_members[] = {
+	{ "tid", T_INT, offsetof(py_lm_thread_obj, thread.pid), READONLY, "Thread ID" },
+	{ NULL }
+};
+
+PyObject *
+py_lm_thread_str(PyObject *self)
+{
+	py_lm_thread_obj *pythread = (py_lm_thread_obj *)self;
+	return PyUnicode_FromFormat("lm_thread_t { tid: %d }", pythread->thread.tid);
+}
+
+static PyTypeObject py_lm_thread_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_thread_t",
+	.tp_doc = "Stores information about a thread",
+	.tp_basicsize = sizeof(py_lm_thread_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_thread_members,
+	.tp_str = py_lm_thread_str
+};
 
 #endif
 

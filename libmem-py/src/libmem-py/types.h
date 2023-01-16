@@ -247,7 +247,7 @@ py_lm_prot_str(PyObject *self)
 	default: protstr = "LM_PROT_NONE"; break;
 	}
 
-	return PyUnicode_FromFormat("<lm_prot_t { prot: %s }>", protstr);
+	return PyUnicode_FromFormat("%s", protstr);
 }
 
 static PyTypeObject py_lm_prot_t = {

@@ -679,6 +679,30 @@ py_LM_ReadMemory(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_WriteMemory(PyObject *self,
+		  PyObject *args)
+{
+	lm_address_t dst;
+	PyObject *pysrc;
+	lm_bytearr_t src;
+	lm_size_t size;
+
+	if (!PyArg_ParseTuple(args, "kY", &dst, &pysrc))
+		return NULL;
+
+	/* TODO: Check if 'PyByteArray_AsString' can handle the byte 0x0 */
+	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
+	size = (lm_size_t)PyByteArray_Size(pysrc);
+
+	if (LM_WriteMemory(dst, src, size) != size)
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -710,7 +734,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetPage", py_LM_GetPage, METH_VARARGS, "Get information about the page of an address in the current process" },
 	{ "LM_GetPageEx", py_LM_GetPageEx, METH_VARARGS, "Get information about the page of an address in a remote process" },
 	/****************************************/
-	{ "LM_ReadMemory", py_LM_ReadMemory, METH_VARARGS, "Lists all pages from the calling process" },
+	{ "LM_ReadMemory", py_LM_ReadMemory, METH_VARARGS, "Read memory from the calling process" },
+	{ "LM_WriteMemory", py_LM_WriteMemory, METH_VARARGS, "Write memory to the calling process" },
 	{ NULL, NULL, 0, NULL }
 };
 

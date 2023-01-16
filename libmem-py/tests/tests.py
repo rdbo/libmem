@@ -124,3 +124,8 @@ print(f"[*] Read Integer From '{hex(val_addr)}': {rdval}")
 
 separator()
 
+LM_WriteMemory(val_addr, bytearray(b"\x39\x05\x00\x00"))
+print(f"[*] Integer After LM_WriteMemory: {val}")
+
+separator()
+

@@ -1,4 +1,6 @@
 from libmem import *
+import ctypes
+import struct
 
 def separator():
     print("========================================")
@@ -111,6 +113,14 @@ print("[*] Page From Current Process Module: " + str(LM_GetPage(symaddr)))
 separator()
 
 print("[*] Page From Remote Process Module: " + str(LM_GetPageEx(proc, mod.base)))
+
+separator()
+
+val = ctypes.c_int(10)
+val_addr = ctypes.addressof(val)
+rdbuf = LM_ReadMemory(val_addr, ctypes.sizeof(val))
+rdval = struct.unpack("@i", rdbuf)[0]
+print(f"[*] Read Integer From '{hex(val_addr)}': {rdval}")
 
 separator()
 

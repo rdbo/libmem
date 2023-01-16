@@ -232,6 +232,7 @@ LM_EnumThreads
 LM_EnumThreadsEx
 LM_GetThread
 LM_GetThreadEx
+LM_GetThreadProcess
 
 LM_EnumModules
 LM_EnumModulesEx

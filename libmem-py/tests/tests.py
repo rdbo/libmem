@@ -69,7 +69,8 @@ print("\n".join([str(mod) for mod in LM_EnumModulesEx(proc)[:5]]))
 
 separator()
 
-print("[*] Current Process Module: " + str(LM_FindModule(curproc.path)))
+mod = LM_FindModule(curproc.path)
+print("[*] Current Process Module: " + str(mod))
 
 separator()
 
@@ -78,4 +79,19 @@ print("[*] Remote Process Module: " + str(LM_FindModuleEx(proc, proc.path)))
 separator()
 
 # TODO: Add tests for LM_LoadModule(Ex) and LM_UnloadModule(Ex)
+
+# separator()
+
+print("[*] Symbol Enumeration")
+
+print("\n".join([str(sym) for sym in LM_EnumSymbols(mod)[:5]]))
+
+separator()
+
+print("[*] Symbol Address Search")
+
+symaddr = LM_FindSymbolAddress(mod, "Py_BytesMain")
+print("[*] Py_BytesMain Address: " + hex(symaddr))
+
+separator()
 

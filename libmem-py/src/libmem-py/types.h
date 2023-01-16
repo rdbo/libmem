@@ -117,7 +117,7 @@ static PyTypeObject py_lm_thread_t = {
 
 /****************************************/
 
-/* lm_process_t */
+/* lm_module_t */
 typedef struct {
 	PyObject_HEAD
 	lm_module_t mod;
@@ -170,4 +170,39 @@ static PyTypeObject py_lm_module_t = {
 };
 
 #endif
+
+/****************************************/
+
+/* lm_symbol_t */
+typedef struct {
+	PyObject_HEAD
+	lm_symbol_t symbol;
+	PyObject *name;
+} py_lm_symbol_obj;
+
+static PyMemberDef py_lm_symbol_members[] = {
+	{ "name", T_OBJECT, offsetof(py_lm_symbol_obj, name), READONLY, "Symbol Name" },
+	{ "address", T_SIZE, offsetof(py_lm_symbol_obj, symbol.address), READONLY, "Symbol Address" },
+	{ NULL }
+};
+
+PyObject *
+py_lm_symbol_str(PyObject *self)
+{
+	py_lm_symbol_obj *pysym = (py_lm_symbol_obj *)self;
+	return PyUnicode_FromFormat("<lm_symbol_t { name: %s, address: %p }>", PyUnicode_AsUTF8(pysym->name), (void *)pysym->symbol.address);
+}
+
+static PyTypeObject py_lm_symbol_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_symbol_t",
+	.tp_doc = "Stores information about a symbol",
+	.tp_basicsize = sizeof(py_lm_symbol_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_symbol_members,
+	.tp_str = py_lm_symbol_str,
+	.tp_repr = py_lm_symbol_str
+};
 

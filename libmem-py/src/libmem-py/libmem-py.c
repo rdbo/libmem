@@ -26,7 +26,7 @@
 #include <structmember.h>
 #include "types.h"
 
-lm_bool_t
+static lm_bool_t
 _py_LM_EnumProcessesCallback(lm_process_t *pproc,
 			     lm_void_t    *arg)
 {
@@ -271,7 +271,7 @@ py_LM_GetThreadProcess(PyObject *self,
 
 /****************************************/
 
-lm_bool_t
+static lm_bool_t
 _py_LM_EnumModulesCallback(lm_module_t *pmod,
 			   lm_void_t   *arg)
 {
@@ -473,6 +473,71 @@ py_LM_UnloadModuleEx(PyObject *self,
 
 /****************************************/
 
+static lm_bool_t
+_py_LM_EnumSymbolsCallback(lm_symbol_t *psym,
+			   lm_void_t   *arg)
+{
+	PyObject *pylist = (PyObject *)arg;
+	py_lm_symbol_obj *pysym;
+
+	pysym = (py_lm_symbol_obj *)PyObject_CallObject((PyObject *)&py_lm_symbol_t, NULL);
+	pysym->symbol = *psym;
+	pysym->name = PyUnicode_FromString(pysym->symbol.name);
+
+	PyList_Append(pylist, (PyObject *)pysym);
+
+	return LM_TRUE;
+}
+
+static PyObject *
+py_LM_EnumSymbols(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_module_obj *pymodule;
+	PyObject *pylist;
+
+	if (!PyArg_ParseTuple(args, "O", &pymodule))
+		return NULL;
+
+	pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumSymbols(&pymodule->mod, _py_LM_EnumSymbolsCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_FindSymbolAddress(PyObject *self,
+			PyObject *args)
+{
+	py_lm_module_obj *pymodule;
+	lm_char_t        *symname;
+	lm_address_t      symaddr;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "Ou", &pymodule, &symname))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "Os", &pymodule, &symname))
+		return NULL;
+#	endif
+
+	symaddr = LM_FindSymbolAddress(&pymodule->mod, symname);
+	if (symaddr == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return (PyObject *)PyLong_FromSize_t(symaddr);
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -496,6 +561,9 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_UnloadModule", py_LM_UnloadModule, METH_VARARGS, "Unloads a module from the current process" },
 	{ "LM_UnloadModuleEx", py_LM_UnloadModuleEx, METH_VARARGS, "Unloads a module from a remote process" },
 	/****************************************/
+	{ "LM_EnumSymbols", py_LM_EnumSymbols, METH_VARARGS, "Lists all symbols from a module" },
+	{ "LM_FindSymbolAddress", py_LM_FindSymbolAddress, METH_VARARGS, "Searches for a symbols in a module" },
+
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -521,6 +589,9 @@ PyInit_libmem(void)
 	if (PyType_Ready(&py_lm_module_t) < 0)
 		goto ERR_PYMOD;
 
+	if (PyType_Ready(&py_lm_symbol_t) < 0)
+		goto ERR_PYMOD;
+
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
 		goto ERR_PYMOD;
@@ -541,8 +612,17 @@ PyInit_libmem(void)
 			       (PyObject *)&py_lm_module_t) < 0)
 		goto ERR_MODULE;
 
+	Py_INCREF(&py_lm_symbol_t);
+	if (PyModule_AddObject(pymod, "lm_symbol_t",
+			       (PyObject *)&py_lm_symbol_t) < 0)
+		goto ERR_SYMBOL;
+
+
 	goto EXIT; /* no errors */
 
+ERR_SYMBOL:
+	Py_DECREF(&py_lm_symbol_t);
+	Py_DECREF(pymod);
 ERR_MODULE:
 	Py_DECREF(&py_lm_module_t);
 	Py_DECREF(pymod);

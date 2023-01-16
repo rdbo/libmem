@@ -41,3 +41,7 @@ print("[*] System Bits: " + str(LM_GetSystemBits()))
 
 separator()
 
+print("[*] Current Process Threads: " + str(LM_EnumThreads()))
+
+separator()
+

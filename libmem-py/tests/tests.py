@@ -69,12 +69,13 @@ print("\n".join([str(mod) for mod in LM_EnumModulesEx(proc)[:5]]))
 
 separator()
 
-mod = LM_FindModule(curproc.path)
-print("[*] Current Process Module: " + str(mod))
+curmod = LM_FindModule(curproc.path)
+print("[*] Current Process Module: " + str(curmod))
 
 separator()
 
-print("[*] Remote Process Module: " + str(LM_FindModuleEx(proc, proc.path)))
+mod = LM_FindModuleEx(proc, proc.path)
+print("[*] Remote Process Module: " + str(mod))
 
 separator()
 
@@ -84,19 +85,32 @@ separator()
 
 print("[*] Symbol Enumeration")
 
-print("\n".join([str(sym) for sym in LM_EnumSymbols(mod)[:5]]))
+print("\n".join([str(sym) for sym in LM_EnumSymbols(curmod)[:5]]))
 
 separator()
 
 print("[*] Symbol Address Search")
 
-symaddr = LM_FindSymbolAddress(mod, "Py_BytesMain")
+symaddr = LM_FindSymbolAddress(curmod, "Py_BytesMain")
 print("[*] Py_BytesMain Address: " + hex(symaddr))
 
 separator()
 
-page = lm_prot_t(LM_PROT_XRW)
-print(page)
+print("[*] Page Enumeration - Current Process")
+print("\n".join([str(page) for page in LM_EnumPages()[:5]]))
+
+separator()
+
+print("[*] Page Enumeration - Remote Process")
+print("\n".join([str(page) for page in LM_EnumPagesEx(proc)[:5]]))
+
+separator()
+
+print("[*] Page From Current Process Module: " + str(LM_GetPage(symaddr)))
+
+separator()
+
+print("[*] Page From Remote Process Module: " + str(LM_GetPageEx(proc, mod.base)))
 
 separator()
 

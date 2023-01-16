@@ -545,6 +545,111 @@ py_LM_FindSymbolAddress(PyObject *self,
 
 /****************************************/
 
+static lm_bool_t
+_py_LM_EnumPagesCallback(lm_page_t *ppage,
+			 lm_void_t *arg)
+{
+	PyObject *pylist = (PyObject *)arg;
+	py_lm_page_obj *pypage;
+
+	pypage = (py_lm_page_obj *)PyObject_CallObject((PyObject *)&py_lm_page_t, NULL);
+	pypage->page = *ppage;
+	pypage->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pypage->page.prot);
+
+	PyList_Append(pylist, (PyObject *)pypage);
+
+	return LM_TRUE;
+}
+
+static PyObject *
+py_LM_EnumPages(PyObject *self,
+		PyObject *args)
+{
+	PyObject *pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumPages(_py_LM_EnumPagesCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_EnumPagesEx(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	PyObject *pylist;
+
+	if (!PyArg_ParseTuple(args, "O", &pyproc))
+		return NULL;
+	
+	pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumPagesEx(&pyproc->proc, _py_LM_EnumPagesCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_GetPage(PyObject *self,
+	      PyObject *args)
+{
+	lm_address_t address;
+	lm_page_t page;
+	py_lm_page_obj *pypage;
+
+	if (!PyArg_ParseTuple(args, "k", &address))
+		return NULL;
+
+	if (!LM_GetPage(address, &page))
+		return Py_BuildValue("");
+
+	pypage = (py_lm_page_obj *)PyObject_CallObject((PyObject *)&py_lm_page_t, NULL);
+	pypage->page = page;
+	pypage->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pypage->page.prot);
+
+	return (PyObject *)pypage;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_GetPageEx(PyObject *self,
+		PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t address;
+	lm_page_t page;
+	py_lm_page_obj *pypage;
+
+	if (!PyArg_ParseTuple(args, "Ok", &pyproc, &address))
+		return NULL;
+
+	if (!LM_GetPageEx(&pyproc->proc, address, &page))
+		return Py_BuildValue("");
+
+	pypage = (py_lm_page_obj *)PyObject_CallObject((PyObject *)&py_lm_page_t, NULL);
+	pypage->page = page;
+	pypage->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pypage->page.prot);
+
+	return (PyObject *)pypage;
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -570,6 +675,11 @@ static PyMethodDef libmem_methods[] = {
 	/****************************************/
 	{ "LM_EnumSymbols", py_LM_EnumSymbols, METH_VARARGS, "Lists all symbols from a module" },
 	{ "LM_FindSymbolAddress", py_LM_FindSymbolAddress, METH_VARARGS, "Searches for a symbols in a module" },
+	/****************************************/
+	{ "LM_EnumPages", py_LM_EnumPages, METH_NOARGS, "Lists all pages from the calling process" },
+	{ "LM_EnumPagesEx", py_LM_EnumPagesEx, METH_VARARGS, "Lists all pages from a remote process" },
+	{ "LM_GetPage", py_LM_GetPage, METH_VARARGS, "Get information about the page of an address in the current process" },
+	{ "LM_GetPageEx", py_LM_GetPageEx, METH_VARARGS, "Get information about the page of an address in a remote process" },
 	/****************************************/
 	{ NULL, NULL, 0, NULL }
 };

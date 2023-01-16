@@ -41,7 +41,24 @@ print("[*] System Bits: " + str(LM_GetSystemBits()))
 
 separator()
 
-print("[*] Current Process Threads: " + str(LM_EnumThreads()))
+print("[*] Current Process Threads: [" + ", ".join([str(thr) for thr in LM_EnumThreads()]) + "]")
+
+separator()
+
+print("[*] Remote Process Threads: [" + ", ".join([str(thr) for thr in LM_EnumThreadsEx(proc)]) + "]")
+
+separator()
+
+thread = LM_GetThread()
+print("[*] Current Thread: " + str(thread))
+
+separator()
+
+print("[*] Remote Thread: " + str(LM_GetThreadEx(proc)))
+
+separator()
+
+print("[*] Process From Thread '" + str(thread) + "': " + str(LM_GetThreadProcess(thread)))
 
 separator()
 

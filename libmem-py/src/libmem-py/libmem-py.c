@@ -185,6 +185,90 @@ py_LM_EnumThreads(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_EnumThreadsEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	PyObject *pylist;
+
+	if (!PyArg_ParseTuple(args, "O", &pyproc))
+		return NULL;
+
+	pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumThreadsEx(&pyproc->proc, _py_LM_EnumThreadsCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_GetThread(PyObject *self,
+		PyObject *args)
+{
+	lm_thread_t thread;
+	py_lm_thread_obj *pythread;
+
+	if (!LM_GetThread(&thread))
+		return Py_BuildValue("");
+
+	pythread = (py_lm_thread_obj *)PyObject_CallObject((PyObject *)&py_lm_thread_t, NULL);
+	pythread->thread = thread;
+
+	return (PyObject *)pythread;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_GetThreadEx(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_thread_t thread;
+	py_lm_thread_obj *pythread;
+
+	if (!PyArg_ParseTuple(args, "O", &pyproc))
+		return NULL;
+
+	if (!LM_GetThreadEx(&pyproc->proc, &thread))
+		return Py_BuildValue("");
+
+	pythread = (py_lm_thread_obj *)PyObject_CallObject((PyObject *)&py_lm_thread_t, NULL);
+	pythread->thread = thread;
+
+	return (PyObject *)pythread;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_GetThreadProcess(PyObject *self,
+		       PyObject *args)
+{
+	py_lm_thread_obj *pythread;
+	lm_process_t proc;
+	py_lm_process_obj *pyproc;
+
+	if (!PyArg_ParseTuple(args, "O", &pythread))
+		return NULL;
+
+	if (!LM_GetThreadProcess(&pythread->thread, &proc))
+		return Py_BuildValue("");
+
+	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
+	pyproc->proc = proc;
+
+	return (PyObject *)pyproc;
+}
+
 /****************************************/
 
 static PyMethodDef libmem_methods[] = {
@@ -196,6 +280,10 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetSystemBits", py_LM_GetSystemBits, METH_VARARGS, "Checks if a process is alive" },
 	/****************************************/
 	{ "LM_EnumThreads", py_LM_EnumThreads, METH_NOARGS, "Lists all threads from the calling process" },
+	{ "LM_EnumThreadsEx", py_LM_EnumThreadsEx, METH_VARARGS, "Lists all threads from the calling process" },
+	{ "LM_GetThread", py_LM_GetThread, METH_NOARGS, "Get information about the calling thread" },
+	{ "LM_GetThreadEx", py_LM_GetThreadEx, METH_VARARGS, "Get information about a remote thread" },
+	{ "LM_GetThreadProcess", py_LM_GetThreadProcess, METH_VARARGS, "Gets information about a process from a thread" },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -213,6 +301,9 @@ PyInit_libmem(void)
 	PyObject *pymod;
 
 	if (PyType_Ready(&py_lm_process_t) < 0)
+		goto ERR_PYMOD;
+
+	if (PyType_Ready(&py_lm_thread_t) < 0)
 		goto ERR_PYMOD;
 
 	pymod = PyModule_Create(&libmem_mod);

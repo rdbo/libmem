@@ -58,4 +58,26 @@ _LM_CloseProc(HANDLE *hProcess)
 
 	*hProcess = NULL;
 }
+
+LM_PRIVATE lm_bool_t
+_LM_OpenThr(lm_tid_t tid,
+	    HANDLE  *hThread)
+{
+	LM_ASSERT(tid != LM_TID_BAD && hThread != LM_NULLPTR);
+
+	*hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
+
+	return *hThread ? LM_TRUE : LM_FALSE;
+}
+
+LM_PRIVATE lm_void_t
+_LM_CloseThr(HANDLE *hThread)
+{
+	LM_ASSERT(hThread != LM_NULLPTR);
+
+	if (*hThread)
+		CloseHandle(*hThread);
+
+	*hThread = NULL;
+}
 #endif

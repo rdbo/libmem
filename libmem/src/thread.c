@@ -210,3 +210,63 @@ LM_GetThreadEx(lm_process_t *pproc,
 	return LM_EnumThreadsEx(pproc, _LM_GetThreadExCallback, (lm_void_t *)thrbuf);
 }
 
+/********************************/
+
+#if LM_OS == LM_OS_WIN
+LM_PRIVATE lm_pid_t
+_LM_GetPidFromThread(lm_thread_t *pthr)
+{
+	lm_pid_t pid = LM_PID_BAD;
+	HANDLE hThread;
+	if (!_LM_OpenThr(pthr->tid, &hThread))
+		return pid;
+
+	pid = (lm_pid_t)GetProcessIdOfThread(hThread);
+	if (!pid)
+		pid = LM_PID_BAD;
+
+	return pid;
+
+}
+#else
+LM_PRIVATE lm_pid_t
+_LM_GetPidFromThread(lm_thread_t *pthr)
+{
+	return (lm_pid_t)pthr->tid;
+}
+#endif
+
+LM_PRIVATE lm_bool_t
+_LM_GetThreadProcessCallback(lm_process_t *pproc,
+			     lm_void_t    *arg)
+{
+	lm_process_t *procbuf = (lm_process_t *)arg;
+	if (pproc->pid == procbuf->pid) {
+		*procbuf = *pproc;
+		return LM_FALSE;
+	}
+
+	return LM_TRUE;
+}
+
+LM_API lm_bool_t
+LM_GetThreadProcess(lm_thread_t  *pthr,
+		    lm_process_t *procbuf)
+{
+	/* TODO: Optimize this function (there should be a way of
+	 * directly opening processes by PID to avoid enumerating
+	 * them all the time) */
+	lm_pid_t pid;
+	lm_process_t proc;
+
+	proc.bits = 0; /* this will be used to check if the process was found */
+
+	pid = _LM_GetPidFromThread(pthr);
+	if (pid == LM_PID_BAD)
+		return LM_FALSE;
+
+	LM_EnumProcesses(_LM_GetThreadProcessCallback, (lm_void_t *)&proc);
+
+	return proc.bits != 0 ? LM_TRUE : LM_FALSE;
+}
+

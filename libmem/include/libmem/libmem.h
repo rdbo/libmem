@@ -513,6 +513,10 @@ LM_API lm_bool_t
 LM_GetThreadEx(lm_process_t *pproc,
 	       lm_thread_t  *thrbuf);
 
+LM_API lm_bool_t
+LM_GetThreadProcess(lm_thread_t  *pthr,
+		    lm_process_t *procbuf);
+
 /****************************************/
 
 LM_API lm_bool_t

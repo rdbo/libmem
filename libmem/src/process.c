@@ -262,6 +262,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 		return LM_FALSE;
 	if (!_LM_GetNameFromPath(procbuf->path, procbuf->name, LM_ARRLEN(procbuf->name)))
 		return LM_FALSE;
+	procbuf->bits = _LM_GetProcessBitsEx(procbuf->path);
 
 	return LM_TRUE;
 }

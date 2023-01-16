@@ -484,6 +484,10 @@ LM_API lm_bool_t
 LM_GetProcess(lm_process_t *procbuf);
 
 LM_API lm_bool_t
+LM_GetProcessEx(lm_pid_t      pid,
+		lm_process_t *procbuf);
+
+LM_API lm_bool_t
 LM_FindProcess(lm_string_t   procstr,
 	       lm_process_t *procbuf);
 

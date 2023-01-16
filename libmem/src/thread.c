@@ -236,35 +236,16 @@ _LM_GetPidFromThread(lm_thread_t *pthr)
 }
 #endif
 
-LM_PRIVATE lm_bool_t
-_LM_GetThreadProcessCallback(lm_process_t *pproc,
-			     lm_void_t    *arg)
-{
-	lm_process_t *procbuf = (lm_process_t *)arg;
-	if (pproc->pid == procbuf->pid) {
-		*procbuf = *pproc;
-		return LM_FALSE;
-	}
-
-	return LM_TRUE;
-}
-
 LM_API lm_bool_t
 LM_GetThreadProcess(lm_thread_t  *pthr,
 		    lm_process_t *procbuf)
 {
-	/* TODO: Optimize this function (there should be a way of
-	 * directly opening processes by PID to avoid enumerating
-	 * them all the time) */
+	lm_pid_t pid;
 
-	procbuf->pid = _LM_GetPidFromThread(pthr);
-	if (procbuf->pid == LM_PID_BAD)
+	pid = _LM_GetPidFromThread(pthr);
+	if (pid == LM_PID_BAD)
 		return LM_FALSE;
 
-	procbuf->bits = 0; /* this will be used to check if the process was found */
-
-	LM_EnumProcesses(_LM_GetThreadProcessCallback, (lm_void_t *)procbuf);
-
-	return procbuf->bits != 0 ? LM_TRUE : LM_FALSE;
+	return LM_GetProcessEx(pid, procbuf);
 }
 

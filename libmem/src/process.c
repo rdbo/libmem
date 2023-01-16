@@ -248,6 +248,26 @@ LM_GetProcess(lm_process_t *procbuf)
 
 /********************************/
 
+LM_API lm_bool_t
+LM_GetProcessEx(lm_pid_t      pid,
+		lm_process_t *procbuf)
+{
+	LM_ASSERT(pid != LM_PID_BAD);
+
+	procbuf->pid = pid;
+	procbuf->ppid = _LM_GetParentIdEx(pid);
+	if (procbuf->ppid == LM_PID_BAD)
+		return LM_FALSE;
+	if (!_LM_GetProcessPathEx(procbuf->pid, procbuf->path, LM_ARRLEN(procbuf->path)))
+		return LM_FALSE;
+	if (!_LM_GetNameFromPath(procbuf->path, procbuf->name, LM_ARRLEN(procbuf->name)))
+		return LM_FALSE;
+
+	return LM_TRUE;
+}
+
+/********************************/
+
 typedef struct {
 	lm_process_t *procbuf;
 	lm_string_t   procstr;

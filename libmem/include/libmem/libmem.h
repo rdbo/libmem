@@ -432,6 +432,10 @@ typedef struct {
 } lm_process_t;
 
 typedef struct {
+	lm_tid_t   tid;
+} lm_thread_t;
+
+typedef struct {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
@@ -492,21 +496,22 @@ LM_GetSystemBits(lm_void_t);
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
-				      lm_void_t *arg),
-		 lm_void_t *arg);
+LM_EnumThreads(lm_bool_t(*callback)(lm_thread_t *pthr,
+				    lm_void_t   *arg),
+	       lm_void_t *arg);
 
 LM_API lm_bool_t
-LM_EnumThreadIdsEx(lm_process_t *pproc,
-		   lm_bool_t   (*callback)(lm_tid_t   tid,
-					   lm_void_t *arg),
-		   lm_void_t    *arg);
+LM_EnumThreadsEx(lm_process_t *pproc,
+		 lm_bool_t   (*callback)(lm_thread_t *pthr,
+					 lm_void_t   *arg),
+		 lm_void_t    *arg);
 
-LM_API lm_tid_t
-LM_GetThreadId(lm_void_t);
+LM_API lm_bool_t
+LM_GetThread(lm_thread_t *thrbuf);
 
-LM_API lm_tid_t
-LM_GetThreadIdEx(lm_process_t *pproc);
+LM_API lm_bool_t
+LM_GetThreadEx(lm_process_t *pproc,
+	       lm_thread_t  *thrbuf);
 
 /****************************************/
 

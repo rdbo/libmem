@@ -38,7 +38,7 @@ LM_API_EXPORT int
 main()
 {
 	lm_process_t proc;
-	lm_tid_t     tid;
+	lm_thread_t  thread;
 	lm_module_t  mod;
 	lm_address_t main_sym;
 	lm_module_t  libtest_mod;
@@ -63,13 +63,13 @@ main()
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
 	LM_GetProcess(&proc);
-	tid  = LM_GetThreadId();
+	LM_GetThread(&thread);
 
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), proc.name);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), proc.path);
 	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), proc.ppid);
-	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
+	LM_PRINTF(LM_STR("[*] TID:  %d\n"), thread.tid);
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), proc.bits);
 	LM_PRINTF(LM_STR("====================\n"));
 

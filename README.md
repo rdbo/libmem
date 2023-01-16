@@ -228,10 +228,10 @@ LM_FindProcess
 LM_IsProcessAlive
 LM_GetSystemBits
 
-LM_EnumThreadIds
-LM_EnumThreadIdsEx
-LM_GetThreadId
-LM_GetThreadIdEx
+LM_EnumThreads
+LM_EnumThreadsEx
+LM_GetThread
+LM_GetThreadEx
 
 LM_EnumModules
 LM_EnumModulesEx

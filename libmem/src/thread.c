@@ -27,8 +27,8 @@
 #endif
 
 LM_API lm_bool_t
-LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
-				      lm_void_t *arg),
+LM_EnumThreads(lm_bool_t(*callback)(lm_thread_t *pthr,
+				    lm_void_t   *arg),
 		 lm_void_t *arg)
 {
 	lm_process_t proc;
@@ -37,21 +37,22 @@ LM_EnumThreadIds(lm_bool_t(*callback)(lm_tid_t   tid,
 	if (!LM_GetProcess(&proc))
 		return LM_FALSE;
 
-	return LM_EnumThreadIdsEx(&proc, callback, arg);
+	return LM_EnumThreadsEx(&proc, callback, arg);
 }
 
 /********************************/
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadIdsEx(lm_process_t *pproc,
-		    lm_bool_t   (*callback)(lm_tid_t   tid,
-					    lm_void_t *arg),
-		    lm_void_t    *arg)
+_LM_EnumThreadsEx(lm_process_t *pproc,
+		  lm_bool_t   (*callback)(lm_tid_t   tid,
+					  lm_void_t *arg),
+		  lm_void_t    *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hSnap;
 	THREADENTRY32 entry;
+	lm_thread_t thread;
 
 	hSnap = CreateToolhelp32Snapshot(
 		TH32CS_SNAPTHREAD,
@@ -70,10 +71,10 @@ _LM_EnumThreadIdsEx(lm_process_t *pproc,
 			if (entry.th32OwnerProcessID !=
 			    pproc->pid)
 				continue;
-					
-			tid = (lm_tid_t)entry.th32ThreadID;
 
-			if (callback(tid, arg) == LM_FALSE)
+			thread.tid = (lm_tid_t)entry.th32ThreadID;
+
+			if (callback(&thread, arg) == LM_FALSE)
 				break;
 		} while (Thread32Next(hSnap, &entry));
 
@@ -87,43 +88,48 @@ _LM_EnumThreadIdsEx(lm_process_t *pproc,
 #elif LM_OS == LM_OS_BSD
 typedef struct {
 	lm_pid_t pid;
-	lm_bool_t (*callback)(lm_tid_t tid, lm_void_t *arg);
+	lm_bool_t (*callback)(lm_thread_t *pthr, lm_void_t *arg);
 	lm_void_t *arg;
 } _lm_enum_tids_t;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadIdsExCallback(lm_process_t *pproc,
-			    lm_void_t    *arg)
+_LM_EnumThreadsExCallback(lm_process_t *pproc,
+			  lm_void_t    *arg)
 {
 	_lm_enum_tids_t *data = (_lm_enum_tids_t *)arg;
+	lm_thread_t thread;
 	/* if the given pid owns the current pid, it is its thread */
-	if (pproc->ppid == data->pid)
-		data->callback((lm_tid_t)pproc->pid, data->arg);
+	if (pproc->ppid == data->pid) {
+		thread.tid = (lm_tid_t)pproc->pid;
+		if (!data->callback(&thread, data->arg))
+			return LM_FALSE;
+	}
 	return LM_TRUE;
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadIdsEx(lm_process_t *pproc,
-		    lm_bool_t   (*callback)(lm_tid_t   tid,
-					    lm_void_t *arg),
-		    lm_void_t    *arg)
+_LM_EnumThreadsEx(lm_process_t *pproc,
+		  lm_bool_t   (*callback)(lm_thread_t *pthr,
+					  lm_void_t   *arg),
+		  lm_void_t    *arg)
 {
 	_lm_enum_tids_t data;
 	data.pid = pproc->pid;
 	data.callback = callback;
 	data.arg = arg;
-	return LM_EnumProcesses(_LM_EnumThreadIdsExCallback, (lm_void_t *)&data);
+	return LM_EnumProcesses(_LM_EnumThreadsExCallback, (lm_void_t *)&data);
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumThreadIdsEx(lm_process_t *pproc,
-		    lm_bool_t   (*callback)(lm_tid_t   tid,
-					    lm_void_t *arg),
-		    lm_void_t    *arg)
+_LM_EnumThreadsEx(lm_process_t *pproc,
+		  lm_bool_t   (*callback)(lm_thread_t *pthr,
+					  lm_void_t   *arg),
+		  lm_void_t    *arg)
 {
 	DIR *pdir;
 	struct dirent *pdirent;
 	lm_char_t task_path[LM_PATH_MAX] = { 0 };
+	lm_thread_t thread;
 
 	LM_SNPRINTF(task_path, LM_ARRLEN(task_path),
 		    LM_STR("/proc/%d/task"), pproc->pid);
@@ -133,12 +139,12 @@ _LM_EnumThreadIdsEx(lm_process_t *pproc,
 		return LM_FALSE;
 		
 	while ((pdirent = readdir(pdir))) {
-		lm_tid_t tid = LM_ATOI(pdirent->d_name);
+		thread.tid = LM_ATOI(pdirent->d_name);
 
-		if (!tid && LM_STRCMP(pdirent->d_name, "0"))
+		if (!thread.tid && LM_STRCMP(pdirent->d_name, "0"))
 			continue;
 
-		if (callback(tid, arg) == LM_FALSE)
+		if (!callback(&thread, arg))
 			break;
 	}
 
@@ -149,60 +155,58 @@ _LM_EnumThreadIdsEx(lm_process_t *pproc,
 #endif
 
 LM_API lm_bool_t
-LM_EnumThreadIdsEx(lm_process_t *pproc,
-		   lm_bool_t   (*callback)(lm_tid_t   tid,
-					   lm_void_t *arg),
-		   lm_void_t    *arg)
+LM_EnumThreadsEx(lm_process_t *pproc,
+		 lm_bool_t   (*callback)(lm_thread_t *pthr,
+					 lm_void_t   *arg),
+		   lm_void_t  *arg)
 {
 	LM_ASSERT(pproc != LM_NULLPTR && callback != LM_NULLPTR);
 
-	return _LM_EnumThreadIdsEx(pproc, callback, arg);
+	return _LM_EnumThreadsEx(pproc, callback, arg);
 }
 
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_tid_t
-_LM_GetThreadId(lm_void_t)
+LM_PRIVATE lm_bool_t
+_LM_GetThread(lm_thread_t *thrbuf)
 {
-	return (lm_tid_t)GetCurrentThreadId();
+	thrbuf->tid = (lm_tid_t)GetCurrentThreadId();
+	return LM_TRUE;
 }
 #else
-LM_PRIVATE lm_tid_t
-_LM_GetThreadId(lm_void_t)
+LM_PRIVATE lm_bool_t
+_LM_GetThread(lm_thread_t *thrbuf)
 {
 	/* the process id and the thread id are the same (threads are also processes) */
-
-	return (lm_tid_t)getpid();
+	thrbuf->tid = (lm_tid_t)getpid();
+	return LM_TRUE;
 }
 #endif
 
-LM_API lm_tid_t
-LM_GetThreadId(lm_void_t)
+LM_API lm_bool_t
+LM_GetThread(lm_thread_t *thrbuf)
 {
-	return _LM_GetThreadId();
+	return _LM_GetThread(thrbuf);
 }
 
 /********************************/
 
 LM_PRIVATE lm_bool_t
-_LM_GetThreadIdExCallback(lm_tid_t   tid,
-			  lm_void_t *arg)
+_LM_GetThreadExCallback(lm_thread_t *pthr,
+			lm_void_t   *arg)
 {
-	/* Gets the first thread it finds from the target process */
-	*(lm_tid_t *)arg = tid;
+	/* get the first thread it found from the target process */
+	*(lm_thread_t *)arg = *pthr;
 	return LM_FALSE;
 }
 
-LM_API lm_tid_t
-LM_GetThreadIdEx(lm_process_t *pproc)
+LM_API lm_bool_t
+LM_GetThreadEx(lm_process_t *pproc,
+	       lm_thread_t  *thrbuf)
 {
-	lm_tid_t tid = LM_TID_BAD;
-
 	LM_ASSERT(pproc != LM_NULLPTR);
 
-	LM_EnumThreadIdsEx(pproc, _LM_GetThreadIdExCallback, (lm_void_t *)&tid);
-
-	return tid;
+	return LM_EnumThreadsEx(pproc, _LM_GetThreadExCallback, (lm_void_t *)thrbuf);
 }
 

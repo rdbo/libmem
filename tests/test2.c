@@ -26,7 +26,7 @@ main()
 {
 	lm_size_t    counter = 0;
 	lm_process_t proc;
-	lm_tid_t     tid;
+	lm_thread_t  thread;
 	lm_module_t  mod;
 	lm_address_t main_sym;
 	/*
@@ -55,13 +55,13 @@ main()
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_FindProcess(TEST1_NAME, &proc);
-	tid  = LM_GetThreadIdEx(&proc);
+	LM_GetThreadEx(&proc, &thread);
 
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), proc.name);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), proc.path);
 	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), proc.ppid);
-	LM_PRINTF(LM_STR("[*] TID:  %d\n"), tid);
+	LM_PRINTF(LM_STR("[*] TID:  %d\n"), thread.tid);
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), proc.bits);
 	LM_PRINTF(LM_STR("====================\n"));
 

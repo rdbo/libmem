@@ -334,6 +334,7 @@ mod libmem_c {
     extern "C" {
         pub(super) fn LM_EnumProcesses(callback : extern "C" fn(*const lm_process_t, *mut ()) -> i32, arg : *mut ()) -> lm_bool_t;
         pub(super) fn LM_GetProcess(procbuf : *mut lm_process_t) -> lm_bool_t;
+        pub(super) fn LM_GetProcessEx(pid : lm_pid_t, procbuf : *mut lm_process_t) -> lm_bool_t;
         pub(super) fn LM_FindProcess(procstr : lm_string_t, procbuf : *mut lm_process_t) -> lm_bool_t;
         pub(super) fn LM_IsProcessAlive(pproc : *const lm_process_t) -> lm_bool_t;
         pub(super) fn LM_GetSystemBits() -> lm_size_t;
@@ -425,6 +426,19 @@ pub fn LM_GetProcess() -> Option<lm_process_t> {
     unsafe {
         let procbuf = &mut proc as *mut lm_process_t;
         if libmem_c::LM_GetProcess(procbuf) != LM_FALSE {
+            Some(proc)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_GetProcessEx(pid : lm_pid_t) -> Option<lm_process_t> {
+    let mut proc = lm_process_t::new();
+
+    unsafe {
+        let procbuf = &mut proc as *mut lm_process_t;
+        if libmem_c::LM_GetProcessEx(pid, procbuf) != LM_FALSE {
             Some(proc)
         } else {
             None

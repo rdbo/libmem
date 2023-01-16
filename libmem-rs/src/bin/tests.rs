@@ -53,6 +53,11 @@ fn main() {
 
     separator();
 
+    let parent_proc = LM_GetProcessEx(cur_proc.get_ppid()).unwrap();
+    println!("[*] Parent Process Of Current Process: {}", parent_proc);
+
+    separator();
+
     let proc = LM_FindProcess("test1").unwrap();
     println!("[*] Remote Process: {}", proc);
 

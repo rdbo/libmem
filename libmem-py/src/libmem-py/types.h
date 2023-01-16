@@ -115,5 +115,59 @@ static PyTypeObject py_lm_thread_t = {
 	.tp_repr = py_lm_thread_str
 };
 
+/****************************************/
+
+/* lm_process_t */
+typedef struct {
+	PyObject_HEAD
+	lm_module_t mod;
+} py_lm_module_obj;
+
+static PyMemberDef py_lm_module_members[] = {
+	{ "base", T_SIZE, offsetof(py_lm_module_obj, mod.base), READONLY, "Module Base Address" },
+	{ "end", T_SIZE, offsetof(py_lm_module_obj, mod.end), READONLY, "Module End Address" },
+	{ "size", T_SIZE, offsetof(py_lm_module_obj, mod.size), READONLY, "Module Size" },
+	{ NULL }
+};
+
+PyObject *
+py_lm_module_get_path(PyObject *self, void *closure)
+{
+	return PyUnicode_FromString(((py_lm_module_obj *)self)->mod.path);
+}
+
+PyObject *
+py_lm_module_get_name(PyObject *self, void *closure)
+{
+	return PyUnicode_FromString(((py_lm_module_obj *)self)->mod.name);
+}
+
+PyObject *
+py_lm_module_str(PyObject *self)
+{
+	py_lm_module_obj *pymodule = (py_lm_module_obj *)self;
+	return PyUnicode_FromFormat("<lm_module_t { base: %p, end: %p, size: %p, path: %s, name: %s }>", (void *)pymodule->mod.base, (void *)pymodule->mod.end, (void *)pymodule->mod.size, pymodule->mod.path, pymodule->mod.name);
+}
+
+static PyGetSetDef py_lm_module_accessors[] = {
+	{ "path", py_lm_module_get_path, NULL, NULL, NULL },
+	{ "name", py_lm_module_get_name, NULL, NULL, NULL },
+	{ NULL, NULL, NULL, NULL, NULL }
+};
+
+static PyTypeObject py_lm_module_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_module_t",
+	.tp_doc = "Stores information about a module",
+	.tp_basicsize = sizeof(py_lm_module_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_module_members,
+	.tp_getset = py_lm_module_accessors,
+	.tp_str = py_lm_module_str,
+	.tp_repr = py_lm_module_str
+};
+
 #endif
 

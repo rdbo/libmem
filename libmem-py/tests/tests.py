@@ -59,3 +59,23 @@ print("[*] Process From Thread '" + str(thread) + "': " + str(LM_GetThreadProces
 
 separator()
 
+print("[*] Module Enumeration - Current Process")
+print("\n".join([str(mod) for mod in LM_EnumModules()[:5]]))
+
+separator()
+
+print("[*] Module Enumeration - Remote Process")
+print("\n".join([str(mod) for mod in LM_EnumModulesEx(proc)[:5]]))
+
+separator()
+
+print("[*] Current Process Module: " + str(LM_FindModule(curproc.path)))
+
+separator()
+
+print("[*] Remote Process Module: " + str(LM_FindModuleEx(proc, proc.path)))
+
+separator()
+
+# TODO: Add tests for LM_LoadModule(Ex) and LM_UnloadModule(Ex)
+

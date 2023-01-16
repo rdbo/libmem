@@ -271,6 +271,208 @@ py_LM_GetThreadProcess(PyObject *self,
 
 /****************************************/
 
+lm_bool_t
+_py_LM_EnumModulesCallback(lm_module_t *pmod,
+			   lm_void_t   *arg)
+{
+	PyObject *pylist = (PyObject *)arg;
+	py_lm_module_obj *pymodule;
+
+	pymodule = (py_lm_module_obj *)PyObject_CallObject((PyObject *)&py_lm_module_t, NULL);
+	pymodule->mod = *pmod;
+
+	PyList_Append(pylist, (PyObject *)pymodule);
+
+	return LM_TRUE;
+}
+
+static PyObject *
+py_LM_EnumModules(PyObject *self,
+		  PyObject *args)
+{
+	PyObject *pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumModules(_py_LM_EnumModulesCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_EnumModulesEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	PyObject *pylist;
+
+	if (!PyArg_ParseTuple(args, "O", &pyproc))
+		return NULL;
+       
+	pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumModulesEx(&pyproc->proc, _py_LM_EnumModulesCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_FindModule(PyObject *self,
+		 PyObject *args)
+{
+	lm_char_t        *modstr;
+	lm_module_t       mod;
+	py_lm_module_obj *pymodule;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "u", &modstr))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "s", &modstr))
+		return NULL;
+#	endif
+
+	if (!LM_FindModule(modstr, &mod))
+		return Py_BuildValue("");
+
+	pymodule = (py_lm_module_obj *)PyObject_CallObject((PyObject *)&py_lm_module_t, NULL);
+	pymodule->mod = mod;
+
+	return (PyObject *)pymodule;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_FindModuleEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_char_t         *modstr;
+	lm_module_t        mod;
+	py_lm_module_obj  *pymodule;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "Ou", &pyproc, &modstr))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "Os", &pyproc, &modstr))
+		return NULL;
+#	endif
+
+	if (!LM_FindModuleEx(&pyproc->proc, modstr, &mod))
+		return Py_BuildValue("");
+
+	pymodule = (py_lm_module_obj *)PyObject_CallObject((PyObject *)&py_lm_module_t, NULL);
+	pymodule->mod = mod;
+
+	return (PyObject *)pymodule;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_LoadModule(PyObject *self,
+		 PyObject *args)
+{
+	lm_char_t        *modpath;
+	lm_module_t       mod;
+	py_lm_module_obj *pymodule;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "u", &modpath))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "s", &modpath))
+		return NULL;
+#	endif
+
+	if (!LM_LoadModule(modpath, &mod))
+		return Py_BuildValue("");
+
+	pymodule = (py_lm_module_obj *)PyObject_CallObject((PyObject *)&py_lm_module_t, NULL);
+	pymodule->mod = mod;
+
+	return (PyObject *)pymodule;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_LoadModuleEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_char_t         *modpath;
+	lm_module_t        mod;
+	py_lm_module_obj  *pymodule;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "Ou", &pyproc, &modpath))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "Os", &pyproc, &modpath))
+		return NULL;
+#	endif
+
+	if (!LM_LoadModuleEx(&pyproc->proc, modpath, &mod))
+		return Py_BuildValue("");
+
+	pymodule = (py_lm_module_obj *)PyObject_CallObject((PyObject *)&py_lm_module_t, NULL);
+	pymodule->mod = mod;
+
+	return (PyObject *)pymodule;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_UnloadModule(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_module_obj *pymodule;
+
+	if (!PyArg_ParseTuple(args, "O", &pymodule))
+		return NULL;
+
+	if (!LM_UnloadModule(&pymodule->mod))
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_UnloadModuleEx(PyObject *self,
+		     PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	py_lm_module_obj *pymodule;
+
+	if (!PyArg_ParseTuple(args, "OO", &pyproc, &pymodule))
+		return NULL;
+
+	if (!LM_UnloadModuleEx(&pyproc->proc, &pymodule->mod))
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -284,6 +486,16 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetThread", py_LM_GetThread, METH_NOARGS, "Get information about the calling thread" },
 	{ "LM_GetThreadEx", py_LM_GetThreadEx, METH_VARARGS, "Get information about a remote thread" },
 	{ "LM_GetThreadProcess", py_LM_GetThreadProcess, METH_VARARGS, "Gets information about a process from a thread" },
+	/****************************************/
+	{ "LM_EnumModules", py_LM_EnumModules, METH_NOARGS, "Lists all modules from the calling process" },
+	{ "LM_EnumModulesEx", py_LM_EnumModulesEx, METH_VARARGS, "Lists all modules from a remote process" },
+	{ "LM_FindModule", py_LM_FindModule, METH_VARARGS, "Searches for a module in the current process" },
+	{ "LM_FindModuleEx", py_LM_FindModuleEx, METH_VARARGS, "Searches for a module in a remote process" },
+	{ "LM_LoadModule", py_LM_LoadModule, METH_VARARGS, "Loads a module into the current process" },
+	{ "LM_LoadModuleEx", py_LM_LoadModuleEx, METH_VARARGS, "Loads a module into a remote process" },
+	{ "LM_UnloadModule", py_LM_UnloadModule, METH_VARARGS, "Unloads a module from the current process" },
+	{ "LM_UnloadModuleEx", py_LM_UnloadModuleEx, METH_VARARGS, "Unloads a module from a remote process" },
+	/****************************************/
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -306,6 +518,9 @@ PyInit_libmem(void)
 	if (PyType_Ready(&py_lm_thread_t) < 0)
 		goto ERR_PYMOD;
 
+	if (PyType_Ready(&py_lm_module_t) < 0)
+		goto ERR_PYMOD;
+
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
 		goto ERR_PYMOD;
@@ -321,8 +536,16 @@ PyInit_libmem(void)
 			       (PyObject *)&py_lm_thread_t) < 0)
 		goto ERR_THREAD;
 
+	Py_INCREF(&py_lm_module_t);
+	if (PyModule_AddObject(pymod, "lm_module_t",
+			       (PyObject *)&py_lm_module_t) < 0)
+		goto ERR_MODULE;
+
 	goto EXIT; /* no errors */
 
+ERR_MODULE:
+	Py_DECREF(&py_lm_module_t);
+	Py_DECREF(pymod);
 ERR_THREAD:
 	Py_DECREF(&py_lm_thread_t);
 	Py_DECREF(pymod);

@@ -4,14 +4,11 @@ def separator():
     print("========================================")
 
 print("[*] libmem-py tests")
+
 separator()
 
 print("[*] Process Enumeration")
-proclist = LM_EnumProcesses()
-for i in range(len(proclist)):
-    if i >= 5:
-        break
-    print(proclist[i])
+print("\n".join([str(proc) for proc in LM_EnumProcesses()[:5]]))
 
 separator()
 

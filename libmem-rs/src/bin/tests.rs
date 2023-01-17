@@ -271,6 +271,11 @@ fn main() {
 
     separator();
 
+    let bytes = LM_AssembleEx("push ebp ; mov ebp, esp; mov esp, ebp; pop ebp; ret", 32, 0);
+    println!("[*] Assembled Instructions: {:#x?}", bytes);
+
+    separator();
+
     let inst = LM_Disassemble(some_function_addr).unwrap();
     println!("[*] Disassembled Instruction: {}", inst);
 
@@ -283,5 +288,7 @@ fn main() {
     separator();
 
     // TODO: Add tests for LM_CodeLengthEx
+
+    // separator();
 }
 

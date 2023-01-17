@@ -391,6 +391,8 @@ mod libmem_c {
         pub(super) fn LM_UnhookCodeEx(pproc : *const lm_process_t, from : lm_address_t, trampoline : lm_address_t, size : lm_size_t) -> lm_bool_t;
         /****************************************/
         pub(super) fn LM_Assemble(code : lm_cstring_t, inst : *mut lm_inst_t) -> lm_bool_t;
+        pub(super) fn LM_AssembleEx(code : lm_cstring_t, bits : lm_size_t, runtime_addr : lm_address_t, pcodebuf : *mut lm_bytearr_t) -> lm_size_t;
+        pub(super) fn LM_FreeCodeBuffer(codebuf : lm_bytearr_t);
         pub(super) fn LM_Disassemble(code : lm_address_t, inst : *mut lm_inst_t) -> lm_bool_t;
         pub(super) fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
         pub(super) fn LM_CodeLengthEx(pproc : *const lm_process_t, code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
@@ -1132,6 +1134,30 @@ pub fn LM_Assemble(code : &str) -> Option<lm_inst_t> {
             None
         }
     }
+}
+
+pub fn LM_AssembleEx(code : &str, bits : lm_size_t, runtime_addr : lm_address_t) -> Vec<u8> {
+    let mut bytes : Vec<u8> = Vec::new();
+    let code = match CString::new(code.as_bytes()) {
+        // this will add the null terminator if needed
+        Ok(s) => s,
+        Err(_e) => return bytes
+    };
+
+    unsafe {
+        let code = code.as_ptr() as lm_cstring_t;
+        let mut codebuf : lm_bytearr_t = 0 as lm_bytearr_t;
+        let pcodebuf = &mut codebuf as *mut lm_bytearr_t;
+
+        let size = libmem_c::LM_AssembleEx(code, bits, runtime_addr, pcodebuf);
+        if size > 0 {
+            let buf = std::slice::from_raw_parts(codebuf as *const u8, size);
+            bytes = Vec::from(buf);
+            libmem_c::LM_FreeCodeBuffer(codebuf);
+        }
+    }
+
+    bytes
 }
 
 pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {

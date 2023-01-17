@@ -143,3 +143,9 @@ separator()
 # TODO: Add tests for 'LM_SetMemoryEx'
 # separator()
 
+print("[*] Changing Memory Protection - Current Process")
+old_prot = LM_ProtMemory(curmod.base, 0x1000, LM_PROT_XRW)
+print(f"[*] Old Memory Protection ({hex(curmod.base)}): {old_prot}")
+page = LM_GetPage(curmod.base)
+print(f"[*] Current Memory Protection ({hex(curmod.base)}): {page.prot}")
+

@@ -26,9 +26,15 @@
 #include <structmember.h>
 #include "types.h"
 
-#define DECL_GLOBAL(var) { \
-	/* make sure that 'pymod' and 'global' are declared */ \
+/* make sure that 'pymod' and 'global' are declared before using DECL_GLOBAL_* */
+#define DECL_GLOBAL_LONG(var) { \
 	global = (PyObject *)PyLong_FromLong((long)var); \
+	PyObject_SetAttrString(pymod, #var, global); \
+	Py_DECREF(global); \
+}
+
+#define DECL_GLOBAL_PROT(var) { \
+	global = PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", var); \
 	PyObject_SetAttrString(pymod, #var, global); \
 	Py_DECREF(global); \
 }
@@ -797,6 +803,53 @@ py_LM_SetMemoryEx(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_ProtMemory(PyObject *self,
+		 PyObject *args)
+{
+	lm_address_t addr;
+	lm_size_t size;
+	py_lm_prot_obj *pyprot;
+	lm_prot_t oldprot;
+	py_lm_prot_obj *pyoldprot;
+
+	if (!PyArg_ParseTuple(args, "kkO", &addr, &size, &pyprot))
+		return NULL;
+
+	if (!LM_ProtMemory(addr, size, pyprot->prot, &oldprot))
+		return Py_BuildValue("");
+
+	pyoldprot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", oldprot);
+
+	return (PyObject *)pyoldprot;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_ProtMemoryEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t addr;
+	lm_size_t size;
+	py_lm_prot_obj *pyprot;
+	lm_prot_t oldprot;
+	py_lm_prot_obj *pyoldprot;
+
+	if (!PyArg_ParseTuple(args, "OkkO", &pyproc, &addr, &size, &pyprot))
+		return NULL;
+
+	if (!LM_ProtMemoryEx(&pyproc->proc, addr, size, pyprot->prot, &oldprot))
+		return Py_BuildValue("");
+
+	pyoldprot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", oldprot);
+
+	return (PyObject *)pyoldprot;
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -834,6 +887,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_WriteMemoryEx", py_LM_WriteMemoryEx, METH_VARARGS, "Write memory to a remote process" },
 	{ "LM_SetMemory", py_LM_SetMemory, METH_VARARGS, "Set memory to a byte in the current process" },
 	{ "LM_SetMemoryEx", py_LM_SetMemoryEx, METH_VARARGS, "Set memory to a byte in a remote process" },
+	{ "LM_ProtMemory", py_LM_ProtMemory, METH_VARARGS, "Change memory protection flags of a region in the current process" },
+	{ "LM_ProtMemoryEx", py_LM_ProtMemoryEx, METH_VARARGS, "Change memory protection flags of a region in a remote process" },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -905,13 +960,13 @@ PyInit_libmem(void)
 		goto ERR_PAGE;
 
 	/* global variables */
-	DECL_GLOBAL(LM_PROT_X);
-	DECL_GLOBAL(LM_PROT_R);
-	DECL_GLOBAL(LM_PROT_W);
-	DECL_GLOBAL(LM_PROT_XR);
-	DECL_GLOBAL(LM_PROT_XW);
-	DECL_GLOBAL(LM_PROT_RW);
-	DECL_GLOBAL(LM_PROT_XRW);
+	DECL_GLOBAL_PROT(LM_PROT_X);
+	DECL_GLOBAL_PROT(LM_PROT_R);
+	DECL_GLOBAL_PROT(LM_PROT_W);
+	DECL_GLOBAL_PROT(LM_PROT_XR);
+	DECL_GLOBAL_PROT(LM_PROT_XW);
+	DECL_GLOBAL_PROT(LM_PROT_RW);
+	DECL_GLOBAL_PROT(LM_PROT_XRW);
 
 	goto EXIT; /* no errors */
 

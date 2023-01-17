@@ -32,16 +32,17 @@ LM_PRIVATE lm_prot_t
 _LM_GetRealProt(lm_prot_t prot)
 {
 	lm_prot_t real_prot;
+
 	switch (prot) {
 	case LM_PROT_NONE: real_prot = _LM_PROT_NONE; break;
-	case LM_PROT_X: real_prot = _LM_PROT_X; break;
-	case LM_PROT_R: real_prot = _LM_PROT_R; break;
-	case LM_PROT_W: real_prot = _LM_PROT_W; break;
-	case LM_PROT_XR: real_prot = _LM_PROT_XR; break;
-	case LM_PROT_XW: real_prot = _LM_PROT_XW; break;
-	case LM_PROT_RW: real_prot = _LM_PROT_RW; break;
-	case LM_PROT_XRW: real_prot = _LM_PROT_XRW; break;
-	default: real_prot = _LM_PROT_NONE; break;
+	case LM_PROT_X:    real_prot = _LM_PROT_X; break;
+	case LM_PROT_R:    real_prot = _LM_PROT_R; break;
+	case LM_PROT_W:    real_prot = _LM_PROT_W; break;
+	case LM_PROT_XR:   real_prot = _LM_PROT_XR; break;
+	case LM_PROT_XW:   real_prot = _LM_PROT_XW; break;
+	case LM_PROT_RW:   real_prot = _LM_PROT_RW; break;
+	case LM_PROT_XRW:  real_prot = _LM_PROT_XRW; break;
+	default:           real_prot = _LM_PROT_NONE; break;
 	}
 
 	return real_prot;
@@ -51,15 +52,16 @@ LM_PRIVATE lm_prot_t
 _LM_GetProt(lm_prot_t real_prot)
 {
 	lm_prot_t prot;
+
 	switch (real_prot) {
-	case _LM_PROT_X: prot = LM_PROT_X; break;
-	case _LM_PROT_R: prot = LM_PROT_R; break;
-	case _LM_PROT_W: prot = LM_PROT_W; break;
-	case _LM_PROT_XR: prot = LM_PROT_XR; break;
-	case _LM_PROT_XW: prot = LM_PROT_XW; break;
-	case _LM_PROT_RW: prot = LM_PROT_RW; break;
+	case _LM_PROT_X:   prot = LM_PROT_X; break;
+	case _LM_PROT_R:   prot = LM_PROT_R; break;
+	case _LM_PROT_W:   prot = LM_PROT_W; break;
+	case _LM_PROT_XR:  prot = LM_PROT_XR; break;
+	case _LM_PROT_XW:  prot = LM_PROT_XW; break;
+	case _LM_PROT_RW:  prot = LM_PROT_RW; break;
 	case _LM_PROT_XRW: prot = LM_PROT_XRW; break;
-	default: prot = LM_PROT_NONE; break;
+	default:           prot = LM_PROT_NONE; break;
 	}
 
 	return prot;

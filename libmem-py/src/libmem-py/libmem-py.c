@@ -680,6 +680,36 @@ py_LM_ReadMemory(PyObject *self,
 /****************************************/
 
 static PyObject *
+py_LM_ReadMemoryEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t src;
+	lm_size_t size;
+	lm_byte_t *dst;
+	PyObject *pybuf;
+
+	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &src, &size))
+		return NULL;
+
+	dst = LM_MALLOC(size);
+	if (!dst)
+		return Py_BuildValue("");
+
+	if (LM_ReadMemoryEx(&pyproc->proc, src, dst, size) == size) {
+		pybuf = PyByteArray_FromStringAndSize((const char *)dst, size);
+	} else {
+		pybuf = Py_BuildValue("");
+	}
+
+	LM_FREE(dst);
+
+	return pybuf;
+}
+
+/****************************************/
+
+static PyObject *
 py_LM_WriteMemory(PyObject *self,
 		  PyObject *args)
 {
@@ -696,6 +726,70 @@ py_LM_WriteMemory(PyObject *self,
 	size = (lm_size_t)PyByteArray_Size(pysrc);
 
 	if (LM_WriteMemory(dst, src, size) != size)
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_WriteMemoryEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t dst;
+	PyObject *pysrc;
+	lm_bytearr_t src;
+	lm_size_t size;
+
+	if (!PyArg_ParseTuple(args, "OkY", &pyproc, &dst, &pysrc))
+		return NULL;
+
+	/* TODO: Check if 'PyByteArray_AsString' can handle the byte 0x0 */
+	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
+	size = (lm_size_t)PyByteArray_Size(pysrc);
+
+	if (LM_WriteMemoryEx(&pyproc->proc, dst, src, size) != size)
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_SetMemory(PyObject *self,
+		PyObject *args)
+{
+	lm_address_t dst;
+	lm_byte_t byte;
+	lm_size_t size;
+
+	if (!PyArg_ParseTuple(args, "kck", &dst, &byte, &size))
+		return NULL;
+
+	if (LM_SetMemory(dst, byte, size) != size)
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_SetMemoryEx(PyObject *self,
+		  PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t dst;
+	lm_byte_t byte;
+	lm_size_t size;
+
+	if (!PyArg_ParseTuple(args, "kck", &pyproc, &dst, &byte, &size))
+		return NULL;
+
+	if (LM_SetMemoryEx(&pyproc->proc, dst, byte, size) != size)
 		Py_RETURN_FALSE;
 
 	Py_RETURN_TRUE;
@@ -735,7 +829,11 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_GetPageEx", py_LM_GetPageEx, METH_VARARGS, "Get information about the page of an address in a remote process" },
 	/****************************************/
 	{ "LM_ReadMemory", py_LM_ReadMemory, METH_VARARGS, "Read memory from the calling process" },
+	{ "LM_ReadMemoryEx", py_LM_ReadMemoryEx, METH_VARARGS, "Read memory from a remote process" },
 	{ "LM_WriteMemory", py_LM_WriteMemory, METH_VARARGS, "Write memory to the calling process" },
+	{ "LM_WriteMemoryEx", py_LM_WriteMemoryEx, METH_VARARGS, "Write memory to a remote process" },
+	{ "LM_SetMemory", py_LM_SetMemory, METH_VARARGS, "Set memory to a byte in the current process" },
+	{ "LM_SetMemoryEx", py_LM_SetMemoryEx, METH_VARARGS, "Set memory to a byte in a remote process" },
 	{ NULL, NULL, 0, NULL }
 };
 

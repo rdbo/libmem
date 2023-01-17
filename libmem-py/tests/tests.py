@@ -124,8 +124,22 @@ print(f"[*] Read Integer From '{hex(val_addr)}': {rdval}")
 
 separator()
 
+# TODO: Add tests for 'LM_ReadMemoryEx'
+# separator()
+
 LM_WriteMemory(val_addr, bytearray(b"\x39\x05\x00\x00"))
 print(f"[*] Integer After LM_WriteMemory: {val}")
 
 separator()
+
+# TODO: Add tests for 'LM_WriteMemoryEx'
+# separator()
+
+LM_SetMemory(val_addr, b"\x00", ctypes.sizeof(val))
+print(f"[*] Integer After LM_SetMemory: {val}")
+
+separator()
+
+# TODO: Add tests for 'LM_SetMemoryEx'
+# separator()
 

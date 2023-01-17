@@ -1187,6 +1187,60 @@ py_LM_UnhookCodeEx(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_Assemble(PyObject *self,
+	       PyObject *args)
+{
+	lm_char_t *code;
+	lm_inst_t inst;
+	py_lm_inst_obj *pyinst;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "u", &code))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "s", &code))
+		return NULL;
+#	endif
+
+	if (!LM_Assemble(code, &inst))
+		return Py_BuildValue("");
+
+	pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
+	pyinst->inst = inst;
+
+	return (PyObject *)pyinst;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_Disassemble(PyObject *self,
+		  PyObject *args)
+{
+	lm_address_t code;
+	lm_inst_t inst;
+	py_lm_inst_obj *pyinst;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "k", &code))
+			return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "k", &code))
+		return NULL;
+#	endif
+
+	if (!LM_Disassemble(code, &inst))
+		return Py_BuildValue("");
+
+	pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
+	pyinst->inst = inst;
+
+	return (PyObject *)pyinst;
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -1243,6 +1297,8 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_UnhookCode", py_LM_UnhookCode, METH_VARARGS, "Unhook/restore code in the current process" },
 	{ "LM_UnhookCodeEx", py_LM_UnhookCodeEx, METH_VARARGS, "Unhook/restore code in a remote process" },
 	/****************************************/
+	{ "LM_Assemble", py_LM_Assemble, METH_VARARGS, "Assemble instruction from text" },
+	{ "LM_Disassemble", py_LM_Disassemble, METH_VARARGS, "Disassemble instruction from an address in the current process" },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -1276,6 +1332,9 @@ PyInit_libmem(void)
 		goto ERR_PYMOD;
 
 	if (PyType_Ready(&py_lm_page_t) < 0)
+		goto ERR_PYMOD;
+
+	if (PyType_Ready(&py_lm_inst_t) < 0)
 		goto ERR_PYMOD;
 
 	pymod = PyModule_Create(&libmem_mod);
@@ -1313,6 +1372,11 @@ PyInit_libmem(void)
 			       (PyObject *)&py_lm_page_t) < 0)
 		goto ERR_PAGE;
 
+	Py_INCREF(&py_lm_inst_t);
+	if (PyModule_AddObject(pymod, "lm_inst_t",
+			       (PyObject *)&py_lm_inst_t) < 0)
+		goto ERR_INST;
+
 	/* global variables */
 	DECL_GLOBAL_PROT(LM_PROT_X);
 	DECL_GLOBAL_PROT(LM_PROT_R);
@@ -1324,6 +1388,9 @@ PyInit_libmem(void)
 
 	goto EXIT; /* no errors */
 
+ERR_INST:
+	Py_DECREF(&py_lm_inst_t);
+	Py_DECREF(pymod);
 ERR_PROT:
 	Py_DECREF(&py_lm_prot_t);
 	Py_DECREF(pymod);

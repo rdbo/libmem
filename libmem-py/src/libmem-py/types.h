@@ -310,3 +310,77 @@ static PyTypeObject py_lm_page_t = {
 	.tp_repr = py_lm_page_str
 };
 
+/****************************************/
+
+/* lm_inst_t */
+typedef struct {
+	PyObject_HEAD
+	lm_inst_t inst;
+} py_lm_inst_obj;
+
+static PyMemberDef py_lm_inst_members[] = {
+	{ "size", T_SIZE, offsetof(py_lm_inst_obj, inst.size), READONLY, "Instruction Size" },
+	{ NULL }
+};
+
+PyObject *
+py_lm_inst_get_mnemonic(PyObject *self, void *closure)
+{
+	return (PyObject *)PyUnicode_FromString(((py_lm_inst_obj *)self)->inst.mnemonic);
+}
+
+PyObject *
+py_lm_inst_get_op_str(PyObject *self, void *closure)
+{
+	return (PyObject *)PyUnicode_FromString(((py_lm_inst_obj *)self)->inst.op_str);
+}
+
+PyObject *
+py_lm_inst_get_bytes(PyObject *self, void *closure)
+{
+	py_lm_inst_obj *inst = (py_lm_inst_obj *)self;
+	return (PyObject *)PyByteArray_FromStringAndSize((const char *)inst->inst.bytes, inst->inst.size);
+}
+
+PyObject *
+py_lm_inst_str(PyObject *self)
+{
+	char bytes_str[255] = { 0 };
+	char *tmp = bytes_str;
+	int offset = 0;
+	py_lm_inst_obj *pyinst = (py_lm_inst_obj *)self;
+	size_t i;
+
+	for (i = 0; i < pyinst->inst.size; ++i) {
+		/* OBS: 'bytes_str' MUST BE large enough */
+		offset = sprintf(tmp, "%hhx ", pyinst->inst.bytes[i]);
+		tmp = &bytes_str[offset];
+	}
+
+	if (offset > 0)
+		tmp[offset - 1] = '\x00'; /* remove last space */
+
+	return (PyObject *)PyUnicode_FromFormat("<%s %s : %s>", pyinst->inst.mnemonic, pyinst->inst.op_str, bytes_str);
+}
+
+static PyGetSetDef py_lm_inst_accessors[] = {
+	{ "mnemonic", py_lm_inst_get_mnemonic, NULL, NULL, NULL },
+	{ "op_str", py_lm_inst_get_op_str, NULL, NULL, NULL },
+	{ "bytes", py_lm_inst_get_bytes, NULL, NULL, NULL },
+	{ NULL, NULL, NULL, NULL, NULL }
+};
+
+static PyTypeObject py_lm_inst_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_inst_t",
+	.tp_doc = "Stores information about an instruction",
+	.tp_basicsize = sizeof(py_lm_inst_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_members = py_lm_inst_members,
+	.tp_getset = py_lm_inst_accessors,
+	.tp_str = py_lm_inst_str,
+	.tp_repr = py_lm_inst_str
+};
+

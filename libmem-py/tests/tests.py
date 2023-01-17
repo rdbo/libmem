@@ -195,3 +195,13 @@ separator()
 # TODO: Add tests for 'LM_HookCodeEx' and 'LM_UnhookCodeEx'
 # separator()
 
+print("[*] Assemblying Instruction")
+inst = LM_Assemble("mov eax, ebx")
+print(inst)
+
+print("[*] Disassembly of PyBytesMain")
+inst = LM_Disassemble(symaddr)
+print(inst)
+
+separator()
+

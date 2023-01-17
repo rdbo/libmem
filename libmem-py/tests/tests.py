@@ -189,3 +189,9 @@ separator()
 # TODO: Add tests for 'LM_DataScanEx', 'LM_PatternScanEx', 'LM_SigScanEx'
 # separator()
 
+# TODO: Add tests for 'LM_HookCode' and 'LM_UnhookCode'
+# separator()
+
+# TODO: Add tests for 'LM_HookCodeEx' and 'LM_UnhookCodeEx'
+# separator()
+

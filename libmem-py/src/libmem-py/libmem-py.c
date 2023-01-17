@@ -1097,6 +1097,96 @@ py_LM_SigScanEx(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_HookCode(PyObject *self,
+	       PyObject *args)
+{
+	lm_address_t from;
+	lm_address_t to;
+	lm_address_t trampoline;
+	lm_size_t    size;
+
+	if (!PyArg_ParseTuple(args, "kk", &from, &to))
+		return NULL;
+
+	size = LM_HookCode(from, to, &trampoline);
+	if (!size)
+		return Py_BuildValue("");
+
+	return Py_BuildValue("(kk)", trampoline, size);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_HookCodeEx(PyObject *self,
+		 PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t from;
+	lm_address_t to;
+	lm_address_t trampoline;
+	lm_size_t    size;
+
+	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &from, &to))
+		return NULL;
+
+	size = LM_HookCodeEx(&pyproc->proc, from, to, &trampoline);
+	if (!size)
+		return Py_BuildValue("");
+
+	return Py_BuildValue("(kk)", trampoline, size);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_UnhookCode(PyObject *self,
+		 PyObject *args)
+{
+	lm_address_t from;
+	PyObject *pytrampoline;
+	lm_address_t trampoline;
+	lm_size_t    size;
+
+	if (!PyArg_ParseTuple(args, "k(kk)", &from, &pytrampoline))
+		return NULL;
+
+	trampoline = (lm_address_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 0));
+	size = (lm_size_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 1));
+
+	if (!LM_UnhookCode(from, trampoline, size))
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_UnhookCodeEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t from;
+	PyObject *pytrampoline;
+	lm_address_t trampoline;
+	lm_size_t    size;
+
+	if (!PyArg_ParseTuple(args, "Ok(kk)", &pyproc, &from, &pytrampoline))
+		return NULL;
+
+	trampoline = (lm_address_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 0));
+	size = (lm_size_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 1));
+
+	if (!LM_UnhookCodeEx(&pyproc->proc, from, trampoline, size))
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -1147,6 +1237,11 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_PatternScanEx", py_LM_PatternScanEx, METH_VARARGS, "Search for a byte pattern with a mask filter in a remote process" },
 	{ "LM_SigScan", py_LM_SigScan, METH_VARARGS, "Search for a byte signature that can contain filters in the current process" },
 	{ "LM_SigScanEx", py_LM_SigScanEx, METH_VARARGS, "Search for a byte signature that can contain filters in a remote process" },
+	/****************************************/
+	{ "LM_HookCode", py_LM_HookCode, METH_VARARGS, "Hook/detour code in the current process, returning a gateway/trampoline" },
+	{ "LM_HookCodeEx", py_LM_HookCodeEx, METH_VARARGS, "Hook/detour code in a remote process, returning a gateway/trampoline" },
+	{ "LM_UnhookCode", py_LM_UnhookCode, METH_VARARGS, "Unhook/restore code in the current process" },
+	{ "LM_UnhookCodeEx", py_LM_UnhookCodeEx, METH_VARARGS, "Unhook/restore code in a remote process" },
 	/****************************************/
 	{ NULL, NULL, 0, NULL }
 };

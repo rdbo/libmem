@@ -172,3 +172,20 @@ LM_FreeMemoryEx(proc, alloc, alloc_size)
 
 separator()
 
+buf = ctypes.c_buffer(b"\x10\x20\x30\x40\x50\x60\x70\x80\x90\xA0")
+buf_addr = ctypes.addressof(buf)
+print(f"[*] Scanning For Buffer At: {hex(buf_addr)}")
+scan_addr = buf_addr - 0x10
+scan_size = 0x100
+data_scan = LM_DataScan(bytearray(buf.value), scan_addr, scan_size)
+print(f"[*] Data Scan Match: {hex(data_scan)}")
+pattern_scan = LM_PatternScan(bytearray(buf.value), "xxxx?x?x?x", scan_addr, scan_size)
+print(f"[*] Pattern Scan Match: {hex(pattern_scan)}")
+sig_scan = LM_SigScan("10 20 30 40 ?? ?? 70 80 ?? A0", scan_addr, scan_size)
+print(f"[*] Signature Scan Match: {hex(sig_scan)}")
+
+separator()
+
+# TODO: Add tests for 'LM_DataScanEx', 'LM_PatternScanEx', 'LM_SigScanEx'
+# separator()
+

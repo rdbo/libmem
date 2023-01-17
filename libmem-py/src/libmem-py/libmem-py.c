@@ -727,7 +727,6 @@ py_LM_WriteMemory(PyObject *self,
 	if (!PyArg_ParseTuple(args, "kY", &dst, &pysrc))
 		return NULL;
 
-	/* TODO: Check if 'PyByteArray_AsString' can handle the byte 0x0 */
 	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
 	size = (lm_size_t)PyByteArray_Size(pysrc);
 
@@ -752,7 +751,6 @@ py_LM_WriteMemoryEx(PyObject *self,
 	if (!PyArg_ParseTuple(args, "OkY", &pyproc, &dst, &pysrc))
 		return NULL;
 
-	/* TODO: Check if 'PyByteArray_AsString' can handle the byte 0x0 */
 	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
 	size = (lm_size_t)PyByteArray_Size(pysrc);
 
@@ -932,6 +930,173 @@ py_LM_FreeMemoryEx(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_DataScan(PyObject *self,
+	       PyObject *args)
+{
+	PyObject *pydata;
+	lm_address_t addr;
+	lm_size_t scansize;
+	lm_bytearr_t data;
+	lm_size_t size;
+	lm_address_t scan_match;
+
+	if (!PyArg_ParseTuple(args, "Ykk", &pydata, &addr, &scansize))
+		return NULL;
+
+	data = (lm_bytearr_t)PyByteArray_AsString(pydata);
+	size = (lm_size_t)PyByteArray_Size(pydata);
+
+	scan_match = LM_DataScan(data, size, addr, scansize);
+	if (scan_match == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(scan_match);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_DataScanEx(PyObject *self,
+		 PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	PyObject *pydata;
+	lm_address_t addr;
+	lm_size_t scansize;
+	lm_bytearr_t data;
+	lm_size_t size;
+	lm_address_t scan_match;
+
+	if (!PyArg_ParseTuple(args, "OYkk", &pyproc, &pydata, &addr, &scansize))
+		return NULL;
+
+	data = (lm_bytearr_t)PyByteArray_AsString(pydata);
+	size = (lm_size_t)PyByteArray_Size(pydata);
+
+	scan_match = LM_DataScanEx(&pyproc->proc, data, size, addr, scansize);
+	if (scan_match == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(scan_match);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_PatternScan(PyObject *self,
+		  PyObject *args)
+{
+	PyObject *pypattern;
+	lm_char_t *mask;
+	lm_address_t addr;
+	lm_size_t scansize;
+	lm_bytearr_t pattern;
+	lm_address_t scan_match;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "Yukk", &pypattern, &mask, &addr, &scansize))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "Yskk", &pypattern, &mask, &addr, &scansize))
+		return NULL;
+#	endif
+
+	pattern = (lm_bytearr_t)PyByteArray_AsString(pypattern);
+
+	scan_match = LM_PatternScan(pattern, mask, addr, scansize);
+	if (scan_match == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(scan_match);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_PatternScanEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	PyObject *pypattern;
+	lm_char_t *mask;
+	lm_address_t addr;
+	lm_size_t scansize;
+	lm_bytearr_t pattern;
+	lm_address_t scan_match;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "OYukk", &pyproc, &pypattern, &mask, &addr, &scansize))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "OYskk", &pyproc, &pypattern, &mask, &addr, &scansize))
+		return NULL;
+#	endif
+
+	pattern = (lm_bytearr_t)PyByteArray_AsString(pypattern);
+
+	scan_match = LM_PatternScanEx(&pyproc->proc, pattern, mask, addr, scansize);
+	if (scan_match == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(scan_match);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_SigScan(PyObject *self,
+	      PyObject *args)
+{
+	lm_char_t *sig;
+	lm_address_t addr;
+	lm_size_t scansize;
+	lm_address_t scan_match;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "ukk", &sig, &addr, &scansize))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "skk", &sig, &addr, &scansize))
+		return NULL;
+#	endif
+
+	scan_match = LM_SigScan(sig, addr, scansize);
+	if (scan_match == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(scan_match);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_SigScanEx(PyObject *self,
+		PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_char_t *sig;
+	lm_address_t addr;
+	lm_size_t scansize;
+	lm_address_t scan_match;
+
+#	if LM_CHARSET == LM_CHARSET_UC
+	if (!PyArg_ParseTuple(args, "Oukk", &pyproc, &sig, &addr, &scansize))
+		return NULL;
+#	else
+	if (!PyArg_ParseTuple(args, "Oskk", &pyproc, &sig, &addr, &scansize))
+		return NULL;
+#	endif
+
+	scan_match = LM_SigScanEx(&pyproc->proc, sig, addr, scansize);
+	if (scan_match == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(scan_match);
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -975,6 +1140,13 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_AllocMemoryEx", py_LM_AllocMemoryEx, METH_VARARGS, "Allocate memory in a remote process" },
 	{ "LM_FreeMemory", py_LM_FreeMemory, METH_VARARGS, "Free memory in the current process" },
 	{ "LM_FreeMemoryEx", py_LM_FreeMemoryEx, METH_VARARGS, "Free memory in a remote process" },
+	/****************************************/
+	{ "LM_DataScan", py_LM_DataScan, METH_VARARGS, "Search for a byte array in the current process" },
+	{ "LM_DataScanEx", py_LM_DataScanEx, METH_VARARGS, "Search for a byte array in a remote process" },
+	{ "LM_PatternScan", py_LM_PatternScan, METH_VARARGS, "Search for a byte pattern with a mask filter in the current process" },
+	{ "LM_PatternScanEx", py_LM_PatternScanEx, METH_VARARGS, "Search for a byte pattern with a mask filter in a remote process" },
+	{ "LM_SigScan", py_LM_SigScan, METH_VARARGS, "Search for a byte signature that can contain filters in the current process" },
+	{ "LM_SigScanEx", py_LM_SigScanEx, METH_VARARGS, "Search for a byte signature that can contain filters in a remote process" },
 	/****************************************/
 	{ NULL, NULL, 0, NULL }
 };

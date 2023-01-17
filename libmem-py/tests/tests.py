@@ -32,32 +32,32 @@ print(proc)
 
 separator()
 
-print("[*] Is Remote Process Alive? " + ("Yes" if LM_IsProcessAlive(proc) else "No"))
+print(f"[*] Is Remote Process Alive? {'Yes' if LM_IsProcessAlive(proc) else 'No'}")
 
 separator()
 
-print("[*] System Bits: " + str(LM_GetSystemBits()))
+print(f"[*] System Bits: {LM_GetSystemBits()}")
 
 separator()
 
-print("[*] Current Process Threads: " + str(LM_EnumThreads()))
+print(f"[*] Current Process Threads: {LM_EnumThreads()}")
 
 separator()
 
-print("[*] Remote Process Threads: " + str(LM_EnumThreadsEx(proc)))
+print(f"[*] Remote Process Threads: {LM_EnumThreadsEx(proc)}")
 
 separator()
 
 thread = LM_GetThread()
-print("[*] Current Thread: " + str(thread))
+print(f"[*] Current Thread: {thread}")
 
 separator()
 
-print("[*] Remote Thread: " + str(LM_GetThreadEx(proc)))
+print(f"[*] Remote Thread: {LM_GetThreadEx(proc)}")
 
 separator()
 
-print("[*] Process From Thread '" + str(thread) + "': " + str(LM_GetThreadProcess(thread)))
+print(f"[*] Process From Thread '{thread}': {LM_GetThreadProcess(thread)}")
 
 separator()
 
@@ -72,12 +72,12 @@ print("\n".join([str(mod) for mod in LM_EnumModulesEx(proc)[:5]]))
 separator()
 
 curmod = LM_FindModule(curproc.path)
-print("[*] Current Process Module: " + str(curmod))
+print(f"[*] Current Process Module: {curmod}")
 
 separator()
 
 mod = LM_FindModuleEx(proc, proc.path)
-print("[*] Remote Process Module: " + str(mod))
+print(f"[*] Remote Process Module: {mod}")
 
 separator()
 
@@ -94,7 +94,7 @@ separator()
 print("[*] Symbol Address Search")
 
 symaddr = LM_FindSymbolAddress(curmod, "Py_BytesMain")
-print("[*] Py_BytesMain Address: " + hex(symaddr))
+print(f"[*] Py_BytesMain Address: {symaddr}")
 
 separator()
 
@@ -108,11 +108,11 @@ print("\n".join([str(page) for page in LM_EnumPagesEx(proc)[:5]]))
 
 separator()
 
-print("[*] Page From Current Process Module: " + str(LM_GetPage(symaddr)))
+print(f"[*] Page From Current Process Module: {LM_GetPage(symaddr)}")
 
 separator()
 
-print("[*] Page From Remote Process Module: " + str(LM_GetPageEx(proc, mod.base)))
+print(f"[*] Page From Remote Process Module: {LM_GetPageEx(proc, mod.base)}")
 
 separator()
 
@@ -120,7 +120,7 @@ val = ctypes.c_int(10)
 val_addr = ctypes.addressof(val)
 rdbuf = LM_ReadMemory(val_addr, ctypes.sizeof(val))
 rdval = struct.unpack("@i", rdbuf)[0]
-print(f"[*] Read Integer From '{hex(val_addr)}': {rdval}")
+print(f"[*] Read Integer From '{hex(val_addr)}': {str(rdval)}")
 
 separator()
 

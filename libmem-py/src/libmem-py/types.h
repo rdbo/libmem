@@ -59,7 +59,7 @@ PyObject *
 py_lm_process_str(PyObject *self)
 {
 	py_lm_process_obj *pyproc = (py_lm_process_obj *)self;
-	return PyUnicode_FromFormat("<lm_process_t { pid: %d, ppid: %d, bits: %zu, path: %s, name: %s }>", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.path, pyproc->proc.name);
+	return PyUnicode_FromFormat("lm_process_t(pid = %d, ppid = %d, bits = %zu, path = \"%s\", name = \"%s\")", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.path, pyproc->proc.name);
 }
 
 static PyGetSetDef py_lm_process_accessors[] = {
@@ -99,7 +99,7 @@ PyObject *
 py_lm_thread_str(PyObject *self)
 {
 	py_lm_thread_obj *pythread = (py_lm_thread_obj *)self;
-	return PyUnicode_FromFormat("<lm_thread_t { tid: %d }>", pythread->thread.tid);
+	return PyUnicode_FromFormat("lm_thread_t(tid = %d)", pythread->thread.tid);
 }
 
 static PyTypeObject py_lm_thread_t = {
@@ -146,7 +146,7 @@ PyObject *
 py_lm_module_str(PyObject *self)
 {
 	py_lm_module_obj *pymodule = (py_lm_module_obj *)self;
-	return PyUnicode_FromFormat("<lm_module_t { base: %p, end: %p, size: %p, path: %s, name: %s }>", (void *)pymodule->mod.base, (void *)pymodule->mod.end, (void *)pymodule->mod.size, pymodule->mod.path, pymodule->mod.name);
+	return PyUnicode_FromFormat("lm_module_t(base = %p, end = %p, size = %p, path = \"%s\", name = \"%s\")", (void *)pymodule->mod.base, (void *)pymodule->mod.end, (void *)pymodule->mod.size, pymodule->mod.path, pymodule->mod.name);
 }
 
 static PyGetSetDef py_lm_module_accessors[] = {
@@ -190,7 +190,7 @@ PyObject *
 py_lm_symbol_str(PyObject *self)
 {
 	py_lm_symbol_obj *pysym = (py_lm_symbol_obj *)self;
-	return PyUnicode_FromFormat("<lm_symbol_t { name: %s, address: %p }>", PyUnicode_AsUTF8(pysym->name), (void *)pysym->symbol.address);
+	return PyUnicode_FromFormat("lm_symbol_t(name = \"%s\", address = %p)>", PyUnicode_AsUTF8(pysym->name), (void *)pysym->symbol.address);
 }
 
 static PyTypeObject py_lm_symbol_t = {
@@ -290,7 +290,7 @@ py_lm_page_str(PyObject *self)
 
 	pyprotstr = PyObject_Str((PyObject *)pypage->prot);
 	protstr = PyUnicode_AsUTF8(pyprotstr);
-	fmtstr = PyUnicode_FromFormat("<lm_page_t { base: %p, end: %p, size: %p, prot: %s }>", (void *)pypage->page.base, (void *)pypage->page.end, (void *)pypage->page.size, protstr);
+	fmtstr = PyUnicode_FromFormat("lm_page_t(base = %p, end = %p, size = %p, prot = %s)", (void *)pypage->page.base, (void *)pypage->page.end, (void *)pypage->page.size, protstr);
 
 	Py_DECREF(pyprotstr); /* delete protection string object */
 

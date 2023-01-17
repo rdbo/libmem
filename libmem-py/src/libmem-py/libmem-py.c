@@ -850,6 +850,88 @@ py_LM_ProtMemoryEx(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_AllocMemory(PyObject *self,
+		  PyObject *args)
+{
+	lm_size_t size;
+	py_lm_prot_obj *pyprot;
+	lm_address_t alloc;
+
+	if (!PyArg_ParseTuple(args, "kO", &size, &pyprot))
+		return NULL;
+
+
+	alloc = LM_AllocMemory(size, pyprot->prot);
+	if (alloc == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(alloc);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_AllocMemoryEx(PyObject *self,
+		    PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_size_t size;
+	py_lm_prot_obj *pyprot;
+	lm_address_t alloc;
+
+	if (!PyArg_ParseTuple(args, "OkO", &pyproc, &size, &pyprot))
+		return NULL;
+
+
+	alloc = LM_AllocMemoryEx(&pyproc->proc, size, pyprot->prot);
+	if (alloc == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(alloc);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_FreeMemory(PyObject *self,
+		 PyObject *args)
+{
+	lm_address_t alloc;
+	lm_size_t size;
+
+	if (!PyArg_ParseTuple(args, "kk", &alloc, &size))
+		return NULL;
+
+
+	if (!LM_FreeMemory(alloc, size))
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_FreeMemoryEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t alloc;
+	lm_size_t size;
+
+	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &alloc, &size))
+		return NULL;
+
+
+	if (!LM_FreeMemoryEx(&pyproc->proc, alloc, size))
+		Py_RETURN_FALSE;
+
+	Py_RETURN_TRUE;
+}
+
+/****************************************/
+
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
@@ -889,6 +971,11 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_SetMemoryEx", py_LM_SetMemoryEx, METH_VARARGS, "Set memory to a byte in a remote process" },
 	{ "LM_ProtMemory", py_LM_ProtMemory, METH_VARARGS, "Change memory protection flags of a region in the current process" },
 	{ "LM_ProtMemoryEx", py_LM_ProtMemoryEx, METH_VARARGS, "Change memory protection flags of a region in a remote process" },
+	{ "LM_AllocMemory", py_LM_AllocMemory, METH_VARARGS, "Allocate memory in the current process" },
+	{ "LM_AllocMemoryEx", py_LM_AllocMemoryEx, METH_VARARGS, "Allocate memory in a remote process" },
+	{ "LM_FreeMemory", py_LM_FreeMemory, METH_VARARGS, "Free memory in the current process" },
+	{ "LM_FreeMemoryEx", py_LM_FreeMemoryEx, METH_VARARGS, "Free memory in a remote process" },
+	/****************************************/
 	{ NULL, NULL, 0, NULL }
 };
 

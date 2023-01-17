@@ -149,3 +149,26 @@ print(f"[*] Old Memory Protection ({hex(curmod.base)}): {old_prot}")
 page = LM_GetPage(curmod.base)
 print(f"[*] Current Memory Protection ({hex(curmod.base)}): {page.prot}")
 
+separator()
+
+print("[*] Changing Memory Protection - Remote Process")
+old_prot = LM_ProtMemoryEx(proc, mod.base, 0x1000, LM_PROT_XRW)
+print(f"[*] Old Memory Protection ({hex(mod.base)}): {old_prot}")
+page = LM_GetPageEx(proc, mod.base)
+print(f"[*] Current Memory Protection ({hex(mod.base)}): {page.prot}")
+
+separator()
+
+alloc_size = 0x1000
+alloc = LM_AllocMemory(alloc_size, LM_PROT_XRW)
+print(f"[*] Allocated Memory - Current Process: {hex(alloc)}")
+LM_FreeMemory(alloc, alloc_size)
+
+separator()
+
+alloc = LM_AllocMemoryEx(proc, alloc_size, LM_PROT_XRW)
+print(f"[*] Allocated Memory - Remote Process: {hex(alloc)}")
+LM_FreeMemoryEx(proc, alloc, alloc_size)
+
+separator()
+

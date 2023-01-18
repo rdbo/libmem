@@ -87,6 +87,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 				len = LM_ARRLEN(proc.name) - 1;
 
 			LM_STRNCPY(proc.name, entry.szExeFile, len);
+			proc.name[len] = LM_STR('\x00')
 			proc.bits = _LM_GetProcessBitsEx(proc.pid);
 
 			if (callback(&proc, arg) == LM_FALSE)

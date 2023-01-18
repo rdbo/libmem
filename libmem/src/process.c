@@ -83,6 +83,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 				continue;
 
 			len = LM_STRLEN(entry.szExeFile);
+			if (!len)
+				continue;
+
 			if (len >= LM_ARRLEN(proc.name))
 				len = LM_ARRLEN(proc.name) - 1;
 

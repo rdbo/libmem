@@ -207,9 +207,15 @@ print(", ".join([hex(b) for b in insts]))
 
 separator()
 
-print("[*] Disassembly of PyBytesMain")
+print("[*] Disassembly of PyBytesMain Instruction")
 inst = LM_Disassemble(symaddr)
 print(inst)
+
+separator()
+
+print("[*] Disassembly of PyBytesMain Instructions")
+insts = LM_DisassembleEx(symaddr, 32, 0x100, 5, symaddr)
+print("\n".join([str(inst) for inst in insts]))
 
 separator()
 

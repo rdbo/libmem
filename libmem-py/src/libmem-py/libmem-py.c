@@ -1259,6 +1259,42 @@ py_LM_Disassemble(PyObject *self,
 /****************************************/
 
 static PyObject *
+py_LM_DisassembleEx(PyObject *self,
+		    PyObject *args)
+{
+	lm_address_t code;
+	lm_size_t bits;
+	lm_size_t size;
+	lm_size_t count;
+	lm_address_t runtime_addr;
+	lm_inst_t *insts;
+	lm_size_t inst_count;
+	PyObject *pyinsts;
+	lm_size_t i;
+	py_lm_inst_obj *pyinst;
+
+	if (!PyArg_ParseTuple(args, "kkkkk", &code, &bits, &size, &count, &runtime_addr))
+		return NULL;
+
+	inst_count = LM_DisassembleEx(code, bits, size, count, runtime_addr, &insts);
+	if (!inst_count)
+		return Py_BuildValue("");
+
+	pyinsts = PyList_New((Py_ssize_t)inst_count);
+	for (i = 0; i < inst_count; ++i) {
+		pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
+		pyinst->inst = insts[i];
+		PyList_SetItem(pyinsts, i, (PyObject *)pyinst);
+	}
+
+	LM_FreeInstructions(insts);
+
+	return pyinsts;
+}
+
+/****************************************/
+
+static PyObject *
 py_LM_CodeLength(PyObject *self,
 		 PyObject *args)
 {
@@ -1358,6 +1394,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_Assemble", py_LM_Assemble, METH_VARARGS, "Assemble instruction from text" },
 	{ "LM_AssembleEx", py_LM_AssembleEx, METH_VARARGS, "Assemble instructions from text" },
 	{ "LM_Disassemble", py_LM_Disassemble, METH_VARARGS, "Disassemble instruction from an address in the current process" },
+	{ "LM_DisassembleEx", py_LM_DisassembleEx, METH_VARARGS, "Disassemble instructions from an address in the current process" },
 	{ "LM_CodeLength", py_LM_CodeLength, METH_VARARGS, "Get the minimum instruction aligned length for a code region in the current process" },
 	{ "LM_CodeLengthEx", py_LM_CodeLengthEx, METH_VARARGS, "Get the minimum instruction aligned length for a code region in a remote process" },
 	{ NULL, NULL, 0, NULL }

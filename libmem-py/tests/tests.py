@@ -199,6 +199,14 @@ print("[*] Assemblying Instruction")
 inst = LM_Assemble("mov eax, ebx")
 print(inst)
 
+separator()
+
+print("[*] Assemblying Instructions")
+insts = LM_AssembleEx("push ebp; mov ebp, esp; mov esp, ebp; pop ebp; ret", 32, 0)
+print(", ".join([hex(b) for b in insts]))
+
+separator()
+
 print("[*] Disassembly of PyBytesMain")
 inst = LM_Disassemble(symaddr)
 print(inst)

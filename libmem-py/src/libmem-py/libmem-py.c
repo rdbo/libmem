@@ -1191,17 +1191,12 @@ static PyObject *
 py_LM_Assemble(PyObject *self,
 	       PyObject *args)
 {
-	lm_char_t *code;
+	lm_cstring_t code;
 	lm_inst_t inst;
 	py_lm_inst_obj *pyinst;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "u", &code))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "s", &code))
 		return NULL;
-#	endif
 
 	if (!LM_Assemble(code, &inst))
 		return Py_BuildValue("");
@@ -1210,6 +1205,33 @@ py_LM_Assemble(PyObject *self,
 	pyinst->inst = inst;
 
 	return (PyObject *)pyinst;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_AssembleEx(PyObject *self,
+		 PyObject *args)
+{
+	lm_cstring_t code;
+	lm_size_t bits;
+	lm_address_t runtime_addr;
+	lm_bytearr_t codebuf;
+	lm_size_t codelen;
+	PyObject *pycodebuf;
+
+	if (!PyArg_ParseTuple(args, "skk", &code, &bits, &runtime_addr))
+		return NULL;
+
+	codelen = LM_AssembleEx(code, bits, runtime_addr, &codebuf);
+	if (!codelen)
+		return Py_BuildValue("");
+
+	pycodebuf = PyByteArray_FromStringAndSize((const char *)codebuf, codelen);
+
+	LM_FreeCodeBuffer(codebuf);
+
+	return pycodebuf;
 }
 
 /****************************************/
@@ -1334,6 +1356,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_UnhookCodeEx", py_LM_UnhookCodeEx, METH_VARARGS, "Unhook/restore code in a remote process" },
 	/****************************************/
 	{ "LM_Assemble", py_LM_Assemble, METH_VARARGS, "Assemble instruction from text" },
+	{ "LM_AssembleEx", py_LM_AssembleEx, METH_VARARGS, "Assemble instructions from text" },
 	{ "LM_Disassemble", py_LM_Disassemble, METH_VARARGS, "Disassemble instruction from an address in the current process" },
 	{ "LM_CodeLength", py_LM_CodeLength, METH_VARARGS, "Get the minimum instruction aligned length for a code region in the current process" },
 	{ "LM_CodeLengthEx", py_LM_CodeLengthEx, METH_VARARGS, "Get the minimum instruction aligned length for a code region in a remote process" },

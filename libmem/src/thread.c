@@ -45,8 +45,8 @@ LM_EnumThreads(lm_bool_t(*callback)(lm_thread_t *pthr,
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_EnumThreadsEx(lm_process_t *pproc,
-		  lm_bool_t   (*callback)(lm_tid_t   tid,
-					  lm_void_t *arg),
+		  lm_bool_t   (*callback)(lm_thread_t *pthr,
+					  lm_void_t   *arg),
 		  lm_void_t    *arg)
 {
 	lm_bool_t ret = LM_FALSE;

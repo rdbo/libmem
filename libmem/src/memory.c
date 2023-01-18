@@ -303,7 +303,7 @@ LM_SetMemoryEx(lm_process_t *pproc,
 	if (!data)
 		return wrsize;
 
-	if (LM_SetMemory(data, byte, size) != size)
+	if (LM_SetMemory((lm_address_t)data, byte, size) != size)
 		return wrsize;
 	
 	wrsize = LM_WriteMemoryEx(pproc, dst, data, size);

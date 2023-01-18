@@ -220,7 +220,7 @@ print("\n".join([str(inst) for inst in insts]))
 separator()
 
 minlength = 0x5
-aligned_length = LM_CodeLength(symaddr, 0x5)
+aligned_length = LM_CodeLength(symaddr, minlength)
 print(f"[*] Aligned Length for Minimum '{minlength}' Bytes is '{aligned_length}' Bytes (PyBytesMain)")
 
 separator()

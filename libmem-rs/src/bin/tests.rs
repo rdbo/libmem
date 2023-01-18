@@ -290,7 +290,7 @@ fn main() {
     separator();
 
     let minsize = 0x5;
-    let alignedsize = LM_CodeLength(some_function_addr, 0x10).unwrap();
+    let alignedsize = LM_CodeLength(some_function_addr, minsize).unwrap();
     println!("[*] Aligned Size (minimum: {:#x}): {:#x}", minsize, alignedsize);
 
     separator();

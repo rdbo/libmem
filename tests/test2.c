@@ -11,8 +11,8 @@ lm_bool_t _LM_EnumProcessesCallback(lm_process_t *pproc,
 {
 	lm_size_t *counter = (lm_size_t *)arg;
 
-	LM_PRINTF(LM_STR("PID: %d | PPID: %d | Bits: %lu | Name: %s | Path: %s\n"),
-		  pproc->pid, pproc->ppid, pproc->bits, pproc->name, pproc->path);
+	LM_PRINTF(LM_STR("PID: %d | PPID: %d | Bits: %zu | Name: %s | Path: %s\n"),
+		  (int)pproc->pid, (int)pproc->ppid, (size_t)pproc->bits, pproc->name, pproc->path);
 
 	*counter += 1;
 	if (*counter >= 5)

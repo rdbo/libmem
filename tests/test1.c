@@ -75,12 +75,13 @@ main()
 
 	LM_FindModule(proc.path, &mod);
 	main_sym = LM_FindSymbolAddress(&mod, "main");
-	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), mod.name);
-	LM_PRINTF(LM_STR("[*] Module Path: %s\n"), mod.path);
-	LM_PRINTF(LM_STR("[*] Module Base: %p\n"), (void *)mod.base);
-	LM_PRINTF(LM_STR("[*] Module Size: %p\n"), (void *)mod.size);
-	LM_PRINTF(LM_STR("[*] Module End:  %p\n"), (void *)mod.end);
-	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), (void *)main_sym);
+	LM_PRINTF(LM_STR("[*] Module Name:    %s\n"), mod.name);
+	LM_PRINTF(LM_STR("[*] Module Path:    %s\n"), mod.path);
+	LM_PRINTF(LM_STR("[*] Module Base:    %p\n"), (void *)mod.base);
+	LM_PRINTF(LM_STR("[*] Module Size:    %p\n"), (void *)mod.size);
+	LM_PRINTF(LM_STR("[*] Module End:     %p\n"), (void *)mod.end);
+	LM_PRINTF(LM_STR("[*] Main Addr:      %p\n"), (void *)main_sym);
+	LM_PRINTF(LM_STR("[*] Real Main Addr: %p\n"), (void *)main);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_PRINTF(LM_STR("[*] Module to Load: %s\n"), LIBTEST_PATH);

@@ -71,6 +71,7 @@ if (LIBMEM_BUILD_TESTS)
 	set(TEST2_SRC "${TESTS_DIR}/test2.c")
 	set(LIBTEST_SRC "${TESTS_DIR}/libtest.c")
 	set(LIBTEST_PATH "${PROJECT_BINARY_DIR}/libtest${CMAKE_SHARED_LIBRARY_SUFFIX}")
+	cmake_path(NATIVE_PATH LIBTEST_PATH LIBTEST_PATH)
 
 	add_executable(test1 ${TEST1_SRC})
 	target_include_directories(test1 PUBLIC ${LIBMEM_INC})

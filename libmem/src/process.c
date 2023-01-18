@@ -71,6 +71,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 	if (Process32First(hSnap, &entry)) {
 		do {
 			proc.pid = (lm_pid_t)entry.th32ProcessID;
+			if (proc.pid == LM_PID_BAD)
+				continue;
+
 			proc.ppid = (lm_pid_t)entry.th32ParentProcessID;
 			/* OBS: The 'szExeFile' member of the 'PROCESSENTRY32'
 			 * struct represents the name of the process, not the

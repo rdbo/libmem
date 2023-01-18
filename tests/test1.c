@@ -83,6 +83,7 @@ main()
 	LM_PRINTF(LM_STR("[*] Main Addr:   %p\n"), (void *)main_sym);
 	LM_PRINTF(LM_STR("====================\n"));
 
+	LM_PRINTF(LM_STR("[*] Module to Load: %s\n"), LIBTEST_PATH);
 	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);
 	LM_UnloadModule(&libtest_mod);
 	LM_PRINTF(LM_STR("[*] Module Name: %s\n"), libtest_mod.name);

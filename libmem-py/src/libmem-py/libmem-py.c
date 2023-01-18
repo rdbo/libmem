@@ -1222,13 +1222,8 @@ py_LM_Disassemble(PyObject *self,
 	lm_inst_t inst;
 	py_lm_inst_obj *pyinst;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "k", &code))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "k", &code))
 		return NULL;
-#	endif
 
 	if (!LM_Disassemble(code, &inst))
 		return Py_BuildValue("");
@@ -1237,6 +1232,47 @@ py_LM_Disassemble(PyObject *self,
 	pyinst->inst = inst;
 
 	return (PyObject *)pyinst;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_CodeLength(PyObject *self,
+		 PyObject *args)
+{
+	lm_address_t code;
+	lm_size_t minlength;
+	lm_size_t aligned_length;
+
+	if (!PyArg_ParseTuple(args, "kk", &code, &minlength))
+		return NULL;
+
+	aligned_length = LM_CodeLength(code, minlength);
+	if (!aligned_length)
+		return Py_BuildValue("");
+
+	return (PyObject *)PyLong_FromSize_t(aligned_length);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_CodeLengthEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t code;
+	lm_size_t minlength;
+	lm_size_t aligned_length;
+
+	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &code, &minlength))
+		return NULL;
+
+	aligned_length = LM_CodeLengthEx(&pyproc->proc, code, minlength);
+	if (!aligned_length)
+		return Py_BuildValue("");
+
+	return (PyObject *)PyLong_FromSize_t(aligned_length);
 }
 
 /****************************************/
@@ -1299,6 +1335,8 @@ static PyMethodDef libmem_methods[] = {
 	/****************************************/
 	{ "LM_Assemble", py_LM_Assemble, METH_VARARGS, "Assemble instruction from text" },
 	{ "LM_Disassemble", py_LM_Disassemble, METH_VARARGS, "Disassemble instruction from an address in the current process" },
+	{ "LM_CodeLength", py_LM_CodeLength, METH_VARARGS, "Get the minimum instruction aligned length for a code region in the current process" },
+	{ "LM_CodeLengthEx", py_LM_CodeLengthEx, METH_VARARGS, "Get the minimum instruction aligned length for a code region in a remote process" },
 	{ NULL, NULL, 0, NULL }
 };
 

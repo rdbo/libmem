@@ -75,6 +75,10 @@ const LM_TRUE : lm_bool_t = 1;
 const LM_ADDRESS_BAD : lm_address_t = 0;
 const LM_PATH_MAX : lm_size_t = 512;
 const LM_INST_SIZE : usize = 16;
+#[cfg(target_pointer_width = "64")]
+pub const LM_BITS : lm_size_t = 64;
+#[cfg(not(target_pointer_width = "64"))]
+pub const LM_BITS : lm_size_t = 32;
 
 fn string_from_cstring(cstring : &[u8]) -> String {
     // This function finds the null terminator from
@@ -291,6 +295,8 @@ impl fmt::Display for lm_page_t {
 
 #[repr(C)]
 #[derive(Debug)]
+#[derive(Clone)]
+#[derive(Copy)]
 pub struct lm_inst_t {
     id : u32,
     address : u64,
@@ -321,7 +327,7 @@ impl lm_inst_t {
 
 impl fmt::Display for lm_inst_t {
     fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} -> {:x?}", string_from_cstring(&self.mnemonic), string_from_cstring(&self.op_str), self.get_bytes())
+        write!(f, "{} {} -> {:02x?}", string_from_cstring(&self.mnemonic), string_from_cstring(&self.op_str), self.get_bytes())
     }
 }
 
@@ -394,6 +400,8 @@ mod libmem_c {
         pub(super) fn LM_AssembleEx(code : lm_cstring_t, bits : lm_size_t, runtime_addr : lm_address_t, pcodebuf : *mut lm_bytearr_t) -> lm_size_t;
         pub(super) fn LM_FreeCodeBuffer(codebuf : lm_bytearr_t);
         pub(super) fn LM_Disassemble(code : lm_address_t, inst : *mut lm_inst_t) -> lm_bool_t;
+        pub(super) fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t, pinsts : *const *mut lm_inst_t) -> lm_size_t;
+        pub(super) fn LM_FreeInstructions(insts : *const lm_inst_t);
         pub(super) fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
         pub(super) fn LM_CodeLengthEx(pproc : *const lm_process_t, code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
     }
@@ -1137,11 +1145,11 @@ pub fn LM_Assemble(code : &str) -> Option<lm_inst_t> {
 }
 
 pub fn LM_AssembleEx(code : &str, bits : lm_size_t, runtime_addr : lm_address_t) -> Vec<u8> {
-    let mut bytes : Vec<u8> = Vec::new();
+    let bytes : Vec<u8>;
     let code = match CString::new(code.as_bytes()) {
         // this will add the null terminator if needed
         Ok(s) => s,
-        Err(_e) => return bytes
+        Err(_e) => return Vec::new()
     };
 
     unsafe {
@@ -1154,6 +1162,8 @@ pub fn LM_AssembleEx(code : &str, bits : lm_size_t, runtime_addr : lm_address_t)
             let buf = std::slice::from_raw_parts(codebuf as *const u8, size);
             bytes = Vec::from(buf);
             libmem_c::LM_FreeCodeBuffer(codebuf);
+        } else {
+            bytes = Vec::new();
         }
     }
 
@@ -1171,6 +1181,25 @@ pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {
             None
         }
     }
+}
+
+pub fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t) -> Vec<lm_inst_t> {
+    let inst_vec : Vec<lm_inst_t>;
+    unsafe {
+        let insts = 0 as *mut lm_inst_t;
+        let pinsts = &insts as *const *mut lm_inst_t;
+
+        let inst_count = libmem_c::LM_DisassembleEx(code, bits, size, count, runtime_addr, pinsts);
+        if inst_count > 0 {
+            let buf = std::slice::from_raw_parts(insts as *const lm_inst_t, inst_count);
+            inst_vec = Vec::from(buf);
+            libmem_c::LM_FreeInstructions(insts);
+        } else {
+            inst_vec = Vec::new();
+        }
+    }
+
+    inst_vec
 }
 
 pub fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t> {

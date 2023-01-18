@@ -281,6 +281,14 @@ fn main() {
 
     separator();
 
+    let insts = LM_DisassembleEx(some_function_addr, LM_BITS, 0x100, 5, some_function_addr);
+    println!("[*] Disassembled Instructions:");
+    for inst in insts {
+        println!("{}", inst);
+    }
+
+    separator();
+
     let minsize = 0x5;
     let alignedsize = LM_CodeLength(some_function_addr, 0x10).unwrap();
     println!("[*] Aligned Size (minimum: {:#x}): {:#x}", minsize, alignedsize);

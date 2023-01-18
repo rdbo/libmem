@@ -731,7 +731,7 @@ LM_Assemble(lm_cstring_t code,
 LM_API lm_size_t
 LM_AssembleEx(lm_cstring_t  code,
 	      lm_size_t     bits,
-	      lm_address_t  base_addr,
+	      lm_address_t  runtime_addr,
 	      lm_bytearr_t *pcodebuf);
 
 LM_API lm_void_t
@@ -746,7 +746,7 @@ LM_DisassembleEx(lm_address_t code,
 		 lm_size_t    bits,
 		 lm_size_t    size,
 		 lm_size_t    count,
-		 lm_address_t base_addr,
+		 lm_address_t runtime_addr,
 		 lm_inst_t  **pinsts);
 
 LM_API lm_void_t

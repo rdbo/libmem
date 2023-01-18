@@ -47,7 +47,7 @@ LM_Assemble(lm_cstring_t code,
 LM_API lm_size_t
 LM_AssembleEx(lm_cstring_t  code,
 	      lm_size_t     bits,
-	      lm_address_t  base_addr,
+	      lm_address_t  runtime_addr,
 	      lm_bytearr_t *pcodebuf)
 {
 	lm_size_t      ret = 0;
@@ -75,7 +75,7 @@ LM_AssembleEx(lm_cstring_t  code,
 	if (ks_open(ksarch, ksmode, &ks) != KS_ERR_OK)
 		return ret;
 
-	if (ks_asm(ks, code, base_addr, &encode, &size, &count) != KS_ERR_OK)
+	if (ks_asm(ks, code, runtime_addr, &encode, &size, &count) != KS_ERR_OK)
 		goto CLEAN_EXIT;
 
 	codebuf = (lm_bytearr_t)LM_MALLOC(size);
@@ -130,7 +130,7 @@ LM_DisassembleEx(lm_address_t code,
 		 lm_size_t    bits,
 		 lm_size_t    size,
 		 lm_size_t    count,
-		 lm_address_t base_addr,
+		 lm_address_t runtime_addr,
 		 lm_inst_t  **pinsts)
 {
 	lm_size_t ret = 0;
@@ -158,7 +158,7 @@ LM_DisassembleEx(lm_address_t code,
 	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
 		return ret;
 
-	inst_count = cs_disasm(cshandle, (uint8_t *)code, size, base_addr, count, &csinsn);
+	inst_count = cs_disasm(cshandle, (uint8_t *)code, size, runtime_addr, count, &csinsn);
 	if (inst_count <= 0)
 		goto CLEAN_EXIT;
 

@@ -416,18 +416,18 @@ extern "C" fn _LM_EnumProcessesCallback(pproc : *const lm_process_t, arg : *mut 
     LM_TRUE
 }
 
-pub fn LM_EnumProcesses() -> Vec<lm_process_t> {
+pub fn LM_EnumProcesses() -> Option<Vec<lm_process_t>> {
     let mut proc_list : Vec<lm_process_t> = Vec::new();
     unsafe {
         let callback = _LM_EnumProcessesCallback;
         let arg = &mut proc_list as *mut Vec<lm_process_t> as *mut ();
 
-        if libmem_c::LM_EnumProcesses(callback, arg) == LM_FALSE {
-            proc_list.clear();
+        if libmem_c::LM_EnumProcesses(callback, arg) != LM_FALSE {
+            Some(proc_list)
+        } else {
+            None
         }
     }
-
-    proc_list
 }
 
 pub fn LM_GetProcess() -> Option<lm_process_t> {
@@ -502,31 +502,31 @@ extern "C" fn LM_EnumThreadsCallback(pthr : *const lm_thread_t, arg : *mut ()) -
     LM_TRUE
 }
 
-pub fn LM_EnumThreads() -> Vec<lm_thread_t> {
+pub fn LM_EnumThreads() -> Option<Vec<lm_thread_t>> {
     let mut thread_list : Vec<lm_thread_t> = Vec::new();
     unsafe {
         let callback = LM_EnumThreadsCallback;
         let arg = &mut thread_list as *mut Vec<lm_thread_t> as *mut ();
-        if libmem_c::LM_EnumThreads(callback, arg) == LM_FALSE {
-            thread_list.clear();
+        if libmem_c::LM_EnumThreads(callback, arg) != LM_FALSE {
+            Some(thread_list)
+        } else {
+            None
         }
     }
-
-    thread_list
 }
 
-pub fn LM_EnumThreadsEx(pproc : &lm_process_t) -> Vec<lm_thread_t> {
+pub fn LM_EnumThreadsEx(pproc : &lm_process_t) -> Option<Vec<lm_thread_t>> {
     let mut thread_list : Vec<lm_thread_t> = Vec::new();
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let callback = LM_EnumThreadsCallback;
         let arg = &mut thread_list as *mut Vec<lm_thread_t> as *mut ();
-        if libmem_c::LM_EnumThreadsEx(pproc, callback, arg) == LM_FALSE {
-            thread_list.clear();
+        if libmem_c::LM_EnumThreadsEx(pproc, callback, arg) != LM_FALSE {
+            Some(thread_list)
+        } else {
+            None
         }
     }
-
-    thread_list
 }
 
 pub fn LM_GetThread() -> Option<lm_thread_t> {
@@ -577,31 +577,31 @@ extern "C" fn LM_EnumModulesCallback(pmod : *const lm_module_t, arg : *mut ()) -
     LM_TRUE
 }
 
-pub fn LM_EnumModules() -> Vec<lm_module_t> {
+pub fn LM_EnumModules() -> Option<Vec<lm_module_t>> {
     let mut module_list : Vec<lm_module_t> = Vec::new();
     unsafe {
         let callback = LM_EnumModulesCallback;
         let arg = &mut module_list as *mut Vec<lm_module_t> as *mut ();
-        if libmem_c::LM_EnumModules(callback, arg) == LM_FALSE {
-            module_list.clear();
+        if libmem_c::LM_EnumModules(callback, arg) != LM_FALSE {
+            Some(module_list)
+        } else {
+            None
         }
     }
-
-    module_list
 }
 
-pub fn LM_EnumModulesEx(pproc : &lm_process_t) -> Vec<lm_module_t> {
+pub fn LM_EnumModulesEx(pproc : &lm_process_t) -> Option<Vec<lm_module_t>> {
     let mut module_list : Vec<lm_module_t> = Vec::new();
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let callback = LM_EnumModulesCallback;
         let arg = &mut module_list as *mut Vec<lm_module_t> as *mut ();
-        if libmem_c::LM_EnumModulesEx(pproc, callback, arg) == LM_FALSE {
-            module_list.clear();
+        if libmem_c::LM_EnumModulesEx(pproc, callback, arg) != LM_FALSE {
+            Some(module_list)
+        } else {
+            None
         }
     }
-
-    module_list
 }
 
 pub fn LM_FindModule(name : &str) -> Option<lm_module_t> {
@@ -686,25 +686,25 @@ pub fn LM_LoadModuleEx(pproc : &lm_process_t, modpath : &str) -> Option<lm_modul
     }
 }
 
-pub fn LM_UnloadModule(pmod : &lm_module_t) -> Result<(), &'static str>{
+pub fn LM_UnloadModule(pmod : &lm_module_t) -> Option<()>{
     unsafe {
         let pmod = pmod as *const lm_module_t;
         if libmem_c::LM_UnloadModule(pmod) != LM_FALSE {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_UnloadModule failed internally")
+            None
         }
     }
 }
 
-pub fn LM_UnloadModuleEx(pproc : &lm_process_t, pmod : &lm_module_t) -> Result<(), &'static str>{
+pub fn LM_UnloadModuleEx(pproc : &lm_process_t, pmod : &lm_module_t) -> Option<()>{
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let pmod = pmod as *const lm_module_t;
         if libmem_c::LM_UnloadModuleEx(pproc, pmod) != LM_FALSE {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_UnloadModuleEx failed internally")
+            None
         }
     }
 }
@@ -727,18 +727,18 @@ extern "C" fn LM_EnumSymbolsCallback(psymbol : *const lm_symbol_t, arg : *mut ()
     LM_TRUE
 }
 
-pub fn LM_EnumSymbols(pmod : &lm_module_t) -> Vec<lm_symbol_t> {
+pub fn LM_EnumSymbols(pmod : &lm_module_t) -> Option<Vec<lm_symbol_t>> {
     let mut symbol_list : Vec<lm_symbol_t> = Vec::new();
     unsafe {
         let pmod = pmod as *const lm_module_t;
         let callback = LM_EnumSymbolsCallback;
         let arg = &mut symbol_list as *mut Vec<lm_symbol_t> as *mut ();
-        if libmem_c::LM_EnumSymbols(pmod, callback, arg) == LM_FALSE {
-            symbol_list.clear();
+        if libmem_c::LM_EnumSymbols(pmod, callback, arg) != LM_FALSE {
+            Some(symbol_list)
+        } else {
+            None
         }
     }
-
-    symbol_list
 }
 
 pub fn LM_FindSymbolAddress(pmod : &lm_module_t, name : &str) -> Option<lm_address_t> {
@@ -768,31 +768,31 @@ extern "C" fn LM_EnumPagesCallback(ppage : *const lm_page_t, arg : *mut ()) -> l
     LM_TRUE
 }
 
-pub fn LM_EnumPages() -> Vec<lm_page_t> {
+pub fn LM_EnumPages() -> Option<Vec<lm_page_t>> {
     let mut page_list : Vec<lm_page_t> = Vec::new();
     unsafe {
         let callback = LM_EnumPagesCallback;
         let arg = &mut page_list as *mut Vec<lm_page_t> as *mut ();
-        if libmem_c::LM_EnumPages(callback, arg) == LM_FALSE {
-            page_list.clear();
+        if libmem_c::LM_EnumPages(callback, arg) != LM_FALSE {
+            Some(page_list)
+        } else {
+            None
         }
     }
-
-    page_list
 }
 
-pub fn LM_EnumPagesEx(pproc : &lm_process_t) -> Vec<lm_page_t> {
+pub fn LM_EnumPagesEx(pproc : &lm_process_t) -> Option<Vec<lm_page_t>> {
     let mut page_list : Vec<lm_page_t> = Vec::new();
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let callback = LM_EnumPagesCallback;
         let arg = &mut page_list as *mut Vec<lm_page_t> as *mut ();
-        if libmem_c::LM_EnumPagesEx(pproc, callback, arg) == LM_FALSE {
-            page_list.clear();
+        if libmem_c::LM_EnumPagesEx(pproc, callback, arg) != LM_FALSE {
+            Some(page_list)
+        } else {
+            None
         }
     }
-
-    page_list
 }
 
 pub fn LM_GetPage(addr : lm_address_t) -> Option<lm_page_t> {
@@ -859,51 +859,51 @@ pub fn LM_ReadMemoryEx<T>(pproc : &lm_process_t, src : lm_address_t) -> Option<T
     }
 }
 
-pub fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Result<(), &'static str> {
+pub fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Option<()> {
     unsafe {
         let dst = dst as lm_address_t;
         let src = value as *const T as *const lm_byte_t;
         let size = mem::size_of::<T>() as lm_size_t;
 
         if libmem_c::LM_WriteMemory(dst, src, size) == size {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_WriteMemory failed internally")
+            None
         }
     }
 }
 
-pub fn LM_WriteMemoryEx<T>(pproc : &lm_process_t, dst : lm_address_t, value : &T) -> Result<(), &'static str> {
+pub fn LM_WriteMemoryEx<T>(pproc : &lm_process_t, dst : lm_address_t, value : &T) -> Option<()> {
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let src = value as *const T as *const lm_byte_t;
         let size = mem::size_of::<T>() as lm_size_t;
 
         if libmem_c::LM_WriteMemoryEx(pproc, dst, src, size) == size {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_WriteMemoryEx failed internally")
+            None
         }
     }
 }
 
-pub fn LM_SetMemory(dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Result<(), &'static str> {
+pub fn LM_SetMemory(dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Option<()> {
     unsafe {
         if libmem_c::LM_SetMemory(dst, byte, size) == size {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_SetMemory failed internally")
+            None
         }
     }
 }
 
-pub fn LM_SetMemoryEx(pproc : &lm_process_t, dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Result<(), &'static str> {
+pub fn LM_SetMemoryEx(pproc : &lm_process_t, dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Option<()> {
     unsafe {
         let pproc = pproc as *const lm_process_t;
         if libmem_c::LM_SetMemoryEx(pproc, dst, byte, size) == size {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_SetMemoryEx failed internally")
+            None
         }
     }
 }
@@ -956,23 +956,23 @@ pub fn LM_AllocMemoryEx(pproc : &lm_process_t, size : lm_size_t, prot : lm_prot_
     }
 }
 
-pub fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> Result<(), &'static str> {
+pub fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> Option<()> {
     unsafe {
         if libmem_c::LM_FreeMemory(alloc, size) != LM_FALSE {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_FreeMemory failed internally")
+            None
         }
     }
 }
 
-pub fn LM_FreeMemoryEx(pproc : &lm_process_t, alloc : lm_address_t, size : lm_size_t) -> Result<(), &'static str> {
+pub fn LM_FreeMemoryEx(pproc : &lm_process_t, alloc : lm_address_t, size : lm_size_t) -> Option<()> {
     unsafe {
         let pproc = pproc as *const lm_process_t;
         if libmem_c::LM_FreeMemoryEx(pproc, alloc, size) != LM_FALSE {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_FreeMemory failed internally")
+            None
         }
     }
 }
@@ -1101,23 +1101,23 @@ pub fn LM_HookCodeEx(pproc : &lm_process_t, from : lm_address_t, to : lm_address
     }
 }
 
-pub fn LM_UnhookCode(from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Result<(), &'static str> {
+pub fn LM_UnhookCode(from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Option<()> {
     unsafe {
         if libmem_c::LM_UnhookCode(from, trampoline.0, trampoline.1) != LM_FALSE {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_UnhookCode failed internally")
+            None
         }
     }
 }
 
-pub fn LM_UnhookCodeEx(pproc : &lm_process_t, from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Result<(), &'static str> {
+pub fn LM_UnhookCodeEx(pproc : &lm_process_t, from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Option<()> {
     unsafe {
         let pproc = pproc as *const lm_process_t;
         if libmem_c::LM_UnhookCodeEx(pproc, from, trampoline.0, trampoline.1) != LM_FALSE {
-            Ok(())
+            Some(())
         } else {
-            Err("LM_UnhookCode failed internally")
+            None
         }
     }
 }
@@ -1144,12 +1144,12 @@ pub fn LM_Assemble(code : &str) -> Option<lm_inst_t> {
     }
 }
 
-pub fn LM_AssembleEx(code : &str, bits : lm_size_t, runtime_addr : lm_address_t) -> Vec<u8> {
+pub fn LM_AssembleEx(code : &str, bits : lm_size_t, runtime_addr : lm_address_t) -> Option<Vec<u8>> {
     let bytes : Vec<u8>;
     let code = match CString::new(code.as_bytes()) {
         // this will add the null terminator if needed
         Ok(s) => s,
-        Err(_e) => return Vec::new()
+        Err(_e) => return None
     };
 
     unsafe {
@@ -1162,12 +1162,11 @@ pub fn LM_AssembleEx(code : &str, bits : lm_size_t, runtime_addr : lm_address_t)
             let buf = std::slice::from_raw_parts(codebuf as *const u8, size);
             bytes = Vec::from(buf);
             libmem_c::LM_FreeCodeBuffer(codebuf);
+            Some(bytes)
         } else {
-            bytes = Vec::new();
+            None
         }
     }
-
-    bytes
 }
 
 pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {
@@ -1183,7 +1182,7 @@ pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {
     }
 }
 
-pub fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t) -> Vec<lm_inst_t> {
+pub fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t) -> Option<Vec<lm_inst_t>> {
     let inst_vec : Vec<lm_inst_t>;
     unsafe {
         let insts = 0 as *mut lm_inst_t;
@@ -1194,12 +1193,11 @@ pub fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t,
             let buf = std::slice::from_raw_parts(insts as *const lm_inst_t, inst_count);
             inst_vec = Vec::from(buf);
             libmem_c::LM_FreeInstructions(insts);
+            Some(inst_vec)
         } else {
-            inst_vec = Vec::new();
+            None
         }
     }
-
-    inst_vec
 }
 
 pub fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t> {

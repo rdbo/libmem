@@ -44,7 +44,7 @@ fn main() {
     separator();
 
     println!("[*] Process Enumeration");
-    print_n(LM_EnumProcesses(), 5);
+    print_n(LM_EnumProcesses().unwrap(), 5);
 
     separator();
 
@@ -73,11 +73,11 @@ fn main() {
 
     separator();
 
-    println!("[*] Current Process Threads: {:?}", LM_EnumThreads());
+    println!("[*] Current Process Threads: {:?}", LM_EnumThreads().unwrap());
 
     separator();
 
-    println!("[*] Remote Process Threads: {:?}", LM_EnumThreadsEx(&proc));
+    println!("[*] Remote Process Threads: {:?}", LM_EnumThreadsEx(&proc).unwrap());
 
     separator();
 
@@ -92,12 +92,12 @@ fn main() {
     separator();
 
     println!("[*] Current Process - Module Enumeration");
-    print_n(LM_EnumModules(), 5);
+    print_n(LM_EnumModules().unwrap(), 5);
 
     separator();
 
     println!("[*] Remote Process - Module Enumeration");
-    print_n(LM_EnumModulesEx(&proc), 5);
+    print_n(LM_EnumModulesEx(&proc).unwrap(), 5);
 
     separator();
 
@@ -132,7 +132,7 @@ fn main() {
 
     println!("[*] Current Process - Symbol Enumeration");
     println!("[*] Module: {}", cur_module.get_name());
-    print_n(LM_EnumSymbols(&cur_module), 5);
+    print_n(LM_EnumSymbols(&cur_module).unwrap(), 5);
 
     separator();
 
@@ -143,12 +143,12 @@ fn main() {
     separator();
 
     println!("[*] Current Process - Page Enumeration");
-    print_n(LM_EnumPages(), 5);
+    print_n(LM_EnumPages().unwrap(), 5);
    
     separator();
 
     println!("[*] Remote Process - Page Enumeration");
-    print_n(LM_EnumPagesEx(&proc), 5);
+    print_n(LM_EnumPagesEx(&proc).unwrap(), 5);
 
     separator();
 
@@ -271,7 +271,7 @@ fn main() {
 
     separator();
 
-    let bytes = LM_AssembleEx("push ebp ; mov ebp, esp; mov esp, ebp; pop ebp; ret", 32, 0);
+    let bytes = LM_AssembleEx("push ebp ; mov ebp, esp; mov esp, ebp; pop ebp; ret", 32, 0).unwrap();
     println!("[*] Assembled Instructions: {:#x?}", bytes);
 
     separator();
@@ -281,7 +281,7 @@ fn main() {
 
     separator();
 
-    let insts = LM_DisassembleEx(some_function_addr, LM_BITS, 0x100, 5, some_function_addr);
+    let insts = LM_DisassembleEx(some_function_addr, LM_BITS, 0x100, 5, some_function_addr).unwrap();
     println!("[*] Disassembled Instructions:");
     for inst in insts {
         println!("{}", inst);

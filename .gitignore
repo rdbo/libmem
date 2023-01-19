@@ -3,3 +3,4 @@ build*/
 libmem-rs/target/
 libmem-py/dist
 libmem-py/src/libmem.*
+docs/examples/rust/*/target/

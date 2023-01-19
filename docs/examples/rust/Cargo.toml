@@ -12,3 +12,7 @@ libmem = ">=0.1.2"
 name = "process_enumeration"
 path = "src/process_enumeration.rs"
 
+[[bin]]
+name = "parent_process"
+path = "src/parent_process.rs"
+

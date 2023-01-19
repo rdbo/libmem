@@ -1,0 +1,17 @@
+# LM_EnumProcesses
+
+```c
+LM_API lm_bool_t
+LM_EnumProcesses(lm_bool_t (*callback)(lm_process_t *pproc,
+				       lm_void_t    *arg),
+		 lm_void_t *arg);
+```
+
+# Parameters
+
+- callback: pointer to a function that will be called for every process found (received in the parameter `pproc`). It can return either `LM_TRUE` to continue searching for processes or `LM_FALSE` to stop the search.
+- arg: An optional extra argument that will be passed into the callback function
+
+# Return Value
+Returns `LM_TRUE` on success and `LM_FALSE` on failure.
+

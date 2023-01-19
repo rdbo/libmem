@@ -477,8 +477,8 @@ typedef lm_int_t lm_arch_t;
 /* libmem */
 LM_API lm_bool_t
 LM_EnumProcesses(lm_bool_t (*callback)(lm_process_t *pproc,
-				      lm_void_t    *arg),
-		  lm_void_t *arg);
+				       lm_void_t    *arg),
+		 lm_void_t *arg);
 
 LM_API lm_bool_t
 LM_GetProcess(lm_process_t *procbuf);

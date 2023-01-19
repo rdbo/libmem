@@ -1,6 +1,6 @@
 # LM_EnumProcesses
 
-```rust
+```py
 def LM_EnumProcesses()
 ```
 

@@ -14,7 +14,7 @@ Enumerates all the current existing processes, sending them to a callback functi
 # Parameters
 
 - callback: pointer to a function that will be called for every process found (received in the parameter `pproc`). It can return either `LM_TRUE` to continue searching for processes or `LM_FALSE` to stop the search.
-- arg: An optional extra argument that will be passed into the callback function.
+- arg: An optional extra argument that will be passed into the callback function (use `LM_NULL` to ignore it)
 
 # Return Value
 

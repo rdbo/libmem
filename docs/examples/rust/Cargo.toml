@@ -8,3 +8,7 @@ edition = "2021"
 [dependencies]
 libmem = ">=0.1.2"
 
+[[bin]]
+name = "process_enumeration"
+path = "src/process_enumeration.rs"
+

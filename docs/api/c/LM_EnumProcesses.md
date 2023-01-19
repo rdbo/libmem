@@ -18,5 +18,5 @@ Enumerates all the current existing processes, sending them to a callback functi
 
 # Return Value
 
-Returns `LM_TRUE` on success and `LM_FALSE` on failure.
+On success, it returns `LM_TRUE`. On failure, it returns `LM_FALSE`.
 

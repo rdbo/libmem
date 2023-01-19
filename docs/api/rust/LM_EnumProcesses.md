@@ -10,5 +10,5 @@ Enumerates all the current existing processes, returning them on a vector.
 
 #  Return Value
 
-Returns an `Option<Vec<lm_process_t>>`. On success, it is a `Some(process_list)` containing a vector with all processes; On failure, it is `None`.
+On success, it returns a `Some(process_list)`, where `process_list` is a vector containing all valid processes; On failure, it returns `None`.
 

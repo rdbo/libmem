@@ -10,5 +10,5 @@ Enumerates all the current existing processes, returning them on a list.
 
 #  Return Value
 
-Returns a `list` containing all processes, or `None` on failure.
+On success, it returns a `list` of `lm_process_t` containing all valid processes. On failure, it returns `None`.
 

@@ -1,3 +1,0 @@
-# libmem docs
-  
-### WIP

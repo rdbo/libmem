@@ -6,11 +6,11 @@ pub fn LM_IsProcessAlive(pproc : &lm_process_t) -> bool
 
 # Description
 
-Checks if a process is alive or not
+Checks if a process is alive or not.
 
 # Parameters
 
-- pproc: immutable reference to a valid `lm_process_t` variable that will be used to check the process state
+- pproc: immutable reference to a valid `lm_process_t` variable that will be used to check the process state.
 
 # Return Value
 

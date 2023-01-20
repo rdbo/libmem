@@ -7,11 +7,11 @@ LM_IsProcessAlive(lm_process_t *pproc);
 
 # Description
 
-Checks if a process is alive or not
+Checks if a process is alive or not.
 
 # Parameters
 
-- pproc: pointer to a valid `lm_process_t` variable that will be used to check the process state
+- pproc: pointer to a valid `lm_process_t` variable that will be used to check the process state.
 
 # Return Value
 

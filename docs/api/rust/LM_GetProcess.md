@@ -6,7 +6,7 @@ pub fn LM_GetProcess() -> Option<lm_process_t>
 
 # Description
 
-Gets information about the calling process
+Gets information about the calling process.
 
 # Return Value
 

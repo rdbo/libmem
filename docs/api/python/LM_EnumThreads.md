@@ -6,7 +6,7 @@ def LM_EnumThreads()
 
 # Description
 
-Enumerates all the current existing processes, returning them on a list.
+Enumerates all the threads in the calling process, returning them on a list.
 
 #  Return Value
 

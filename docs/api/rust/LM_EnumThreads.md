@@ -10,5 +10,5 @@ Enumerates all the threads in the calling processes, returning them on a vector.
 
 #  Return Value
 
-On success, it returns a `Some(process_list)`, where `process_list` is a vector containing all valid threads; On failure, it returns `None`.
+On success, it returns a `Some(thread_list)`, where `thread_list` is a vector containing all valid threads; On failure, it returns `None`.
 

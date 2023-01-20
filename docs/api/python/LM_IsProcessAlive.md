@@ -6,11 +6,11 @@ def LM_IsProcessAlive(pproc : lm_process_t) : bool
 
 # Description
 
-Checks if a process is alive or not
+Checks if a process is alive or not.
 
 # Parameters
 
-- pproc: valid `lm_process_t` variable that will be used to check the process state
+- pproc: valid `lm_process_t` variable that will be used to check the process state.
 
 # Return Value
 

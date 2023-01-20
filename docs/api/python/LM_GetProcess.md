@@ -6,7 +6,7 @@ def LM_GetProcess()
 
 # Description
 
-Gets information about the calling process
+Gets information about the calling process.
 
 # Return Value
 

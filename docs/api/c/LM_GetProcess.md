@@ -11,7 +11,7 @@ Gets information about the calling process
 
 # Parameters
 
-- procbuf: pointer to an `lm_process_t` variable that will receive the process information
+- procbuf: pointer to an `lm_process_t` variable that will receive the process information.
 
 # Return Value
 

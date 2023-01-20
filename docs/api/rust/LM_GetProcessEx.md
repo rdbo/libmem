@@ -6,11 +6,11 @@ pub fn LM_GetProcessEx(pid : lm_pid_t) -> Option<lm_process_t>
 
 # Description
 
-Gets information about a remote process with a known PID
+Gets information about a remote process with a known PID.
 
 # Parameters
 
-- pid: ID of the process to get information from
+- pid: ID of the process to get information from.
 
 # Return Value
 

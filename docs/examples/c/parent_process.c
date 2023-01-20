@@ -22,4 +22,6 @@ main()
 	}
 
 	printf("[*] Parent Process Name: %s\n", parent_process.name);
+
+	return 0;
 }

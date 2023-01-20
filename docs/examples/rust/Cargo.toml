@@ -16,3 +16,7 @@ path = "src/process_enumeration.rs"
 name = "parent_process"
 path = "src/parent_process.rs"
 
+[[bin]]
+name = "thread_enumeration"
+path = "src/thread_enumeration.rs"
+

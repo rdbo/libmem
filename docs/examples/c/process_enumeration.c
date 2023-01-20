@@ -16,4 +16,6 @@ int
 main()
 {
 	LM_EnumProcesses(EnumProcessesCallback, LM_NULL);
+
+	return 0;
 }

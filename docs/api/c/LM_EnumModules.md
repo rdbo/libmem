@@ -9,7 +9,7 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 
 # Description
 
-Enumerates all the modules in the calling processes, sending them to a callback function.
+Enumerates all the modules in the calling process, sending them to a callback function.
 
 # Parameters
 

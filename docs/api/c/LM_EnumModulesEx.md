@@ -10,7 +10,7 @@ LM_EnumModulesEx(lm_process_t *pproc,
 
 # Description
 
-Enumerates all the modules in a remote processes, sending them to a callback function.
+Enumerates all the modules in a remote process, sending them to a callback function.
 
 # Parameters
 

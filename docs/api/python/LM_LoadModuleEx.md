@@ -1,15 +1,16 @@
-# LM_LoadModule
+# LM_LoadModuleEx
 
 ```python
-def LM_LoadModule(modpath : str)
+def LM_LoadModuleEx(pproc : lm_process_t, modpath : str)
 ```
 
 # Description
 
-Loads a module into the calling process from its path.
+Loads a module into a remote process from its path.
 
 # Parameters
 
+- pproc: valid process in which the module will be loaded.
 - modpath: string containing a relative/absolute path, like `"bin/lib/gamemodule.dll"`, or `"/usr/lib/libc.so"`.
 
 # Return Value

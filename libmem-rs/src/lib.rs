@@ -686,7 +686,7 @@ pub fn LM_LoadModuleEx(pproc : &lm_process_t, modpath : &str) -> Option<lm_modul
     }
 }
 
-pub fn LM_UnloadModule(pmod : &lm_module_t) -> Option<()>{
+pub fn LM_UnloadModule(pmod : &lm_module_t) -> Option<()> {
     unsafe {
         let pmod = pmod as *const lm_module_t;
         if libmem_c::LM_UnloadModule(pmod) != LM_FALSE {
@@ -697,7 +697,7 @@ pub fn LM_UnloadModule(pmod : &lm_module_t) -> Option<()>{
     }
 }
 
-pub fn LM_UnloadModuleEx(pproc : &lm_process_t, pmod : &lm_module_t) -> Option<()>{
+pub fn LM_UnloadModuleEx(pproc : &lm_process_t, pmod : &lm_module_t) -> Option<()> {
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let pmod = pmod as *const lm_module_t;
@@ -933,7 +933,7 @@ pub fn LM_ProtMemoryEx(pproc : &lm_process_t, addr : lm_address_t, size : lm_siz
     }
 }
 
-pub fn LM_AllocMemory(size : lm_size_t, prot : lm_prot_t) -> Option<usize> {
+pub fn LM_AllocMemory(size : lm_size_t, prot : lm_prot_t) -> Option<lm_address_t> {
     unsafe {
         let alloc = libmem_c::LM_AllocMemory(size, prot);
         if alloc != LM_ADDRESS_BAD {

@@ -50,6 +50,7 @@ setup(
 		"Bug Tracker" : "https://github.com/rdbo/libmem/issues",
 		"Discord Server" : "https://discord.com/invite/Qw8jsPD99X"
 	},
+    keywords="gamehacking memory process hooking detouring hacking winapi linux freebsd"
     license_files = ("LICENSE"),
 	package_dir = { "" : "src" },
 	packages = find_packages(where="src"),

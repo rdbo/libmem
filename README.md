@@ -11,6 +11,8 @@ Read `LICENSE` for more information
 
 ## Examples
 
+For more examples and API manual, access the [documentation](https://github.com/rdbo/libmem/blob/master/docs/DOCS.md)
+
 ### C/C++
 ```c
 #include <libmem/libmem.h>

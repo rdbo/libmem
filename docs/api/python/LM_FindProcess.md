@@ -1,4 +1,4 @@
-# LM_FindProcessEx
+# LM_FindProcess
 
 ```python
 def LM_FindProcess(procstr : str)

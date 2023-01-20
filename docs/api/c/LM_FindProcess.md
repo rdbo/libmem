@@ -1,4 +1,4 @@
-# LM_FindProcessEx
+# LM_FindProcess
 
 ```c
 LM_API lm_bool_t
@@ -8,7 +8,7 @@ LM_FindProcess(lm_string_t   procstr,
 
 # Description
 
-Searches for a process based on it's name or path
+Searches for a process based on it's name or path.
 
 # Parameters
 

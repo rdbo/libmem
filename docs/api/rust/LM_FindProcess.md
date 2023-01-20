@@ -1,4 +1,4 @@
-# LM_FindProcessEx
+# LM_FindProcess
 
 ```rust
 pub fn LM_FindProcess(procstr : &str) -> Option<lm_process_t>

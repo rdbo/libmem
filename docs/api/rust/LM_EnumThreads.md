@@ -6,7 +6,7 @@ pub fn LM_EnumThreads() -> Option<Vec<lm_thread_t>>
 
 # Description
 
-Enumerates all the threads in the calling processes, returning them on a vector.
+Enumerates all the threads in the calling process, returning them on a vector.
 
 #  Return Value
 

@@ -6,7 +6,7 @@ pub fn LM_GetThread() -> Option<lm_thread_t>
 
 # Description
 
-Gets information about the calling thread
+Gets information about the calling thread.
 
 # Return Value
 

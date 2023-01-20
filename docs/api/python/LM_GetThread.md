@@ -6,7 +6,7 @@ def LM_GetThread()
 
 # Description
 
-Gets information about the calling thread
+Gets information about the calling thread.
 
 # Return Value
 

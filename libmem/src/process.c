@@ -424,20 +424,31 @@ _LM_GetParentIdEx(lm_pid_t pid)
 	FILE       *stat_file;
 	lm_char_t  *stat_line = NULL;
 	size_t      buf_len;
+	regex_t     regex;
+	regmatch_t  matches[2];
+
+	if (regcomp(&regex, "^[0-9]+[[:blank:]]+[(].*[)][[:blank:]]+[A-Z][[:blank:]]+([0-9]+)[[:blank:]].*$", REG_EXTENDED))
+		return ppid;
 
 	LM_SNPRINTF(stat_path, LM_ARRLEN(stat_path),
 		    LM_STR("%s/%d/stat"), LM_PROCFS, pid);
 
 	stat_file = LM_FOPEN(stat_path, "r");
 	if (!stat_file)
-		return ppid;
+		goto FREE_EXIT;
 
-	if (LM_GETLINE(&stat_line, &buf_len, stat_file) > 0)
-		LM_SSCANF(stat_line, "%*d %*s %*c %d", (int *)&ppid);
+
+	if (LM_GETLINE(&stat_line, &buf_len, stat_file) > 0 && !regexec(&regex, stat_line, LM_ARRLEN(matches), matches, 0)) {
+		stat_line[matches[1].rm_eo] = LM_STR('\x00'); /* place null terminator to do 'LM_STRCMP' later */
+		ppid = (lm_pid_t)LM_ATOI(&stat_line[matches[1].rm_so]);
+		if (ppid == 0 && LM_STRCMP(&stat_line[matches[1].rm_so], "0"))
+			ppid = LM_PID_BAD;
+	}
 
 	LM_FREE(stat_line);
 	LM_FCLOSE(stat_file);
-
+FREE_EXIT:
+	regfree(&regex);
 	return ppid;
 }
 #endif

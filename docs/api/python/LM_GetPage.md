@@ -1,7 +1,7 @@
 # LM_GetPage
 
 ```python
-def LM_GetPage(addr : lm_address_t)
+def LM_GetPage(addr : int)
 ```
 
 # Description

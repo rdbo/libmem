@@ -15,5 +15,5 @@ Searches for a symbol in a module, returning its virtual address.
 
 # Return Value
 
-On success, it returns is a valid `lm_address_t`. On failure, it returns `None`.
+On success, it returns is a valid `int` containing the virtual address of the symbol. On failure, it returns `None`.
 

@@ -1,7 +1,7 @@
-# LM_UnhookCode
+# LM_UnhookCodeEx
 
 ```python
-def LM_UnhookCode(pproc : lm_process_t, from : int, trampoline : (int, int))
+def LM_UnhookCodeEx(pproc : lm_process_t, from : int, trampoline : (int, int))
 ```
 
 # Description

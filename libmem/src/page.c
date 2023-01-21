@@ -226,7 +226,9 @@ LM_EnumPagesEx(lm_process_t *pproc,
 				       lm_void_t *arg),
 	       lm_void_t    *arg)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && callback != LM_NULLPTR);
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
+		  callback != LM_NULLPTR);
 
 	return _LM_EnumPagesEx(pproc, callback, arg);
 }
@@ -278,8 +280,6 @@ _LM_GetPage(lm_address_t addr,
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
 
-	LM_ASSERT(addr != LM_ADDRESS_BAD && pagebuf != LM_NULLPTR);
-
 	arg.addr = addr;
 	arg.pagebuf = pagebuf;
 	arg.pagebuf->base = LM_ADDRESS_BAD;
@@ -298,6 +298,8 @@ LM_API lm_bool_t
 LM_GetPage(lm_address_t addr,
 	   lm_page_t   *pagebuf)
 {
+	LM_ASSERT(addr != LM_ADDRESS_BAD && pagebuf != LM_NULLPTR);
+
 	return _LM_GetPage(addr, pagebuf);
 }
 
@@ -338,11 +340,7 @@ _LM_GetPageEx(lm_process_t *pproc,
 {
 	lm_bool_t ret = LM_FALSE;
 	_lm_get_page_t arg;
-
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  addr != LM_ADDRESS_BAD &&
-		  pagebuf != LM_NULLPTR);
-
+	
 	arg.addr = addr;
 	arg.pagebuf = pagebuf;
 	arg.pagebuf->base = LM_ADDRESS_BAD;
@@ -361,6 +359,11 @@ LM_GetPageEx(lm_process_t *pproc,
 	     lm_address_t  addr,
 	     lm_page_t    *pagebuf)
 {
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
+		  addr != LM_ADDRESS_BAD &&
+		  pagebuf != LM_NULLPTR);
+
 	return _LM_GetPageEx(pproc, addr, pagebuf);
 }
 

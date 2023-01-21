@@ -493,6 +493,9 @@ _LM_IsProcessAlive(lm_process_t *pproc)
 LM_API lm_bool_t
 LM_IsProcessAlive(lm_process_t *pproc)
 {
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc));
+
 	return _LM_IsProcessAlive(pproc);
 }
 

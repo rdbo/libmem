@@ -226,12 +226,12 @@
 #define LM_CHKMASK(c) (c == LM_MASK_KNOWN || c == LM_MASK_KNOWN2)
 #define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
 #define LM_OFFSET(base, offset) (&((lm_byte_t *)base)[offset])
-#if LM_OS == LM_OS_WIN
-#	define _LM_VALID_PROCESS(proc) LM_TRUE
-#else
-#	define _LM_VALID_PROCESS(proc) LM_TRUE
-#endif
-#define LM_VALID_PROCESS(proc) (proc.pid != LM_PID_BAD && _LM_VALID_PROCESS(proc))
+#define LM_VALID_BITS(bits) (bits == 32 || bits == 64)
+#define LM_VALID_PROCESS(pproc) ((pproc)->pid != LM_PID_BAD && LM_VALID_BITS((pproc)->bits))
+#define LM_VALID_THREAD(pthr) ((pthr)->tid != LM_TID_BAD)
+#define LM_VALID_MODULE(pmod) ((pmod)->base != LM_ADDRESS_BAD && (pmod)->end != LM_ADDRESS_BAD && (pmod)->size > 0)
+#define LM_VALID_PAGE(ppage) ((ppage)->base != LM_ADDRESS_BAD && (ppage)->end != LM_ADDRESS_BAD && (ppage)->size > 0)
+#define LM_VALID_PROT(prot) ((prot & LM_PROT_XRW) || prot == LM_PROT_NONE)
 
 /* Flags */
 #if LM_OS == LM_OS_WIN

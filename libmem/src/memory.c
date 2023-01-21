@@ -163,6 +163,7 @@ LM_ReadMemoryEx(lm_process_t *pproc,
 		lm_size_t    size)
 {
 	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
 		  src != LM_ADDRESS_BAD &&
 		  dst != LM_NULLPTR &&
 		  size > 0);
@@ -266,6 +267,7 @@ LM_WriteMemoryEx(lm_process_t *pproc,
 		 lm_size_t     size)
 {
 	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
 		  dst != LM_ADDRESS_BAD &&
 		  src != LM_NULLPTR &&
 		  size > 0);
@@ -281,6 +283,8 @@ LM_SetMemory(lm_address_t dst,
 	     lm_size_t    size)
 {
 	lm_size_t i;
+
+	LM_ASSERT(dst != LM_ADDRESS_BAD && size > 0);
 
 	for (i = 0; i < size; ++i)
 		*(lm_byte_t *)LM_OFFSET(dst, i) = byte;
@@ -298,6 +302,11 @@ LM_SetMemoryEx(lm_process_t *pproc,
 {
 	lm_size_t  wrsize = 0;
 	lm_byte_t *data;
+
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
+		  dst != LM_ADDRESS_BAD &&
+		  size > 0);
 
 	data = (lm_byte_t *)LM_MALLOC(size);
 	if (!data)
@@ -366,7 +375,9 @@ LM_ProtMemory(lm_address_t addr,
 	      lm_prot_t   *oldprot)
 {
 	/* oldprot can be a null pointer */
-	LM_ASSERT(addr != LM_ADDRESS_BAD && size > 0);
+	LM_ASSERT(addr != LM_ADDRESS_BAD &&
+		  size > 0 &&
+		  LM_VALID_PROT(prot));
 	
 	return _LM_ProtMemory(addr, size, prot, oldprot);
 }
@@ -444,7 +455,9 @@ LM_ProtMemoryEx(lm_process_t *pproc,
 		lm_prot_t    *oldprot)
 {
 	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
 		  addr != LM_ADDRESS_BAD &&
+		  LM_VALID_PROT(prot) &&
 		  size > 0);
 
 	return _LM_ProtMemoryEx(pproc, addr, size, prot, oldprot);
@@ -487,7 +500,7 @@ LM_API lm_address_t
 LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot)
 {
-	LM_ASSERT(size > 0);
+	LM_ASSERT(size > 0 && LM_VALID_PROT(prot));
 
 	return _LM_AllocMemory(size, prot);
 }
@@ -555,7 +568,9 @@ LM_AllocMemoryEx(lm_process_t *pproc,
 		 lm_size_t     size,
 		 lm_prot_t     prot)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && size > 0);
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
+		  size > 0 && LM_VALID_PROT(prot));
 
 	return _LM_AllocMemoryEx(pproc, size, prot);
 }
@@ -584,7 +599,7 @@ LM_FreeMemory(lm_address_t alloc,
 {
 	/* size can be 0 (at least on Windows, where it MUST be 0) */
 	LM_ASSERT(alloc != LM_ADDRESS_BAD);
-	
+
 	return _LM_FreeMemory(alloc, size);	
 }
 /********************************/
@@ -633,7 +648,9 @@ LM_FreeMemoryEx(lm_process_t *pproc,
 		lm_address_t  alloc,
 		lm_size_t     size)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && alloc != LM_ADDRESS_BAD);
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
+		  alloc != LM_ADDRESS_BAD);
 
 	return _LM_FreeMemoryEx(pproc, alloc, size);
 }

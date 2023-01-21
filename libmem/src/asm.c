@@ -30,6 +30,8 @@ LM_Assemble(lm_cstring_t code,
 	lm_bool_t    ret = LM_FALSE;
 	lm_bytearr_t codebuf;
 
+	LM_ASSERT(code != LM_NULLPTR && inst != LM_NULLPTR);
+
 	if (!LM_AssembleEx(code, LM_BITS, (lm_address_t)0, &codebuf))
 		return ret;
 
@@ -59,7 +61,9 @@ LM_AssembleEx(lm_cstring_t  code,
 	size_t         count;
 	lm_bytearr_t   codebuf;
 
-	LM_ASSERT(code != LM_NULLPTR && pcodebuf != LM_NULLPTR);
+	LM_ASSERT(code != LM_NULLPTR &&
+		  LM_VALID_BITS(bits) &&
+		  pcodebuf != LM_NULLPTR);
 
 	switch (LM_ARCH) {
 	case LM_ARCH_X86: ksarch = KS_ARCH_X86; break;
@@ -98,8 +102,9 @@ CLEAN_EXIT:
 LM_API lm_void_t
 LM_FreeCodeBuffer(lm_bytearr_t codebuf)
 {
-	if (codebuf)
-		LM_FREE(codebuf);
+	LM_ASSERT(codebuf != LM_NULLPTR);
+
+	LM_FREE(codebuf);
 }
 
 /********************************/
@@ -142,7 +147,9 @@ LM_DisassembleEx(lm_address_t code,
 	lm_inst_t *insts = (lm_inst_t *)LM_NULLPTR;
 	size_t i;
 
-	LM_ASSERT(code != LM_ADDRESS_BAD && pinsts != LM_NULLPTR);
+	LM_ASSERT(code != LM_ADDRESS_BAD &&
+		  LM_VALID_BITS(bits) &&
+		  pinsts != LM_NULLPTR);
 
 	switch (LM_ARCH) {
 	case LM_ARCH_X86: csarch = CS_ARCH_X86; break;
@@ -185,8 +192,9 @@ CLEAN_EXIT:
 LM_API lm_void_t
 LM_FreeInstructions(lm_inst_t *insts)
 {
-	if (insts)
-		LM_FREE(insts);
+	LM_ASSERT(insts != LM_NULLPTR);
+
+	LM_FREE(insts);
 }
 
 /********************************/
@@ -221,6 +229,7 @@ LM_CodeLengthEx(lm_process_t *pproc,
 	lm_byte_t codebuf[LM_INST_SIZE];
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
 		  code != LM_ADDRESS_BAD &&
 		  minlength > 0);
 

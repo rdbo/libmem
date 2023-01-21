@@ -209,7 +209,9 @@ LM_EnumModulesEx(lm_process_t *pproc,
 					 lm_void_t   *arg),
 		 lm_void_t    *arg)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && callback != LM_NULLPTR);
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
+		  callback != LM_NULLPTR);
 
 	return _LM_EnumModulesEx(pproc, callback, arg);
 }
@@ -270,6 +272,7 @@ LM_FindModuleEx(lm_process_t *pproc,
 	_lm_find_mod_t arg;
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
 		  name != LM_NULLPTR &&
 		  modbuf != LM_NULLPTR);
 
@@ -378,7 +381,7 @@ LM_LoadModuleEx(lm_process_t *pproc,
 		lm_string_t   path,
 		lm_module_t  *modbuf)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && path != LM_NULLPTR);
+	LM_ASSERT(pproc != LM_NULLPTR && LM_VALID_PROCESS(pproc) && path != LM_NULLPTR);
 	return _LM_LoadModuleEx(pproc, path, modbuf);
 }
 
@@ -423,7 +426,7 @@ _LM_UnloadModule(lm_module_t *pmod)
 LM_API lm_bool_t
 LM_UnloadModule(lm_module_t *pmod)
 {
-	LM_ASSERT(pmod != LM_NULLPTR);
+	LM_ASSERT(pmod != LM_NULLPTR && LM_VALID_MODULE(pmod));
 
 	return _LM_UnloadModule(pmod);
 }
@@ -505,7 +508,10 @@ LM_API lm_bool_t
 LM_UnloadModuleEx(lm_process_t *pproc,
 		  lm_module_t  *pmod)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && pmod != LM_NULLPTR);
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
+		  pmod != LM_NULLPTR &&
+		  LM_VALID_MODULE(pmod));
 
 	return _LM_UnloadModuleEx(pproc, pmod);
 }

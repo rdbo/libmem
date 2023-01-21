@@ -90,7 +90,8 @@ LM_DataScanEx(lm_process_t *pproc,
 	lm_byte_t   *ptr;
 	lm_page_t    oldpage;
 
-	LM_ASSERT(pproc != LM_NULLPTR && data != LM_NULLPTR &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) && data != LM_NULLPTR &&
 		  size > 0 && addr != LM_ADDRESS_BAD && scansize > 0);
 
 	if (!LM_GetPageEx(pproc, addr, &oldpage))
@@ -213,7 +214,8 @@ LM_PatternScanEx(lm_process_t *pproc,
 	lm_page_t    oldpage;
 	lm_byte_t   *ptr;
 
-	LM_ASSERT(pproc != LM_NULLPTR && pattern != LM_NULLPTR &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) && pattern != LM_NULLPTR &&
 		  mask != LM_NULLPTR && addr != LM_ADDRESS_BAD &&
 		  scansize > 0);
 
@@ -365,7 +367,8 @@ LM_SigScanEx(lm_process_t *pproc,
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
 	lm_char_t   *mask = (lm_char_t *)LM_NULL;
 
-	LM_ASSERT(pproc != LM_NULLPTR && sig != LM_NULLPTR &&
+	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) && sig != LM_NULLPTR &&
 		  addr != LM_ADDRESS_BAD && scansize > 0);
 
 	if (!_LM_ParseSig(sig, &pattern, &mask))

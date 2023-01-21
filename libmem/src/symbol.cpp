@@ -112,7 +112,9 @@ LM_EnumSymbols(lm_module_t *pmod,
 				      lm_void_t   *arg),
 	       lm_void_t   *arg)
 {
-	LM_ASSERT(pmod != LM_NULLPTR && callback);
+	LM_ASSERT(pmod != LM_NULLPTR &&
+		  LM_VALID_MODULE(pmod) &&
+		  callback);
 
 	return _LM_EnumSymbols(pmod, callback, arg);
 }
@@ -138,7 +140,9 @@ LM_FindSymbolAddress(lm_module_t  *pmod,
 {
 	lm_symbol_t arg;
 
-	LM_ASSERT(pmod != LM_NULLPTR && name != LM_NULLPTR);
+	LM_ASSERT(pmod != LM_NULLPTR &&
+		  LM_VALID_MODULE(pmod) &&
+		  name != LM_NULLPTR);
 
 	arg.name = name;
 	arg.address = LM_ADDRESS_BAD;

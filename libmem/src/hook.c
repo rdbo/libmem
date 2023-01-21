@@ -40,7 +40,7 @@ _LM_GenerateHook(lm_address_t  from,
 			     /* these nops will become the jump address */
 			     "nop; nop; nop; nop; nop; nop; nop; nop");
 	} else {
-		LM_CSNPRINTF(code, sizeof(code), "jmp 0x%lx", (void *)to);
+		LM_CSNPRINTF(code, sizeof(code), "jmp 0x%zx", to);
 	}
 
 	size = LM_AssembleEx(code, bits, from, pcodebuf);
@@ -132,6 +132,7 @@ LM_HookCodeEx(lm_process_t *pproc,
 	lm_size_t    alignedsize;
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
 		  from != LM_ADDRESS_BAD &&
 		  to != LM_ADDRESS_BAD);
 
@@ -227,6 +228,7 @@ LM_UnhookCodeEx(lm_process_t *pproc,
 	lm_prot_t old_prot;
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
+		  LM_VALID_PROCESS(pproc) &&
 		  from != LM_ADDRESS_BAD &&
 		  trampoline != LM_ADDRESS_BAD &&
 		  size > 0);

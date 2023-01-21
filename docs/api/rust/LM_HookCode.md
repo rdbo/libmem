@@ -10,7 +10,7 @@ Places a hook/detour onto the address `from`, redirecting it to the address `to`
 
 # Parameters
 
-- from: the address where the hooked will be placed.
+- from: the address where the hook will be placed.
 - to: the address where the hook will jump to.
 
 # Return Value

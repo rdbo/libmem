@@ -472,6 +472,22 @@ typedef struct {
 	lm_void_t  *detail;
 } lm_inst_t;
 
+typedef struct lm_vmt_entry_t {
+	lm_address_t           orig_func;
+	lm_size_t              index;
+	struct lm_vmt_entry_t *next;
+} lm_vmt_entry_t;
+
+typedef struct {
+	/*
+	 * README: Make sure the 'vtable' is writable!
+	 * It's recommended to change its protection to 'LM_PROT_XRW'
+	 * before using the VMT APIs.
+	 */
+	lm_address_t   *vtable;
+	lm_vmt_entry_t *hkentries;
+} lm_vmt_t;
+
 typedef lm_int_t lm_arch_t;
 
 /* libmem */
@@ -760,6 +776,28 @@ LM_API lm_size_t
 LM_CodeLengthEx(lm_process_t *pproc,
 		lm_address_t  code,
 		lm_size_t     minlength);
+
+/****************************************/
+
+LM_API lm_void_t
+LM_VmtNew(lm_address_t *vtable,
+	  lm_vmt_t *vmtbuf);
+
+LM_API lm_bool_t
+LM_VmtHook(lm_vmt_t *pvmt,
+	   lm_size_t fnindex,
+	   lm_address_t dst);
+
+LM_API lm_void_t
+LM_VmtUnhook(lm_vmt_t *pvmt,
+	     lm_size_t fnindex);
+
+LM_API lm_address_t
+LM_VmtGetOriginal(lm_vmt_t *pvmt,
+		  lm_size_t fnindex);
+
+LM_API lm_void_t
+LM_VmtFree(lm_vmt_t *pvmt);
 
 #if LM_LANG == LM_LANG_CPP
 }

@@ -34,6 +34,19 @@ void hk_some_function(int a, int b)
 	some_function_orig(420, 917);
 }
 
+void vmt_hk_some_function(int a, int b)
+{
+	printf("VMT Hooked Some Function\n");
+}
+
+struct some_class_vtable_t {
+	void (*pfn_some_function)(int, int);
+} some_class_vtable;
+
+typedef struct {
+	struct some_class_vtable_t *vtable;
+} some_class_t;
+
 LM_API_EXPORT int
 main()
 {
@@ -59,6 +72,8 @@ main()
 	lm_size_t    disasm_count;
 	lm_size_t    disasm_bytes = 0;
 	lm_size_t    tramp_size;
+	some_class_t some_object;
+	lm_vmt_t     some_object_vmt;
 
 	LM_PRINTF(LM_STR("[+] Test 1\n"));
 
@@ -159,8 +174,29 @@ main()
 
 	LM_UnhookCode((lm_address_t)some_function, (lm_address_t)some_function_orig, tramp_size);
 
-	printf("\nUnhooked\n\n");
+	LM_PRINTF(LM_STR("\n[*] Unhooked\n\n"));
 	some_function(5, 5);
+
+	LM_PRINTF(LM_STR("====================\n"));
+
+	LM_PRINTF(LM_STR("[*] VMT Hooking\n"));
+
+	some_object.vtable = &some_class_vtable;
+	some_object.vtable->pfn_some_function = some_function;
+
+	LM_VmtNew(*(lm_address_t **)&some_object, &some_object_vmt);
+
+	LM_VmtHook(&some_object_vmt, 0, vmt_hk_some_function);
+
+	LM_PRINTF(LM_STR("[*] Original 'some_function' Address: %p\n"), (void *)LM_VmtGetOriginal(&some_object_vmt, 0));
+
+	some_object.vtable->pfn_some_function(10, 10);
+
+	LM_VmtFree(&some_object_vmt);
+
+	LM_PRINTF(LM_STR("\n[*] Freed the VMT manager\n\n"));
+
+	some_object.vtable->pfn_some_function(10, 10);
 
 	LM_PRINTF(LM_STR("====================\n"));
 

@@ -28,3 +28,7 @@ path = "src/module_enumeration.rs"
 name = "asm_disasm"
 path = "src/asm_disasm.rs"
 
+[[bin]]
+name = "memory"
+path = "src/memory.rs"
+

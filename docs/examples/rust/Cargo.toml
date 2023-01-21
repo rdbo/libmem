@@ -24,4 +24,7 @@ path = "src/thread_enumeration.rs"
 name = "module_enumeration"
 path = "src/module_enumeration.rs"
 
+[[bin]]
+name = "asm_disasm"
+path = "src/asm_disasm.rs"
 

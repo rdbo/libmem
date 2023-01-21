@@ -1,17 +1,16 @@
-# LM_DataScanEx
+# LM_SigScan
 
 ```python
-def LM_DataScanEx(pproc : lm_process_t, data : bytearray, addr : int, scansize : int)
+def LM_SigScan(sig : str, addr : int, scansize : int)
 ```
 
 # Description
 
-Searches for specific bytes in a memory region in a remote process.
+Searches for a byte signature in a memory region in the current process.
 
 # Parameters
 
-- pproc: valid process which will be searched.
-- data: the bytes to search for.
+- sig: string representation of a byte signature that can contain unknown bytes (`??`). Example: `"E9 ?? ?? ?? ?? 90 90 90 90"`.
 - addr: the address to start the scan from.
 - scansize: the maximum size of the scan, in bytes.
 

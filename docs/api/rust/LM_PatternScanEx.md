@@ -12,7 +12,7 @@ Searches for specific bytes with a mask filter in a memory region in a remote pr
 
 - pproc: immutable reference to a valid process which will be searched.
 - pattern: the bytes to search for (it is common practice to leave unknown bytes as 0).
-- mask: a mask filter to apply to the pattern. Use 'x' for a known byte and '?' for an unknown byte. Example: "xxxx???x?xxx".
+- mask: a mask filter to apply to the pattern. Use 'x' for a known byte and '?' for an unknown byte. Example: `"xxxx???x?xxx"`.
 - addr: the address to start the scan from.
 - scansize: the maximum size of the scan, in bytes.
 

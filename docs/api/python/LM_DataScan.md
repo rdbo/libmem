@@ -16,5 +16,5 @@ Searches for specific bytes in a memory region in the current process.
 
 # Return Value
 
-On success, it returns a valid `lm_address_t` containing the first match found. On failure, it returns `None`.
+On success, it returns a valid address (`int`) containing the first match found. On failure, it returns `None`.
 

@@ -10,6 +10,8 @@ EnumProcessesCallback(lm_process_t *pproc,
 	printf("[*] Process Path: %s\n", pproc->path);
 	printf("[*] Process Bits: %zu\n", pproc->bits);
 	printf("====================\n");
+
+	return LM_TRUE;
 }
 
 int

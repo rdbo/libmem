@@ -9,6 +9,25 @@ https://discord.com/invite/Qw8jsPD99X
 This project is licensed under the `GNU AGPLv3.0`
 Read `LICENSE` for more information
 
+## Features
+- Cross Platform (Windows/Linux/FreeBSD)
+- Cross Architecture (x86/x64)
+
+`libmem` can:
+- Find Processes
+- Find Modules
+- Find Symbols
+- Read/Write/Set Memory
+- Allocate/Protect Memory
+- Scan Memory by Pattern/Signature
+- Hook/Unhook Functions
+- Assemble/Dissassemble Code (JIT)
+- Do VMT Hooking/Unhooking
+- Load/Unload Modules
+- Get Page Information
+- Enumerate Process Threads
+And much more
+
 ## Examples
 
 For more examples and API manual, access the [documentation](https://github.com/rdbo/libmem/blob/master/docs/DOCS.md)

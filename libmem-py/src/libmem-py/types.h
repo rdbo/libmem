@@ -384,3 +384,125 @@ static PyTypeObject py_lm_inst_t = {
 	.tp_repr = py_lm_inst_str
 };
 
+/****************************************/
+
+/* lm_process_t */
+typedef struct {
+	PyObject_HEAD
+	lm_vmt_t vmt;
+} py_lm_vmt_obj;
+
+PyObject *
+py_lm_vmt_str(PyObject *self)
+{
+	py_lm_vmt_obj *pyvmt = (py_lm_vmt_obj *)self;
+	return PyUnicode_FromFormat("<lm_vmt_t(vtable = 0x%zx)>", pyvmt->vmt.vtable);
+}
+
+int
+py_lm_vmt_init(PyObject *self,
+	       PyObject *args,
+	       PyObject *kwds)
+{
+	lm_address_t *vtable;
+	py_lm_vmt_obj *pyvmt = (py_lm_vmt_obj *)self;
+
+	if (!PyArg_ParseTuple(args, "k", &vtable))
+		return -1;
+
+	LM_VmtNew(vtable, &pyvmt->vmt);
+
+	return 0;
+}
+
+void
+py_lm_vmt_del(PyObject *self)
+{
+	py_lm_vmt_obj *pyvmt = (py_lm_vmt_obj *)self;
+	
+	LM_VmtFree(&pyvmt->vmt);
+}
+
+PyObject *
+py_lm_vmt_hook(PyObject *self,
+	       PyObject *args)
+{
+	py_lm_vmt_obj *pyvmt = (py_lm_vmt_obj *)self;
+	lm_size_t index;
+	lm_address_t dst;
+
+	if (!PyArg_ParseTuple(args, "kk", &index, &dst))
+		return NULL;
+
+	LM_VmtHook(&pyvmt->vmt, index, dst);
+
+	return Py_BuildValue("");
+}
+
+PyObject *
+py_lm_vmt_unhook(PyObject *self,
+		 PyObject *args)
+{
+	py_lm_vmt_obj *pyvmt = (py_lm_vmt_obj *)self;
+	lm_size_t index;
+
+	if (!PyArg_ParseTuple(args, "k", &index))
+		return NULL;
+
+	LM_VmtUnhook(&pyvmt->vmt, index);
+
+	return Py_BuildValue("");
+}
+
+PyObject *
+py_lm_vmt_get_original(PyObject *self,
+		       PyObject *args)
+{
+	py_lm_vmt_obj *pyvmt = (py_lm_vmt_obj *)self;
+	lm_size_t index;
+	lm_address_t orig_func;
+
+	if (!PyArg_ParseTuple(args, "k", &index))
+		return NULL;
+
+	orig_func = LM_VmtGetOriginal(&pyvmt->vmt, index);
+
+	return PyLong_FromSize_t(orig_func);
+}
+
+PyObject *
+py_lm_vmt_reset(PyObject *self,
+		PyObject *args)
+{
+	py_lm_vmt_obj *pyvmt = (py_lm_vmt_obj *)self;
+
+	LM_VmtReset(&pyvmt->vmt);
+
+	return Py_BuildValue("");
+}
+
+static PyMethodDef py_lm_vmt_methods[] = {
+	{ "hook", py_lm_vmt_hook, METH_VARARGS, "Hooks a VMT function at an index" },
+	{ "unhook", py_lm_vmt_unhook, METH_VARARGS, "Unhooks a VMT function at an index" },
+	{ "get_original", py_lm_vmt_get_original, METH_VARARGS, "Gets the original VMT function at an index" },
+	{ "reset", py_lm_vmt_reset, METH_VARARGS, "Resets the original VMT" },
+	{ NULL }
+};
+
+static PyTypeObject py_lm_vmt_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_vmt_t",
+	.tp_doc = "Manages a Virtual Method Table",
+	.tp_basicsize = sizeof(py_lm_vmt_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_init = py_lm_vmt_init,
+	.tp_finalize = py_lm_vmt_del,
+	.tp_methods = py_lm_vmt_methods,
+	.tp_str = py_lm_vmt_str,
+	.tp_repr = py_lm_vmt_str
+};
+
+/****************************************/
+

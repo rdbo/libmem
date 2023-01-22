@@ -1435,6 +1435,9 @@ PyInit_libmem(void)
 	if (PyType_Ready(&py_lm_inst_t) < 0)
 		goto ERR_PYMOD;
 
+	if (PyType_Ready(&py_lm_vmt_t) < 0)
+		goto ERR_PYMOD;
+
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
 		goto ERR_PYMOD;
@@ -1475,6 +1478,11 @@ PyInit_libmem(void)
 			       (PyObject *)&py_lm_inst_t) < 0)
 		goto ERR_INST;
 
+	Py_INCREF(&py_lm_vmt_t);
+	if (PyModule_AddObject(pymod, "lm_vmt_t",
+			       (PyObject *)&py_lm_vmt_t) < 0)
+		goto ERR_VMT;
+
 	/* global variables */
 	DECL_GLOBAL_PROT(LM_PROT_X);
 	DECL_GLOBAL_PROT(LM_PROT_R);
@@ -1487,6 +1495,9 @@ PyInit_libmem(void)
 
 	goto EXIT; /* no errors */
 
+ERR_VMT:
+	Py_DECREF(&py_lm_vmt_t);
+	Py_DECREF(pymod);
 ERR_INST:
 	Py_DECREF(&py_lm_inst_t);
 	Py_DECREF(pymod);

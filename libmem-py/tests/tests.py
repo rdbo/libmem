@@ -226,4 +226,18 @@ print(f"[*] Aligned Length for Minimum '{minlength}' Bytes is '{aligned_length}'
 separator()
 
 # TODO: Add tests for 'LM_CodeLengthEx'
+# separator()
+
+print("[*] VMT Hooking")
+
+vtable = ctypes.c_ulonglong(0x1020304050607080)
+vmt = lm_vmt_t(ctypes.addressof(vtable))
+print(f"[*] Original Function: {hex(vmt.get_original(0))}")
+vmt.hook(0, 0xdeadbeef)
+print(f"[*] VMT After Hook: {hex(vtable.value)}")
+vmt.unhook(0)
+# vmt.reset()
+print(f"[*] VMT After Unhook: {hex(vtable.value)}")
+
+separator()
 

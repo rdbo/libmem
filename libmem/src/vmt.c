@@ -53,7 +53,7 @@ _LM_VmtSearchPrev(lm_vmt_t       *pvmt,
 
 LM_API lm_void_t
 LM_VmtNew(lm_address_t *vtable,
-	  lm_vmt_t *vmtbuf)
+	  lm_vmt_t     *vmtbuf)
 {
 	LM_ASSERT(vmtbuf != LM_NULLPTR);
 
@@ -64,8 +64,8 @@ LM_VmtNew(lm_address_t *vtable,
 /********************************/
 
 LM_API lm_bool_t
-LM_VmtHook(lm_vmt_t *pvmt,
-	   lm_size_t fnindex,
+LM_VmtHook(lm_vmt_t    *pvmt,
+	   lm_size_t    fnindex,
 	   lm_address_t dst)
 {
 	lm_vmt_entry_t *entry;

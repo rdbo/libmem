@@ -797,6 +797,9 @@ LM_VmtGetOriginal(lm_vmt_t *pvmt,
 		  lm_size_t fnindex);
 
 LM_API lm_void_t
+LM_VmtReset(lm_vmt_t *pvmt);
+
+LM_API lm_void_t
 LM_VmtFree(lm_vmt_t *pvmt);
 
 #if LM_LANG == LM_LANG_CPP

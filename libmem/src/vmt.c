@@ -133,7 +133,7 @@ LM_VmtGetOriginal(lm_vmt_t *pvmt,
 /********************************/
 
 LM_API lm_void_t
-LM_VmtFree(lm_vmt_t *pvmt)
+LM_VmtReset(lm_vmt_t *pvmt)
 {
 	lm_vmt_entry_t *entry;
 	lm_vmt_entry_t *next;
@@ -143,5 +143,15 @@ LM_VmtFree(lm_vmt_t *pvmt)
 		next = entry->next;
 		LM_FREE(entry);
 	}
+
+	pvmt->hkentries = LM_NULLPTR;
+}
+
+/********************************/
+
+LM_API lm_void_t
+LM_VmtFree(lm_vmt_t *pvmt)
+{
+	LM_VmtReset(pvmt);
 }
 

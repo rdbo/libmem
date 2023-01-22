@@ -1,1 +1,1 @@
-recursive-include src/libmem-py libmem.h
+recursive-include src/libmem-py types.h

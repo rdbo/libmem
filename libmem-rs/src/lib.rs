@@ -331,6 +331,73 @@ impl fmt::Display for lm_inst_t {
     }
 }
 
+/****************************************/
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct lm_vmt_t {
+    vtable : *mut lm_address_t,
+    hkentries : *mut () // there is no need to declare 'lm_vmt_entry_t'
+}
+
+impl lm_vmt_t {
+    pub fn new(vtable : *mut lm_address_t) -> Self {
+        let mut vmt = Self { vtable: 0 as *mut lm_address_t, hkentries: 0 as *mut () };
+
+        unsafe {
+            let vmtbuf = &mut vmt as *mut lm_vmt_t;
+            libmem_c::LM_VmtNew(vtable, vmtbuf);
+        }
+
+        vmt
+    }
+
+    pub fn hook(&mut self, index : lm_size_t, dst : lm_address_t) {
+        unsafe {
+            let pvmt = self as *mut lm_vmt_t;
+            libmem_c::LM_VmtHook(pvmt, index, dst);
+        }
+    }
+
+    pub fn unhook(&mut self, index : lm_size_t) {
+        unsafe {
+            let pvmt = self as *mut lm_vmt_t;
+
+            libmem_c::LM_VmtUnhook(pvmt, index);
+        }
+    }
+
+    pub fn get_original(&self, index : lm_size_t) -> lm_address_t {
+        unsafe {
+            let pvmt = self as *const lm_vmt_t;
+            libmem_c::LM_VmtGetOriginal(pvmt, index)
+        }
+    }
+
+    pub fn reset(&mut self) {
+        unsafe {
+            let pvmt = self as *mut lm_vmt_t;
+
+            libmem_c::LM_VmtReset(pvmt);
+        }
+    }
+}
+
+impl Drop for lm_vmt_t {
+    fn drop(&mut self) {
+        unsafe {
+            let pvmt = self as *mut lm_vmt_t;
+            libmem_c::LM_VmtFree(pvmt);
+        }
+    }
+}
+
+impl fmt::Display for lm_vmt_t {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "lm_vmt_t {{ vtable: {:#x} }}", self.vtable as lm_address_t)
+    }
+}
+
 // Raw libmem calls
 mod libmem_c {
     use crate::*;
@@ -404,6 +471,13 @@ mod libmem_c {
         pub(super) fn LM_FreeInstructions(insts : *const lm_inst_t);
         pub(super) fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
         pub(super) fn LM_CodeLengthEx(pproc : *const lm_process_t, code : lm_address_t, minlength : lm_size_t) -> lm_size_t;
+        /****************************************/
+        pub(super) fn LM_VmtNew(vtable : *mut lm_address_t, vmtbuf : *mut lm_vmt_t);
+        pub(super) fn LM_VmtHook(pvmt : *mut lm_vmt_t, fnindex : lm_size_t, dst : lm_address_t);
+        pub(super) fn LM_VmtUnhook(pvmt : *mut lm_vmt_t, fnindex : lm_size_t);
+        pub(super) fn LM_VmtGetOriginal(pvmt : *const lm_vmt_t, fnindex : lm_size_t) -> lm_address_t;
+        pub(super) fn LM_VmtReset(pvmt : *mut lm_vmt_t);
+        pub(super) fn LM_VmtFree(pvmt : *mut lm_vmt_t);
     }
 }
 

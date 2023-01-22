@@ -38,6 +38,27 @@ where T : fmt::Display {
     }
 }
 
+// Simple memory representation of a C++ class
+#[repr(C)]
+struct SomeClassVMT {
+    pfn_some_function : extern "C" fn()
+}
+
+#[repr(C)]
+struct SomeClass {
+    vtable : SomeClassVMT
+}
+
+impl SomeClass {
+    fn new() -> Self {
+        Self { vtable: SomeClassVMT { pfn_some_function: some_function } }
+    }
+
+    fn some_function(&self) {
+        (self.vtable.pfn_some_function)();
+    }
+}
+
 fn main() {
     println!("[*] libmem-rs tests");
 
@@ -298,5 +319,27 @@ fn main() {
     // TODO: Add tests for LM_CodeLengthEx
 
     // separator();
+
+    println!("[*] VMT Hooking");
+
+    let some_object = SomeClass::new();
+    let mut some_object_vmt = lm_vmt_t::new(&some_object as *const SomeClass as *mut lm_address_t);
+    some_object_vmt.hook(0, hk_some_function as lm_address_t);
+
+    println!("[*] Original VMT Function: {:#x}", some_object_vmt.get_original(0));
+
+    some_object.some_function();
+    some_object_vmt.unhook(0);
+
+    // let consume_vmt = |_vmt : lm_vmt_t| {};
+    // consume_vmt(some_object_vmt);
+
+    println!();
+    println!("[*] Unhooked");
+    println!();
+
+    some_object.some_function();
+
+    separator();
 }
 

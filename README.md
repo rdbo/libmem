@@ -146,9 +146,9 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 ### FreeBSD
 
-1. Install GCC, G++, Git and CMake (run as root):
+1. Install Git, CMake and Python3 (run as root) (clang, clang++ and make should already be installed):
 
-        pkg install gcc g++ git cmake make python3
+        pkg install git cmake python3
 
 2. Continue reading at `Build and Install`
 

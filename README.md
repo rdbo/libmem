@@ -307,6 +307,13 @@ LM_DisassembleEx
 LM_FreeInstructions
 LM_CodeLength
 LM_CodeLengthEx
+
+LM_VmtNew
+LM_VmtHook
+LM_VmtUnhook
+LM_VmtGetOriginal
+LM_VmtReset
+LM_VmtFree
 ```
 
 ## Projects

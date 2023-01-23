@@ -146,11 +146,17 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 ### FreeBSD
 
-1. Install Git, CMake and Python3 (run as root) (clang, clang++ and make should already be installed):
+1. Add a mountpoint for the `procfs` filesystem in your `/etc/fstab` by appending the following line:
+	proc		/proc		procfs	rw	0	0
+
+2. Manually mount the `procfs`. This will only be necessary if you don't reboot. If you reboot, it will be automatically mounted because of the line at `/etc/fstab`. Run the following command (as root):
+	 mount -t procfs proc /proc
+
+3. Install Git, CMake and Python3 (run as root) (clang, clang++ and make should already be installed):
 
         pkg install git cmake python3
 
-2. Continue reading at `Build and Install`
+4. Continue reading at `Build and Install`
 
 ### Build and Install
 **Note**: Run the following commands on Git Bash (Windows) or a terminal (Linux/FreeBSD).

@@ -148,11 +148,11 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 1. Add a mountpoint for the `procfs` filesystem in your `/etc/fstab` by appending the following line:
 
-	proc		/proc		procfs	rw	0	0
+        proc		/proc		procfs	rw	0	0
 
 2. Manually mount the `procfs`. This will only be necessary if you don't reboot. If you reboot, it will be automatically mounted because of the line at `/etc/fstab`. Run the following command (as root):
 
-	 mount -t procfs proc /proc
+        mount -t procfs proc /proc
 
 3. Install Git, CMake and Python3 (run as root) (clang, clang++ and make should already be installed):
 

@@ -67,7 +67,7 @@ fn hk_some_function() {
     // ...
 }
 
-fn main() {
+unsafe fn test() {
     // reading/writing memory
     let number : i32 = 0;
     let number_addr = &number as *const i32 as lm_address_t;
@@ -94,6 +94,11 @@ fn main() {
     some_function(); // call 'some_function' to see if it has been unhooked
 }
 
+fn main() {
+    unsafe {
+        test();
+    }
+}
 ```
 
 ### Python

@@ -4,13 +4,13 @@
 impl lm_vmt_t {
     pub fn new(vtable : *mut lm_address_t) -> Self;
 
-    pub fn hook(&mut self, index : lm_size_t, dst : lm_address_t);
+    pub unsafe fn hook(&mut self, index : lm_size_t, dst : lm_address_t);
 
-    pub fn unhook(&mut self, index : lm_size_t);
+    pub unsafe fn unhook(&mut self, index : lm_size_t);
 
-    pub fn get_original(&self, index : lm_size_t) -> lm_address_t;
+    pub fn get_original(&self, index : lm_size_t) -> Option<lm_address_t>;
 
-    pub fn reset(&mut self);
+    pub unsafe fn reset(&mut self);
 }
 ```
 

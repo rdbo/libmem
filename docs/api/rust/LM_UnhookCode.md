@@ -1,7 +1,7 @@
 # LM_UnhookCode
 
 ```rust
-pub fn LM_UnhookCode(from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Option<()>
+pub unsafe fn LM_UnhookCode(from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Option<()>
 ```
 
 # Description

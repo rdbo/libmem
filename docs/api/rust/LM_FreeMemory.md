@@ -1,7 +1,7 @@
 # LM_FreeMemory
 
 ```rust
-pub fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> Option<()>
+pub unsafe fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> Option<()>
 ```
 
 # Description

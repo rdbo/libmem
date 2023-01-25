@@ -1,7 +1,7 @@
 # LM_HookCode
 
 ```rust
-pub fn LM_HookCode(from : lm_address_t, to : lm_address_t) -> Option<(lm_address_t, lm_size_t)>
+pub unsafe fn LM_HookCode(from : lm_address_t, to : lm_address_t) -> Option<(lm_address_t, lm_size_t)>
 ```
 
 # Description

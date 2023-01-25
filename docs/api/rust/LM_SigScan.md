@@ -1,7 +1,7 @@
 # LM_SigScan
 
 ```rust
-pub fn LM_SigScan(sig : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t>
+pub unsafe fn LM_SigScan(sig : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t>
 ```
 
 # Description

@@ -1,7 +1,7 @@
 # LM_ProtMemory
 
 ```rust
-pub fn LM_ProtMemory(addr : lm_address_t, size : lm_size_t, prot : lm_prot_t) -> Option<lm_prot_t>
+pub unsafe fn LM_ProtMemory(addr : lm_address_t, size : lm_size_t, prot : lm_prot_t) -> Option<lm_prot_t>
 ```
 
 # Description

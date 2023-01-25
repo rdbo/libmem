@@ -1,7 +1,7 @@
 # LM_SetMemory
 
 ```rust
-pub fn LM_SetMemory(dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Option<()>
+pub unsafe fn LM_SetMemory(dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Option<()>
 ```
 
 # Description

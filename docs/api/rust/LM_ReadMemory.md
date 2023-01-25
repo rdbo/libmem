@@ -1,7 +1,7 @@
 # LM_ReadMemory
 
 ```rust
-pub fn LM_ReadMemory<T>(src : lm_address_t) -> Option<T>
+pub unsafe fn LM_ReadMemory<T>(src : lm_address_t) -> Option<T>
 ```
 
 # Description

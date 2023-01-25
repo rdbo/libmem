@@ -1,7 +1,7 @@
 # LM_Disassemble
 
 ```rust
-pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t>
+pub unsafe fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t>
 ```
 
 # Description

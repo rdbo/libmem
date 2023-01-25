@@ -1,7 +1,7 @@
 # LM_CodeLength
 
 ```rust
-pub fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t>
+pub unsafe fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t>
 ```
 
 # Description

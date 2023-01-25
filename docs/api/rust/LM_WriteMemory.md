@@ -1,7 +1,7 @@
 # LM_WriteMemory
 
 ```rust
-pub fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Option<()>
+pub unsafe fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Option<()>
 ```
 
 # Description

@@ -1,7 +1,7 @@
 # LM_DisassembleEx
 
 ```rust
-pub fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t) -> Option<Vec<lm_inst_t>>
+pub unsafe fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t) -> Option<Vec<lm_inst_t>>
 ```
 
 # Description

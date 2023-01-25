@@ -1,7 +1,7 @@
 # LM_DataScan
 
 ```rust
-pub fn LM_DataScan(data : &[lm_byte_t], addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t>
+pub unsafe fn LM_DataScan(data : &[lm_byte_t], addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t>
 ```
 
 # Description

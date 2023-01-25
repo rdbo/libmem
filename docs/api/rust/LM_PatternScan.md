@@ -1,7 +1,7 @@
 # LM_PatternScan
 
 ```rust
-pub fn LM_PatternScan(pattern : &[u8], mask : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t>
+pub unsafe fn LM_PatternScan(pattern : &[u8], mask : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t>
 ```
 
 # Description

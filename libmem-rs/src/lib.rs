@@ -352,19 +352,15 @@ impl lm_vmt_t {
         vmt
     }
 
-    pub fn hook(&mut self, index : lm_size_t, dst : lm_address_t) {
-        unsafe {
-            let pvmt = self as *mut lm_vmt_t;
-            libmem_c::LM_VmtHook(pvmt, index, dst);
-        }
+    pub unsafe fn hook(&mut self, index : lm_size_t, dst : lm_address_t) {
+        let pvmt = self as *mut lm_vmt_t;
+        libmem_c::LM_VmtHook(pvmt, index, dst);
     }
 
-    pub fn unhook(&mut self, index : lm_size_t) {
-        unsafe {
-            let pvmt = self as *mut lm_vmt_t;
+    pub unsafe fn unhook(&mut self, index : lm_size_t) {
+        let pvmt = self as *mut lm_vmt_t;
 
-            libmem_c::LM_VmtUnhook(pvmt, index);
-        }
+        libmem_c::LM_VmtUnhook(pvmt, index);
     }
 
     pub fn get_original(&self, index : lm_size_t) -> lm_address_t {
@@ -374,12 +370,10 @@ impl lm_vmt_t {
         }
     }
 
-    pub fn reset(&mut self) {
-        unsafe {
+    pub unsafe fn reset(&mut self) {
             let pvmt = self as *mut lm_vmt_t;
 
             libmem_c::LM_VmtReset(pvmt);
-        }
     }
 }
 
@@ -900,25 +894,22 @@ pub fn LM_GetPageEx(pproc : &lm_process_t, addr : lm_address_t) -> Option<lm_pag
 
 /****************************************/
 
-pub fn LM_ReadMemory<T>(src : lm_address_t) -> Option<T> {
+pub unsafe fn LM_ReadMemory<T>(src : lm_address_t) -> Option<T> {
     let mut read_data : mem::MaybeUninit::<T> = mem::MaybeUninit::uninit();
 
-    unsafe {
-        let src = src as lm_address_t;
-        let dst = read_data.as_mut_ptr() as *mut lm_byte_t;
-        let size = mem::size_of::<T>() as lm_size_t;
+    let src = src as lm_address_t;
+    let dst = read_data.as_mut_ptr() as *mut lm_byte_t;
+    let size = mem::size_of::<T>() as lm_size_t;
 
-        if libmem_c::LM_ReadMemory(src, dst, size) == size {
-            Some(read_data.assume_init_read())
-        } else {
-            None
-        }
+    if libmem_c::LM_ReadMemory(src, dst, size) == size {
+        Some(read_data.assume_init_read())
+    } else {
+        None
     }
 }
 
 pub fn LM_ReadMemoryEx<T>(pproc : &lm_process_t, src : lm_address_t) -> Option<T> {
     let mut read_data : mem::MaybeUninit::<T> = mem::MaybeUninit::uninit();
-
     unsafe {
         let pproc = pproc as *const lm_process_t;
         let src = src as lm_address_t;
@@ -933,17 +924,15 @@ pub fn LM_ReadMemoryEx<T>(pproc : &lm_process_t, src : lm_address_t) -> Option<T
     }
 }
 
-pub fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Option<()> {
-    unsafe {
-        let dst = dst as lm_address_t;
-        let src = value as *const T as *const lm_byte_t;
-        let size = mem::size_of::<T>() as lm_size_t;
+pub unsafe fn LM_WriteMemory<T>(dst : lm_address_t, value : &T) -> Option<()> {
+    let dst = dst as lm_address_t;
+    let src = value as *const T as *const lm_byte_t;
+    let size = mem::size_of::<T>() as lm_size_t;
 
-        if libmem_c::LM_WriteMemory(dst, src, size) == size {
-            Some(())
-        } else {
-            None
-        }
+    if libmem_c::LM_WriteMemory(dst, src, size) == size {
+        Some(())
+    } else {
+        None
     }
 }
 
@@ -961,13 +950,11 @@ pub fn LM_WriteMemoryEx<T>(pproc : &lm_process_t, dst : lm_address_t, value : &T
     }
 }
 
-pub fn LM_SetMemory(dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Option<()> {
-    unsafe {
-        if libmem_c::LM_SetMemory(dst, byte, size) == size {
-            Some(())
-        } else {
-            None
-        }
+pub unsafe fn LM_SetMemory(dst : lm_address_t, byte : lm_byte_t, size : lm_size_t) -> Option<()> {
+    if libmem_c::LM_SetMemory(dst, byte, size) == size {
+        Some(())
+    } else {
+        None
     }
 }
 
@@ -982,15 +969,14 @@ pub fn LM_SetMemoryEx(pproc : &lm_process_t, dst : lm_address_t, byte : lm_byte_
     }
 }
 
-pub fn LM_ProtMemory(addr : lm_address_t, size : lm_size_t, prot : lm_prot_t) -> Option<lm_prot_t> {
+pub unsafe fn LM_ProtMemory(addr : lm_address_t, size : lm_size_t, prot : lm_prot_t) -> Option<lm_prot_t> {
     let mut oldprot = LM_PROT_NONE;
-    unsafe {
-        let poldprot = &mut oldprot as *mut lm_prot_t;
-        if libmem_c::LM_ProtMemory(addr, size, prot, poldprot) != LM_FALSE {
-            Some(oldprot)
-        } else {
-            None
-        }
+
+    let poldprot = &mut oldprot as *mut lm_prot_t;
+    if libmem_c::LM_ProtMemory(addr, size, prot, poldprot) != LM_FALSE {
+        Some(oldprot)
+    } else {
+         None
     }
 }
 
@@ -1030,13 +1016,11 @@ pub fn LM_AllocMemoryEx(pproc : &lm_process_t, size : lm_size_t, prot : lm_prot_
     }
 }
 
-pub fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> Option<()> {
-    unsafe {
-        if libmem_c::LM_FreeMemory(alloc, size) != LM_FALSE {
-            Some(())
-        } else {
-            None
-        }
+pub unsafe fn LM_FreeMemory(alloc : lm_address_t, size : lm_size_t) -> Option<()> {
+    if libmem_c::LM_FreeMemory(alloc, size) != LM_FALSE {
+        Some(())
+    } else {
+        None
     }
 }
 
@@ -1053,14 +1037,12 @@ pub fn LM_FreeMemoryEx(pproc : &lm_process_t, alloc : lm_address_t, size : lm_si
 
 /****************************************/
 
-pub fn LM_DataScan(data : &[lm_byte_t], addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
-    unsafe {
-        let size = data.len();
-        let data = data.as_ptr() as lm_bytearr_t;
-        match libmem_c::LM_DataScan(data, size, addr, scansize) {
-            LM_ADDRESS_BAD => None,
-            scanaddr => Some(scanaddr)
-        }
+pub unsafe fn LM_DataScan(data : &[lm_byte_t], addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+    let size = data.len();
+    let data = data.as_ptr() as lm_bytearr_t;
+    match libmem_c::LM_DataScan(data, size, addr, scansize) {
+        LM_ADDRESS_BAD => None,
+        scanaddr => Some(scanaddr)
     }
 }
 
@@ -1076,20 +1058,18 @@ pub fn LM_DataScanEx(pproc : &lm_process_t, data : &[lm_byte_t], addr : lm_addre
     }
 }
 
-pub fn LM_PatternScan(pattern : &[u8], mask : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+pub unsafe fn LM_PatternScan(pattern : &[u8], mask : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
     let mask = match CString::new(mask.as_bytes()) {
         // this will add the null terminator if needed
         Ok(s) => s,
         Err(_e) => return None
     };
 
-    unsafe {
-        let pattern = pattern.as_ptr() as lm_bytearr_t;
-        let mask = mask.as_ptr() as lm_string_t;
-        match libmem_c::LM_PatternScan(pattern, mask, addr, scansize) {
-            LM_ADDRESS_BAD => None,
-            scanaddr => Some(scanaddr)
-        }
+    let pattern = pattern.as_ptr() as lm_bytearr_t;
+    let mask = mask.as_ptr() as lm_string_t;
+    match libmem_c::LM_PatternScan(pattern, mask, addr, scansize) {
+        LM_ADDRESS_BAD => None,
+        scanaddr => Some(scanaddr)
     }
 }
 
@@ -1111,19 +1091,17 @@ pub fn LM_PatternScanEx(pproc : &lm_process_t, pattern : &[u8], mask : &str, add
     }
 }
 
-pub fn LM_SigScan(sig : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
+pub unsafe fn LM_SigScan(sig : &str, addr : lm_address_t, scansize : lm_size_t) -> Option<lm_address_t> {
     let sig = match CString::new(sig.as_bytes()) {
         // this will add the null terminator if needed
         Ok(s) => s,
         Err(_e) => return None
     };
 
-    unsafe {
-        let sig = sig.as_ptr() as lm_string_t;
-        match libmem_c::LM_SigScan(sig, addr, scansize) {
-            LM_ADDRESS_BAD => None,
-            scanaddr => Some(scanaddr)
-        }
+    let sig = sig.as_ptr() as lm_string_t;
+    match libmem_c::LM_SigScan(sig, addr, scansize) {
+        LM_ADDRESS_BAD => None,
+        scanaddr => Some(scanaddr)
     }
 }
 
@@ -1146,17 +1124,15 @@ pub fn LM_SigScanEx(pproc : &lm_process_t, sig : &str, addr : lm_address_t, scan
 
 /****************************************/
 
-pub fn LM_HookCode(from : lm_address_t, to : lm_address_t) -> Option<(lm_address_t, lm_size_t)> {
+pub unsafe fn LM_HookCode(from : lm_address_t, to : lm_address_t) -> Option<(lm_address_t, lm_size_t)> {
     let mut trampoline = LM_ADDRESS_BAD;
 
-    unsafe {
-        let ptrampoline = &mut trampoline as *mut lm_address_t;
-        let size = libmem_c::LM_HookCode(from, to, ptrampoline);
-        if size > 0 {
-            Some((trampoline, size))
-        } else {
-            None
-        }
+    let ptrampoline = &mut trampoline as *mut lm_address_t;
+    let size = libmem_c::LM_HookCode(from, to, ptrampoline);
+    if size > 0 {
+        Some((trampoline, size))
+    } else {
+        None
     }
 }
 
@@ -1175,13 +1151,11 @@ pub fn LM_HookCodeEx(pproc : &lm_process_t, from : lm_address_t, to : lm_address
     }
 }
 
-pub fn LM_UnhookCode(from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Option<()> {
-    unsafe {
-        if libmem_c::LM_UnhookCode(from, trampoline.0, trampoline.1) != LM_FALSE {
-            Some(())
-        } else {
-            None
-        }
+pub unsafe fn LM_UnhookCode(from : lm_address_t, trampoline : (lm_address_t, lm_size_t)) -> Option<()> {
+    if libmem_c::LM_UnhookCode(from, trampoline.0, trampoline.1) != LM_FALSE {
+        Some(())
+    } else {
+        None
     }
 }
 
@@ -1243,43 +1217,37 @@ pub fn LM_AssembleEx(code : &str, bits : lm_size_t, runtime_addr : lm_address_t)
     }
 }
 
-pub fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {
+pub unsafe fn LM_Disassemble(code : lm_address_t) -> Option<lm_inst_t> {
     let mut inst = lm_inst_t::new();
-    unsafe {
-        let pinst = &mut inst as *mut lm_inst_t;
+    let pinst = &mut inst as *mut lm_inst_t;
 
-        if libmem_c::LM_Disassemble(code, pinst) != LM_FALSE {
-            Some(inst)
-        } else {
-            None
-        }
+    if libmem_c::LM_Disassemble(code, pinst) != LM_FALSE {
+        Some(inst)
+    } else {
+        None
     }
 }
 
-pub fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t) -> Option<Vec<lm_inst_t>> {
+pub unsafe fn LM_DisassembleEx(code : lm_address_t, bits : lm_size_t, size : lm_size_t, count : lm_size_t, runtime_addr : lm_address_t) -> Option<Vec<lm_inst_t>> {
     let inst_vec : Vec<lm_inst_t>;
-    unsafe {
-        let insts = 0 as *mut lm_inst_t;
-        let pinsts = &insts as *const *mut lm_inst_t;
+    let insts = 0 as *mut lm_inst_t;
+    let pinsts = &insts as *const *mut lm_inst_t;
 
-        let inst_count = libmem_c::LM_DisassembleEx(code, bits, size, count, runtime_addr, pinsts);
-        if inst_count > 0 {
-            let buf = std::slice::from_raw_parts(insts as *const lm_inst_t, inst_count);
-            inst_vec = Vec::from(buf);
-            libmem_c::LM_FreeInstructions(insts);
-            Some(inst_vec)
-        } else {
-            None
-        }
+    let inst_count = libmem_c::LM_DisassembleEx(code, bits, size, count, runtime_addr, pinsts);
+    if inst_count > 0 {
+        let buf = std::slice::from_raw_parts(insts as *const lm_inst_t, inst_count);
+        inst_vec = Vec::from(buf);
+        libmem_c::LM_FreeInstructions(insts);
+        Some(inst_vec)
+    } else {
+        None
     }
 }
 
-pub fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t> {
-    unsafe {
-        match libmem_c::LM_CodeLength(code, minlength) {
-            0 => None,
-            len => Some(len)
-        }
+pub unsafe fn LM_CodeLength(code : lm_address_t, minlength : lm_size_t) -> Option<lm_size_t> {
+    match libmem_c::LM_CodeLength(code, minlength) {
+        0 => None,
+        len => Some(len)
     }
 }
 

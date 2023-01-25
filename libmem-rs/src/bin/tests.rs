@@ -59,7 +59,7 @@ impl SomeClass {
     }
 }
 
-fn main() {
+unsafe fn test() {
     println!("[*] libmem-rs tests");
 
     separator();
@@ -266,17 +266,12 @@ fn main() {
     println!("[*] Hooking 'some_function'");
     println!("[*] Original Address: {:#x}", some_function_addr);
 
-    // TODO: Make trampoline operations safe
-    unsafe {
-        TRAMPOLINE = LM_HookCode(some_function_addr, hk_some_function as *const () as lm_address_t).unwrap();
-        println!("[*] Trampoline: {:#x?}", TRAMPOLINE);
-    }
+    TRAMPOLINE = LM_HookCode(some_function_addr, hk_some_function as *const () as lm_address_t).unwrap();
+    println!("[*] Trampoline: {:#x?}", TRAMPOLINE);
 
     some_function();
 
-    unsafe {
-        LM_UnhookCode(some_function_addr, TRAMPOLINE).unwrap();
-    }
+    LM_UnhookCode(some_function_addr, TRAMPOLINE).unwrap();
 
     println!("[*] Unhooked 'some_function'");
     some_function();
@@ -341,5 +336,11 @@ fn main() {
     some_object.some_function();
 
     separator();
+}
+
+fn main() {
+    unsafe {
+        test();
+    }
 }
 

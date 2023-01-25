@@ -4,4 +4,4 @@ version = 3
 
 [[package]]
 name = "libmem"
-version = "0.1.2"
+version = "4.0.0"

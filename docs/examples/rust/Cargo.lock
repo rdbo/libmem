@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "libmem"
-version = "4.0.0"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "489f0360c148be6064bcaabe563ac8cfed26bdeae9e1e18dea85a0a5dd3e23dc"
+checksum = "f07d2ba97ca97894be08c46547c0a30b845135242af0363d618c80f0059ca338"
 
 [[package]]
 name = "process_enumeration"

@@ -1,6 +1,6 @@
 use libmem::*;
 
-fn main() {
+unsafe fn example() {
     let some_var : i32 = 10;
     println!("[*] Value of 'some_var': {}", some_var);
 
@@ -9,4 +9,10 @@ fn main() {
 
     LM_WriteMemory::<i32>(&some_var as *const i32 as lm_address_t, &1337).unwrap();
     println!("[*] Value of 'some_var' after writing: {}", some_var);
+}
+
+fn main() {
+    unsafe {
+        example();
+    }
 }

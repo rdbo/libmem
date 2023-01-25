@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libmem = ">=4.0.0"
+libmem = "4.1"
 
 [[bin]]
 name = "process_enumeration"

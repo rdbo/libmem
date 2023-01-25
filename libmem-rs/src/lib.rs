@@ -363,10 +363,14 @@ impl lm_vmt_t {
         libmem_c::LM_VmtUnhook(pvmt, index);
     }
 
-    pub fn get_original(&self, index : lm_size_t) -> lm_address_t {
+    pub fn get_original(&self, index : lm_size_t) -> Option<lm_address_t> {
         unsafe {
             let pvmt = self as *const lm_vmt_t;
-            libmem_c::LM_VmtGetOriginal(pvmt, index)
+            let orig_func = libmem_c::LM_VmtGetOriginal(pvmt, index);
+            match orig_func {
+                LM_ADDRESS_BAD => None,
+                addr => Some(addr)
+            }
         }
     }
 

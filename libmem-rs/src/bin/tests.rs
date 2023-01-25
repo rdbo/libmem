@@ -321,7 +321,7 @@ unsafe fn test() {
     let mut some_object_vmt = lm_vmt_t::new(&some_object as *const SomeClass as *mut lm_address_t);
     some_object_vmt.hook(0, hk_some_function as lm_address_t);
 
-    println!("[*] Original VMT Function: {:#x}", some_object_vmt.get_original(0));
+    println!("[*] Original VMT Function: {:#x}", some_object_vmt.get_original(0).unwrap());
 
     some_object.some_function();
     some_object_vmt.unhook(0);

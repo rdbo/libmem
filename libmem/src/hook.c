@@ -23,7 +23,23 @@
 
 #include "internal.h"
 
-#if LM_ARCH == LM_ARCH_X86
+#if LM_ARCH == LM_ARCH_ARM64
+LM_PRIVATE lm_size_t
+_LM_GenerateHook(lm_address_t  from,
+		 lm_address_t  to,
+		 lm_size_t     bits,
+		 lm_bytearr_t *pcodebuf)
+{
+	lm_cchar_t code[255];
+	lm_size_t size;
+
+	LM_CSNPRINTF(code, sizeof(code), "BL 0x%zx", to);
+
+	size = LM_AssembleEx(code, bits, from, pcodebuf);
+
+	return size;
+}
+#else
 LM_PRIVATE lm_size_t
 _LM_GenerateHook(lm_address_t  from,
 		 lm_address_t  to,
@@ -53,16 +69,6 @@ _LM_GenerateHook(lm_address_t  from,
 	}
 
 	return size;
-}
-#elif LM_ARCH == LM_ARCH_ARM
-LM_PRIVATE lm_size_t
-_LM_GenerateHook(lm_address_t  from,
-		 lm_address_t  to,
-		 lm_size_t     bits,
-		 lm_bytearr_t *pcodebuf)
-{
-	/* TODO: Implement */
-	return 0;
 }
 #endif
 

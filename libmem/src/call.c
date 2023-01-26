@@ -98,17 +98,25 @@ _LM_GetProgramCounter(lm_void_t *regs)
 
 #	if LM_OS == LM_OS_LINUX
 	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
-#		if LM_BITS == 64
-	program_counter = pregs->rip;
+#		if LM_ARCH == LM_ARCH_ARM64
+	program_counter = pregs->pc;
 #		else
+#			if LM_BITS == 64
+	program_counter = pregs->rip;
+#			else
 	program_counter = pregs->eip;
+#			endif
 #		endif
 #	else
 	struct reg *pregs = (struct user_regs_struct *)regs;
-#		if LM_BITS == 64
-	program_counter = pregs->r_rip;
+#		if LM_ARCH == LM_ARCH_ARM64
+	program_counter = pregs->uregs[15];
 #		else
+#			if LM_BITS == 64
+	program_counter = pregs->r_rip;
+#			else
 	program_counter = pregs->r_eip;
+#			endif
 #		endif
 #	endif
 
@@ -123,7 +131,16 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 {
 #	if LM_OS == LM_OS_LINUX
 	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
-#		if LM_BITS == 64
+#		if LM_ARCH == LM_ARCH_ARM64
+	pregs->regs[8] = data->syscall_num;
+	pregs->regs[0] = data->arg0;
+	pregs->regs[1] = data->arg1;
+	pregs->regs[2] = data->arg2;
+	pregs->regs[3] = data->arg3;
+	pregs->regs[4] = data->arg4;
+	pregs->regs[5] = data->arg5;
+#		else
+#			if LM_BITS == 64
 	/* target process bits is 64 */
 	if (bits == 64) {
 		pregs->rax = data->syscall_num;
@@ -142,7 +159,7 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 		pregs->rdi = data->arg4;
 		pregs->rbp = data->arg5;
 	}
-#		else
+#			else
 	pregs->eax = data->syscall_num;
 	pregs->ebx = data->arg0;
 	pregs->ecx = data->arg1;
@@ -150,10 +167,20 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 	pregs->esi = data->arg3;
 	pregs->edi = data->arg4;
 	pregs->ebp = data->arg5;
-#		endif
+#			endif /* LM_BITS */
+#		endif /* LM_ARCH */
 #	else
 	struct reg *pregs = (struct reg *)regs;
-#		if LM_BITS == 64
+#		if LM_ARCH == LM_ARCH_ARM64
+	pregs->uregs[8] = data->syscall_num;
+	pregs->uregs[0] = data->arg0;
+	pregs->uregs[1] = data->arg1;
+	pregs->uregs[2] = data->arg2;
+	pregs->uregs[3] = data->arg3;
+	pregs->uregs[4] = data->arg4;
+	pregs->uregs[5] = data->arg5;
+#		else
+#			if LM_BITS == 64
 	/* target process bits is 64 */
 	if (bits == 64) {
 		pregs->r_rax = data->syscall_num;
@@ -172,7 +199,7 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 		pregs->r_rdi = data->arg4;
 		pregs->r_rbp = data->arg5;
 	}
-#		else
+#			else
 	pregs->r_eax = data->syscall_num;
 	pregs->r_ebx = data->arg0;
 	pregs->r_ecx = data->arg1;
@@ -180,8 +207,9 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 	pregs->r_esi = data->arg3;
 	pregs->r_edi = data->arg4;
 	pregs->r_ebp = data->arg5;
-#		endif
-#	endif
+#			endif /* LM_BITS */
+#		endif /* LM_ARCH */
+#	endif /* LM_OS */
 
 	*program_counter = _LM_GetProgramCounter(regs);
 }
@@ -307,17 +335,25 @@ _LM_GetSyscallRet(lm_void_t *regs)
 {
 	lm_uintptr_t ret = 0;
 #	if LM_OS == LM_OS_LINUX
-#		if LM_BITS == 64
+#		if LM_ARCH == LM_ARCH_ARM64
+	ret = ((struct user_regs_struct *)regs)->regs[0];
+#		else
+#			if LM_BITS == 64
 	ret = ((struct user_regs_struct *)regs)->rax;
-#		else
+#			else
 	ret = ((struct user_regs_struct *)regs)->eax;
-#		endif
+#			endif /* LM_BITS */
+#		endif /* LM_ARCH */
 #	else
-#		if LM_BITS == 64
-	ret = ((struct reg *)regs)->r_rax;
+#		if LM_ARCH == LM_ARCH_ARM64
+	ret = ((struct user_regs_struct *)regs)->uregs[0];
 #		else
+#			if LM_BITS == 64
+	ret = ((struct reg *)regs)->r_rax;
+#			else
 	ret = ((struct reg *)regs)->r_eax;
-#		endif
+#			endif /* LM_BITS */
+#		endif /* LM_ARCH */
 #	endif
 	return ret;
 }
@@ -505,7 +541,10 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 {
 #	if LM_OS == LM_OS_LINUX
 	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
-#		if LM_BITS == 64
+#		if LM_ARCH == LM_ARCH_ARM64
+		/* TODO: Implement */
+#		else
+#			if LM_BITS == 64
 	/* target process bits is 64 */
 	if (bits == 64) {
 		/*
@@ -538,7 +577,7 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 		pregs->rdi = data->arg4;
 		/* pregs->rbp = data->arg5; */
 	}
-#		else
+#			else
 	pregs->eax = data->func_addr;
 	pregs->ebx = data->arg0;
 	pregs->ecx = data->arg1;
@@ -546,10 +585,14 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 	pregs->esi = data->arg3;
 	pregs->edi = data->arg4;
 	/* pregs->ebp = data->arg5; */
-#		endif
+#			endif /* LM_BITS */
+#		endif /* LM_ARCH */
 #	else
 	struct reg *pregs = (struct reg *)regs;
-#		if LM_BITS == 64
+#		if LM_ARCH == LM_ARCH_ARM64
+	/* TODO: Implement */
+#		else
+#			if LM_BITS == 64
 	/* target process bits is 64 */
 	if (bits == 64) {
 		pregs->r_rax = data->func_addr;
@@ -568,7 +611,7 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 		pregs->r_rdi = data->arg4;
 		/* pregs->r_rbp = data->arg5; */
 	}
-#		else
+#			else
 	pregs->r_eax = data->func_addr;
 	pregs->r_ebx = data->arg0;
 	pregs->r_ecx = data->arg1;
@@ -576,7 +619,8 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 	pregs->r_esi = data->arg3;
 	pregs->r_edi = data->arg4;
 	/* pregs->r_ebp = data->arg5; */
-#		endif
+#			endif /* LM_BITS */
+#		endif /* LM_ARCH */
 #	endif
 
 	*program_counter = _LM_GetProgramCounter(regs);
@@ -587,16 +631,24 @@ _LM_GetLibcallRet(lm_void_t *regs)
 {
 	lm_uintptr_t ret = 0;
 #	if LM_OS == LM_OS_LINUX
-#		if LM_BITS == 64
+#		if LM_ARCH == LM_ARCH_ARM64
+	/* TODO: Implement */
+#		else
+#			if LM_BITS == 64
 	ret = ((struct user_regs_struct *)regs)->rax;
-#		else
+#			else
 	ret = ((struct user_regs_struct *)regs)->eax;
-#		endif
+#			endif /* LM_BITS */
+#		endif /* LM_ARCH */
 #	else
-#		if LM_BITS == 64
-	ret = ((struct reg *)regs)->r_rax;
+#		if LM_ARCH == LM_ARCH_ARM64
+	/* TODO: Implement */
 #		else
+#			if LM_BITS == 64
+	ret = ((struct reg *)regs)->r_rax;
+#			else
 	ret = ((struct reg *)regs)->r_eax;
+#			endif
 #		endif
 #	endif
 	return ret;

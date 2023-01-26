@@ -74,14 +74,12 @@
 		|| defined (i386) || defined(__i386) || defined(__i386__) \
 		|| defined(_M_IX86)
 #		define LM_ARCH LM_ARCH_X86
-#	elif defined(__arm__) || defined(_ARM) || defined(_LM_ARM)
+#	elif defined(__aarch64__) || defined(_M_ARM64)
 #		define LM_ARCH LM_ARCH_ARM64
-#	elif defined(__aarch64__)
+#	elif defined(__arm__) || defined(_ARM) || defined(_LM_ARM)
 #		define LM_ARCH LM_ARCH_ARM64
 #	endif
 #endif
-
-#define LM_ARCH LM_ARCH_X86
 
 /* Bits */
 #if defined(LM_FORCE_BITS_64)

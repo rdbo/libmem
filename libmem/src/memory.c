@@ -23,9 +23,8 @@
 
 #include "internal.h"
 
-#if LM_OS == LM_OS_LINUX
-#	define __NR_mmap  9
-#	define __NR_mmap2 192
+#if LM_OS == LM_OS_LINUX && !defined(SYS_mmap2)
+#	define SYS_mmap2 192
 #endif
 
 LM_PRIVATE lm_prot_t
@@ -539,9 +538,9 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 
 #	if LM_OS == LM_OS_LINUX
 	if (pproc->bits == 64)
-		data.syscall_num = __NR_mmap;
+		data.syscall_num = SYS_mmap;
 	else
-		data.syscall_num = __NR_mmap2;
+		data.syscall_num = SYS_mmap2;
 #	else
 	data.syscall_num = SYS_mmap;
 #	endif

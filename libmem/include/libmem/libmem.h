@@ -58,14 +58,11 @@
 /* Architecture */
 #define LM_ARCH_X86   0
 #define LM_ARCH_ARM   1
-#define LM_ARCH_ARM64 2
 
 #if defined(LM_FORCE_ARCH_X86)
 #	define LM_ARCH LM_ARCH_X86
 #elif defined(LM_FORCE_ARCH_ARM)
 #	define LM_ARCH LM_ARCH_ARM
-#elif defined(LM_FORCE_ARCH_ARM64)
-#	define LM_ARCH LM_ARCH_ARM64
 #endif
 
 #ifndef LM_ARCH
@@ -74,10 +71,9 @@
 		|| defined (i386) || defined(__i386) || defined(__i386__) \
 		|| defined(_M_IX86)
 #		define LM_ARCH LM_ARCH_X86
-#	elif defined(__aarch64__) || defined(_M_ARM64)
-#		define LM_ARCH LM_ARCH_ARM64
-#	elif defined(__arm__) || defined(_ARM) || defined(_LM_ARM)
-#		define LM_ARCH LM_ARCH_ARM64
+#	elif defined(__aarch64__) || defined(_M_ARM64) \
+		|| defined(__arm__) || defined(_ARM) || defined(_LM_ARM)
+#		define LM_ARCH LM_ARCH_ARM
 #	endif
 #endif
 

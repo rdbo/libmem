@@ -67,7 +67,11 @@ LM_AssembleEx(lm_cstring_t  code,
 
 	switch (LM_ARCH) {
 	case LM_ARCH_X86: ksarch = KS_ARCH_X86; break;
-	case LM_ARCH_ARM64: ksarch = KS_ARCH_ARM64; break;
+#	if LM_BITS == 64
+	case LM_ARCH_ARM: ksarch = KS_ARCH_ARM64; break;
+#	else
+	case LM_ARCH_ARM: ksarch = KS_ARCH_ARM; break;
+#	endif
 	default: return ret;
 	}
 
@@ -154,7 +158,11 @@ LM_DisassembleEx(lm_address_t code,
 
 	switch (LM_ARCH) {
 	case LM_ARCH_X86: csarch = CS_ARCH_X86; break;
-	case LM_ARCH_ARM64: csarch = CS_ARCH_ARM; break;
+#	if LM_BITS == 64
+	case LM_ARCH_ARM: csarch = CS_ARCH_ARM64; break;
+#	else
+	case LM_ARCH_ARM: csarch = CS_ARCH_ARM; break;
+#	endif
 	default: return ret;
 	}
 

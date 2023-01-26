@@ -1,3 +1,6 @@
+.git/
+Dockerfile
+docker-env*
 build*/
 *.swp
 libmem-rs/target/

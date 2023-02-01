@@ -40,7 +40,7 @@ libmem_py = Extension(
 setup(
 	name = "libmem",
 	version = "4.1.0",
-	description = "Game Hacking Library (Windows/Linux/FreeBSD)",
+	description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
 	long_description = readme,
 	long_description_content_type = "text/markdown",
 	author = "rdbo",

@@ -12,7 +12,7 @@ Read `LICENSE` for more information
 
 ## Features
 - Cross Platform (Windows/Linux/FreeBSD)
-- Cross Architecture (x86/x64)
+- Cross Architecture (x86/x64/ARM/ARM64)
 
 `libmem` can:
 - *Find Processes*

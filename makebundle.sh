@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mv libmem.a libmem_partial.a
+mv liblibmem.a liblibmem_partial.a
 
 if [ ! -f ./libcapstone.a ]; then
 	ln -s capstone-engine-prefix/src/capstone-engine-build/libcapstone.a ./libcapstone.a
@@ -12,8 +12,8 @@ if [ ! -f ./libLIEF.a ]; then
 	ln -s lief-project-prefix/src/lief-project-build/libLIEF.a ./libLIEF.a
 fi
 ar -M << EOM
-	CREATE libmem.a
-	ADDLIB libmem_partial.a
+	CREATE liblibmem.a
+	ADDLIB liblibmem_partial.a
 	ADDLIB libcapstone.a
 	ADDLIB libkeystone.a
 	ADDLIB libLIEF.a

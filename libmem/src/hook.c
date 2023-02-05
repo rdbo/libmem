@@ -23,7 +23,7 @@
 
 #include "internal.h"
 
-#if LM_ARCH == LM_ARCH_ARM64
+#if LM_ARCH == LM_ARCH_ARM
 LM_PRIVATE lm_size_t
 _LM_GenerateHook(lm_address_t  from,
 		 lm_address_t  to,

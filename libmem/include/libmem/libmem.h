@@ -426,9 +426,9 @@ typedef struct {
 	lm_pid_t   pid;
 	lm_pid_t   ppid;
 	lm_size_t  bits;
+        lm_time_t  start_time; /* PIDs can be replaced, therefore they are not reliable. But PID + start time is reliable */
 	lm_char_t  path[LM_PATH_MAX];
 	lm_char_t  name[LM_PATH_MAX];
-        lm_time_t  start_time; /* PIDs can be replaced, therefore they are not reliable. But PID + start time is reliable */
 } lm_process_t;
 
 typedef struct {

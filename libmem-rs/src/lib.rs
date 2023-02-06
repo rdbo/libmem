@@ -38,12 +38,26 @@ type lm_cchar_t = u8;
 type lm_string_t = *const lm_char_t;
 type lm_cstring_t = *const lm_cchar_t;
 type lm_bytearr_t = *const lm_byte_t;
+type lm_time_t = u64;
 
 pub type lm_pid_t = u32;
 pub type lm_tid_t = u32;
 pub type lm_size_t = usize;
 pub type lm_address_t = usize;
 pub type lm_byte_t = u8;
+
+const LM_PID_BAD : lm_pid_t = 0;
+const LM_TID_BAD : lm_tid_t = 0;
+const LM_FALSE : lm_bool_t = 0;
+const LM_TRUE : lm_bool_t = 1;
+const LM_ADDRESS_BAD : lm_address_t = 0;
+const LM_PATH_MAX : lm_size_t = 512;
+const LM_INST_SIZE : usize = 16;
+const LM_TIME_BAD : lm_time_t = u64::MAX;
+#[cfg(target_pointer_width = "64")]
+pub const LM_BITS : lm_size_t = 64;
+#[cfg(not(target_pointer_width = "64"))]
+pub const LM_BITS : lm_size_t = 32;
 
 #[repr(C)]
 #[derive(Clone)]
@@ -67,18 +81,6 @@ impl fmt::Display for lm_prot_t {
 }
 
 pub use crate::lm_prot_t::*;
-
-const LM_PID_BAD : lm_pid_t = 0;
-const LM_TID_BAD : lm_tid_t = 0;
-const LM_FALSE : lm_bool_t = 0;
-const LM_TRUE : lm_bool_t = 1;
-const LM_ADDRESS_BAD : lm_address_t = 0;
-const LM_PATH_MAX : lm_size_t = 512;
-const LM_INST_SIZE : usize = 16;
-#[cfg(target_pointer_width = "64")]
-pub const LM_BITS : lm_size_t = 64;
-#[cfg(not(target_pointer_width = "64"))]
-pub const LM_BITS : lm_size_t = 32;
 
 fn string_from_cstring(cstring : &[u8]) -> String {
     // This function finds the null terminator from
@@ -110,14 +112,15 @@ pub struct lm_process_t {
     pid : lm_pid_t,
     ppid : lm_pid_t,
     bits : lm_size_t,
+    start_time : lm_time_t,
     // OBS: if lm_char_t is a wchar_t, these variables won't work. Use Multibyte
     path : [lm_char_t; LM_PATH_MAX],
-    name : [lm_char_t; LM_PATH_MAX]
+    name : [lm_char_t; LM_PATH_MAX],
 }
 
 impl lm_process_t {
     pub fn new() -> Self {
-        Self { pid: LM_PID_BAD, ppid: LM_PID_BAD, bits: 0, name: [0;LM_PATH_MAX], path: [0;LM_PATH_MAX] }
+        Self { pid: LM_PID_BAD, ppid: LM_PID_BAD, bits: 0, start_time: LM_TIME_BAD, name: [0;LM_PATH_MAX], path: [0;LM_PATH_MAX] }
     }
 
     pub fn get_pid(&self) -> lm_pid_t {
@@ -132,6 +135,10 @@ impl lm_process_t {
         self.bits
     }
 
+    pub fn get_start_time(&self) -> lm_time_t {
+        self.start_time
+    }
+
     pub fn get_path(&self) -> String {
         string_from_cstring(&self.path)
     }
@@ -143,7 +150,7 @@ impl lm_process_t {
 
 impl fmt::Display for lm_process_t {
     fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "lm_process_t {{ pid: {}, ppid: {}, bits: {}, path: {}, name: {} }}", self.get_pid(), self.get_ppid(), self.get_bits(), self.get_path(), self.get_name())
+        write!(f, "lm_process_t {{ pid: {}, ppid: {}, bits: {}, start_time: {}, path: {}, name: {} }}", self.get_pid(), self.get_ppid(), self.get_bits(), self.get_start_time(), self.get_path(), self.get_name())
     }
 }
 

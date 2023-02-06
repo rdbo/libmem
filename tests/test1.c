@@ -82,6 +82,7 @@ main()
 
 	LM_PRINTF(LM_STR("[*] Process Name: %s\n"), proc.name);
 	LM_PRINTF(LM_STR("[*] Process Path: %s\n"), proc.path);
+        LM_PRINTF(LM_STR("[*] Process Start Time: %llu\n"), proc.start_time);
 	LM_PRINTF(LM_STR("[*] PID:  %d\n"), proc.pid);
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), proc.ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), thread.tid);

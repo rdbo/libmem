@@ -52,6 +52,51 @@ _LM_GetNameFromPath(lm_char_t *path,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
+lm_time_t
+_LM_GetProcessStartTime(lm_pid_t pid)
+{
+	/* TODO: Implement */
+	lm_time_t start_time = LM_TIME_BAD;
+	return start_time;
+}
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_time_t
+_LM_GetProcessStartTime(lm_pid_t pid)
+{
+	/* TODO: Implement */
+}
+#else
+LM_PRIVATE lm_time_t
+_LM_GetProcessStartTime(lm_pid_t pid)
+{
+	lm_time_t   start_time = LM_TIME_BAD;
+	lm_char_t   stat_path[LM_PATH_MAX] = { 0 };
+	FILE       *stat_file;
+	lm_char_t  *stat_line = NULL;
+	size_t      buf_len;
+
+	LM_SNPRINTF(stat_path, LM_ARRLEN(stat_path),
+		    LM_STR("%s/%d/stat"), LM_PROCFS, pid);
+
+	stat_file = LM_FOPEN(stat_path, "r");
+	if (!stat_file)
+		goto FREE_EXIT;
+
+
+	if (LM_GETLINE(&stat_line, &buf_len, stat_file) > 0) {
+		sscanf(stat_line, "%*d %*[(]%*[^)]%*[)] %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %*ld %*ld %llu", (unsigned long long *)&start_time);
+	}
+
+	LM_FREE(stat_line);
+	LM_FCLOSE(stat_file);
+FREE_EXIT:
+	return start_time;
+}
+#endif
+
+/********************************/
+
+#if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 				       lm_void_t    *arg),
@@ -80,6 +125,10 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			 * full path of the executable.
 			 * Source: https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/ns-tlhelp32-processentry32 */
 			if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
+				continue;
+
+			proc.start_time = _LM_GetProcessStartTime(proc.pid);
+			if (proc.start_time == LM_TIME_BAD)
 				continue;
 
 			len = LM_STRLEN(entry.szExeFile);
@@ -132,13 +181,16 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 			if (!_LM_GetProcessPathEx(proc.pid, proc.path, LM_ARRLEN(proc.path)))
 				continue;
 
+			proc.start_time = _LM_GetProcessStartTime(proc.pid);
+			if (proc.start_time == LM_TIME_BAD)
+				continue;
+
 			len = LM_STRLEN(procs[i].ki_comm);
 			if (len >= LM_ARRLEN(proc.name))
 				len = LM_ARRLEN(proc.name) - 1;
 
 			LM_STRNCPY(proc.name, procs[i].ki_comm, len);
 
-			proc.bits = LM_BITS;
 			proc.bits = _LM_GetProcessBitsEx(proc.path);
 
 			if (callback(&proc, arg) == LM_FALSE)
@@ -184,7 +236,10 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 		if (!_LM_GetNameFromPath(proc.path, proc.name, LM_ARRLEN(proc.name)))
 			continue;
 
-		proc.bits = LM_BITS;
+		proc.start_time = _LM_GetProcessStartTime(proc.pid);
+		if (proc.start_time == LM_TIME_BAD)
+			continue;
+
 		proc.bits = _LM_GetProcessBitsEx(proc.path);
 
 		if (callback(&proc, arg) == LM_FALSE)
@@ -222,6 +277,10 @@ _LM_GetProcess(lm_process_t *procbuf)
 	if (!_LM_GetNameFromPath(procbuf->path, procbuf->name, LM_ARRLEN(procbuf->name)))
 		return LM_FALSE;
 
+	procbuf->start_time = _LM_GetProcessStartTime(procbuf->pid);
+	if (procbuf->start_time == LM_TIME_BAD)
+		return LM_FALSE;
+
 	procbuf->bits = LM_BITS;
 	return LM_TRUE;
 }
@@ -230,7 +289,7 @@ LM_API lm_bool_t
 LM_GetProcess(lm_process_t *procbuf)
 {
 	static lm_process_t self_proc = {
-		LM_PID_BAD, LM_PID_BAD, 0, "", ""
+		LM_PID_BAD, LM_PID_BAD, 0, "", "", LM_TIME_BAD
 	};
 
 	LM_ASSERT(procbuf != LM_NULLPTR);
@@ -265,6 +324,9 @@ LM_GetProcessEx(lm_pid_t      pid,
 	if (!_LM_GetProcessPathEx(procbuf->pid, procbuf->path, LM_ARRLEN(procbuf->path)))
 		return LM_FALSE;
 	if (!_LM_GetNameFromPath(procbuf->path, procbuf->name, LM_ARRLEN(procbuf->name)))
+		return LM_FALSE;
+	procbuf->start_time = _LM_GetProcessStartTime(procbuf->pid);
+	if (procbuf->start_time == LM_TIME_BAD)
 		return LM_FALSE;
 
 	/* TODO: Unify different '_LM_GetProcessBitsEx' */
@@ -455,48 +517,14 @@ FREE_EXIT:
 
 /********************************/
 
-#if LM_OS == LM_OS_WIN
-LM_API lm_bool_t
-_LM_IsProcessAlive(lm_process_t *pproc)
-{
-	HANDLE hProcess;
-
-	/* _LM_OpenProc already checks if the process
-	 * has terminated by looking if it has an
-	 * exit code. */
-	if (!_LM_OpenProc(pproc->pid, &hProcess))
-		return LM_FALSE;
-
-	_LM_CloseProc(&hProcess);
-
-	return LM_TRUE;
-}
-#else
-LM_API lm_bool_t
-_LM_IsProcessAlive(lm_process_t *pproc)
-{
-	lm_char_t proc_path[LM_PATH_MAX];
-	DIR *pdir;
-
-	LM_SNPRINTF(proc_path, sizeof(proc_path),
-		    "%s/%d", LM_PROCFS, pproc->pid);
-
-	if (!(pdir = opendir(proc_path)))
-		return LM_FALSE;
-
-	closedir(pdir);
-
-	return LM_TRUE;
-}
-#endif
-
 LM_API lm_bool_t
 LM_IsProcessAlive(lm_process_t *pproc)
 {
 	LM_ASSERT(pproc != LM_NULLPTR &&
 		  LM_VALID_PROCESS(pproc));
 
-	return _LM_IsProcessAlive(pproc);
+	/* If the process has the same PID and the same start time, it is the same process */
+	return _LM_GetProcessStartTime(pproc->pid) == pproc->start_time ? LM_TRUE : LM_FALSE;
 }
 
 /********************************/

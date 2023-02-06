@@ -224,7 +224,7 @@
 #define LM_RCHKMASK(c) (c == LM_MASK_UNKNOWN || c == LM_MASK_UNKNOWN2)
 #define LM_OFFSET(base, offset) (&((lm_byte_t *)base)[offset])
 #define LM_VALID_BITS(bits) (bits == 32 || bits == 64)
-#define LM_VALID_PROCESS(pproc) ((pproc)->pid != LM_PID_BAD && LM_VALID_BITS((pproc)->bits))
+#define LM_VALID_PROCESS(pproc) ((pproc)->pid != LM_PID_BAD && LM_VALID_BITS((pproc)->bits) && (pproc)->ppid != LM_TIME_BAD)
 #define LM_VALID_THREAD(pthr) ((pthr)->tid != LM_TID_BAD)
 #define LM_VALID_MODULE(pmod) ((pmod)->base != LM_ADDRESS_BAD && (pmod)->end != LM_ADDRESS_BAD && (pmod)->size > 0)
 #define LM_VALID_PAGE(ppage) ((ppage)->base != LM_ADDRESS_BAD && (ppage)->end != LM_ADDRESS_BAD && (ppage)->size > 0)
@@ -284,6 +284,7 @@
 #define LM_MAX     (-1UL)
 #define LM_PID_BAD ((lm_pid_t)LM_NULL) /* tecnically, PID = 0 exists, but should probably never be accessed anyways, unlike the last possible PID, which was the previous error value for lm_pid_t */
 #define LM_TID_BAD ((lm_tid_t)LM_NULL)
+#define LM_TIME_BAD ((lm_time_t)-1)
 #define LM_ADDRESS_BAD ((lm_address_t)LM_NULL)
 #define LM_MASK_KNOWN    LM_STR('x')
 #define LM_MASK_KNOWN2   LM_STR('X')
@@ -404,6 +405,7 @@ typedef int                lm_flags_t;
 
 typedef lm_uint32_t        lm_pid_t;
 typedef lm_uint32_t        lm_tid_t;
+typedef lm_uint64_t        lm_time_t; /* 64 bit Unix timestamp */
 
 enum {
 	LM_PROT_NONE = 0,
@@ -426,6 +428,7 @@ typedef struct {
 	lm_size_t  bits;
 	lm_char_t  path[LM_PATH_MAX];
 	lm_char_t  name[LM_PATH_MAX];
+        lm_time_t  start_time; /* PIDs can be replaced, therefore they are not reliable. But PID + start time is reliable */
 } lm_process_t;
 
 typedef struct {

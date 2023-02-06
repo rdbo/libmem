@@ -63,6 +63,7 @@ main()
 	LM_PRINTF(LM_STR("[*] PPID: %d\n"), proc.ppid);
 	LM_PRINTF(LM_STR("[*] TID:  %d\n"), thread.tid);
 	LM_PRINTF(LM_STR("[*] Bits: %lu\n"), proc.bits);
+        LM_PRINTF(LM_STR("[*] Start Time: %llu\n"), proc.start_time);
 	LM_PRINTF(LM_STR("====================\n"));
 
 	LM_FindModuleEx(&proc, proc.path, &mod);

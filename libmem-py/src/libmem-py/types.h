@@ -40,6 +40,7 @@ static PyMemberDef py_lm_process_members[] = {
 	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), READONLY, "Process ID" },
 	{ "ppid", T_INT, offsetof(py_lm_process_obj, proc.ppid), READONLY, "Parent Process ID" },
 	{ "bits", T_SIZE, offsetof(py_lm_process_obj, proc.bits), READONLY, "Process Bits" },
+        { "start_time", T_ULONGLONG, offsetof(py_lm_process_obj, proc.start_time), READONLY, "Process Start Time" },
 	{ NULL }
 };
 
@@ -59,7 +60,7 @@ PyObject *
 py_lm_process_str(PyObject *self)
 {
 	py_lm_process_obj *pyproc = (py_lm_process_obj *)self;
-	return PyUnicode_FromFormat("lm_process_t(pid = %d, ppid = %d, bits = %zu, path = \"%s\", name = \"%s\")", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.path, pyproc->proc.name);
+	return PyUnicode_FromFormat("lm_process_t(pid = %d, ppid = %d, bits = %zu, start_time = %llu, path = \"%s\", name = \"%s\")", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.start_time, pyproc->proc.path, pyproc->proc.name);
 }
 
 static PyGetSetDef py_lm_process_accessors[] = {

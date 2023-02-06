@@ -405,7 +405,7 @@ typedef int                lm_flags_t;
 
 typedef lm_uint32_t        lm_pid_t;
 typedef lm_uint32_t        lm_tid_t;
-typedef lm_uint64_t        lm_time_t; /* 64 bit Unix timestamp */
+typedef lm_uint64_t        lm_time_t; /* 64 bit time in seconds since the last system boot */
 
 enum {
 	LM_PROT_NONE = 0,

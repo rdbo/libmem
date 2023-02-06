@@ -53,17 +53,81 @@ _LM_GetNameFromPath(lm_char_t *path,
 
 #if LM_OS == LM_OS_WIN
 lm_time_t
+_LM_FiletimeToTime(FILETIME *ft)
+{
+	lm_uint64_t time;
+
+	/* copy FILETIME to uint64 */
+	((lm_uint32_t *)&time)[1] = ft->dwLowDateTime;
+	((lm_uint32_t *)&time)[0] = ft->dwHighDateTime;
+
+	/* convert to seconds (FILETIME has a 100ns accuracy) */
+	time = time / 10000000;
+
+	return (lm_time_t)time;	
+}
+
+lm_time_t
 _LM_GetProcessStartTime(lm_pid_t pid)
 {
-	/* TODO: Implement */
+	/*
+	 * WARNING: Unsupported APIs
+	 *  - NtQuerySystemInformation: https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation
+	 */
+
 	lm_time_t start_time = LM_TIME_BAD;
+	SYSTEM_TIMEOFDAY_INFORMATION time;
+	lm_time_t last_boot;
+	HANDLE hProcess;
+	FILETIME filetime;
+	FILETIME tmp;
+	lm_time_t creation_time;
+
+	/* Get the system last boot time */
+	if (NtQuerySystemInformation(SystemTimeOfDayInformation, &time, sizeof(time), NULL) != STATUS_SUCCESS)
+		return start_time;
+
+	last_boot = _LM_FiletimeToTime((FILETIME *)&time);
+	if (!_LM_OpenProc(pid, &hProcess))
+		return start_time;
+
+	/* Calculate process start time relative to boot time */
+	if (GetProcessTimes(hProcess, &filetime, &tmp, &tmp, &tmp)) {
+		creation_time = _LM_FiletimeToTime(&filetime);
+		start_time = creation_time - last_boot;
+	}
+
+	_LM_CloseProc(&hProcess);
+
 	return start_time;
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_time_t
 _LM_GetProcessStartTime(lm_pid_t pid)
 {
-	/* TODO: Implement */
+	lm_time_t start_time = LM_TIME_BAD;
+	struct procstat *ps;
+	unsigned int nprocs = 0;
+	struct kinfo_proc *procs;
+
+	ps = procstat_open_sysctl();
+	if (!ps)
+		return start_time;
+
+	procs = procstat_getprocs(
+		ps, KERN_PROC_PID,
+		pid, &nprocs
+	);
+
+	if (procs && nprocs) {
+		start_time = (lm_time_t)procs[0].ki_start.tv_sec;
+		procstat_freeprocs(ps, procs);
+	}
+
+	procstat_close(ps);
+
+	return start_time;
+
 }
 #else
 LM_PRIVATE lm_time_t

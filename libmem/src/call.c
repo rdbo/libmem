@@ -473,17 +473,17 @@ FREE_CODEBUF_RET:
 
 typedef struct {
 	regex_t     regex;
-	lm_module_t libc_mod;
-} _lm_find_libc_t;
+	lm_module_t lib_mod;
+} _lm_find_lib_t;
 
 LM_PRIVATE lm_bool_t
-_LM_FindLibcCallback(lm_module_t *pmod,
-		     lm_void_t   *arg)
+_LM_FindLibCallback(lm_module_t *pmod,
+		    lm_void_t   *arg)
 {
-	_lm_find_libc_t *parg = (_lm_find_libc_t *)arg;
+	_lm_find_lib_t *parg = (_lm_find_lib_t *)arg;
 
 	if (!regexec(&parg->regex, pmod->path, 0, NULL, 0)) {
-		parg->libc_mod = *pmod;
+		parg->lib_mod = *pmod;
 		return LM_FALSE;
 	}
 
@@ -492,10 +492,11 @@ _LM_FindLibcCallback(lm_module_t *pmod,
 
 LM_PRIVATE lm_bool_t
 _LM_FindLibc(lm_process_t *pproc,
-	     lm_module_t  *libc_mod)
+	     lm_module_t  *lib_mod)
 {
-	_lm_find_libc_t arg;
+	_lm_find_lib_t arg;
 
+	/* TODO: Improve regex. A folder named 'libc.so.1' would match */
 	if (regcomp(&arg.regex, ".*/libc[.-].*", REG_EXTENDED))
 		return LM_FALSE;
 
@@ -505,16 +506,40 @@ _LM_FindLibc(lm_process_t *pproc,
 	//if (regcomp(&arg.regex, ".*/modlibc[\.\-].*", REG_EXTENDED))
 	//	return LM_FALSE;
 
-	arg.libc_mod.size = 0;
+	arg.lib_mod.size = 0;
 
-	LM_EnumModulesEx(pproc, _LM_FindLibcCallback, (lm_void_t *)&arg);
+	LM_EnumModulesEx(pproc, _LM_FindLibCallback, (lm_void_t *)&arg);
 
 	regfree(&arg.regex);
 
-	if (arg.libc_mod.size <= 0)
+	if (arg.lib_mod.size <= 0)
 		return LM_FALSE;
 
-	*libc_mod = arg.libc_mod;
+	*lib_mod = arg.lib_mod;
+
+	return LM_TRUE;
+}
+
+LM_PRIVATE lm_bool_t
+_LM_FindLibdl(lm_process_t *pproc,
+	      lm_module_t  *lib_mod)
+{
+	_lm_find_lib_t arg;
+
+	/* TODO: Improve regex. A folder named 'libdl.so.1' would match */
+	if (regcomp(&arg.regex, ".*/libdl[.-].*", REG_EXTENDED))
+		return LM_FALSE;
+
+	arg.lib_mod.size = 0;
+
+	LM_EnumModulesEx(pproc, _LM_FindLibCallback, (lm_void_t *)&arg);
+
+	regfree(&arg.regex);
+
+	if (arg.lib_mod.size <= 0)
+		return LM_FALSE;
+
+	*lib_mod = arg.lib_mod;
 
 	return LM_TRUE;
 }
@@ -782,19 +807,19 @@ _LM_CallDlopen(lm_process_t *pproc,
 	       void        **plibhandle)
 {
 	lm_bool_t          ret = LM_FALSE;
-	lm_module_t        libc_mod;
+	lm_module_t        lib_mod;
 	lm_address_t       dlopen_addr;
 	lm_size_t          modpath_size;
 	lm_address_t       modpath_addr;
 	_lm_libcall_data_t data;
 	lm_uintptr_t       modhandle = 0;
 
-	if (!_LM_FindLibc(pproc, &libc_mod))
+	if (!_LM_FindLibdl(pproc, &lib_mod) && !_LM_FindLibc(pproc, &lib_mod))
 		return ret;
 
-	dlopen_addr = LM_FindSymbolAddress(&libc_mod, "__libc_dlopen_mode");
+	dlopen_addr = LM_FindSymbolAddress(&lib_mod, "__libc_dlopen_mode");
 	if (dlopen_addr == LM_ADDRESS_BAD) {
-		dlopen_addr = LM_FindSymbolAddress(&libc_mod, "dlopen");
+		dlopen_addr = LM_FindSymbolAddress(&lib_mod, "dlopen");
 		if (dlopen_addr == LM_ADDRESS_BAD)
 			return ret;
 	}
@@ -830,17 +855,17 @@ _LM_CallDlclose(lm_process_t *pproc,
 		void         *modhandle)
 {
 	lm_bool_t          ret = LM_FALSE;
-	lm_module_t        libc_mod;
+	lm_module_t        lib_mod;
 	lm_address_t       dlclose_addr;
 	_lm_libcall_data_t data;
 	lm_uintptr_t       retval;
 
-	if (!_LM_FindLibc(pproc, &libc_mod))
+	if (!_LM_FindLibdl(pproc, &lib_mod) && !_LM_FindLibc(pproc, &lib_mod))
 		return ret;
 
-	dlclose_addr = LM_FindSymbolAddress(&libc_mod, "__libc_dlclose");
+	dlclose_addr = LM_FindSymbolAddress(&lib_mod, "__libc_dlclose");
 	if (dlclose_addr == LM_ADDRESS_BAD) {
-		dlclose_addr = LM_FindSymbolAddress(&libc_mod, "dlclose");
+		dlclose_addr = LM_FindSymbolAddress(&lib_mod, "dlclose");
 		if (dlclose_addr == LM_ADDRESS_BAD)
 			return ret;
 	}

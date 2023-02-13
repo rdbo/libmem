@@ -353,7 +353,7 @@ LM_API lm_bool_t
 LM_GetProcess(lm_process_t *procbuf)
 {
 	static lm_process_t self_proc = {
-		LM_PID_BAD, LM_PID_BAD, 0, "", "", LM_TIME_BAD
+		LM_PID_BAD, LM_PID_BAD, 0, LM_TIME_BAD, "", ""
 	};
 
 	LM_ASSERT(procbuf != LM_NULLPTR);

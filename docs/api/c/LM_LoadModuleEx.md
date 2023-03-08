@@ -15,7 +15,7 @@ Loads a module into a remote process from its path.
 
 - pproc: pointer to a valid process in which the module will be loaded.
 - path: string containing a relative/absolute path, like `"bin/lib/gamemodule.dll"`, or `"/usr/lib/libc.so"`.
-- modbuf: pointer to an `lm_module_t` variable that will receive the loaded module information.
+- modbuf: optional pointer to an `lm_module_t` variable that will receive the loaded module information.
 
 # Return Value
 

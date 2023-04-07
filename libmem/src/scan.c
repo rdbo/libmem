@@ -66,37 +66,37 @@ LM_DataScanEx(lm_process_t *pproc,
 	      lm_size_t     scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
-	lm_byte_t   *ptr;
-	lm_byte_t   *curbuf;
+	lm_byte_t   *scanbuf;
+	lm_size_t    i, j;
+	lm_bool_t    check;
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
 		  LM_VALID_PROCESS(pproc) && data != LM_NULLPTR &&
-		  size > 0 && addr != LM_ADDRESS_BAD && scansize > 0);
+		  size > 0 && addr != LM_ADDRESS_BAD && scansize > 0 &&
+		  scansize >= size);
 
-	curbuf = LM_MALLOC(size);
-	if (!curbuf)
+	scanbuf = (lm_byte_t *)LM_MALLOC(scansize);
+	if (!scanbuf)
 		return match;
 
-	for (ptr = (lm_byte_t *)addr;
-	     ptr != &((lm_byte_t *)addr)[scansize];
-	     ptr = &ptr[1]) {
-		lm_size_t i;
-		lm_bool_t check = LM_TRUE;
+	if (!LM_ReadMemoryEx(pproc, addr, scanbuf, scansize))
+		goto FREE_EXIT;
 
-		if (!LM_ReadMemoryEx(pproc, (lm_address_t)ptr, curbuf, size))
-			continue;
-
-		for (i = 0; check && i < size; ++i) {
-			if (curbuf[i] != data[i])
+	for (i = 0; i <= scansize - size; ++i) {
+		check = LM_TRUE;
+		for (j = 0; j < size; ++j) {
+			if (scanbuf[i + j] != data[j])
 				check = LM_FALSE;
 		}
-		
-		if (!check)
-			continue;
-		
-		match = (lm_address_t)ptr;
-		break;
+
+		if (check) {
+			match = addr + i;
+			break;
+		}
 	}
+
+FREE_EXIT:
+	LM_FREE(scanbuf);
 
 	return match;
 }
@@ -152,8 +152,9 @@ LM_PatternScanEx(lm_process_t *pproc,
 {
 	lm_address_t match = LM_ADDRESS_BAD;
 	lm_size_t    size;
-	lm_byte_t   *ptr;
-	lm_byte_t   *curbuf;
+	lm_byte_t   *scanbuf;
+	lm_size_t    i, j;
+	lm_bool_t    check;
 
 	LM_ASSERT(pproc != LM_NULLPTR &&
 		  LM_VALID_PROCESS(pproc) && pattern != LM_NULLPTR &&
@@ -161,35 +162,31 @@ LM_PatternScanEx(lm_process_t *pproc,
 		  scansize > 0);
 
 	size = LM_STRLEN(mask);
-	if (!size)
+	if (!size || scansize < size)
 		return match;
 
-	curbuf = (lm_byte_t *)LM_MALLOC(size);
-	if (!curbuf)
+	scanbuf = (lm_byte_t *)LM_MALLOC(scansize);
+	if (!scanbuf)
 		return match;
 
-	for (ptr = (lm_byte_t *)addr;
-	     ptr != &((lm_byte_t *)addr)[scansize];
-	     ptr = &ptr[1]) {
-		lm_size_t i;
-		lm_bool_t check = LM_TRUE;
+	if (!LM_ReadMemoryEx(pproc, addr, scanbuf, scansize))
+		goto FREE_EXIT;
 
-		if (!LM_ReadMemoryEx(pproc, (lm_address_t)ptr, curbuf, size))
-			continue;
-
-		for (i = 0; check && i < size; ++i) {
-			if (LM_CHKMASK(mask[i]) && curbuf[i] != pattern[i])
+	for (i = 0; i <= scansize - size; ++i) {
+		check = LM_TRUE;
+		for (j = 0; j < size; ++j) {
+			if (LM_CHKMASK(mask[j]) && scanbuf[i + j] != pattern[j])
 				check = LM_FALSE;
 		}
-		
-		if (!check)
-			continue;
-		
-		match = (lm_address_t)ptr;
-		break;
+
+		if (check) {
+			match = addr + i;
+			break;
+		}
 	}
 
-	LM_FREE(curbuf);
+FREE_EXIT:
+	LM_FREE(scanbuf);
 
 	return match;
 }

@@ -52,7 +52,7 @@ int main()
 	printf("[*] Module End:  %p\n", mod.end);
 	printf("[*] Main Addr:   %p\n"), main_sym);
 
-    return 0;
+	return 0;
 }
 ```
 

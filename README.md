@@ -8,6 +8,7 @@ https://discord.com/invite/Qw8jsPD99X
 
 ## License
 This project is licensed under the `GNU AGPLv3.0`
+
 Read `LICENSE` for more information
 
 ## Features

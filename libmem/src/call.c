@@ -497,7 +497,7 @@ _LM_FindLibc(lm_process_t *pproc,
 	_lm_find_lib_t arg;
 
 	/* TODO: Improve regex. A folder named 'libc.so.1' would match */
-	if (regcomp(&arg.regex, ".*/libc[.-].*", REG_EXTENDED))
+	if (regcomp(&arg.regex, ".*/(libc[.-]|.*musl[.-]).*", REG_EXTENDED))
 		return LM_FALSE;
 
 	/* (debugging) using patched version of dlopen that has been LD_PRELOAD'ed.

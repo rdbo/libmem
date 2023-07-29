@@ -543,6 +543,22 @@ mod libmem_c {
             pmod: *const lm_module_t,
             name: lm_cstring_t,
         ) -> lm_address_t;
+        pub(super) fn LM_DemangleSymbol(
+            symbol: lm_cstring_t,
+            demangled: *mut lm_cchar_t,
+            maxsize: lm_size_t,
+        ) -> lm_cstring_t;
+        pub(super) fn LM_FreeDemangleSymbol(symbol: lm_cstring_t);
+        #[allow(improper_ctypes)]
+        pub(super) fn LM_EnumSymbolsDemangled(
+            pmod: *const lm_module_t,
+            callback: extern "C" fn(*const lm_symbol_t, *mut ()) -> lm_bool_t,
+            arg: *mut (),
+        ) -> lm_bool_t;
+        pub(super) fn LM_FindSymbolAddressDemangled(
+            pmod: *const lm_module_t,
+            name: lm_cstring_t,
+        ) -> lm_address_t;
         /****************************************/
         pub(super) fn LM_EnumPages(
             callback: extern "C" fn(*const lm_page_t, *mut ()) -> lm_bool_t,
@@ -1054,6 +1070,59 @@ pub fn LM_FindSymbolAddress(pmod: &lm_module_t, name: &str) -> Option<lm_address
         let name: lm_cstring_t = name.as_ptr().cast();
 
         match libmem_c::LM_FindSymbolAddress(pmod, name) {
+            LM_ADDRESS_BAD => None,
+            val => Some(val),
+        }
+    }
+}
+
+pub fn LM_DemangleSymbol(symbol: &str) -> Option<String> {
+    let symbol = match CString::new(symbol.as_bytes()) {
+        Ok(s) => s,
+        Err(_e) => return None,
+    };
+
+    unsafe {
+        let symbol: lm_cstring_t = symbol.as_ptr() as lm_cstring_t;
+        let newsym_raw = libmem_c::LM_DemangleSymbol(symbol, ptr::null_mut(), 0);
+        if newsym_raw == ptr::null() {
+            return None;
+        }
+
+        let cstr = CStr::from_ptr(newsym_raw as *const i8).to_owned();
+        let newsym = string_from_cstring(cstr.as_bytes_with_nul());
+
+        libmem_c::LM_FreeDemangleSymbol(newsym_raw);
+
+        Some(newsym)
+    }
+}
+
+pub fn LM_EnumSymbolsDemangled(pmod: &lm_module_t) -> Option<Vec<lm_symbol_t>> {
+    let mut symbol_list: Vec<lm_symbol_t> = Vec::new();
+    unsafe {
+        let pmod = pmod as *const lm_module_t;
+        let callback = LM_EnumSymbolsCallback;
+        let arg = &mut symbol_list as *mut Vec<lm_symbol_t> as *mut ();
+        if libmem_c::LM_EnumSymbolsDemangled(pmod, callback, arg) != LM_FALSE {
+            Some(symbol_list)
+        } else {
+            None
+        }
+    }
+}
+
+pub fn LM_FindSymbolAddressDemangled(pmod: &lm_module_t, name: &str) -> Option<lm_address_t> {
+    let name = match CString::new(name.as_bytes()) {
+        Ok(s) => s,
+        Err(_e) => return None,
+    };
+
+    unsafe {
+        let pmod = pmod as *const lm_module_t;
+        let name: lm_cstring_t = name.as_ptr().cast();
+
+        match libmem_c::LM_FindSymbolAddressDemangled(pmod, name) {
             LM_ADDRESS_BAD => None,
             val => Some(val),
         }

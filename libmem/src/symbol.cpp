@@ -189,6 +189,14 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 
 /********************************/
 
+LM_API lm_void_t
+LM_FreeDemangleSymbol(lm_cstring_t symbol)
+{
+	LM_FREE(symbol);
+}
+
+/********************************/
+
 struct lm_enum_sym_demang_t {
 	lm_bool_t (*callback)(lm_symbol_t *, lm_void_t *);
 	lm_void_t  *arg;
@@ -209,7 +217,7 @@ _LM_EnumSymbolsDemangledCallback(lm_symbol_t *psym,
 
 	ret = cbarg->callback(&newsym, cbarg->arg);
 
-	LM_FREE(newsym.name);
+	LM_FreeDemangleSymbol(newsym.name);
 
 	return ret;
 }

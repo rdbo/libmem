@@ -104,7 +104,7 @@ main()
 
 	demangled = LM_DemangleSymbol(mangled, (lm_cchar_t *)LM_NULLPTR, 0);
 	LM_PRINTF(LM_STR("[*] Demangled symbol '%s': %s\n"), mangled, demangled);
-	LM_FREE(demangled);
+	LM_FreeDemangleSymbol(demangled);
 
 	LM_PRINTF(LM_STR("[*] Module to Load: %s\n"), LIBTEST_PATH);
 	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);

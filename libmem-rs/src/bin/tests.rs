@@ -173,6 +173,8 @@ unsafe fn test() {
 
     // separator();
 
+    // TODO: Fix empty symbol list
+    /*
     println!("[*] Current Process - Symbol Enumeration");
     println!("[*] Module: {}", cur_module.get_name());
     print_n(LM_EnumSymbols(&cur_module).unwrap(), 5);
@@ -185,6 +187,14 @@ unsafe fn test() {
         some_function as *const ()
     );
     println!("[*] Symbol Address Lookup:      {:#x}", some_function_addr);
+
+    separator();
+    */
+    let some_function_addr = some_function as *const () as usize;
+
+    let mangled = "_ZN5tests9separator17h9f5c7cd256d1d06aE";
+    let demangled = LM_DemangleSymbol(&mangled).unwrap();
+    println!("[*] Demangled '{}': {}", mangled, demangled);
 
     separator();
 

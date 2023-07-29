@@ -163,8 +163,13 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 	std::string demang;
 	size_t size;
 	lm_cchar_t *demang_copy;
+
+	LM_ASSERT(symbol != LM_NULLPTR);
 	
 	demang = llvm::demangle(symbol);
+	if (demang.length() == 0)
+		return (lm_cstring_t)LM_NULLPTR;
+	
 	if (!demangled) {
 		/* 'demang_copy' needs to be freed by the caller! */
 		size = demang.length();
@@ -180,4 +185,68 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 
 	strncpy(demang_copy, demang.c_str(), size);
 	return demang_copy;
+}
+
+/********************************/
+
+struct lm_enum_sym_demang_t {
+	lm_bool_t (*callback)(lm_symbol_t *, lm_void_t *);
+	lm_void_t  *arg;
+};
+
+LM_PRIVATE lm_bool_t
+_LM_EnumSymbolsDemangledCallback(lm_symbol_t *psym,
+				 lm_void_t   *arg)
+{
+	lm_bool_t ret;
+	lm_symbol_t newsym;
+	lm_enum_sym_demang_t *cbarg = (lm_enum_sym_demang_t *)arg;
+
+	newsym.name = LM_DemangleSymbol(psym->name, (lm_cchar_t *)LM_NULLPTR, 0);
+	if (!newsym.name)
+		return LM_TRUE;
+	newsym.address = psym->address;
+
+	ret = cbarg->callback(&newsym, cbarg->arg);
+
+	LM_FREE(newsym.name);
+
+	return ret;
+}
+
+LM_API lm_bool_t
+LM_EnumSymbolsDemangled(lm_module_t *pmod,
+			lm_bool_t  (*callback)(lm_symbol_t *psymbol,
+					       lm_void_t   *arg),
+			lm_void_t   *arg)
+{
+	lm_enum_sym_demang_t cbarg;
+
+	LM_ASSERT(pmod != LM_NULLPTR &&
+		  LM_VALID_MODULE(pmod) &&
+		  callback);
+	
+	cbarg.callback = callback;
+	cbarg.arg = arg;
+	return LM_EnumSymbols(pmod, _LM_EnumSymbolsDemangledCallback, (lm_void_t *)&cbarg);
+}
+
+/********************************/
+
+LM_API lm_bool_t
+LM_FindSymbolAddressDemangled(lm_module_t *pmod,
+			      lm_cstring_t name)
+{
+	lm_symbol_t arg;
+
+	LM_ASSERT(pmod != LM_NULLPTR &&
+		  LM_VALID_MODULE(pmod) &&
+		  name != LM_NULLPTR);
+
+	arg.name = name;
+	arg.address = LM_ADDRESS_BAD;
+
+	LM_EnumSymbolsDemangled(pmod, _LM_FindSymbolAddressCallback, (lm_void_t *)&arg);
+
+	return arg.address;
 }

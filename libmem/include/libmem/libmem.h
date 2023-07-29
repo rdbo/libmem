@@ -592,6 +592,16 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 		  lm_cchar_t  *demangled,
 		  lm_size_t    maxsize);
 
+LM_API lm_bool_t
+LM_EnumSymbolsDemangled(lm_module_t *pmod,
+			lm_bool_t  (*callback)(lm_symbol_t *psymbol,
+					       lm_void_t   *arg),
+			lm_void_t   *arg);
+
+LM_API lm_bool_t
+LM_FindSymbolAddressDemangled(lm_module_t *pmod,
+			      lm_cstring_t name);
+
 /****************************************/
 
 LM_API lm_bool_t

@@ -102,7 +102,7 @@ main()
 	LM_PRINTF(LM_STR("[*] Real Main Addr: %p\n"), (void *)main);
 	LM_PRINTF(LM_STR("====================\n"));
 
-	demangled = LM_DemangleSymbol(mangled, NULL, 0);
+	demangled = LM_DemangleSymbol(mangled, (lm_cchar_t *)LM_NULLPTR, 0);
 	LM_PRINTF(LM_STR("[*] Demangled symbol '%s': %s\n"), mangled, demangled);
 	LM_FREE(demangled);
 

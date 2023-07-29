@@ -68,10 +68,16 @@ ExternalProject_Add(lief-project SOURCE_DIR ${LIEF_DIR} INSTALL_COMMAND "" CMAKE
 add_library(LIEF STATIC IMPORTED)
 set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}LIEF${CMAKE_STATIC_LIBRARY_SUFFIX})
 
+set(LLVM_DIR "${PROJECT_SOURCE_DIR}/llvm")
+set(LLVM_INC "${LLVM_DIR}/include")
+file(GLOB_RECURSE LLVM_SRC "${LLVM_DIR}/lib/*.cpp")
+add_library(llvm STATIC ${LLVM_SRC})
+target_compile_options(llvm PUBLIC -fPIC)
+
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
-set(LIBMEM_DEPS capstone keystone LIEF)
+set(LIBMEM_DEPS capstone keystone LIEF llvm)
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	if(NOT MSVC)
@@ -92,7 +98,7 @@ else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${LIEF_INC})
+include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${LIEF_INC} ${LLVM_INC})
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem capstone-engine keystone-engine lief-project)
@@ -119,7 +125,6 @@ if (LIBMEM_BUILD_TESTS)
 	target_include_directories(test2 PUBLIC ${LIBMEM_INC})
 	target_link_libraries(test2 libmem)
 	target_compile_definitions(test2 PUBLIC LIBTEST_PATH="${LIBTEST_PATH}" TEST1_NAME="test1${CMAKE_EXECUTABLE_SUFFIX}")
-
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)

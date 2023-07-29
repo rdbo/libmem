@@ -17,6 +17,7 @@ ar -M << EOM
 	ADDLIB libcapstone.a
 	ADDLIB libkeystone.a
 	ADDLIB libLIEF.a
+	ADDLIB libllvm.a
 	SAVE
 	END
 EOM

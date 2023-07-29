@@ -54,6 +54,8 @@ main()
 	lm_thread_t  thread;
 	lm_module_t  mod;
 	lm_address_t main_sym;
+	lm_cstring_t mangled = "_Z15_LM_EnumSymbolsP11lm_module_tPFiP11lm_symbol_tPvES3_";
+	lm_cchar_t  *demangled;
 	lm_module_t  libtest_mod;
 	lm_page_t    page;
 	lm_int32_t   rdbuf;
@@ -99,6 +101,10 @@ main()
 	LM_PRINTF(LM_STR("[*] Main Addr:      %p\n"), (void *)main_sym);
 	LM_PRINTF(LM_STR("[*] Real Main Addr: %p\n"), (void *)main);
 	LM_PRINTF(LM_STR("====================\n"));
+
+	demangled = LM_DemangleSymbol(mangled, NULL, 0);
+	LM_PRINTF(LM_STR("[*] Demangled symbol '%s': %s\n"), mangled, demangled);
+	LM_FREE(demangled);
 
 	LM_PRINTF(LM_STR("[*] Module to Load: %s\n"), LIBTEST_PATH);
 	LM_LoadModule(LM_STR(LIBTEST_PATH), &libtest_mod);

@@ -587,6 +587,11 @@ LM_API lm_address_t
 LM_FindSymbolAddress(lm_module_t *pmod,
 		     lm_cstring_t name);
 
+LM_API lm_cstring_t
+LM_DemangleSymbol(lm_cstring_t symbol,
+		  lm_cchar_t  *demangled,
+		  lm_size_t    maxsize);
+
 /****************************************/
 
 LM_API lm_bool_t

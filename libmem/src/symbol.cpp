@@ -23,6 +23,7 @@
 
 #define LM_FORCE_LANG_CPP
 #include <libmem/libmem.h>
+#include <llvm/Demangle/Demangle.h>
 
 #if LM_OS == LM_OS_WIN
 #include <LIEF/PE.hpp>
@@ -152,3 +153,31 @@ LM_FindSymbolAddress(lm_module_t  *pmod,
 	return arg.address;
 }
 
+/********************************/
+
+LM_API lm_cstring_t
+LM_DemangleSymbol(lm_cstring_t symbol,
+		  lm_cchar_t  *demangled,
+		  lm_size_t    maxsize)
+{
+	std::string demang;
+	size_t size;
+	lm_cchar_t *demang_copy;
+	
+	demang = llvm::demangle(symbol);
+	if (!demangled) {
+		/* 'demang_copy' needs to be freed by the caller! */
+		size = demang.length();
+		demang_copy = (lm_cchar_t *)LM_CALLOC(size, sizeof(lm_cchar_t));
+	} else {
+		demang_copy = demangled;
+		if (maxsize > demang.length()) {
+			size = demang.length();
+		} else {
+			size = maxsize;
+		}
+	}
+
+	strncpy(demang_copy, demang.c_str(), size);
+	return demang_copy;
+}

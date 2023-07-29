@@ -11,7 +11,7 @@ pub extern "C" fn some_function() {
     println!("[*] Some Function Called!");
 }
 
-static mut TRAMPOLINE : (lm_address_t, lm_size_t) = (0, 0);
+static mut TRAMPOLINE: (lm_address_t, lm_size_t) = (0, 0);
 
 #[no_mangle]
 pub extern "C" fn hk_some_function() {
@@ -27,10 +27,12 @@ pub extern "C" fn hk_some_function() {
     */
 }
 
-fn print_n<T>(vec : Vec<T>, n : usize)
-where T : fmt::Display {
+fn print_n<T>(vec: Vec<T>, n: usize)
+where
+    T: fmt::Display,
+{
     for i in 0..n {
-        if i > vec.len() {
+        if i >= vec.len() {
             break;
         }
 
@@ -41,17 +43,21 @@ where T : fmt::Display {
 // Simple memory representation of a C++ class
 #[repr(C)]
 struct SomeClassVMT {
-    pfn_some_function : extern "C" fn()
+    pfn_some_function: extern "C" fn(),
 }
 
 #[repr(C)]
 struct SomeClass {
-    vtable : SomeClassVMT
+    vtable: SomeClassVMT,
 }
 
 impl SomeClass {
     fn new() -> Self {
-        Self { vtable: SomeClassVMT { pfn_some_function: some_function } }
+        Self {
+            vtable: SomeClassVMT {
+                pfn_some_function: some_function,
+            },
+        }
     }
 
     fn some_function(&self) {
@@ -85,7 +91,10 @@ unsafe fn test() {
     separator();
 
     let is_alive = LM_IsProcessAlive(&proc);
-    println!("[*] Is the Remote Process Alive? {}", if is_alive { "Yes" } else { "No" });
+    println!(
+        "[*] Is the Remote Process Alive? {}",
+        if is_alive { "Yes" } else { "No" }
+    );
 
     separator();
 
@@ -94,21 +103,34 @@ unsafe fn test() {
 
     separator();
 
-    println!("[*] Current Process Threads: {:?}", LM_EnumThreads().unwrap());
+    println!(
+        "[*] Current Process Threads: {:?}",
+        LM_EnumThreads().unwrap()
+    );
 
     separator();
 
-    println!("[*] Remote Process Threads: {:?}", LM_EnumThreadsEx(&proc).unwrap());
+    println!(
+        "[*] Remote Process Threads: {:?}",
+        LM_EnumThreadsEx(&proc).unwrap()
+    );
 
     separator();
 
     let thread = LM_GetThread().unwrap();
     println!("[*] Current Thread ID: {}", thread);
-    println!("[*] Remote Process Thread ID: {}", LM_GetThreadEx(&proc).unwrap());
+    println!(
+        "[*] Remote Process Thread ID: {}",
+        LM_GetThreadEx(&proc).unwrap()
+    );
 
     separator();
 
-    println!("[*] Process From Thread '{}': {}", thread, LM_GetThreadProcess(&thread).unwrap());
+    println!(
+        "[*] Process From Thread '{}': {}",
+        thread,
+        LM_GetThreadProcess(&thread).unwrap()
+    );
 
     separator();
 
@@ -138,7 +160,7 @@ unsafe fn test() {
     separator();
 
     // TODO: Add tests for LM_LoadModuleEx
-    
+
     // separator();
 
     // Needs internal fixing
@@ -158,14 +180,17 @@ unsafe fn test() {
     separator();
 
     let some_function_addr = LM_FindSymbolAddress(&cur_module, "some_function").unwrap();
-    println!("[*] Address of 'some_function': {:p}", some_function as *const ());
+    println!(
+        "[*] Address of 'some_function': {:p}",
+        some_function as *const ()
+    );
     println!("[*] Symbol Address Lookup:      {:#x}", some_function_addr);
 
     separator();
 
     println!("[*] Current Process - Page Enumeration");
     print_n(LM_EnumPages().unwrap(), 5);
-   
+
     separator();
 
     println!("[*] Remote Process - Page Enumeration");
@@ -173,7 +198,10 @@ unsafe fn test() {
 
     separator();
 
-    println!("[*] Current Process - Page at: {:#x}", cur_module.get_base());
+    println!(
+        "[*] Current Process - Page at: {:#x}",
+        cur_module.get_base()
+    );
     println!("{}", LM_GetPage(cur_module.get_base()).unwrap());
 
     separator();
@@ -183,9 +211,9 @@ unsafe fn test() {
 
     separator();
 
-    let number : i32 = 1337;
+    let number: i32 = 1337;
     let number_addr = &number as *const i32 as usize;
-    let read_number : i32 = LM_ReadMemory(number_addr).unwrap();
+    let read_number: i32 = LM_ReadMemory(number_addr).unwrap();
     println!("[*] Number Value: {}", number);
     println!("[*] Read Number Value: {}", read_number);
 
@@ -195,7 +223,7 @@ unsafe fn test() {
 
     // separator();
 
-    let value : i32 = 69;
+    let value: i32 = 69;
     LM_WriteMemory(number_addr, &value).unwrap();
     println!("[*] Value to write: {}", value);
     println!("[*] Number Value: {}", number);
@@ -206,9 +234,14 @@ unsafe fn test() {
 
     // separator();
 
-    let buffer : [u8;10] = [0;10];
+    let buffer: [u8; 10] = [0; 10];
     println!("[*] Buffer Original: {:?}", buffer);
-    LM_SetMemory(buffer.as_ptr() as usize, 255, buffer.len() * mem::size_of::<u8>()).unwrap();
+    LM_SetMemory(
+        buffer.as_ptr() as usize,
+        255,
+        buffer.len() * mem::size_of::<u8>(),
+    )
+    .unwrap();
     println!("[*] Buffer After LM_SetMemory: {:?}", buffer);
 
     separator();
@@ -218,16 +251,29 @@ unsafe fn test() {
     // separator();
 
     let old_prot = LM_ProtMemory(some_function_addr, 0x1000, LM_PROT_XRW).unwrap();
-    println!("[*] Original Protection of '{:#x}': {}", some_function_addr, old_prot);
+    println!(
+        "[*] Original Protection of '{:#x}': {}",
+        some_function_addr, old_prot
+    );
     let prot = LM_ProtMemory(some_function_addr, 0x1000, old_prot).unwrap();
-    println!("[*] Reverted Protection (from '{}' back to '{}')", prot, old_prot);
+    println!(
+        "[*] Reverted Protection (from '{}' back to '{}')",
+        prot, old_prot
+    );
 
     separator();
 
     let old_prot = LM_ProtMemoryEx(&proc, module.get_base(), 0x1000, LM_PROT_XRW).unwrap();
-    println!("[*] Remote - Original Protection of '{:#x}': {}", module.get_base(), old_prot);
+    println!(
+        "[*] Remote - Original Protection of '{:#x}': {}",
+        module.get_base(),
+        old_prot
+    );
     let prot = LM_ProtMemoryEx(&proc, module.get_base(), 0x1000, old_prot).unwrap();
-    println!("[*] Remote - Reverted Protection (from '{}' back to '{}')", prot, old_prot);
+    println!(
+        "[*] Remote - Reverted Protection (from '{}' back to '{}')",
+        prot, old_prot
+    );
 
     separator();
 
@@ -245,7 +291,7 @@ unsafe fn test() {
 
     separator();
 
-    let scan_me : [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    let scan_me: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     let scan_me_addr = scan_me.as_ptr() as lm_address_t;
     let scan_start = scan_me_addr - 0x10; // start the scan before the 'scan_me' address
     let scan_size = 0xFF;
@@ -266,7 +312,11 @@ unsafe fn test() {
     println!("[*] Hooking 'some_function'");
     println!("[*] Original Address: {:#x}", some_function_addr);
 
-    TRAMPOLINE = LM_HookCode(some_function_addr, hk_some_function as *const () as lm_address_t).unwrap();
+    TRAMPOLINE = LM_HookCode(
+        some_function_addr,
+        hk_some_function as *const () as lm_address_t,
+    )
+    .unwrap();
     println!("[*] Trampoline: {:#x?}", TRAMPOLINE);
 
     some_function();
@@ -287,7 +337,8 @@ unsafe fn test() {
 
     separator();
 
-    let bytes = LM_AssembleEx("push ebp ; mov ebp, esp; mov esp, ebp; pop ebp; ret", 32, 0).unwrap();
+    let bytes =
+        LM_AssembleEx("push ebp ; mov ebp, esp; mov esp, ebp; pop ebp; ret", 32, 0).unwrap();
     println!("[*] Assembled Instructions: {:#x?}", bytes);
 
     separator();
@@ -297,7 +348,8 @@ unsafe fn test() {
 
     separator();
 
-    let insts = LM_DisassembleEx(some_function_addr, LM_BITS, 0x100, 5, some_function_addr).unwrap();
+    let insts =
+        LM_DisassembleEx(some_function_addr, LM_BITS, 0x100, 5, some_function_addr).unwrap();
     println!("[*] Disassembled Instructions:");
     for inst in insts {
         println!("{}", inst);
@@ -307,7 +359,10 @@ unsafe fn test() {
 
     let minsize = 0x5;
     let alignedsize = LM_CodeLength(some_function_addr, minsize).unwrap();
-    println!("[*] Aligned Size (minimum: {:#x}): {:#x}", minsize, alignedsize);
+    println!(
+        "[*] Aligned Size (minimum: {:#x}): {:#x}",
+        minsize, alignedsize
+    );
 
     separator();
 
@@ -321,7 +376,10 @@ unsafe fn test() {
     let mut some_object_vmt = lm_vmt_t::new(&some_object as *const SomeClass as *mut lm_address_t);
     some_object_vmt.hook(0, hk_some_function as lm_address_t);
 
-    println!("[*] Original VMT Function: {:#x}", some_object_vmt.get_original(0).unwrap());
+    println!(
+        "[*] Original VMT Function: {:#x}",
+        some_object_vmt.get_original(0).unwrap()
+    );
 
     some_object.some_function();
     some_object_vmt.unhook(0);
@@ -343,4 +401,3 @@ fn main() {
         test();
     }
 }
-

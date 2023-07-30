@@ -98,6 +98,22 @@ print(f"[*] Py_BytesMain Address: {symaddr}")
 
 separator()
 
+mangled = "_Z15_LM_EnumSymbolsP11lm_module_tPFiP11lm_symbol_tPvES3_"
+demangled = LM_DemangleSymbol(mangled)
+print(f"[*] Demangled '{mangled}': {demangled}")
+
+separator()
+
+print("[*] Demangled Symbol Enumeration")
+
+print("\n".join([str(sym) for sym in LM_EnumSymbolsDemangled(curmod)[:5]]))
+
+# TODO: Add test for 'LM_FindSymbolAddressDemangled'
+
+# separator()
+
+separator()
+
 print("[*] Page Enumeration - Current Process")
 print("\n".join([str(page) for page in LM_EnumPages()[:5]]))
 

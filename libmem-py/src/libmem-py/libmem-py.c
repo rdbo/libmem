@@ -531,16 +531,11 @@ py_LM_FindSymbolAddress(PyObject *self,
 			PyObject *args)
 {
 	py_lm_module_obj *pymodule;
-	lm_char_t        *symname;
+	lm_cchar_t       *symname;
 	lm_address_t      symaddr;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "Ou", &pymodule, &symname))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "Os", &pymodule, &symname))
 		return NULL;
-#	endif
 
 	symaddr = LM_FindSymbolAddress(&pymodule->mod, symname);
 	if (symaddr == LM_ADDRESS_BAD)
@@ -548,6 +543,32 @@ py_LM_FindSymbolAddress(PyObject *self,
 
 	return (PyObject *)PyLong_FromSize_t(symaddr);
 }
+
+/****************************************/
+
+static PyObject *
+py_LM_DemangleSymbol(PyObject *self,
+		     PyObject *args)
+{
+	lm_cchar_t  *symbol;
+	lm_cstring_t newsym;
+	PyObject    *pynewsym;
+
+	if (!PyArg_ParseTuple(args, "s", &symbol))
+		return NULL;
+
+	newsym = LM_DemangleSymbol(symbol, (lm_cchar_t *)LM_NULLPTR, 0);
+	if (!newsym)
+		return Py_BuildValue("");
+
+	pynewsym = PyUnicode_FromString(newsym);
+
+	LM_FreeDemangleSymbol(newsym);
+
+	return pynewsym;
+}
+
+/****************************************/
 
 /****************************************/
 
@@ -1360,6 +1381,7 @@ static PyMethodDef libmem_methods[] = {
 	/****************************************/
 	{ "LM_EnumSymbols", py_LM_EnumSymbols, METH_VARARGS, "Lists all symbols from a module" },
 	{ "LM_FindSymbolAddress", py_LM_FindSymbolAddress, METH_VARARGS, "Searches for a symbols in a module" },
+	{ "LM_DemangleSymbol", py_LM_DemangleSymbol, METH_VARARGS, "Demangles a mangled symbol from a module" },
 	/****************************************/
 	{ "LM_EnumPages", py_LM_EnumPages, METH_NOARGS, "Lists all pages from the calling process" },
 	{ "LM_EnumPagesEx", py_LM_EnumPagesEx, METH_VARARGS, "Lists all pages from a remote process" },

@@ -283,6 +283,10 @@ LM_UnloadModuleEx
 
 LM_EnumSymbols
 LM_FindSymbolAddress
+LM_DemangleSymbol
+LM_FreeDemangleSymbol
+LM_EnumSymbolsDemangled
+LM_FindSymbolAddressDemangled
 
 LM_EnumPages
 LM_EnumPagesEx

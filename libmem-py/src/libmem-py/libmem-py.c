@@ -570,6 +570,48 @@ py_LM_DemangleSymbol(PyObject *self,
 
 /****************************************/
 
+static PyObject *
+py_LM_EnumSymbolsDemangled(PyObject *self,
+			   PyObject *args)
+{
+	py_lm_module_obj *pymodule;
+	PyObject *pylist;
+
+	if (!PyArg_ParseTuple(args, "O", &pymodule))
+		return NULL;
+
+	pylist = PyList_New(0);
+	if (!pylist)
+		return NULL;
+
+	if (!LM_EnumSymbolsDemangled(&pymodule->mod, _py_LM_EnumSymbolsCallback, (lm_void_t *)pylist)) {
+		Py_DECREF(pylist); /* destroy list */
+		pylist = Py_BuildValue("");
+	}
+
+	return pylist;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_FindSymbolAddressDemangled(PyObject *self,
+				 PyObject *args)
+{
+	py_lm_module_obj *pymodule;
+	lm_cchar_t       *symname;
+	lm_address_t      symaddr;
+
+	if (!PyArg_ParseTuple(args, "Os", &pymodule, &symname))
+		return NULL;
+
+	symaddr = LM_FindSymbolAddressDemangled(&pymodule->mod, symname);
+	if (symaddr == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return (PyObject *)PyLong_FromSize_t(symaddr);
+}
+
 /****************************************/
 
 static lm_bool_t
@@ -1380,8 +1422,10 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_UnloadModuleEx", py_LM_UnloadModuleEx, METH_VARARGS, "Unloads a module from a remote process" },
 	/****************************************/
 	{ "LM_EnumSymbols", py_LM_EnumSymbols, METH_VARARGS, "Lists all symbols from a module" },
-	{ "LM_FindSymbolAddress", py_LM_FindSymbolAddress, METH_VARARGS, "Searches for a symbols in a module" },
+	{ "LM_FindSymbolAddress", py_LM_FindSymbolAddress, METH_VARARGS, "Searches for a symbol in a module" },
 	{ "LM_DemangleSymbol", py_LM_DemangleSymbol, METH_VARARGS, "Demangles a mangled symbol from a module" },
+	{ "LM_EnumSymbolsDemangled", py_LM_EnumSymbolsDemangled, METH_VARARGS, "Lists all demangled symbols from a module" },
+	{ "LM_FindSymbolAddressDemangled", py_LM_FindSymbolAddressDemangled, METH_VARARGS, "Searches for a demangled symbol in a module" },
 	/****************************************/
 	{ "LM_EnumPages", py_LM_EnumPages, METH_NOARGS, "Lists all pages from the calling process" },
 	{ "LM_EnumPagesEx", py_LM_EnumPagesEx, METH_VARARGS, "Lists all pages from a remote process" },

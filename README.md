@@ -126,19 +126,17 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 2. Install [Python 3](https://python.org/downloads) (Check the option to add Python to PATH) (Use [Python 3.8.9](https://python.org/downloads/release/python-389) for Windows 7)
 
-3. Install [Visual Studio](https://visualstudio.microsoft.com/) 2022 or newer (with C++ support and CMake) (older versions might work, but they were not tested)
+3. Install [Visual Studio](https://visualstudio.microsoft.com/) 2022 or newer (with C++ support and CMake) (older versions might work, but they were not tested). NOTE: You can install only the Visual Studio Build Tools if you don't want the whole IDE.
 
-4. Install [CMake](https://cmake.org/download)
+4. Install [Git Bash](https://git-scm.com/downloads)
 
-5. Install [Git Bash](https://git-scm.com/downloads)
+5. Run a Visual Studio `Developer Command Prompt` (or `x64 Native Tools Command Prompt for VS 2022` for 64 bits) as Administrator
 
-6. Run a Visual Studio `Developer Command Prompt` as Administrator
-
-7. Run the following command to append libmem's destination directory to your `%PATH%` user variable:
+6. Run the following command to append libmem's destination directory to your `%PATH%` user variable:
 
         setx PATH "%PATH%;%ProgramFiles%\libmem\include;%ProgramFiles%\libmem\lib"
 
-8. Continue reading at `Build and Install`
+7. Continue reading at `Build and Install`
 
 ### Linux
 **Note**: The following commands are for Debian/Ubuntu based distributions. Make sure to find the appropriate commands for your Linux distribution.
@@ -172,12 +170,7 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 Clone the repository:
 ```
-git clone https://github.com/rdbo/libmem
-```
-Initialize and update the submodules:
-```
-git submodule init
-git submodule update
+git clone --recursive --depth 1 https://github.com/rdbo/libmem
 ```
 Generate the CMake cache:
 ```
@@ -213,7 +206,7 @@ Link the generated libmem library against your binary (`libmem.so` for Unix-like
 ## Usage (Rust)
 Add the following line to your `Cargo.toml` under `[dependencies]`:
 ```toml
-libmem = "4.1"
+libmem = "4.2"
 ```
 Import libmem in your Rust source code:
 ```rust

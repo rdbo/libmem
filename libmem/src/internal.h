@@ -31,6 +31,8 @@
 #if LM_OS == LM_OS_WIN
 #	include <tlhelp32.h>
 #	include <psapi.h>
+#	include <winternl.h>
+#	include <ntstatus.h>
 #else
 #	include <dirent.h>
 #	include <errno.h>

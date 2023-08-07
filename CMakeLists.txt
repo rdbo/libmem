@@ -73,6 +73,7 @@ set(LLVM_INC "${LLVM_DIR}/include")
 file(GLOB_RECURSE LLVM_SRC "${LLVM_DIR}/lib/*.cpp")
 add_library(llvm STATIC ${LLVM_SRC})
 set_target_properties(llvm PROPERTIES POSITION_INDEPENDENT_CODE True)
+target_compile_features(llvm PUBLIC cxx_std_17)
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")

@@ -239,7 +239,7 @@ All:
 - libmath (used in keystone)
 
 Windows:  
-- Windows SDK (-luser32, -lpsapi) 
+- Windows SDK (-luser32, -lpsapi, -lntdll) 
 
 Linux/Android:  
 - libdl (-ldl)

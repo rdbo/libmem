@@ -173,17 +173,18 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 	if (!demangled) {
 		/* 'demang_copy' needs to be freed by the caller! */
 		size = demang.length();
-		demang_copy = (lm_cchar_t *)LM_CALLOC(size, sizeof(lm_cchar_t));
+		demang_copy = (lm_cchar_t *)LM_CALLOC(size + 1, sizeof(lm_cchar_t));
 	} else {
 		demang_copy = demangled;
 		if (maxsize > demang.length()) {
 			size = demang.length();
 		} else {
-			size = maxsize;
+			size = maxsize - 1;
 		}
 	}
 
 	strncpy(demang_copy, demang.c_str(), size);
+	demang_copy[size] = LM_STR('\0');
 	return demang_copy;
 }
 

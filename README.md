@@ -235,7 +235,7 @@ All:
 - capstone (included in root project)
 - keystone (included in root project)
 - LIEF (included in root project)
-- libstdc++ (used in keystone and LIEF)
+- libstdc++ (used in keystone, LIEF and LLVM)
 - libmath (used in keystone)
 
 Windows:  

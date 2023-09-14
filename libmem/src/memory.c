@@ -98,9 +98,8 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return rdsize;
 
-    if(!ReadProcessMemory(hProcess, src, dst, size, &rdsize)){
-        return 0;
-    }
+	if (!ReadProcessMemory(hProcess, src, dst, size, &rdsize))
+		rdsize = 0;
 
 	_LM_CloseProc(&hProcess);
 

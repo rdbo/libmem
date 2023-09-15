@@ -164,6 +164,24 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 				(lm_uintptr_t)mod.end - (lm_uintptr_t)mod.base
 			);
 
+			/* NOTE: This is a fix for virtualized filesystems on Linux.
+			 * The "magic symlink" directory `/proc/<PID>/root` gives a
+			 * root filesystem viewed from the process' perspective, unlike
+			 * `/proc/<PID>/maps`, which only gives information about
+			 * what the process thinks the paths are. This is useful for
+			 * getting modules for apps that are "virtualized", like Flatpaks
+			 * and others.
+			 * TODO: Test this on BSD.
+			 */
+#			if LM_OS == LM_OS_LINUX
+			{
+				lm_char_t old_path[LM_PATH_MAX];
+
+				LM_STRNCPY(old_path, mod.path, LM_PATH_MAX);
+				LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), LM_STR("/proc/%d/root%s"), pproc->pid, old_path);
+			}
+#			endif
+
 			if (callback(&mod, arg) == LM_FALSE) {
 				mod.size = 0; /* prevent last module callback */
 				break;
@@ -191,8 +209,26 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 	}
 
 	/* run a callback for the last module */
-	if (mod.size != 0)
+	if (mod.size != 0) {
+		/* NOTE: This is a fix for virtualized filesystems on Linux.
+		 * The "magic symlink" directory `/proc/<PID>/root` gives a
+		 * root filesystem viewed from the process' perspective, unlike
+		 * `/proc/<PID>/maps`, which only gives information about
+		 * what the process thinks the paths are. This is useful for
+		 * getting modules for apps that are "virtualized", like Flatpaks
+		 * and others.
+		 * TODO: Test this on BSD.
+		 */
+#		if LM_OS == LM_OS_LINUX
+		{
+			lm_char_t old_path[LM_PATH_MAX];
+
+			LM_STRNCPY(old_path, mod.path, LM_PATH_MAX);
+			LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), LM_STR("/proc/%d/root%s"), pproc->pid, old_path);
+		}
+#		endif
 		callback(&mod, arg);
+	}
 
 	ret = LM_TRUE;
 

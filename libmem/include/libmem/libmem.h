@@ -601,7 +601,7 @@ LM_EnumSymbolsDemangled(lm_module_t *pmod,
 					       lm_void_t   *arg),
 			lm_void_t   *arg);
 
-LM_API lm_bool_t
+LM_API lm_address_t
 LM_FindSymbolAddressDemangled(lm_module_t *pmod,
 			      lm_cstring_t name);
 

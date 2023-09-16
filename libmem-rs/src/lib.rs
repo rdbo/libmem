@@ -472,7 +472,8 @@ mod libmem_c {
     use crate::*;
 
     // link against 'mem' (the lib prefix is appended automatically)
-    #[link(name = "libmem")]
+    #[cfg_attr(feature = "static", link(name = "libmem", kind = "static"))]
+    #[cfg_attr(not(feature = "static"), link(name = "libmem"))]
     extern "C" {
         pub(super) fn LM_EnumProcesses(
             callback: extern "C" fn(*const lm_process_t, *mut ()) -> i32,

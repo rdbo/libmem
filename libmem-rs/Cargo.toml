@@ -19,6 +19,9 @@ categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "o
 [lib]
 name = "libmem"
 
+[features]
+static = []
+
 [[bin]]
 name = "tests"
 

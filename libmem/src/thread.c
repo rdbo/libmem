@@ -33,7 +33,9 @@ LM_EnumThreads(lm_bool_t(*callback)(lm_thread_t *pthr,
 {
 	lm_process_t proc;
 
-	LM_ASSERT(callback != LM_NULLPTR);
+	if (!callback)
+		return LM_FALSE;
+
 	if (!LM_GetProcess(&proc))
 		return LM_FALSE;
 
@@ -160,9 +162,8 @@ LM_EnumThreadsEx(lm_process_t *pproc,
 					 lm_void_t   *arg),
 		   lm_void_t  *arg)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  callback != LM_NULLPTR);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !callback)
+		return LM_FALSE;
 
 	return _LM_EnumThreadsEx(pproc, callback, arg);
 }
@@ -189,7 +190,8 @@ _LM_GetThread(lm_thread_t *thrbuf)
 LM_API lm_bool_t
 LM_GetThread(lm_thread_t *thrbuf)
 {
-	LM_ASSERT(thrbuf != LM_NULLPTR);
+	if (!thrbuf)
+		return LM_FALSE;
 	return _LM_GetThread(thrbuf);
 }
 
@@ -208,9 +210,8 @@ LM_API lm_bool_t
 LM_GetThreadEx(lm_process_t *pproc,
 	       lm_thread_t  *thrbuf)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  thrbuf != LM_NULLPTR);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !thrbuf)
+		return LM_FALSE;
 
 	return LM_EnumThreadsEx(pproc, _LM_GetThreadExCallback, (lm_void_t *)thrbuf);
 }
@@ -247,8 +248,8 @@ LM_GetThreadProcess(lm_thread_t  *pthr,
 {
 	lm_pid_t pid;
 
-	LM_ASSERT(pthr != LM_NULLPTR &&
-		  LM_VALID_THREAD(pthr));
+	if (!pthr || !LM_VALID_THREAD(pthr))
+		return LM_FALSE;
 
 	pid = _LM_GetPidFromThread(pthr);
 	if (pid == LM_PID_BAD)

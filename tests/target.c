@@ -11,11 +11,14 @@
 
 void wait_message()
 {
-	printf("Waiting...\n");
+	printf(".");
+	fflush(stdout);
 }
 
 int main()
 {
+	printf("[*] Target Process\n");
+	printf("Waiting...");
 	for (;;) {
 		wait_message();
 		do_sleep();

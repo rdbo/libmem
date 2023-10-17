@@ -1,13 +1,7 @@
 #include <libmem/libmem.h>
 
-#if LM_CHARSET == LM_CHARSET_UC
-#define LM_PRINTF wprintf
-#else
-#define LM_PRINTF printf
-#endif
-
-#define LOAD_STR LM_STR("[*] Libtest Loaded!\n")
-#define UNLOAD_STR LM_STR("[*] Libtest Unloaded!\n")
+#define LOAD_STR " <LIBTEST LOADED> "
+#define UNLOAD_STR " <LIBTEST_UNLOADED> "
 
 #if LM_OS == LM_OS_WIN
 BOOL APIENTRY
@@ -17,10 +11,12 @@ DllMain(HMODULE hModule,
 {
 	switch (dwReason) {
 	case DLL_PROCESS_ATTACH:
-		LM_PRINTF(LOAD_STR);	
+		printf(LOAD_STR);
+		fflush(stdout);
 		break;
 	case DLL_PROCESS_DETACH:
-		LM_PRINTF(UNLOAD_STR);
+		printf(UNLOAD_STR);
+		fflush(stdout);
 		break;
 	}
 	return TRUE;
@@ -29,12 +25,14 @@ DllMain(HMODULE hModule,
 void __attribute__((constructor))
 libentry(void)
 {
-	LM_PRINTF(LOAD_STR);
+	printf(LOAD_STR);
+	fflush(stdout);
 }
 
 void __attribute__((destructor))
 libexit(void)
 {
-	LM_PRINTF(UNLOAD_STR);
+	printf(UNLOAD_STR);
+	fflush(stdout);
 }
 #endif

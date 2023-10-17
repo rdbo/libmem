@@ -30,7 +30,8 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 {
 	lm_process_t proc;
 
-	LM_ASSERT(callback != LM_NULLPTR);
+	if (!callback)
+		return LM_FALSE;
 
 	if (!LM_GetProcess(&proc))
 		return LM_FALSE;
@@ -245,9 +246,8 @@ LM_EnumModulesEx(lm_process_t *pproc,
 					 lm_void_t   *arg),
 		 lm_void_t    *arg)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  callback != LM_NULLPTR);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !callback)
+		return LM_FALSE;
 
 	return _LM_EnumModulesEx(pproc, callback, arg);
 }
@@ -285,7 +285,8 @@ LM_FindModule(lm_string_t  name,
 {
 	_lm_find_mod_t arg;
 
-	LM_ASSERT(name != LM_NULLPTR && modbuf != LM_NULLPTR);
+	if (!name || !modbuf)
+		return LM_FALSE;
 
 	arg.modbuf = modbuf;
 	arg.modbuf->size = 0;
@@ -307,10 +308,8 @@ LM_FindModuleEx(lm_process_t *pproc,
 {
 	_lm_find_mod_t arg;
 
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  name != LM_NULLPTR &&
-		  modbuf != LM_NULLPTR);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !name || !modbuf)
+		return LM_FALSE;
 
 	arg.modbuf = modbuf;
 	arg.modbuf->size = 0;
@@ -344,12 +343,14 @@ LM_LoadModule(lm_string_t  path,
 	      lm_module_t *modbuf)
 {
 	/* modbuf can be NULL. in that case, the module info won't be saved */
-	LM_ASSERT(path != LM_NULLPTR);
+	if (!path)
+		return LM_FALSE;
 
 	if (!_LM_LoadModule(path))
 		return LM_FALSE;
 
-	/* TODO (?): Unload the module if it doesn't find it */
+	/* TODO (?): Unload the module if it doesn't find it - or
+	             retrieve the module directly in the OS-specific functions */
 	if (modbuf && !LM_FindModule(path, modbuf))
 		return LM_FALSE;
 
@@ -462,7 +463,8 @@ _LM_UnloadModule(lm_module_t *pmod)
 LM_API lm_bool_t
 LM_UnloadModule(lm_module_t *pmod)
 {
-	LM_ASSERT(pmod != LM_NULLPTR && LM_VALID_MODULE(pmod));
+	if (!pmod || !LM_VALID_MODULE(pmod))
+		return LM_FALSE;
 
 	return _LM_UnloadModule(pmod);
 }

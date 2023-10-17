@@ -2,8 +2,6 @@
 #include "minunit.h"
 #include "helpers.h"
 
-extern lm_process_t target_process;
-
 char *test_LM_GetThread()
 {
 	lm_thread_t thread;
@@ -75,16 +73,15 @@ char *test_LM_EnumThreadsEx()
 char *test_LM_GetThreadProcess()
 {
 	lm_thread_t curthread;
-	lm_process_t curprocess;
 	lm_process_t process;
 
 	mu_assert("failed to get current thread", LM_GetThread(&curthread) == LM_TRUE);
 	mu_assert("retrieved invalid thread", CHECK_THREAD(&curthread));
-	mu_assert("failed to get current process", LM_GetProcess(&curprocess) == LM_TRUE);
-	mu_assert("retrieved current process is invalid", CHECK_PROCESS(&curprocess));
+	mu_assert("failed to get current process", LM_GetProcess(&current_process) == LM_TRUE);
+	mu_assert("retrieved current process is invalid", CHECK_PROCESS(&current_process));
 	mu_assert("failed to get thread process", LM_GetThreadProcess(&curthread, &process) == LM_TRUE);
 	mu_assert("retrieved process is invalid", CHECK_PROCESS(&process));
-	mu_assert("processes don't match", EQUAL_PROCESSES(&curprocess, &process));
+	mu_assert("processes don't match", EQUAL_PROCESSES(&current_process, &process));
 	mu_assert("function attempted to run with bad arguments (invalid thread)", LM_GetThreadProcess(LM_NULLPTR, &process) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_GetThreadProcess(&curthread, LM_NULLPTR) == LM_FALSE);
 

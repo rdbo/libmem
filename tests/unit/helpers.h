@@ -1,3 +1,5 @@
+#include <libmem/libmem.h>
+
 #define CHECK_PROCESS(proc) ( \
 	(proc)->pid != LM_PID_BAD && \
 	LM_STRLEN((proc)->path) > 0 && \
@@ -11,5 +13,17 @@
 	!LM_STRCMP((p1)->path, (p2)->path) && \
 	!LM_STRCMP((p1)->name, (p2)->name) \
 )
+
 #define CHECK_THREAD(thread) ((thread)->tid != LM_TID_BAD)
 #define EQUAL_THREADS(t1, t2) ((t1)->tid == (t2)->tid)
+
+#define CHECK_MODULE(mod) ( \
+	(mod)->base != LM_ADDRESS_BAD && \
+	(mod)->end != LM_ADDRESS_BAD && \
+	(mod)->size > 0 && \
+	LM_STRLEN((mod)->path) > 0 && \
+	LM_STRLEN((mod)->name) > 0 \
+)
+
+extern lm_process_t current_process;
+extern lm_process_t target_process;

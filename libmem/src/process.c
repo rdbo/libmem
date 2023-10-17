@@ -357,7 +357,9 @@ LM_GetProcess(lm_process_t *procbuf)
 		LM_PID_BAD, LM_PID_BAD, 0, LM_TIME_BAD, "", ""
 	};
 
-	LM_ASSERT(procbuf != LM_NULLPTR);
+	if (!procbuf) {
+		return LM_FALSE;
+	}
 
 	if (self_proc.pid != LM_PID_BAD) {
 		*procbuf = self_proc;
@@ -380,7 +382,8 @@ LM_API lm_bool_t
 LM_GetProcessEx(lm_pid_t      pid,
 		lm_process_t *procbuf)
 {
-	LM_ASSERT(pid != LM_PID_BAD);
+	if (pid == LM_PID_BAD || !procbuf)
+		return LM_FALSE;
 
 	procbuf->pid = pid;
 	procbuf->ppid = _LM_GetParentIdEx(pid);

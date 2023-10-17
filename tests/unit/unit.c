@@ -1,9 +1,9 @@
-#include "unit.h"
 #include "minunit.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 #define UNIT_TEST(func) { \
+	extern char *test_##func(); \
 	char *result; \
 	printf("%s... ", #func); \
 	fflush(stdout); \
@@ -18,6 +18,8 @@
 void test_process()
 {
 	UNIT_TEST(LM_EnumProcesses);
+	UNIT_TEST(LM_GetProcess);
+	UNIT_TEST(LM_GetProcessEx);
 }
 
 int main()

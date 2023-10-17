@@ -155,6 +155,7 @@
 #define LM_CALLOC   calloc
 #define LM_REALLOC  realloc
 #define LM_FREE     free
+#define LM_MEMCMP   memcmp
 #define LM_MEMCPY   memcpy
 #define LM_MEMSET   memset
 #define LM_ASSERT   assert

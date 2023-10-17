@@ -322,7 +322,8 @@ LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 				      lm_void_t    *arg),
 		 lm_void_t *arg)
 {
-	LM_ASSERT(callback != LM_NULLPTR);
+	if (!callback)
+		return LM_FALSE;
 
 	return _LM_EnumProcesses(callback, arg);
 }

@@ -330,11 +330,11 @@ LM_VmtFree
 
 ## Projects
 Made with libmem:  
-- ![AssaultCube Multihack](https://github.com/rdbo/AssaultCube-Multihack)  
-- ![X-Inject](https://github.com/rdbo/x-inject)  
-- ![DirectX9 BaseHook](https://github.com/rdbo/DX9-BaseHook)  
-- ![DirectX11 BaseHook](https://github.com/rdbo/DX11-BaseHook)  
-- ![OpenGL BaseHook](https://github.com/rdbo/GL-BaseHook)  
-- ![Counter-Strike 1.6 BaseHook](https://github.com/rdbo/cstrike-basehook)  
-- ![Crazymem - NodeJS Memory Library](https://github.com/karliky/Crazymem)  
+- [AssaultCube Multihack](https://github.com/rdbo/AssaultCube-Multihack)  
+- [X-Inject](https://github.com/rdbo/x-inject)  
+- [DirectX9 BaseHook](https://github.com/rdbo/DX9-BaseHook)  
+- [DirectX11 BaseHook](https://github.com/rdbo/DX11-BaseHook)  
+- [OpenGL BaseHook](https://github.com/rdbo/GL-BaseHook)  
+- [Counter-Strike 1.6 BaseHook](https://github.com/rdbo/cstrike-basehook)  
+- [Crazymem - NodeJS Memory Library](https://github.com/karliky/Crazymem)  
   

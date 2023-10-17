@@ -20,6 +20,9 @@ void test_process()
 	UNIT_TEST(LM_EnumProcesses);
 	UNIT_TEST(LM_GetProcess);
 	UNIT_TEST(LM_GetProcessEx);
+	UNIT_TEST(LM_FindProcess);
+	UNIT_TEST(LM_IsProcessAlive);
+	UNIT_TEST(LM_GetSystemBits);
 }
 
 int main()

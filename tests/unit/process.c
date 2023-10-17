@@ -40,7 +40,7 @@ char *test_LM_EnumProcesses()
 
 	mu_assert("failed to enumerate processes", LM_EnumProcesses(_LM_EnumProcessesCallback, (lm_void_t *)&cbarg) == LM_TRUE);
 	mu_assert("cbarg.check is not LM_TRUE", cbarg.check == LM_TRUE);
-	mu_assert("function attempted to run with bad parameters", LM_EnumProcesses(LM_NULL, LM_NULL) == LM_FALSE);
+	mu_assert("function attempted to run with bad parameters", LM_EnumProcesses(LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }
@@ -68,5 +68,41 @@ char *test_LM_GetProcessEx()
 	mu_assert("function attempted to run with bad parameters (invalid procbuf)", LM_GetProcessEx(curproc.pid, LM_NULLPTR) == LM_FALSE);
 	mu_assert("function attempted to run with bad parameters (invalid pid)", LM_GetProcessEx(LM_PID_BAD, &proc) == LM_FALSE);
 
+	return NULL;
+}
+
+char *test_LM_FindProcess()
+{
+	lm_process_t curproc;
+	lm_process_t proc;
+
+	mu_assert("failed to retrieve current process", LM_GetProcess(&curproc) == LM_TRUE);
+	mu_assert("current process is invalid", CHECK_PROCESS(&curproc));
+	mu_assert("failed to find current process from string", LM_FindProcess(curproc.name, &proc));
+	mu_assert("retrieved process is invalid", CHECK_PROCESS(&proc));
+	mu_assert("processes don't match", EQUAL_PROCESSES(&curproc, &proc));
+	mu_assert("function attempted to run with bad parameters (invalid procstr)", LM_FindProcess(LM_NULLPTR, &proc) == LM_FALSE);
+	mu_assert("function attempted to run with bad parameters (invalid procbuf)", LM_FindProcess(curproc.name, LM_NULLPTR) == LM_FALSE);
+
+	return NULL;
+}
+
+char *test_LM_IsProcessAlive()
+{
+	lm_process_t curproc;
+
+	mu_assert("failed to retrieve current process", LM_GetProcess(&curproc) == LM_TRUE);
+	mu_assert("current process is invalid", CHECK_PROCESS(&curproc));
+	mu_assert("process is alive", LM_IsProcessAlive(&curproc) == LM_TRUE);
+	curproc.pid = LM_PID_BAD;
+	mu_assert("process does not exist", LM_IsProcessAlive(&curproc) == LM_FALSE);
+	mu_assert("function attempted to run with bad parameters", LM_IsProcessAlive(LM_NULLPTR) == LM_FALSE);
+
+	return NULL;
+}
+
+char *test_LM_GetSystemBits()
+{
+	mu_assert("wrong system bits", LM_GetSystemBits() == sizeof(uintmax_t) * 8);
 	return NULL;
 }

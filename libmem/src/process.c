@@ -439,7 +439,8 @@ LM_FindProcess(lm_string_t   procstr,
 {
 	_lm_find_pid_t arg;
 
-	LM_ASSERT(procstr != LM_NULLPTR);
+	if (!procstr || !procbuf)
+		return LM_FALSE;
 
 	arg.procbuf = procbuf;
 	arg.procbuf->pid = LM_PID_BAD;
@@ -588,8 +589,8 @@ FREE_EXIT:
 LM_API lm_bool_t
 LM_IsProcessAlive(lm_process_t *pproc)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc));
+	if (!pproc || !LM_VALID_PROCESS(pproc))
+		return LM_FALSE;
 
 	/* If the process has the same PID and the same start time, it is the same process */
 	return _LM_GetProcessStartTime(pproc->pid) == pproc->start_time ? LM_TRUE : LM_FALSE;

@@ -443,20 +443,30 @@ _LM_UnloadModule(lm_module_t *pmod)
 LM_PRIVATE lm_bool_t
 _LM_UnloadModule(lm_module_t *pmod)
 {
-	void *libhandle;
+	/* NOTE: 'dlclose' is not required to unload any modules, but this is as good as it gets */
+	struct link_map *base_link;
+	struct link_map *handle;
+	lm_bool_t has_unloaded = LM_FALSE;
 
-	/* reopen the library without loading, which gives us the
-	   handle that we can use to decrease the reference count
-	   and unload the library */
-	libhandle = dlopen(pmod->path, RTLD_NOLOAD);
-
-	if (!libhandle)
+	/* Retrieve 'link_map' of the executable to access the 'link_map' chain */
+	base_link = (struct link_map *)dlopen(NULL, RTLD_NOLOAD);
+	if (!base_link)
 		return LM_FALSE;
 
-	dlclose(libhandle);
-	dlclose(libhandle);
+	/* Loop through 'link_map' chain */
+	for (handle = base_link; handle; handle = handle->l_next) {
+		if ((lm_address_t)handle->l_addr == pmod->base) {
+			dlclose(handle);
+			has_unloaded = LM_TRUE;
+			break; /* NOTE: Maybe don't break, because there might be other 'link_map's related to this module */
+		}
 
-	return LM_TRUE;
+		/* NOTE: Perhaps manually patch 'link_map' chain and deallocate library */
+	}
+
+	dlclose(base_link);
+
+	return has_unloaded;
 }
 #endif
 

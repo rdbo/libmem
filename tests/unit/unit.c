@@ -1,13 +1,8 @@
 #include <libmem/libmem.h>
 #include "minunit.h"
+#include "helpers.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-#if LM_OS == LM_OS_WIN
-#	define TARGET_PROC "target.exe"
-#else
-#	define TARGET_PROC "target"
-#endif
 
 #define UNIT_TEST(func) { \
 	extern char *test_##func(); \
@@ -54,6 +49,8 @@ void test_module()
 
 lm_process_t current_process;
 lm_process_t target_process;
+lm_thread_t  current_thread;
+lm_thread_t  target_thread;
 
 int main()
 {
@@ -61,18 +58,6 @@ int main()
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
 
 	test_process();
-	printf("[*] Searching for target process...\n");
-
-	if (!LM_GetProcess(&current_process)) {
-		printf("[!] Failed to retrieve current process\n");
-		exit(1);
-	}
-	
-	if (!LM_FindProcess(TARGET_PROC, &target_process)) {
-		printf("[!] Target process not found: make sure '%s' is running\n", TARGET_PROC);
-		exit(1);
-	}
-	
 	test_thread();
 	test_module();
 

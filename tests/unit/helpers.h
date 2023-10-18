@@ -1,5 +1,11 @@
 #include <libmem/libmem.h>
 
+#if LM_OS == LM_OS_WIN
+#	define TARGET_PROC "target.exe"
+#else
+#	define TARGET_PROC "target"
+#endif
+
 #define CHECK_PROCESS(proc) ( \
 	(proc)->pid != LM_PID_BAD && \
 	LM_STRLEN((proc)->path) > 0 && \
@@ -25,5 +31,8 @@
 	LM_STRLEN((mod)->name) > 0 \
 )
 
+/* Dependency Injection */
 extern lm_process_t current_process;
 extern lm_process_t target_process;
+extern lm_thread_t  current_thread;
+extern lm_thread_t  target_thread;

@@ -254,16 +254,20 @@ _LM_PtraceRead(lm_pid_t     pid,
 
 #	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	for (i = 0; i < size; ++i) {
+		errno = 0;
 		dst[i] = (lm_byte_t)ptrace(PTRACE_PEEKDATA,
 					   pid,
 					   (void *)LM_OFFSET(src, i),
 					   NULL);
 
-		if (dst[i] == (lm_byte_t)-1 && errno)
-			return LM_FALSE;
+		if (dst[i] == (lm_byte_t)-1 && errno) {
+			printf("errno: %d\n", errno);
+		 	return LM_FALSE;
+		}
 	}
 #	elif LM_OS == LM_OS_BSD
 	for (i = 0; i < size; ++i) {
+		errno = 0;
 		dst[i] = (lm_byte_t)ptrace(PT_READ_D,
 					   pid,
 					   (caddr_t)LM_OFFSET(src, i),
@@ -302,12 +306,14 @@ _LM_PtraceWrite(lm_pid_t     pid,
 
 #	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
+		errno = 0;
 		if (ptrace(PTRACE_POKEDATA, pid, (void *)LM_OFFSET(dst, i),
 			   *(lm_uintptr_t *)(&buf[i])) == -1)
 			goto FREE_RET;
 	}
 #	elif LM_OS == LM_OS_BSD
 	for (i = 0; i < aligned_size; i += sizeof(lm_uintptr_t)) {
+		errno = 0;
 		if (ptrace(PT_WRITE_D, pid, (caddr_t)LM_OFFSET(dst, i),
 			   *(lm_uintptr_t *)(&buf[i])) == -1)
 			goto FREE_RET;

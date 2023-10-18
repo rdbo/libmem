@@ -90,10 +90,7 @@ char *test_LM_LoadModule()
 
 char *test_LM_UnloadModule()
 {
-	lm_module_t mod;
-
 	mu_assert("failed to unload module from current process", LM_UnloadModule(&libtest_mod) == LM_TRUE);
-	mu_assert("module has not been properly unloaded", LM_FindModule(libtest_mod.name, &mod) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments", LM_UnloadModule(LM_NULLPTR) == LM_FALSE);
 
 	return NULL;

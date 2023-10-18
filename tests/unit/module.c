@@ -2,12 +2,6 @@
 #include "minunit.h"
 #include "helpers.h"
 
-#if LM_OS == LM_OS_WIN
-#	define LIB_PATH "libtest.dll"
-#else
-#	define LIB_PATH "libtest.so"
-#endif
-
 struct enum_modules_cbarg {
 	lm_process_t *pproc;
 	lm_bool_t check;
@@ -79,7 +73,7 @@ char *test_LM_FindModuleEx(lm_process_t *ptargetproc)
 
 char *test_LM_LoadModule(lm_module_t *pmod)
 {
-	mu_assert("failed to load module into current process", LM_LoadModule(LIB_PATH, pmod) == LM_TRUE);
+	mu_assert("failed to load module into current process", LM_LoadModule(LIBTEST_PATH, pmod) == LM_TRUE);
 	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));
 	mu_assert("function attempted to run with bad arguments", LM_LoadModule(LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 
@@ -99,11 +93,11 @@ char *test_LM_LoadModuleEx(struct load_module_args *arg)
 	lm_process_t *ptargetproc = arg->ptargetproc;
 	lm_module_t *pmod = arg->pmod;
 
-	mu_assert("failed to load module into target process", LM_LoadModuleEx(ptargetproc, LIB_PATH, pmod) == LM_TRUE);
+	mu_assert("failed to load module into target process", LM_LoadModuleEx(ptargetproc, LIBTEST_PATH, pmod) == LM_TRUE);
 	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));
-	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_LoadModuleEx(LM_NULLPTR, LIB_PATH, pmod) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_LoadModuleEx(LM_NULLPTR, LIBTEST_PATH, pmod) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LM_NULLPTR, pmod) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LIB_PATH, LM_NULLPTR) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LIBTEST_PATH, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }

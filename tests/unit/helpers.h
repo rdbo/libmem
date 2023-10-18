@@ -1,11 +1,5 @@
 #include <libmem/libmem.h>
 
-#if LM_OS == LM_OS_WIN
-#	define TARGET_PROC "target.exe"
-#else
-#	define TARGET_PROC "target"
-#endif
-
 #define CHECK_PROCESS(proc) ( \
 	(proc)->pid != LM_PID_BAD && \
 	LM_STRLEN((proc)->path) > 0 && \

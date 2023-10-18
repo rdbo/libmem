@@ -132,6 +132,7 @@ if (LIBMEM_BUILD_TESTS)
 	add_executable(unit ${UNIT_SRC})
 	target_include_directories(unit PUBLIC ${LIBMEM_INC})
 	target_link_libraries(unit libmem)
+	target_compile_definitions(unit PUBLIC LIBTEST_PATH="${LIBTEST_PATH}" TARGET_NAME="target${CMAKE_EXECUTABLE_SUFFIX}")
 
 	add_executable(target ${TARGET_SRC})
 	target_include_directories(target PUBLIC ${LIBMEM_INC})

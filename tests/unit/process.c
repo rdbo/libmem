@@ -56,10 +56,10 @@ char *test_LM_GetProcessEx(lm_process_t *pcurproc)
 
 char *test_LM_FindProcess(lm_process_t *ptargetproc)
 {
-	mu_assert("failed to find target process from string", LM_FindProcess(TARGET_PROC, ptargetproc));
+	mu_assert("failed to find target process from string", LM_FindProcess(TARGET_NAME, ptargetproc));
 	mu_assert("retrieved process is invalid", CHECK_PROCESS(ptargetproc));
 	mu_assert("function attempted to run with bad arguments (invalid procstr)", LM_FindProcess(LM_NULLPTR, ptargetproc) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid procbuf)", LM_FindProcess(TARGET_PROC, LM_NULLPTR) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid procbuf)", LM_FindProcess(TARGET_NAME, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }

@@ -25,10 +25,10 @@ lm_bool_t _LM_EnumModulesCallback(lm_module_t *pmod, lm_void_t *arg)
 	return LM_TRUE;
 }
 
-char *test_LM_EnumModules()
+char *test_LM_EnumModules(lm_process_t *pcurproc)
 {
 	struct enum_modules_cbarg arg;
-	arg.pproc = &current_process;
+	arg.pproc = pcurproc;
 	arg.check = LM_FALSE;
 
 	mu_assert("failed to enumerate modules", LM_EnumModules(_LM_EnumModulesCallback, (lm_void_t *)&arg) == LM_TRUE);
@@ -38,73 +38,72 @@ char *test_LM_EnumModules()
 	return NULL;
 }
 
-char *test_LM_EnumModulesEx()
+char *test_LM_EnumModulesEx(lm_process_t *ptargetproc)
 {
 	struct enum_modules_cbarg arg;
-	arg.pproc = &target_process;
+	arg.pproc = ptargetproc;
 	arg.check = LM_FALSE;
 
-	mu_assert("failed to enumerate modules", LM_EnumModulesEx(&target_process, _LM_EnumModulesCallback, (lm_void_t *)&arg) == LM_TRUE);
+	mu_assert("failed to enumerate modules", LM_EnumModulesEx(ptargetproc, _LM_EnumModulesCallback, (lm_void_t *)&arg) == LM_TRUE);
 	mu_assert("process module not found in callback", arg.check == LM_TRUE);
 	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_EnumModulesEx(LM_NULLPTR, _LM_EnumModulesCallback, LM_NULLPTR) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_EnumModulesEx(&target_process, LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_EnumModulesEx(ptargetproc, LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }
 
-char *test_LM_FindModule()
+char *test_LM_FindModule(lm_process_t *pcurproc)
 {
 	lm_module_t mod;
 	
-	mu_assert("failed to find current process module", LM_FindModule(current_process.name, &mod) == LM_TRUE);
+	mu_assert("failed to find current process module", LM_FindModule(pcurproc->name, &mod) == LM_TRUE);
 	mu_assert("found module is invalid", CHECK_MODULE(&mod));
 	mu_assert("function attempted to run with bad arguments (invalid name)", LM_FindModule(LM_NULLPTR, &mod) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid modbuf)", LM_FindModule(current_process.name, LM_NULLPTR) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid modbuf)", LM_FindModule(pcurproc->name, LM_NULLPTR) == LM_FALSE);
 	
 	return NULL;
 }
 
-char *test_LM_FindModuleEx()
+char *test_LM_FindModuleEx(lm_process_t *ptargetproc)
 {
 	lm_module_t mod;
 	
-	mu_assert("failed to find process module", LM_FindModuleEx(&target_process, target_process.name, &mod) == LM_TRUE);
+	mu_assert("failed to find process module", LM_FindModuleEx(ptargetproc, ptargetproc->name, &mod) == LM_TRUE);
 	mu_assert("found module is invalid", CHECK_MODULE(&mod));
-	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_FindModuleEx(LM_NULLPTR, current_process.name, &mod) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid name)", LM_FindModuleEx(&target_process, LM_NULLPTR, &mod) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid modbuf)", LM_FindModuleEx(&target_process, current_process.name, LM_NULLPTR) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_FindModuleEx(LM_NULLPTR, ptargetproc->name, &mod) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid name)", LM_FindModuleEx(ptargetproc, LM_NULLPTR, &mod) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid modbuf)", LM_FindModuleEx(ptargetproc, ptargetproc->name, LM_NULLPTR) == LM_FALSE);
 	
 	return NULL;
 }
 
-lm_module_t libtest_mod;
-
-char *test_LM_LoadModule()
+char *test_LM_LoadModule(lm_module_t *pmod)
 {
-	mu_assert("failed to load module into current process", LM_LoadModule(LIB_PATH, &libtest_mod) == LM_TRUE);
-	mu_assert("loaded module is invalid", CHECK_MODULE(&libtest_mod));
+	mu_assert("failed to load module into current process", LM_LoadModule(LIB_PATH, pmod) == LM_TRUE);
+	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));
 	mu_assert("function attempted to run with bad arguments", LM_LoadModule(LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }
 
-char *test_LM_UnloadModule()
+char *test_LM_UnloadModule(lm_module_t *pmod)
 {
-	mu_assert("failed to unload module from current process", LM_UnloadModule(&libtest_mod) == LM_TRUE);
+	mu_assert("failed to unload module from current process", LM_UnloadModule(pmod) == LM_TRUE);
 	mu_assert("function attempted to run with bad arguments", LM_UnloadModule(LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }
 
-char *test_LM_LoadModuleEx()
+char *test_LM_LoadModuleEx(struct load_module_args *arg)
 {
-	lm_module_t mod;
+	lm_process_t *ptargetproc = arg->ptargetproc;
+	lm_module_t *pmod = arg->pmod;
 
-	mu_assert("failed to load module into target process", LM_LoadModuleEx(&target_process, LIB_PATH, &mod) == LM_TRUE);
-	mu_assert("loaded module is invalid", CHECK_MODULE(&mod));
-	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_LoadModuleEx(LM_NULLPTR, LIB_PATH, &mod) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(&target_process, LM_NULLPTR, &mod) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(&target_process, LIB_PATH, LM_NULLPTR) == LM_FALSE);
+	mu_assert("failed to load module into target process", LM_LoadModuleEx(ptargetproc, LIB_PATH, pmod) == LM_TRUE);
+	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));
+	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_LoadModuleEx(LM_NULLPTR, LIB_PATH, pmod) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LM_NULLPTR, pmod) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LIB_PATH, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }

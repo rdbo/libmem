@@ -31,8 +31,14 @@
 	LM_STRLEN((mod)->name) > 0 \
 )
 
-/* Dependency Injection */
-extern lm_process_t current_process;
-extern lm_process_t target_process;
-extern lm_thread_t  current_thread;
-extern lm_thread_t  target_thread;
+struct thread_args {
+	lm_process_t *pcurproc;
+	lm_process_t *ptargetproc;
+	lm_thread_t *pcurthread;
+	lm_thread_t *ptargetthread;
+};
+
+struct load_module_args {
+	lm_process_t *ptargetproc;
+	lm_module_t *pmod;
+};

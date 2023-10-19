@@ -229,7 +229,7 @@
 #define LM_VALID_THREAD(pthr) ((pthr)->tid != LM_TID_BAD)
 #define LM_VALID_MODULE(pmod) ((pmod)->base != LM_ADDRESS_BAD && (pmod)->end != LM_ADDRESS_BAD && (pmod)->size > 0)
 #define LM_VALID_PAGE(ppage) ((ppage)->base != LM_ADDRESS_BAD && (ppage)->end != LM_ADDRESS_BAD && (ppage)->size > 0)
-#define LM_VALID_PROT(prot) ((prot & LM_PROT_XRW) || prot == LM_PROT_NONE)
+#define LM_VALID_PROT(prot) ((prot & LM_PROT_XRW) == prot || prot == LM_PROT_NONE)
 
 /* Flags */
 #if LM_OS == LM_OS_WIN

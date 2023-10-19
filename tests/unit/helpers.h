@@ -36,3 +36,8 @@ struct load_module_args {
 	lm_process_t *ptargetproc;
 	lm_module_t *pmod;
 };
+
+struct memory_args {
+	lm_process_t *ptargetproc;
+	lm_address_t *palloc;
+};

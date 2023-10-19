@@ -75,7 +75,8 @@ LM_ReadMemory(lm_address_t src,
 {
 	lm_size_t i;
 
-	LM_ASSERT(src != LM_ADDRESS_BAD && dst != LM_NULLPTR && size > 0);
+	if (src == LM_ADDRESS_BAD || dst == LM_NULLPTR || size == 0)
+		return 0;
 
 	for (i = 0; i < size; ++i)
 		dst[i] = ((lm_byte_t *)src)[i];
@@ -180,7 +181,8 @@ LM_WriteMemory(lm_address_t dst,
 {
 	lm_size_t i;
 
-	LM_ASSERT(dst != LM_ADDRESS_BAD && src != LM_NULLPTR && size > 0);
+	if (dst == LM_ADDRESS_BAD || !src || size == 0)
+		return 0;
 
 	for (i = 0; i < size; ++i)
 		((lm_byte_t *)dst)[i] = src[i];
@@ -284,7 +286,8 @@ LM_SetMemory(lm_address_t dst,
 {
 	lm_size_t i;
 
-	LM_ASSERT(dst != LM_ADDRESS_BAD && size > 0);
+	if (dst == LM_ADDRESS_BAD || size == 0)
+		return 0;
 
 	for (i = 0; i < size; ++i)
 		*(lm_byte_t *)LM_OFFSET(dst, i) = byte;
@@ -500,7 +503,8 @@ LM_API lm_address_t
 LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot)
 {
-	LM_ASSERT(size > 0 && LM_VALID_PROT(prot));
+	if (size == 0 || !LM_VALID_PROT(prot))
+		return LM_ADDRESS_BAD;
 
 	return _LM_AllocMemory(size, prot);
 }
@@ -568,9 +572,8 @@ LM_AllocMemoryEx(lm_process_t *pproc,
 		 lm_size_t     size,
 		 lm_prot_t     prot)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  size > 0 && LM_VALID_PROT(prot));
+	if (!pproc || !LM_VALID_PROCESS(pproc) || size == 0 || !LM_VALID_PROT(prot))
+		return LM_ADDRESS_BAD;
 
 	return _LM_AllocMemoryEx(pproc, size, prot);
 }
@@ -598,7 +601,8 @@ LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size)
 {
 	/* size can be 0 (at least on Windows, where it MUST be 0) */
-	LM_ASSERT(alloc != LM_ADDRESS_BAD);
+	if (alloc == LM_ADDRESS_BAD)
+		return LM_FALSE;
 
 	return _LM_FreeMemory(alloc, size);	
 }
@@ -648,9 +652,8 @@ LM_FreeMemoryEx(lm_process_t *pproc,
 		lm_address_t  alloc,
 		lm_size_t     size)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  alloc != LM_ADDRESS_BAD);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || alloc == LM_ADDRESS_BAD)
+		return LM_FALSE;
 
 	return _LM_FreeMemoryEx(pproc, alloc, size);
 }

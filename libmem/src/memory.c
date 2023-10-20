@@ -198,12 +198,13 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 {
 	lm_size_t wrsize = 0;
 	HANDLE hProcess;
+	SIZE_T written_bytes;
 
 	if (!_LM_OpenProc(pproc->pid, &hProcess))
 		return wrsize;
 
-	wrsize = (lm_size_t)WriteProcessMemory(hProcess, dst, src,
-					       size, NULL);
+	if (WriteProcessMemory(hProcess, dst, src, size, &written_bytes))
+		wrsize = (lm_size_t)written_bytes;
 
 	_LM_CloseProc(&hProcess);
 

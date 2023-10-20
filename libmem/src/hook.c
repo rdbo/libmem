@@ -83,7 +83,8 @@ LM_HookCode(lm_address_t  from,
 	lm_size_t    codesize;
 	lm_size_t    alignedsize;
 
-	LM_ASSERT(from != LM_ADDRESS_BAD && to != LM_ADDRESS_BAD);
+	if (from == LM_ADDRESS_BAD || to == LM_ADDRESS_BAD)
+		return ret;
 
 	if (!(codesize = _LM_GenerateHook(from, to, LM_BITS, &codebuf)))
 		return ret;
@@ -208,9 +209,8 @@ LM_UnhookCode(lm_address_t from,
 {
 	lm_prot_t old_prot;
 
-	LM_ASSERT(from != LM_ADDRESS_BAD &&
-		  trampoline != LM_ADDRESS_BAD &&
-		  size > 0);
+	if (from == LM_ADDRESS_BAD || trampoline == LM_ADDRESS_BAD || size == 0)
+		return LM_FALSE;
 
 	if (!LM_ProtMemory(from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;

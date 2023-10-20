@@ -39,5 +39,11 @@ struct load_module_args {
 
 struct memory_args {
 	lm_process_t *ptargetproc;
-	lm_address_t *palloc;
+	lm_address_t *palloc; /* TODO: Change this to just 'lm_address_t alloc' */
+};
+
+struct hook_args {
+	lm_process_t *ptargetproc;
+	lm_address_t trampoline;
+	lm_size_t hksize;
 };

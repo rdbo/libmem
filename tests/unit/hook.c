@@ -29,6 +29,9 @@ int hk_target_function(char *mystr, int mynum)
 
 char *test_LM_HookCode(struct hook_args *arg)
 {
+	/* TODO: Don't rely on LM_ProtMemory for this test */
+	mu_assert("failed to change protection of target function", LM_ProtMemory((lm_address_t)target_function, 1024, LM_PROT_XRW, LM_NULLPTR) == LM_TRUE);
+	
 	arg->hksize = LM_HookCode((lm_address_t)target_function, (lm_address_t)hk_target_function, &arg->trampoline);
 	mu_assert("failed to hook target function", arg->hksize > 0);
 	target_function_trampoline = (int (*)(char *, int))arg->trampoline;

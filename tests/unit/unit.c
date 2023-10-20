@@ -52,11 +52,16 @@ void test_memory(lm_process_t *ptargetproc)
 	arg.palloc = &alloc;
 
 	UNIT_TEST_P(LM_AllocMemory, &alloc);
+	UNIT_TEST_P(LM_ProtMemory, &alloc);
 	UNIT_TEST_P(LM_FreeMemory, &alloc);
 	UNIT_TEST(LM_ReadMemory);
 	UNIT_TEST(LM_WriteMemory);
 	UNIT_TEST(LM_SetMemory);
 	UNIT_TEST_P(LM_AllocMemoryEx, &arg);
+	UNIT_TEST_P(LM_ProtMemoryEx, &arg);
+	UNIT_TEST_P(LM_WriteMemoryEx, &arg);
+	UNIT_TEST_P(LM_SetMemoryEx, &arg);
+	UNIT_TEST_P(LM_ReadMemoryEx, &arg);
 	UNIT_TEST_P(LM_FreeMemoryEx, &arg);
 }
 

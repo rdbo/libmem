@@ -163,11 +163,8 @@ LM_ReadMemoryEx(lm_process_t *pproc,
 		lm_byte_t   *dst,
 		lm_size_t    size)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  src != LM_ADDRESS_BAD &&
-		  dst != LM_NULLPTR &&
-		  size > 0);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || src == LM_ADDRESS_BAD || !dst || size == 0)
+		return LM_FALSE;
 
 	return _LM_ReadMemoryEx(pproc, src, dst, size);
 }
@@ -268,11 +265,8 @@ LM_WriteMemoryEx(lm_process_t *pproc,
 		 lm_bytearr_t  src,
 		 lm_size_t     size)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  dst != LM_ADDRESS_BAD &&
-		  src != LM_NULLPTR &&
-		  size > 0);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || dst == LM_ADDRESS_BAD || !src || size == 0)
+		return LM_FALSE;
 
 	return _LM_WriteMemoryEx(pproc, dst, src, size);
 }
@@ -306,10 +300,8 @@ LM_SetMemoryEx(lm_process_t *pproc,
 	lm_size_t  wrsize = 0;
 	lm_byte_t *data;
 
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  dst != LM_ADDRESS_BAD &&
-		  size > 0);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || dst == LM_ADDRESS_BAD || size == 0)
+		return LM_FALSE;
 
 	data = (lm_byte_t *)LM_MALLOC(size);
 	if (!data)
@@ -378,9 +370,8 @@ LM_ProtMemory(lm_address_t addr,
 	      lm_prot_t   *oldprot)
 {
 	/* oldprot can be a null pointer */
-	LM_ASSERT(addr != LM_ADDRESS_BAD &&
-		  size > 0 &&
-		  LM_VALID_PROT(prot));
+	if (addr == LM_ADDRESS_BAD || size == 0 || !LM_VALID_PROT(prot))
+		return LM_FALSE;
 	
 	return _LM_ProtMemory(addr, size, prot, oldprot);
 }
@@ -457,11 +448,8 @@ LM_ProtMemoryEx(lm_process_t *pproc,
 		lm_prot_t     prot,
 		lm_prot_t    *oldprot)
 {
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) &&
-		  addr != LM_ADDRESS_BAD &&
-		  LM_VALID_PROT(prot) &&
-		  size > 0);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || addr == LM_ADDRESS_BAD || !LM_VALID_PROT(prot) || size == 0)
+		return LM_FALSE;
 
 	return _LM_ProtMemoryEx(pproc, addr, size, prot, oldprot);
 }

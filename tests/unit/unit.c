@@ -72,7 +72,7 @@ void test_hook(lm_process_t *ptargetproc)
 	
 	UNIT_TEST_P(LM_HookCode, &arg);
 	UNIT_TEST_P(LM_UnhookCode, &arg);
-	/* TODO: Add tests for LM_HookCodeEx and LM_unhookCodeEx */
+	/* TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx */
 }
 
 void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
@@ -89,6 +89,7 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_LoadModule, &mod);
 	UNIT_TEST_P(LM_UnloadModule, &mod);
 	UNIT_TEST_P(LM_LoadModuleEx, &arg);
+	/* TODO: Add test for LM_UnloadModuleEx */
 }
 
 int main()

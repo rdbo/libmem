@@ -36,6 +36,7 @@ LM_EnumModules(lm_bool_t(*callback)(lm_module_t *pmod,
 	if (!LM_GetProcess(&proc))
 		return LM_FALSE;
 
+	/* TODO: Add manual implementation for *nix, using `dl_iterate_phdr` or through `link_map`s chain */
 	return LM_EnumModulesEx(&proc, callback, arg);
 }
 
@@ -88,6 +89,90 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 
 	return ret;
 }
+#elif LM_OS == LM_OS_LINUX
+LM_PRIVATE lm_bool_t
+_LM_EnumModulesEx(lm_process_t *pproc,
+		  lm_bool_t   (*callback)(lm_module_t *pmod,
+					  lm_void_t   *arg),
+		  lm_void_t    *arg)
+{
+	DIR *d;
+	struct dirent *dir;
+	regex_t regex;
+	regmatch_t matches[3];
+	lm_module_t mod;
+
+	lm_address_t start;
+	lm_address_t end;
+	char path[LM_PATH_MAX];
+	char real_path[LM_PATH_MAX];
+	ssize_t result;
+	lm_char_t *name;
+	lm_char_t *tmp;
+
+	LM_CSNPRINTF(path, sizeof(path), "/proc/%d/map_files", pproc->pid);
+	d = opendir(path);
+	if (!d)
+		return LM_FALSE;
+
+	if (regcomp(&regex, "([a-z0-9]+)-([a-z0-9]+)", REG_ICASE | REG_EXTENDED))
+		goto CLOSE_RET;
+
+	mod.base = 0;
+	mod.end = 0;
+	
+	while ((dir = readdir(d)) != NULL) {
+		if (!regexec(&regex, dir->d_name, 3, matches, 0)) {
+			start = (lm_address_t)LM_STRTOP(&dir->d_name[matches[1].rm_so], NULL, 16);
+			end = (lm_address_t)LM_STRTOP(&dir->d_name[matches[2].rm_so], NULL, 16);
+
+			LM_SNPRINTF(path, sizeof(path), LM_STR("/proc/%d/map_files/%s"), pproc->pid, dir->d_name);
+			if ((result = readlink(path, real_path, sizeof(real_path))) == -1)
+				continue;
+
+			real_path[result] = '\0';
+			
+			if (!mod.base) {
+				mod.base = start;
+				mod.end = end;
+				LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), "/proc/%d/root%s", pproc->pid, real_path); /* TODO: avoid this repetition below */
+			} else {
+				if (start != mod.end || strcmp(mod.path, real_path)) {
+					for (tmp = mod.path; (tmp = LM_STRCHR(tmp, LM_STR('/'))) != NULL; tmp = &tmp[1])
+						name = tmp;
+					name = &name[1];
+					LM_STRCPY(mod.name, name);
+					mod.size = mod.end - mod.base;
+
+					callback(&mod, arg);
+					mod.base = start;
+					mod.end = end;
+					LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), "/proc/%d/root%s", pproc->pid, real_path);
+				} else {
+					mod.end = end;
+				}
+			}
+		}
+	}
+
+	/* TODO: avoid the repeating code to setup 'mod' */
+	if (mod.base) {
+		for (tmp = mod.path; (tmp = LM_STRCHR(tmp, LM_STR('/'))) != NULL; tmp = &tmp[1])
+			name = tmp;
+		name = &name[1];
+		LM_STRCPY(mod.name, name);
+		mod.size = mod.end - mod.base;
+
+		callback(&mod, arg);
+	}
+
+	regfree(&regex);
+
+CLOSE_RET:
+	closedir(d);
+	
+	return LM_TRUE;
+}
 #else
 LM_PRIVATE lm_bool_t
 _LM_EnumModulesEx(lm_process_t *pproc,
@@ -109,19 +194,11 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 	mod.size = 0;
 	mod.path[0] = LM_STR('\x00');
 
-#	if LM_OS == LM_OS_BSD
 	if (regcomp(&regex, "^0x([a-z0-9]+)[[:blank:]]+0x([a-z0-9]+)[[:blank:]]+[^/]+(/.*)([[:blank:]])+[A-Z]+[[:blank:]]+.*$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
 		    LM_STR("%s/%d/map"), LM_PROCFS, pproc->pid);
-#	else
-	if (regcomp(&regex, "^([a-z0-9]+)-([a-z0-9]+)[^/]+(/.+)$", REG_EXTENDED))
-		return ret;
-
-	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),
-		    LM_STR("%s/%d/maps"), LM_PROCFS, pproc->pid);
-#	endif
 
 	maps_file = LM_FOPEN(maps_path, "r");
 	if (!maps_file)
@@ -132,9 +209,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 			continue;
 
 		maps_line[--line_len] = LM_STR('\x00'); /* remove \n */
-#		if LM_OS == LM_OS_BSD
 		maps_line[matches[4].rm_so] = LM_STR('\x00');
-#		endif
 		curpath = &maps_line[matches[3].rm_so];
 
 
@@ -174,6 +249,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 			 * and others.
 			 * TODO: Test this on BSD.
 			 */
+			/*
 #			if LM_OS == LM_OS_LINUX
 			{
 				lm_char_t old_path[LM_PATH_MAX];
@@ -182,6 +258,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 				LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), LM_STR("/proc/%d/root%s"), pproc->pid, old_path);
 			}
 #			endif
+			*/
 
 			if (callback(&mod, arg) == LM_FALSE) {
 				mod.size = 0; /* prevent last module callback */
@@ -220,6 +297,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 		 * and others.
 		 * TODO: Test this on BSD.
 		 */
+		/*
 #		if LM_OS == LM_OS_LINUX
 		{
 			lm_char_t old_path[LM_PATH_MAX];
@@ -228,6 +306,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 			LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), LM_STR("/proc/%d/root%s"), pproc->pid, old_path);
 		}
 #		endif
+		*/
 		callback(&mod, arg);
 	}
 

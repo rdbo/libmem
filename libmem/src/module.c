@@ -131,13 +131,16 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 				continue;
 
 			real_path[result] = '\0';
-			
+			result++;
+
 			if (!mod.base) {
 				mod.base = start;
 				mod.end = end;
-				LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), "/proc/%d/root%s", pproc->pid, real_path); /* TODO: avoid this repetition below */
+				LM_MEMCPY(mod.path, real_path, (lm_size_t)result); /* TODO: Avoid repetition of this code below */
 			} else {
-				if (start != mod.end || strcmp(mod.path, real_path)) {
+				if (start != mod.end || LM_STRCMP(mod.path, real_path)) {
+					LM_MEMCPY(path, mod.path, sizeof(path)); /* temporary path for adding the /proc/<pid>/root prefix later */
+					LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), "/proc/%d/root%s", pproc->pid, path);
 					for (tmp = mod.path; (tmp = LM_STRCHR(tmp, LM_STR('/'))) != NULL; tmp = &tmp[1])
 						name = tmp;
 					name = &name[1];
@@ -147,7 +150,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 					callback(&mod, arg);
 					mod.base = start;
 					mod.end = end;
-					LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), "/proc/%d/root%s", pproc->pid, real_path);
+					LM_MEMCPY(mod.path, real_path, (lm_size_t)result);
 				} else {
 					mod.end = end;
 				}
@@ -157,6 +160,7 @@ _LM_EnumModulesEx(lm_process_t *pproc,
 
 	/* TODO: avoid the repeating code to setup 'mod' */
 	if (mod.base) {
+		LM_SNPRINTF(mod.path, LM_ARRLEN(mod.path), "/proc/%d/root%s", pproc->pid, real_path); /* Since this is the last module, we don't have to create a copy of 'mod.path', as 'real_path' still holds it */
 		for (tmp = mod.path; (tmp = LM_STRCHR(tmp, LM_STR('/'))) != NULL; tmp = &tmp[1])
 			name = tmp;
 		name = &name[1];

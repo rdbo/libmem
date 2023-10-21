@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.22.1)
 
 include(ExternalProject)
 
-project(libmem)
+project(libmem LANGUAGES C CXX ASM)
 
 message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
 
-option(LIBMEM_BUILD_TESTS "Build tests" ON)
+option(LIBMEM_BUILD_TESTS "Build tests" OFF)
 option(LIBMEM_BUILD_STATIC "Build a static library" OFF)
 option(LIBMEM_BUILD_32 "Build for 32 bits" OFF)
 
@@ -75,10 +75,23 @@ add_library(llvm STATIC ${LLVM_SRC})
 set_target_properties(llvm PROPERTIES POSITION_INDEPENDENT_CODE True)
 target_compile_features(llvm PUBLIC cxx_std_17)
 
+set(INJECTOR_DIR "${PROJECT_SOURCE_DIR}/injector")
+set(INJECTOR_INC "${INJECTOR_DIR}/include")
+if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
+	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/windows/*.c")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/linux/*.c" "${INJECTOR_DIR}/src/linux/*.S")
+endif()
+
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
 set(LIBMEM_DEPS capstone keystone LIEF llvm)
+if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+	add_library(injector STATIC ${INJECTOR_SRC})
+	set_target_properties(injector PROPERTIES POSITION_INDEPENDENT_CODE True)
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
+endif()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	if(NOT MSVC)
@@ -99,7 +112,7 @@ else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${LIEF_INC} ${LLVM_INC})
+include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${LIEF_INC} ${LLVM_INC} ${INJECTOR_INC})
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem capstone-engine keystone-engine lief-project)

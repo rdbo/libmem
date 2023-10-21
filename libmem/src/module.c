@@ -442,6 +442,7 @@ LM_LoadModule(lm_string_t  path,
 
 /********************************/
 
+/*
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_LoadModuleEx(lm_process_t *pproc,
@@ -488,6 +489,46 @@ _LM_LoadModuleEx(lm_process_t *pproc,
 {
 	if (!_LM_CallDlopen(pproc, path, RTLD_LAZY, LM_NULLPTR))
 		return LM_FALSE;
+
+	if (modbuf && !LM_FindModuleEx(pproc, path, modbuf))
+		return LM_FALSE;
+
+	return LM_TRUE;
+}
+#endif
+*/
+
+#if LM_OS == LM_OS_BSD
+LM_PRIVATE lm_bool_t
+_LM_LoadModuleEx(lm_process_t *pproc,
+		 lm_string_t   path,
+		 lm_module_t  *modbuf)
+{
+	if (!_LM_CallDlopen(pproc, path, RTLD_LAZY, LM_NULLPTR))
+		return LM_FALSE;
+
+	if (modbuf && !LM_FindModuleEx(pproc, path, modbuf))
+		return LM_FALSE;
+
+	return LM_TRUE;
+}
+#else
+#include <injector.h>
+
+LM_PRIVATE lm_bool_t
+_LM_LoadModuleEx(lm_process_t *pproc,
+		 lm_string_t   path,
+		 lm_module_t  *modbuf)
+{
+	injector_t *injector;
+
+	if (injector_attach(&injector, pproc->pid))
+		return LM_FALSE;
+	
+        if (injector_inject(injector, path, NULL))
+		return LM_FALSE;
+
+        injector_detach(injector);
 
 	if (modbuf && !LM_FindModuleEx(pproc, path, modbuf))
 		return LM_FALSE;

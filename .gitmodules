@@ -10,3 +10,7 @@
 	path = LIEF
 	url = https://github.com/lief-project/LIEF
 	branch = master
+[submodule "injector"]
+	path = injector
+	url = https://github.com/rdbo/injector
+	branch = rdbo-flatpak-sandbox-fix

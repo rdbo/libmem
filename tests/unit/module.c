@@ -97,7 +97,6 @@ char *test_LM_LoadModuleEx(struct load_module_args *arg)
 	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));
 	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_LoadModuleEx(LM_NULLPTR, LIBTEST_PATH, pmod) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LM_NULLPTR, pmod) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LIBTEST_PATH, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
 }

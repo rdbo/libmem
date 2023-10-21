@@ -542,7 +542,9 @@ LM_LoadModuleEx(lm_process_t *pproc,
 		lm_string_t   path,
 		lm_module_t  *modbuf)
 {
-	LM_ASSERT(pproc != LM_NULLPTR && LM_VALID_PROCESS(pproc) && path != LM_NULLPTR);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !path)
+		return LM_FALSE;
+
 	return _LM_LoadModuleEx(pproc, path, modbuf);
 }
 

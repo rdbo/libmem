@@ -113,9 +113,8 @@ LM_EnumSymbols(lm_module_t *pmod,
 				      lm_void_t   *arg),
 	       lm_void_t   *arg)
 {
-	LM_ASSERT(pmod != LM_NULLPTR &&
-		  LM_VALID_MODULE(pmod) &&
-		  callback);
+	if (!pmod || !LM_VALID_MODULE(pmod) || !callback)
+		return LM_FALSE;
 
 	return _LM_EnumSymbols(pmod, callback, arg);
 }
@@ -141,9 +140,8 @@ LM_FindSymbolAddress(lm_module_t  *pmod,
 {
 	lm_symbol_t arg;
 
-	LM_ASSERT(pmod != LM_NULLPTR &&
-		  LM_VALID_MODULE(pmod) &&
-		  name != LM_NULLPTR);
+	if (!pmod || !LM_VALID_MODULE(pmod) || !name)
+		return LM_ADDRESS_BAD;
 
 	arg.name = name;
 	arg.address = LM_ADDRESS_BAD;
@@ -164,7 +162,8 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 	size_t size;
 	lm_cchar_t *demang_copy;
 
-	LM_ASSERT(symbol != LM_NULLPTR);
+	if (!symbol)
+		return (lm_cstring_t)LM_NULLPTR;
 	
 	demang = llvm::demangle(symbol);
 	if (demang.length() == 0)
@@ -231,10 +230,9 @@ LM_EnumSymbolsDemangled(lm_module_t *pmod,
 {
 	lm_enum_sym_demang_t cbarg;
 
-	LM_ASSERT(pmod != LM_NULLPTR &&
-		  LM_VALID_MODULE(pmod) &&
-		  callback);
-	
+	if (!pmod || !LM_VALID_MODULE(pmod) || !callback)
+		return LM_FALSE;
+
 	cbarg.callback = callback;
 	cbarg.arg = arg;
 	return LM_EnumSymbols(pmod, _LM_EnumSymbolsDemangledCallback, (lm_void_t *)&cbarg);
@@ -248,9 +246,8 @@ LM_FindSymbolAddressDemangled(lm_module_t *pmod,
 {
 	lm_symbol_t arg;
 
-	LM_ASSERT(pmod != LM_NULLPTR &&
-		  LM_VALID_MODULE(pmod) &&
-		  name != LM_NULLPTR);
+	if (!pmod || !LM_VALID_MODULE(pmod) || !name)
+		return LM_ADDRESS_BAD;
 
 	arg.name = name;
 	arg.address = LM_ADDRESS_BAD;

@@ -100,6 +100,21 @@ void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_GetPageEx, ptargetproc);
 }
 
+void test_symbol(lm_process_t *pcurproc)
+{
+	/* TODO: Retrieve module from 'module' tests and reuse here! */
+	lm_module_t mod;
+	
+	assert(LM_FindModule(pcurproc->name, &mod) == LM_TRUE);
+	
+	UNIT_TEST_P(LM_EnumSymbols, &mod);
+	UNIT_TEST_P(LM_FindSymbolAddress, &mod);
+	UNIT_TEST(LM_DemangleSymbol);
+	UNIT_TEST(LM_FreeDemangleSymbol);
+	UNIT_TEST_P(LM_EnumSymbolsDemangled, &mod);
+	UNIT_TEST_P(LM_FindSymbolAddressDemangled, &mod);
+}
+
 int main()
 {
 	lm_process_t current_process;
@@ -116,6 +131,7 @@ int main()
 	test_hook(&target_process);
 	test_module(&current_process, &target_process);
 	test_page(&current_process, &target_process);
+	test_symbol(&current_process);
 
 	return 0;
 }

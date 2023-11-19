@@ -92,6 +92,14 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	/* TODO: Add test for LM_UnloadModuleEx */
 }
 
+void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
+{
+	UNIT_TEST_P(LM_EnumPages, pcurproc);
+	UNIT_TEST_P(LM_EnumPagesEx, pcurproc);
+	UNIT_TEST_P(LM_GetPage, pcurproc);
+	UNIT_TEST_P(LM_GetPageEx, ptargetproc);
+}
+
 int main()
 {
 	lm_process_t current_process;
@@ -107,6 +115,7 @@ int main()
 	test_memory(&target_process);
 	test_hook(&target_process);
 	test_module(&current_process, &target_process);
+	test_page(&current_process, &target_process);
 
 	return 0;
 }

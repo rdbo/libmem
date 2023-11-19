@@ -25,6 +25,13 @@
 	LM_STRLEN((mod)->name) > 0 \
 )
 
+#define CHECK_PAGE(page) ( \
+	(page)->base != LM_ADDRESS_BAD && \
+	(page)->end != LM_ADDRESS_BAD && \
+	(page)->size > 0 && \
+	LM_VALID_PROT((page)->prot) \
+)
+
 struct thread_args {
 	lm_process_t *pcurproc;
 	lm_process_t *ptargetproc;

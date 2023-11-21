@@ -115,6 +115,9 @@ void test_symbol(lm_process_t *pcurproc)
 	UNIT_TEST_P(LM_FindSymbolAddressDemangled, &mod);
 }
 
+#if LM_OS == LM_OS_WIN && LM_COMPILER ==LM_COMPILER_MSVC
+__declspec(dllexport)
+#endif
 int main()
 {
 	lm_process_t current_process;

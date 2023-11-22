@@ -798,7 +798,7 @@ LM_CodeLengthEx(lm_process_t *pproc,
 
 /****************************************/
 
-LM_API lm_void_t
+LM_API lm_bool_t
 LM_VmtNew(lm_address_t *vtable,
 	  lm_vmt_t     *vmtbuf);
 
@@ -807,7 +807,7 @@ LM_VmtHook(lm_vmt_t    *pvmt,
 	   lm_size_t    fnindex,
 	   lm_address_t dst);
 
-LM_API lm_void_t
+LM_API lm_bool_t
 LM_VmtUnhook(lm_vmt_t *pvmt,
 	     lm_size_t fnindex);
 

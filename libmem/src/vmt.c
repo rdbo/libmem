@@ -27,7 +27,7 @@ LM_PRIVATE lm_vmt_entry_t *
 _LM_VmtSearch(lm_vmt_t *pvmt,
 	      lm_size_t hkindex)
 {
-	lm_vmt_entry_t *entry;
+	lm_vmt_entry_t *entry = LM_NULLPTR;
 
 	for (entry = pvmt->hkentries; entry != LM_NULLPTR; entry = entry->next) {
 		if (entry->index == hkindex)
@@ -41,7 +41,7 @@ LM_PRIVATE lm_vmt_entry_t *
 _LM_VmtSearchPrev(lm_vmt_t       *pvmt,
 		  lm_vmt_entry_t *next)
 {
-	lm_vmt_entry_t *entry;
+	lm_vmt_entry_t *entry = LM_NULLPTR;
 
 	for (entry = pvmt->hkentries; entry != LM_NULLPTR; entry = entry->next) {
 		if (entry->next == next)
@@ -51,14 +51,17 @@ _LM_VmtSearchPrev(lm_vmt_t       *pvmt,
 	return entry;
 }
 
-LM_API lm_void_t
+LM_API lm_bool_t
 LM_VmtNew(lm_address_t *vtable,
 	  lm_vmt_t     *vmtbuf)
 {
-	LM_ASSERT(vmtbuf != LM_NULLPTR);
+	if (!vtable || !vmtbuf)
+		return LM_FALSE;
 
 	vmtbuf->vtable = vtable;
 	vmtbuf->hkentries = LM_NULLPTR;
+
+	return LM_TRUE;
 }
 
 /********************************/
@@ -70,6 +73,9 @@ LM_VmtHook(lm_vmt_t    *pvmt,
 {
 	lm_vmt_entry_t *entry;
 	lm_vmt_entry_t *head;
+
+	if (!pvmt)
+		return LM_FALSE;
 
 	/* check if the function has been hooked before; if not, create a new hook entry */
 	if (!(entry = _LM_VmtSearch(pvmt, fnindex))) {
@@ -93,15 +99,20 @@ LM_VmtHook(lm_vmt_t    *pvmt,
 
 /********************************/
 
-LM_API lm_void_t
+LM_API lm_bool_t
 LM_VmtUnhook(lm_vmt_t *pvmt,
 	     lm_size_t fnindex)
 {
-	lm_vmt_entry_t *entry = _LM_VmtSearch(pvmt, fnindex);
+	lm_vmt_entry_t *entry;
 	lm_vmt_entry_t *prev;
 
+	if (!pvmt)
+		return LM_FALSE;
+
+	entry = _LM_VmtSearch(pvmt, fnindex);
+
 	if (!entry)
-		return;
+		return LM_FALSE;
 
 	pvmt->vtable[fnindex] = entry->orig_func;
 
@@ -113,6 +124,8 @@ LM_VmtUnhook(lm_vmt_t *pvmt,
 	}
 
 	LM_FREE(entry);
+
+	return LM_TRUE;
 }
 
 /********************************/
@@ -122,6 +135,9 @@ LM_VmtGetOriginal(lm_vmt_t *pvmt,
 		  lm_size_t fnindex)
 {
 	lm_vmt_entry_t *entry;
+
+	if (!pvmt)
+		return LM_ADDRESS_BAD;
 
 	entry = _LM_VmtSearch(pvmt, fnindex);
 	if (entry)
@@ -137,6 +153,9 @@ LM_VmtReset(lm_vmt_t *pvmt)
 {
 	lm_vmt_entry_t *entry;
 	lm_vmt_entry_t *next;
+
+	if (!pvmt)
+		return;
 
 	for (entry = pvmt->hkentries; entry != LM_NULLPTR; entry = next) {
 		pvmt->vtable[entry->index] = entry->orig_func;

@@ -115,6 +115,18 @@ void test_symbol(lm_process_t *pcurproc)
 	UNIT_TEST_P(LM_FindSymbolAddressDemangled, &mod);
 }
 
+void test_vmt()
+{
+	lm_vmt_t vmt;
+
+	UNIT_TEST_P(LM_VmtNew, &vmt);
+	UNIT_TEST_P(LM_VmtHook, &vmt);
+	UNIT_TEST_P(LM_VmtGetOriginal, &vmt);
+	UNIT_TEST_P(LM_VmtUnhook, &vmt);
+	UNIT_TEST_P(LM_VmtReset, &vmt);
+	UNIT_TEST_P(LM_VmtFree, &vmt);
+}
+
 #if LM_OS == LM_OS_WIN && LM_COMPILER ==LM_COMPILER_MSVC
 __declspec(dllexport)
 #endif
@@ -135,6 +147,7 @@ int main()
 	test_module(&current_process, &target_process);
 	test_page(&current_process, &target_process);
 	test_symbol(&current_process);
+	test_vmt();
 
 	return 0;
 }

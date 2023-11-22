@@ -127,6 +127,21 @@ void test_vmt()
 	UNIT_TEST_P(LM_VmtFree, &vmt);
 }
 
+void test_scan(lm_process_t *ptargetproc)
+{
+	struct scan_args arg;
+	arg.ptargetproc = ptargetproc;
+	arg.scanaddr = LM_AllocMemoryEx(ptargetproc, sizeof(scanbuf), LM_PROT_XRW);
+	assert(arg.scanaddr != LM_ADDRESS_BAD);
+
+	assert(LM_WriteMemoryEx(ptargetproc, arg.scanaddr, (lm_bytearr_t)scanbuf, sizeof(scanbuf)) == sizeof(scanbuf));
+	
+	UNIT_TEST(LM_DataScan);
+	UNIT_TEST_P(LM_DataScanEx, &arg);
+
+	LM_FreeMemoryEx(ptargetproc, arg.scanaddr, sizeof(scanbuf));
+}
+
 #if LM_OS == LM_OS_WIN && LM_COMPILER ==LM_COMPILER_MSVC
 __declspec(dllexport)
 #endif
@@ -148,6 +163,7 @@ int main()
 	test_page(&current_process, &target_process);
 	test_symbol(&current_process);
 	test_vmt();
+	test_scan(&target_process);
 
 	return 0;
 }

@@ -54,3 +54,10 @@ struct hook_args {
 	lm_address_t trampoline;
 	lm_size_t hksize;
 };
+
+extern const lm_byte_t scanbuf[20];
+
+struct scan_args {
+	lm_process_t *ptargetproc;
+	lm_address_t scanaddr;
+};

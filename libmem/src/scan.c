@@ -32,8 +32,8 @@ LM_DataScan(lm_bytearr_t data,
 	lm_address_t match = LM_ADDRESS_BAD;
 	lm_byte_t   *ptr;
 
-	LM_ASSERT(data != LM_NULLPTR && size > 0 &&
-		  addr != LM_ADDRESS_BAD && scansize > 0);
+	if (!data || size == 0 || addr == LM_ADDRESS_BAD || scansize == 0)
+		return LM_ADDRESS_BAD;
 
 	for (ptr = (lm_byte_t *)addr;
 	     ptr != &((lm_byte_t *)addr)[scansize];
@@ -70,10 +70,8 @@ LM_DataScanEx(lm_process_t *pproc,
 	lm_size_t    i, j;
 	lm_bool_t    check;
 
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) && data != LM_NULLPTR &&
-		  size > 0 && addr != LM_ADDRESS_BAD && scansize > 0 &&
-		  scansize >= size);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !data || size == 0 || addr == LM_ADDRESS_BAD || scansize == 0 || scansize < size)
+		return LM_ADDRESS_BAD;
 
 	scanbuf = (lm_byte_t *)LM_MALLOC(scansize);
 	if (!scanbuf)

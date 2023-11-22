@@ -51,17 +51,15 @@ _LM_VmtSearchPrev(lm_vmt_t       *pvmt,
 	return entry;
 }
 
-LM_API lm_bool_t
+LM_API lm_void_t
 LM_VmtNew(lm_address_t *vtable,
 	  lm_vmt_t     *vmtbuf)
 {
 	if (!vtable || !vmtbuf)
-		return LM_FALSE;
+		return;
 
 	vmtbuf->vtable = vtable;
 	vmtbuf->hkentries = LM_NULLPTR;
-
-	return LM_TRUE;
 }
 
 /********************************/
@@ -99,7 +97,7 @@ LM_VmtHook(lm_vmt_t    *pvmt,
 
 /********************************/
 
-LM_API lm_bool_t
+LM_API lm_void_t
 LM_VmtUnhook(lm_vmt_t *pvmt,
 	     lm_size_t fnindex)
 {
@@ -107,12 +105,12 @@ LM_VmtUnhook(lm_vmt_t *pvmt,
 	lm_vmt_entry_t *prev;
 
 	if (!pvmt)
-		return LM_FALSE;
+		return;
 
 	entry = _LM_VmtSearch(pvmt, fnindex);
 
 	if (!entry)
-		return LM_FALSE;
+		return;
 
 	pvmt->vtable[fnindex] = entry->orig_func;
 
@@ -124,8 +122,6 @@ LM_VmtUnhook(lm_vmt_t *pvmt,
 	}
 
 	LM_FREE(entry);
-
-	return LM_TRUE;
 }
 
 /********************************/

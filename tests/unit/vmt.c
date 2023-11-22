@@ -37,10 +37,12 @@ char *test_LM_VmtNew(lm_vmt_t *vmt)
 {
 	initCppObject(&cppObject);
 	
-	mu_assert("failed to create vmt", LM_VmtNew((lm_address_t *)cppObject.vtable, vmt) == LM_TRUE);
+	LM_VmtNew((lm_address_t *)cppObject.vtable, vmt);
 	mu_assert("vmt is invalid", vmt->vtable == (lm_address_t *)cppObject.vtable && !vmt->hkentries);
-	mu_assert("function attempted to run with bad arguments (invalid vtable)", LM_VmtNew(LM_NULLPTR, vmt) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid vtable)", LM_VmtNew((lm_address_t *)cppObject.vtable, LM_NULLPTR) == LM_FALSE);
+
+	/* crash tests */
+	LM_VmtNew(LM_NULLPTR, vmt);
+	LM_VmtNew((lm_address_t *)cppObject.vtable, LM_NULLPTR);
 
 	return NULL;
 }
@@ -79,13 +81,14 @@ char *test_LM_VmtUnhook(lm_vmt_t *vmt)
 {
 	int result;
 	
-	mu_assert("failed to unhook vmt function", LM_VmtUnhook(vmt, 0) == LM_TRUE);
+	LM_VmtUnhook(vmt, 0);
 	
 	result = ((int (*)(CppObject *))cppObject.vtable[0])(&cppObject);
 	mu_assert("return value from vtable function is invalid", result == cppObject.number);
 
-	mu_assert("attempted to unhook invalid index", LM_VmtUnhook(vmt, 100) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid vmt)", LM_VmtUnhook(LM_NULLPTR, 0) == LM_FALSE);
+	/* crash tests */
+	LM_VmtUnhook(vmt, 100);
+	LM_VmtUnhook(LM_NULLPTR, 0);
 
 	return NULL;
 }
@@ -100,6 +103,9 @@ char *test_LM_VmtReset(lm_vmt_t *vmt)
 	result = ((int (*)(CppObject *))cppObject.vtable[0])(&cppObject);
 	mu_assert("return value from vtable function is invalid", result == cppObject.number);
 
+	/* crash tests */
+	LM_VmtReset(LM_NULLPTR);
+
 	return NULL;
 }
 
@@ -112,6 +118,9 @@ char *test_LM_VmtFree(lm_vmt_t *vmt)
 	
 	result = ((int (*)(CppObject *))cppObject.vtable[0])(&cppObject);
 	mu_assert("return value from vtable function is invalid", result == cppObject.number);
+
+	/* crash tests */
+	LM_VmtFree(LM_NULLPTR);
 
 	return NULL;
 }

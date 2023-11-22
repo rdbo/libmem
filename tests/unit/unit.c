@@ -138,6 +138,10 @@ void test_scan(lm_process_t *ptargetproc)
 	
 	UNIT_TEST(LM_DataScan);
 	UNIT_TEST_P(LM_DataScanEx, &arg);
+	UNIT_TEST(LM_PatternScan);
+	UNIT_TEST_P(LM_PatternScanEx, &arg);
+	UNIT_TEST(LM_SigScan);
+	UNIT_TEST_P(LM_SigScanEx, &arg);
 
 	LM_FreeMemoryEx(ptargetproc, arg.scanaddr, sizeof(scanbuf));
 }

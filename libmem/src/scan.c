@@ -111,11 +111,11 @@ LM_PatternScan(lm_bytearr_t pattern,
 	lm_size_t    size;
 	lm_byte_t   *ptr;
 
-	LM_ASSERT(pattern != LM_NULLPTR && mask != LM_NULLPTR &&
-		  addr != LM_ADDRESS_BAD && scansize > 0);
+	if (!pattern || !mask || addr == LM_ADDRESS_BAD || scansize == 0)
+		return match;
 
 	size = LM_STRLEN(mask);
-	if (!size)
+	if (!size || scansize < size)
 		return match;
 
 	for (ptr = (lm_byte_t *)addr;
@@ -154,10 +154,8 @@ LM_PatternScanEx(lm_process_t *pproc,
 	lm_size_t    i, j;
 	lm_bool_t    check;
 
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) && pattern != LM_NULLPTR &&
-		  mask != LM_NULLPTR && addr != LM_ADDRESS_BAD &&
-		  scansize > 0);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !pattern || !mask || addr == LM_ADDRESS_BAD || scansize == 0)
+		return match;
 
 	size = LM_STRLEN(mask);
 	if (!size || scansize < size)
@@ -260,10 +258,11 @@ LM_SigScan(lm_string_t  sig,
 	   lm_size_t    scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
-	lm_bytearr_t pattern = (lm_byte_t *)LM_NULL;
+	lm_bytearr_t pattern = (lm_bytearr_t)LM_NULL;
 	lm_string_t  mask = (lm_string_t)LM_NULL;
 
-	LM_ASSERT(sig != LM_NULLPTR && addr != LM_ADDRESS_BAD);
+	if (!sig || addr == LM_ADDRESS_BAD || scansize == 0)
+		return match;
 
 	if (!_LM_ParseSig(sig, &pattern, &mask))
 		return match;
@@ -285,12 +284,11 @@ LM_SigScanEx(lm_process_t *pproc,
 	     lm_size_t     scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
-	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
-	lm_char_t   *mask = (lm_char_t *)LM_NULL;
+	lm_bytearr_t pattern = (lm_bytearr_t)LM_NULL;
+	lm_string_t  mask = (lm_string_t)LM_NULL;
 
-	LM_ASSERT(pproc != LM_NULLPTR &&
-		  LM_VALID_PROCESS(pproc) && sig != LM_NULLPTR &&
-		  addr != LM_ADDRESS_BAD && scansize > 0);
+	if (!pproc || !LM_VALID_PROCESS(pproc) || !sig || addr == LM_ADDRESS_BAD || scansize == 0)
+		return match;
 
 	if (!_LM_ParseSig(sig, &pattern, &mask))
 		return match;

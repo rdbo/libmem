@@ -100,8 +100,9 @@ _LM_EnumThreadsExCallback(lm_process_t *pproc,
 {
 	_lm_enum_tids_t *data = (_lm_enum_tids_t *)arg;
 	lm_thread_t thread;
-	/* if the given pid owns the current pid, it is its thread */
-	if (pproc->ppid == data->pid) {
+	/* if the given pid owns the current pid, it is its thread or it's the target process */
+	/* NOTE: this could be optimized by just calling the callback with the PID right away */
+	if (pproc->ppid == data->pid || pproc->pid == data->pid) {
 		thread.tid = (lm_tid_t)pproc->pid;
 		if (!data->callback(&thread, data->arg))
 			return LM_FALSE;

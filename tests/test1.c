@@ -193,7 +193,7 @@ main()
 
 	LM_VmtNew(*(lm_address_t **)&some_object, &some_object_vmt);
 
-	LM_VmtHook(&some_object_vmt, 0, vmt_hk_some_function);
+	LM_VmtHook(&some_object_vmt, 0, (lm_address_t)vmt_hk_some_function);
 
 	LM_PRINTF(LM_STR("[*] Original 'some_function' Address: %p\n"), (void *)LM_VmtGetOriginal(&some_object_vmt, 0));
 

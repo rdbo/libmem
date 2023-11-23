@@ -34,7 +34,7 @@ _LM_PtraceAttach(lm_pid_t pid)
 {
 	int status;
 
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	if (ptrace(PTRACE_ATTACH, pid, NULL, NULL) == -1)
 		return LM_FALSE;
 #	else
@@ -49,7 +49,7 @@ _LM_PtraceAttach(lm_pid_t pid)
 LM_PRIVATE lm_void_t
 _LM_PtraceDetach(lm_pid_t pid)
 {
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	ptrace(PTRACE_DETACH, pid, NULL, NULL);
 #	else
 	ptrace(PT_DETACH, pid, (caddr_t)NULL, 0);
@@ -59,7 +59,7 @@ _LM_PtraceDetach(lm_pid_t pid)
 LM_PRIVATE lm_size_t
 _LM_PtraceGetRegs(lm_pid_t pid, lm_void_t **regsbuf)
 {
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	struct user_regs_struct regs;
 
 	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
@@ -96,7 +96,7 @@ _LM_GetProgramCounter(lm_void_t *regs)
 {
 	lm_uintptr_t program_counter = 0;
 
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
 #		if LM_ARCH == LM_ARCH_ARM
 #			if LM_BITS == 64
@@ -137,7 +137,7 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 		     lm_void_t          *regs,
 		     lm_uintptr_t       *program_counter)
 {
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
 #		if LM_ARCH == LM_ARCH_ARM
 #			if LM_BITS == 64
@@ -233,7 +233,7 @@ _LM_SetupSyscallRegs(_lm_syscall_data_t *data,
 LM_PRIVATE lm_bool_t
 _LM_PtraceSetRegs(lm_pid_t pid, lm_void_t *regs)
 {
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	if (ptrace(PTRACE_SETREGS, pid, NULL, regs) == -1)
 		return LM_FALSE;
 #	else
@@ -331,7 +331,7 @@ _LM_PtraceStep(lm_pid_t pid)
 {
 	int status;
 
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	if (ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL) == -1)
 		return LM_FALSE;
 #	else
@@ -356,7 +356,7 @@ LM_PRIVATE lm_uintptr_t
 _LM_GetSyscallRet(lm_void_t *regs)
 {
 	lm_uintptr_t ret = 0;
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 #		if LM_ARCH == LM_ARCH_ARM
 #			if LM_BITS == 64
 	ret = ((struct user_regs_struct *)regs)->regs[0];
@@ -594,7 +594,7 @@ _LM_SetupLibcallRegs(_lm_libcall_data_t *data,
 		     lm_void_t          *regs,
 		     lm_uintptr_t       *program_counter)
 {
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
 #		if LM_ARCH == LM_ARCH_ARM
 		/* TODO: Implement */
@@ -685,7 +685,7 @@ LM_PRIVATE lm_uintptr_t
 _LM_GetLibcallRet(lm_void_t *regs)
 {
 	lm_uintptr_t ret = 0;
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 #		if LM_ARCH == LM_ARCH_ARM
 	/* TODO: Implement */
 #		else
@@ -714,7 +714,7 @@ _LM_PtraceContAndWait(lm_pid_t pid)
 {
 	int status;
 
-#	if LM_OS == LM_OS_LINUX
+#	if LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 	if (ptrace(PTRACE_CONT, pid, NULL, NULL) == -1)
 		return LM_FALSE;
 #	else

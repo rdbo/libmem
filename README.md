@@ -11,6 +11,8 @@ This project is licensed under the `GNU AGPLv3.0`
 
 Read `LICENSE` for more information
 
+NOTE: Submodules might have their own licenses! Check for other `LICENSE` files as well.
+
 ## Features
 - Cross Platform (Windows/Linux/FreeBSD)
 - Cross Architecture (x86/x64/ARM/ARM64)

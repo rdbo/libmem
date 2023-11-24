@@ -565,6 +565,22 @@ _LM_UnloadModule(lm_module_t *pmod)
 	FreeLibrary(hModule);
 	return LM_TRUE;
 }
+#elif LM_OS == LM_OS_BSD
+LM_PRIVATE lm_bool_t
+_LM_UnloadModule(lm_module_t *pmod)
+{
+	void *handle;
+
+	/* Retrieve handle by calling 'dlopen' again, but without loading the module */
+	handle = dlopen(pmod->path, RTLD_NOLOAD);
+	if (!handle)
+		return LM_FALSE;
+
+	dlclose(handle); /* Decrease reference count */
+	dlclose(handle); /* Unload module */
+
+	return LM_TRUE;
+}
 #else
 LM_PRIVATE lm_bool_t
 _LM_UnloadModule(lm_module_t *pmod)

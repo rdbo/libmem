@@ -165,7 +165,7 @@ _LM_EnumPagesEx(lm_process_t *pproc,
 	size_t      i;
 
 #	if LM_OS == LM_OS_BSD
-	if (regcomp(&regex, "^0x([a-z0-9]+)[[:blank:]]+0x([a-z0-9]+).*0x[a-z0-9]+[[:blank:]]+(.+).*$", REG_EXTENDED))
+	if (regcomp(&regex, "^0x([a-z0-9]+)[[:blank:]]+0x([a-z0-9]+).*0x[a-z0-9]+[[:blank:]]+([a-z-]+)[[:blank:]]+.*$", REG_EXTENDED))
 		return ret;
 
 	LM_SNPRINTF(maps_path, LM_ARRLEN(maps_path),

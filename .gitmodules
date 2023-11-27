@@ -1,16 +1,16 @@
 [submodule "capstone"]
-	path = capstone
+	path = external/capstone
 	url = https://github.com/capstone-engine/capstone
 	branch = v4
 [submodule "keystone"]
-	path = keystone
+	path = external/keystone
 	url = https://github.com/keystone-engine/keystone
 	branch = master
 [submodule "LIEF"]
-	path = LIEF
+	path = external/LIEF
 	url = https://github.com/lief-project/LIEF
 	branch = master
 [submodule "injector"]
-	path = injector
+	path = external/injector
 	url = https://github.com/rdbo/injector
 	branch = rdbo-flatpak-sandbox-fix

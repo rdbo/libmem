@@ -28,7 +28,6 @@
  * https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux
  */
 
-#if LM_OS != LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_PtraceAttach(lm_pid_t pid)
 {
@@ -887,5 +886,3 @@ _LM_CallDlclose(lm_process_t *pproc,
 
 	return ret;
 }
-#endif
-

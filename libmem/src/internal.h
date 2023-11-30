@@ -29,13 +29,13 @@
 #include <keystone/keystone.h>
 
 #if LM_OS == LM_OS_WIN
-#	include "internal/win/internal.h"
+#	include "internal/win/_internal.h"
 #else
-#	include "internal/unix/internal.h"
+#	include "internal/unix/_internal.h"
 #	if LM_OS == LM_OS_BSD
-#		include "internal/bsd/internal.h"
+#		include "internal/bsd/_internal.h"
 #	else
-#		include "internal/linux/internal.h"
+#		include "internal/linux/_internal.h"
 #	endif
 #endif
 

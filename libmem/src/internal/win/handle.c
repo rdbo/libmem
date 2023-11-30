@@ -23,7 +23,6 @@
 
 #include "internal.h"
 
-#if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_OpenProc(lm_pid_t      pid,
 	     HANDLE       *hProcess)
@@ -80,4 +79,3 @@ _LM_CloseThr(HANDLE *hThread)
 
 	*hThread = NULL;
 }
-#endif

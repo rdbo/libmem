@@ -208,7 +208,7 @@ Link the generated libmem library against your binary (`libmem.so` for Unix-like
 ## Usage (Rust)
 Add the following line to your `Cargo.toml` under `[dependencies]`:
 ```toml
-libmem = "4.2"
+libmem = "4"
 ```
 Import libmem in your Rust source code:
 ```rust

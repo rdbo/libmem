@@ -21,10 +21,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <libmem/libmem.h>
+
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
-#include <libmem/libmem.h>
 
 int lua_lm_process_create(lua_State *L)
 {

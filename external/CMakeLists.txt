@@ -1,7 +1,3 @@
-
-set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
-set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
-set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/capstone-engine-prefix/src/capstone-engine-build")
 set(CAPSTONE_CMAKE_ARGS
 	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 	-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -26,9 +22,6 @@ ExternalProject_Add(capstone-engine SOURCE_DIR ${CAPSTONE_DIR} INSTALL_COMMAND "
 add_library(capstone STATIC IMPORTED)
 set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
-set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
-set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
 set(KEYSTONE_CMAKE_ARGS
 	-DBUILD_LIBS_ONLY=1
 	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -48,9 +41,6 @@ ExternalProject_Add(keystone-engine SOURCE_DIR ${KEYSTONE_DIR} INSTALL_COMMAND "
 add_library(keystone STATIC IMPORTED)
 set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-set(LIEF_DIR "${EXTERNAL_DEPENDENCIES_DIR}/LIEF")
-set(LIEF_INC "${LIEF_DIR}/include" "${PROJECT_BINARY_DIR}/lief-project-prefix/src/lief-project-build/include")
-set(LIEF_IMPORT_DIR "${PROJECT_BINARY_DIR}/lief-project-prefix/src/lief-project-build")
 set(LIEF_CMAKE_ARGS
 	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 	-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -81,15 +71,8 @@ ExternalProject_Add(lief-project SOURCE_DIR ${LIEF_DIR} INSTALL_COMMAND "" CMAKE
 add_library(LIEF STATIC IMPORTED)
 set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}LIEF${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
-set(LLVM_INC "${LLVM_DIR}/include")
-file(GLOB_RECURSE LLVM_SRC "${LLVM_DIR}/lib/*.cpp")
-add_library(llvm STATIC ${LLVM_SRC})
-set_target_properties(llvm PROPERTIES POSITION_INDEPENDENT_CODE True)
-target_compile_features(llvm PUBLIC cxx_std_17)
+add_subdirectory("${LLVM_DIR}")
 
-set(INJECTOR_DIR "${EXTERNAL_DEPENDENCIES_DIR}/injector")
-set(INJECTOR_INC "${INJECTOR_DIR}/include")
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/windows/*.c")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
@@ -97,13 +80,10 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Andr
 endif()
 
 if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-
 	add_library(injector
 		STATIC
 		${INJECTOR_SRC}
 	)
-
 	set_target_properties(injector PROPERTIES POSITION_INDEPENDENT_CODE True)
-
 	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
 endif()

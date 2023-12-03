@@ -51,9 +51,24 @@ endif()
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+# External dependencies
 set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
+set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
+set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
+set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/capstone-engine-prefix/src/capstone-engine-build")
+set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
+set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
+set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
+set(LIEF_DIR "${EXTERNAL_DEPENDENCIES_DIR}/LIEF")
+set(LIEF_INC "${LIEF_DIR}/include" "${PROJECT_BINARY_DIR}/lief-project-prefix/src/lief-project-build/include")
+set(LIEF_IMPORT_DIR "${PROJECT_BINARY_DIR}/lief-project-prefix/src/lief-project-build")
+set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
+set(LLVM_INC "${LLVM_DIR}/include")
+set(INJECTOR_DIR "${EXTERNAL_DEPENDENCIES_DIR}/injector")
+set(INJECTOR_INC "${INJECTOR_DIR}/include")
 
 add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
+# End of external dependencies
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")

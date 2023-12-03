@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd ..
+
 mv liblibmem.a liblibmem_partial.a
 
 if [ ! -f ./libcapstone.a ]; then

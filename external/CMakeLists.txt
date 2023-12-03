@@ -95,3 +95,15 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
 	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/linux/*.c" "${INJECTOR_DIR}/src/linux/*.S")
 endif()
+
+if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+
+	add_library(injector
+		STATIC
+		${INJECTOR_SRC}
+	)
+
+	set_target_properties(injector PROPERTIES POSITION_INDEPENDENT_CODE True)
+
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
+endif()

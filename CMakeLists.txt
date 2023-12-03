@@ -73,17 +73,6 @@ set(LIBMEM_DEPS
 	LIEF
 	llvm
 )
-if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-
-	add_library(injector
-		STATIC
-		${INJECTOR_SRC}
-	)
-
-	set_target_properties(injector PROPERTIES POSITION_INDEPENDENT_CODE True)
-
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
-endif()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	if(NOT MSVC)

@@ -102,7 +102,7 @@ if (LIBMEM_BUILD_STATIC)
 		add_custom_command(
 			TARGET libmem POST_BUILD
 			WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-			COMMAND sh ${PROJECT_SOURCE_DIR}/makebundle.sh
+			COMMAND sh ${PROJECT_SOURCE_DIR}/tools/makebundle.sh
 		)
 	endif()
 else()

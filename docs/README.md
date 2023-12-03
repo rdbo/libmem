@@ -8,11 +8,11 @@ If you are willing to contribute to this project, read `CONTRIBUTING.md` on the 
 
 ## Examples
 
-[C/C++](examples/c)
+[C/C++](../examples/c)
 
-[Rust](examples/rust)
+[Rust](../examples/rust)
 
-[Python](examples/python)
+[Python](../examples/python)
 
 ## API Documentation
 
@@ -21,4 +21,3 @@ If you are willing to contribute to this project, read `CONTRIBUTING.md` on the 
 [Rust](api/rust)
 
 [Python](api/python)
-

@@ -22,6 +22,7 @@
  */
 
 #include "internal.h"
+
 #if LM_OS != LM_OS_WIN
 #	include <dirent.h>
 #endif

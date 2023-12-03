@@ -1,3 +1,4 @@
+target_include_directories(llvm PUBLIC "${LLVM_DIR}/include")
 file(GLOB_RECURSE LLVM_SRC "${LLVM_DIR}/lib/*.cpp")
 add_library(llvm STATIC ${LLVM_SRC})
 set_target_properties(llvm PROPERTIES POSITION_INDEPENDENT_CODE True)

@@ -27,33 +27,33 @@
 #include <lualib.h>
 #include "types.h"
 
-int lua_LM_FindProcess(lua_State *L)
+int lua_lm_process_index(lua_State *L)
 {
-	lm_process_t *udata;
-	const char *procname;
+	lua_pushinteger(L, 1337);
+	return 1;
+}
 
-	procname = luaL_checkstring(L, 1);
+int lua_lm_process_tostring(lua_State *L)
+{
+	lm_process_t *udata = (lm_process_t *)luaL_checkudata(L, 1, "lm_process_t");
 
-	lua_create_lm_process(L);
-	udata = (lm_process_t *)lua_touserdata(L, lua_gettop(L));
-
-	if (LM_FindProcess((lm_string_t)procname, udata) != LM_TRUE) {
-		lua_pushnil(L);
-	}
+	lua_pushfstring(L, "lm_process_t(pid: %d, ppid: %d, bits: %d, name: \"%s\", path: \"%s\", start_time: %p)", udata->pid, udata->ppid, udata->bits, udata->name, udata->path, udata->start_time);
 
 	return 1;
 }
 
-int luaopen_libmem_lua(lua_State *L)
+void lua_create_lm_process(lua_State *L)
 {
-	luaL_Reg functions[] = {
-		{ "LM_FindProcess", lua_LM_FindProcess },
-		{ NULL, NULL }
-	};
+	lm_process_t *udata = lua_newuserdata(L, sizeof(lm_process_t));
+	luaL_getmetatable(L, "lm_process_t");
+	lua_setmetatable(L, lua_gettop(L) - 1);
+}
 
-	lua_define_lm_process(L);
-
-	luaL_register(L, "libmem_lua", functions);
-
-	return 1;
+void lua_define_lm_process(lua_State *L)
+{
+	luaL_newmetatable(L, "lm_process_t");
+	lua_pushcfunction(L, lua_lm_process_index);
+	lua_setfield(L, lua_gettop(L) - 1, "__index");
+	lua_pushcfunction(L, lua_lm_process_tostring);
+	lua_setfield(L, lua_gettop(L) - 1, "__tostring");
 }

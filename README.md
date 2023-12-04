@@ -134,7 +134,7 @@ print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 
 5. Run a Visual Studio `Developer Command Prompt` (or `x64 Native Tools Command Prompt for VS 2022` for 64 bits) as Administrator
 
-6. Run the following command to append libmem's destination directory to your `%PATH%` user variable:
+6. Run the following command to append libmem's destination directory to your `%PATH%` user variable (**WARNING** - watch for your path size limit!):
 
         setx PATH "%PATH%;%ProgramFiles%\libmem\include;%ProgramFiles%\libmem\lib"
 

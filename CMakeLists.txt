@@ -2,17 +2,43 @@ cmake_minimum_required(VERSION 3.22.1)
 
 include(ExternalProject)
 
-project(libmem LANGUAGES C CXX ASM)
+project(libmem
+	LANGUAGES
+	C
+	CXX
+	ASM
+)
 
-message(STATUS "[*] Platform: ${CMAKE_SYSTEM_NAME}")
+message(STATUS
+	"[*] Platform: ${CMAKE_SYSTEM_NAME}"
+)
 
-option(LIBMEM_BUILD_TESTS "Build tests" OFF)
-option(LIBMEM_BUILD_STATIC "Build a static library" OFF)
-option(LIBMEM_BUILD_32 "Build for 32 bits" OFF)
+option(LIBMEM_BUILD_TESTS
+	"Build tests"
+	OFF
+)
 
-message(STATUS "[*] Build tests: ${LIBMEM_BUILD_TESTS}")
-message(STATUS "[*] Build static library: ${LIBMEM_BUILD_STATIC}")
-message(STATUS "[*] Build for 32 bits: ${LIBMEM_BUILD_32}")
+option(LIBMEM_BUILD_STATIC
+	"Build a static library"
+	OFF
+)
+
+option(LIBMEM_BUILD_32
+	"Build for 32 bits"
+	OFF
+)
+
+message(STATUS
+	"[*] Build tests: ${LIBMEM_BUILD_TESTS}"
+)
+
+message(STATUS
+	"[*] Build static library: ${LIBMEM_BUILD_STATIC}"
+)
+
+message(STATUS
+	"[*] Build for 32 bits: ${LIBMEM_BUILD_32}"
+)
 
 if(LIBMEM_BUILD_32 AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows)
     # To compile 32 bits for Windows, use the x86 Visual Studio developer console instead of the x64 Native Tools console
@@ -25,67 +51,32 @@ endif()
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+# External dependencies
 set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
-
 set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
 set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
-set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/capstone-engine-prefix/src/capstone-engine-build")
-set(CAPSTONE_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCAPSTONE_ARCHITECTURE_DEFAULT=ON -DCAPSTONE_BUILD_TESTS=OFF -DCAPSTONE_BUILD_CSTOOL=OFF -DCAPSTONE_INSTALL=OFF -DCAPSTONE_BUILD_SHARED=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCAPSTONE_ARCHITECTURE_DEFAULT=OFF -DCAPSTONE_BUILD_STATIC_RUNTIME=OFF)
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
-	set(CAPSTONE_CMAKE_ARGS ${CAPSTONE_CMAKE_ARGS} -DCAPSTONE_ARM64_SUPPORT=ON)
-elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
-	set(CAPSTONE_CMAKE_ARGS ${CAPSTONE_CMAKE_ARGS} -DCAPSTONE_ARM_SUPPORT=ON)
-else()
-	set(CAPSTONE_CMAKE_ARGS ${CAPSTONE_CMAKE_ARGS} -DCAPSTONE_X86_SUPPORT=ON)
-endif()
-ExternalProject_Add(capstone-engine SOURCE_DIR ${CAPSTONE_DIR} INSTALL_COMMAND "" CMAKE_ARGS ${CAPSTONE_CMAKE_ARGS})
-add_library(capstone STATIC IMPORTED)
-set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
-
+set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/src/capstone-engine-build")
 set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
 set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
-set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
-set(KEYSTONE_CMAKE_ARGS -DBUILD_LIBS_ONLY=1 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DKEYSTONE_BUILD_STATIC_RUNTIME=OFF)
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
-	set(KEYSTONE_CMAKE_ARGS ${KEYSTONE_CMAKE_ARGS} -DLLVM_TARGETS_TO_BUILD=AArch64)
-elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
-	set(KEYSTONE_CMAKE_ARGS ${KEYSTONE_CMAKE_ARGS} -DLLVM_TARGETS_TO_BUILD=ARM)
-else()
-	set(KEYSTONE_CMAKE_ARGS ${KEYSTONE_CMAKE_ARGS} -DLLVM_TARGETS_TO_BUILD=X86)
-endif()
-ExternalProject_Add(keystone-engine SOURCE_DIR ${KEYSTONE_DIR} INSTALL_COMMAND "" CMAKE_ARGS ${KEYSTONE_CMAKE_ARGS})
-add_library(keystone STATIC IMPORTED)
-set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
-
+set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
 set(LIEF_DIR "${EXTERNAL_DEPENDENCIES_DIR}/LIEF")
-set(LIEF_INC "${LIEF_DIR}/include" "${PROJECT_BINARY_DIR}/lief-project-prefix/src/lief-project-build/include")
-set(LIEF_IMPORT_DIR "${PROJECT_BINARY_DIR}/lief-project-prefix/src/lief-project-build")
-set(LIEF_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DLIEF_USE_CCACHE=OFF -DLIEF_ENABLE_JSON=OFF -DLIEF_FROZEN_ENABLED=OFF -DLIEF_MACHO=OFF -DLIEF_OAT=OFF -DLIEF_DEX=OFF -DLIEF_VDEX=OFF -DLIEF_ART=OFF -DLIEF_EXTERNAL_LEAF=OFF -DLIEF_EXTERNAL_SPAN_DIR=OFF -DLIEF_FUZZING=OFF -DLIEF_PROFILING=OFF -DLIEF_COVERAGE=OFF -DLIEF_EXAMPLES=OFF -DLIEF_TESTS=OFF -DLIEF_DOC=OFF)
-if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-        set(LIEF_CMAKE_ARGS ${LIEF_CMAKE_ARGS} -DLIEF_ELF=OFF)
-else()
-        set(LIEF_CMAKE_ARGS ${LIEF_CMAKE_ARGS} -DLIEF_PE=OFF)
-endif()
-ExternalProject_Add(lief-project SOURCE_DIR ${LIEF_DIR} INSTALL_COMMAND "" CMAKE_ARGS ${LIEF_CMAKE_ARGS})
-add_library(LIEF STATIC IMPORTED)
-set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}LIEF${CMAKE_STATIC_LIBRARY_SUFFIX})
-
+set(LIEF_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/lief-project-prefix/src/lief-project-build")
+set(LIEF_INC "${LIEF_DIR}/include" "${LIEF_IMPORT_DIR}/include")
 set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
 set(LLVM_INC "${LLVM_DIR}/include")
-file(GLOB_RECURSE LLVM_SRC "${LLVM_DIR}/lib/*.cpp")
-add_library(llvm STATIC ${LLVM_SRC})
-set_target_properties(llvm PROPERTIES POSITION_INDEPENDENT_CODE True)
-target_compile_features(llvm PUBLIC cxx_std_17)
-
 set(INJECTOR_DIR "${EXTERNAL_DEPENDENCIES_DIR}/injector")
 set(INJECTOR_INC "${INJECTOR_DIR}/include")
-if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/windows/*.c")
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
-	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/linux/*.c" "${INJECTOR_DIR}/src/linux/*.S")
-endif()
 
-set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}/libmem")
+add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
+add_library(capstone STATIC IMPORTED)
+set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
+add_library(keystone STATIC IMPORTED)
+set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
+add_library(LIEF STATIC IMPORTED)
+set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}LIEF${CMAKE_STATIC_LIBRARY_SUFFIX})
+# End of external dependencies
+
+set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 file(GLOB LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
@@ -93,17 +84,25 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN
 else()
 	file(GLOB_RECURSE LIBMEM_INTERNAL_SRC "${LIBMEM_DIR}/src/internal/unix/*.c")
 endif()
-set(LIBMEM_SRC ${LIBMEM_SRC} ${LIBMEM_INTERNAL_SRC})
-set(LIBMEM_DEPS capstone keystone LIEF llvm)
-if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-	add_library(injector STATIC ${INJECTOR_SRC})
-	set_target_properties(injector PROPERTIES POSITION_INDEPENDENT_CODE True)
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
-endif()
+set(LIBMEM_SRC
+	${LIBMEM_SRC}
+	${LIBMEM_INTERNAL_SRC}
+)
+set(LIBMEM_DEPS
+	capstone
+	keystone
+	LIEF
+	llvm
+)
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	if(NOT MSVC)
-		add_compile_options(-Wall -Wextra -Wpedantic -g -ggdb)
+		add_compile_options(-Wall
+			-Wextra
+			-Wpedantic
+			-g
+			-ggdb
+		)
 	endif()
 endif()
 
@@ -113,7 +112,7 @@ if (LIBMEM_BUILD_STATIC)
 		add_custom_command(
 			TARGET libmem POST_BUILD
 			WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-			COMMAND sh ${PROJECT_SOURCE_DIR}/makebundle.sh
+			COMMAND sh ${PROJECT_SOURCE_DIR}/tools/makebundle.sh
 		)
 	endif()
 else()
@@ -121,54 +120,58 @@ else()
 endif()
 target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src")
 
-include_directories(${PROJECT_SOURCE_DIR} ${LIBMEM_INC} ${CAPSTONE_INC} ${KEYSTONE_INC} ${LIEF_INC} ${LLVM_INC} ${INJECTOR_INC})
+include_directories(${PROJECT_SOURCE_DIR}
+	${LIBMEM_INC}
+	${CAPSTONE_INC}
+	${KEYSTONE_INC}
+	${LIEF_INC}
+	${LLVM_INC}
+	${INJECTOR_INC}
+)
+
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
-add_dependencies(libmem capstone-engine keystone-engine lief-project)
+add_dependencies(libmem
+	capstone-engine
+	keystone-engine
+	lief-project
+)
 
 if (LIBMEM_BUILD_TESTS)
 	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
-	set(TEST1_SRC "${TESTS_DIR}/test1.c")
-	set(TEST2_SRC "${TESTS_DIR}/test2.c")
-	file(GLOB_RECURSE UNIT_SRC "${TESTS_DIR}/unit/*.c")
-	set(TARGET_SRC "${TESTS_DIR}/target.c")
-	set(LIBTEST_SRC "${TESTS_DIR}/libtest.c")
-	set(LIBTEST_PATH "${PROJECT_BINARY_DIR}/libtest${CMAKE_SHARED_LIBRARY_SUFFIX}")
-	cmake_path(NATIVE_PATH LIBTEST_PATH LIBTEST_PATH)
-	string(REPLACE "\\" "\\\\" LIBTEST_PATH "${LIBTEST_PATH}")
-
-	add_executable(test1 ${TEST1_SRC})
-	target_include_directories(test1 PUBLIC ${LIBMEM_INC})
-	target_link_libraries(test1 libmem)
-
-	add_library(libtest SHARED ${LIBTEST_SRC})
-	target_include_directories(libtest PUBLIC ${LIBMEM_INC})
-	set_target_properties(libtest PROPERTIES PREFIX "")
-	target_compile_definitions(test1 PUBLIC LIBTEST_PATH="${LIBTEST_PATH}")
-
-	add_executable(test2 ${TEST2_SRC})
-	target_include_directories(test2 PUBLIC ${LIBMEM_INC})
-	target_link_libraries(test2 libmem)
-	target_compile_definitions(test2 PUBLIC LIBTEST_PATH="${LIBTEST_PATH}" TEST1_NAME="test1${CMAKE_EXECUTABLE_SUFFIX}")
-
-	add_executable(unit ${UNIT_SRC})
-	target_include_directories(unit PUBLIC ${LIBMEM_INC})
-	target_link_libraries(unit libmem)
-	target_compile_definitions(unit PUBLIC LIBTEST_PATH="${LIBTEST_PATH}" TARGET_NAME="target${CMAKE_EXECUTABLE_SUFFIX}")
-
-	add_executable(target ${TARGET_SRC})
-	target_include_directories(target PUBLIC ${LIBMEM_INC})
-	target_link_libraries(target libmem)
+	add_subdirectory(${TESTS_DIR})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} user32 psapi ntdll)
+	set(LIBMEM_DEPS
+		${LIBMEM_DEPS}
+		user32
+		psapi
+		ntdll
+	)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} dl stdc++ m)
+	set(LIBMEM_DEPS 
+		${LIBMEM_DEPS}
+		dl
+		stdc++
+		m
+	)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} dl kvm procstat elf stdc++ m)
+	set(LIBMEM_DEPS
+		${LIBMEM_DEPS}
+		dl
+		kvm
+		procstat
+		elf
+		stdc++
+		m
+	)
 else()
 	message(FATAL_ERROR "[!] Unsupported platform")
+endif()
+
+if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
+	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
 endif()
 
 target_link_libraries(libmem ${LIBMEM_DEPS})

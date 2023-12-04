@@ -21,10 +21,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <libmem/libmem.h>
+
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
-#include <libmem/libmem.h>
 
 int lua_lm_process_create(lua_State *L)
 {
@@ -54,25 +55,25 @@ int lua_LM_FindProcess(lua_State *L)
 {
 	lm_process_t *udata;
 	const char *procname;
-	
+
 	procname = luaL_checkstring(L, 1);
 
 	lua_lm_process_create(L);
 	udata = (lm_process_t *)lua_touserdata(L, lua_gettop(L));
 
-	if (LM_FindProcess((lm_string_t)procname, udata) != LM_TRUE) {
+	if (LM_FindProcess((lm_string_t)procname, udata) != LM_TRUE)
+	{
 		lua_pushnil(L);
 	}
-	
+
 	return 1;
 }
 
 int luaopen_libmem_lua(lua_State *L)
 {
 	luaL_Reg functions[] = {
-		{ "LM_FindProcess", lua_LM_FindProcess },
-		{ NULL, NULL }
-	};
+		{"LM_FindProcess", lua_LM_FindProcess},
+		{NULL, NULL}};
 
 	luaL_newmetatable(L, "lm_process_t");
 	lua_pushcfunction(L, lua_lm_process_index);
@@ -81,6 +82,6 @@ int luaopen_libmem_lua(lua_State *L)
 	lua_setfield(L, lua_gettop(L) - 1, "__tostring");
 
 	luaL_register(L, "libmem_lua", functions);
-	
+
 	return 1;
 }

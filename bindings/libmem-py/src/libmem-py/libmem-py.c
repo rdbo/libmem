@@ -22,9 +22,11 @@
  */
 
 #include <libmem/libmem.h>
+
 #include <Python.h>
 #include <structmember.h>
-#include "types.h"
+
+#include <types.h>
 
 /* make sure that 'pymod' and 'global' are declared before using DECL_GLOBAL_* */
 #define DECL_GLOBAL_LONG(var) { \

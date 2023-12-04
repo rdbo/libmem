@@ -3,4 +3,3 @@ if(WIN32) # this MUST NOT match CYGWIN
 else()
 	set(CMAKE_GENERATOR "Unix Makefiles" CACHE INTERNAL "" FORCE)
 endif()
-

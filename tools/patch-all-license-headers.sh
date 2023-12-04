@@ -20,4 +20,4 @@ function patch_dirs {
     done
 }
 
-patch_dirs "include" "src"
+patch_dirs "include" "src" "bindings"

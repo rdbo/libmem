@@ -85,5 +85,6 @@ if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
 		${INJECTOR_SRC}
 	)
 	set_target_properties(injector PROPERTIES POSITION_INDEPENDENT_CODE True)
+	target_include_directories(injector PUBLIC "${INJECTOR_INC}")
 	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
 endif()

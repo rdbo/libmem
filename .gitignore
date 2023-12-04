@@ -5,3 +5,4 @@ libmem-py/dist/
 libmem-py/build/
 libmem-py/src/libmem.*
 docs/examples/rust/target/
+clang-format

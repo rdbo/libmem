@@ -1,0 +1,33 @@
+name: Libmem Linux
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcovr
+        git submodule update --init --recursive
+  
+    - name: Configure and Build
+      run: |
+        cmake -S . -B build
+        cmake --build build
+
+    - name: Run Tests
+      run: |
+        cd build
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: libmem-artifacts
+        path: |
+          build/

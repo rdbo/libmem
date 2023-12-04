@@ -1,4 +1,4 @@
-name: Libmem Linux
+name: Libmem Linux x86
 
 on: [push, pull_request]
 

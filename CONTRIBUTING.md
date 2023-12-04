@@ -55,7 +55,7 @@ LEGAL: Every commit submitted through a pull request must be under the same lice
          */
 
         /*
-         * Copyright (C) 2023    Rdbo
+         * Copyright (C) <year>    <author>
          * This program is free software: you can redistribute it and/or modify
          * it under the terms of the GNU Affero General Public License version 3
          * as published by the Free Software Foundation.

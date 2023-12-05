@@ -1,7 +1,7 @@
 #!/bin/bash
 
 error=0
-for test in $(find build/tests -type f -executable); do
+tests=$(find build/tests -type f -executable -name "test*" -o -name "unit*")
     echo "Running $test"
     $test
     if [ $? -ne 0 ]; then

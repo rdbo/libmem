@@ -1,8 +1,8 @@
 build*/
 *.swp
-libmem-rs/target/
-libmem-py/dist/
-libmem-py/build/
-libmem-py/src/libmem.*
+bindings/rust/target/
+bindings/python/dist/
+bindings/python/build/
+bindings/python/src/libmem.*
 docs/examples/rust/target/
 clang-format

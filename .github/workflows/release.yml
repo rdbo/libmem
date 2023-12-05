@@ -1,0 +1,110 @@
+---
+
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      checkout-branch:
+        description: 'The branch or tag to checkout (same as workflow if not specified)'
+        required: false
+      targets:
+        description: 'The targets to build (regex, all if not specified)'
+        required: false
+
+jobs:
+
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-version: ${{ steps.set-version.outputs.artifact-version }}
+      release: ${{ steps.set-version.outputs.release }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Set version
+        id: set-version
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == 'push' && "$GITHUB_REF_TYPE" == 'tag' ]]; then
+            artifact_version=${GITHUB_REF_NAME}
+            release=true
+          else
+            artifact_version='test'
+            release=false
+          fi
+          printf 'Artifact version: %s\n' "$artifact_version"
+          printf 'artifact-version=%s\n' "$artifact_version" >> "$GITHUB_OUTPUT"
+          printf 'Release: %s\n' "$release"
+          printf 'release=%s\n' "$release" >> "$GITHUB_OUTPUT"
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          matrix=$(jq -Mcs \
+            --arg filter "^${INPUT_TARGETS:-.*}$" \
+            '{include: [.[] | select(.target|test($filter))]}' \
+            <<<'
+              {"target": "x86_64-linux-gnu-shared", "runs-on": "ubuntu-latest"}
+              {"target": "x86_64-linux-gnu-static", "runs-on": "ubuntu-latest"}
+              {"target": "x86_64-linux-musl-shared", "runs-on": "ubuntu-latest"}
+              {"target": "x86_64-linux-musl-static", "runs-on": "ubuntu-latest"}
+              {"target": "i686-windows-msvc-shared-md", "runs-on": "windows-2019"}
+              {"target": "i686-windows-msvc-static-md", "runs-on": "windows-2019"}
+              {"target": "i686-windows-msvc-static-mt", "runs-on": "windows-2019"}
+              {"target": "x86_64-windows-msvc-shared-md", "runs-on": "windows-2019"}
+              {"target": "x86_64-windows-msvc-static-md", "runs-on": "windows-2019"}
+              {"target": "x86_64-windows-msvc-static-mt", "runs-on": "windows-2019"}
+              {"target": "aarch64-windows-msvc-shared-md", "runs-on": "windows-2022"}
+              {"target": "aarch64-windows-msvc-static-md", "runs-on": "windows-2022"}
+              {"target": "aarch64-windows-msvc-static-mt", "runs-on": "windows-2022"}
+              '
+          )
+          printf 'Matrix: %s\n' "$(jq <<< "$matrix")"
+          printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_TARGETS: ${{ inputs.targets }}
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.checkout-branch }}
+          submodules: true
+      - name: Build
+        run: ./tools/build-release.sh "$BUILD_TARGETS"
+        shell: bash
+        env:
+          BUILD_TARGETS: ${{ matrix.target }}
+          LIBMEM_BUILD_OUT_DIR: out/libmem-${{ needs.prepare.outputs.artifact-version }}-${{ matrix.target }}
+          MSYS: 'winsymlinks:sys' # fix symlink issues when cloning on Windows
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: libmem-${{ needs.prepare.outputs.artifact-version }}-${{ matrix.target }}
+          path: out/libmem-${{ needs.prepare.outputs.artifact-version }}-${{ matrix.target }}.tar.gz
+
+  release:
+    needs: [prepare, build]
+    if: needs.prepare.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # allows the action to create a release
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          omitBody: true
+          prerelease: true
+          artifacts: libmem-*/libmem-*.tar.gz
+          artifactContentType: application/gzip
+          artifactErrorsFailBuild: true

@@ -27,6 +27,16 @@
 #include "types.h"
 
 #define STREQUAL(a, b) (!strcmp(a, b))
+#define LUA_ENTRY_INT(name) \
+	if (STREQUAL(entry, #name)) { \
+		lua_pushinteger(L, (lua_Integer)udata->name); \
+		return 1; \
+	}
+#define LUA_ENTRY_STR(name) \
+	if (STREQUAL(entry, #name)) { \
+		lua_pushstring(L, udata->name); \
+		return 1; \
+	}
 #define LM_PROCESS_META "lm_process_t"
 
 int lua_lm_process_index(lua_State *L)
@@ -34,22 +44,14 @@ int lua_lm_process_index(lua_State *L)
 	lm_process_t *udata = (lm_process_t *)luaL_checkudata(L, 1, LM_PROCESS_META);
 	const char *entry = luaL_checkstring(L, 2);
 
-	if (STREQUAL(entry, "pid")) {
-		lua_pushinteger(L, (lua_Integer)udata->pid);
-	} else if (STREQUAL(entry, "ppid")) {
-		lua_pushinteger(L, (lua_Integer)udata->ppid);
-	} else if (STREQUAL(entry, "bits")) {
-		lua_pushinteger(L, (lua_Integer)udata->bits);
-	} else if (STREQUAL(entry, "start_time")) {
-		lua_pushinteger(L, (lua_Integer)udata->start_time);
-	} else if (STREQUAL(entry, "path")) {
-		lua_pushstring(L, udata->path);
-	} else if (STREQUAL(entry, "name")) {
-		lua_pushstring(L, udata->name);
-	} else {
-		lua_pushnil(L);
-	}
+	LUA_ENTRY_INT(pid)
+	LUA_ENTRY_INT(ppid)
+	LUA_ENTRY_INT(bits)
+	LUA_ENTRY_INT(start_time)
+	LUA_ENTRY_STR(path)
+	LUA_ENTRY_STR(name)
 
+	lua_pushnil(L);
 	return 1;
 }
 

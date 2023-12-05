@@ -19,7 +19,7 @@ jobs:
   
     - name: Configure and Build
       run: |
-        cmake -S . -B build
+        cmake -S . -B build -DLIBMEM_BUILD_TESTS=ON
         cmake --build build
 
     - name: Run Tests

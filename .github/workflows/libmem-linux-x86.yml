@@ -22,6 +22,10 @@ jobs:
         cmake -S . -B build
         cmake --build build
 
+    - name: Run Tests
+      run: |
+        tools/test.sh
+        
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
@@ -29,6 +33,3 @@ jobs:
         path: |
           build/
           
-    - name: Run Tests
-      run: |
-        tools/test.sh

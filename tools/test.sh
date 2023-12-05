@@ -5,7 +5,7 @@ tests=$(find build/tests -type f -executable -name "test*" -o -name "unit*")
 
 for test in $tests; do
     echo "Running $test"
-    $test
+    strace $test
     if [ $? -ne 0 ]; then
         error=$((error + $?))
     fi

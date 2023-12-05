@@ -108,13 +108,6 @@ endif()
 
 if (LIBMEM_BUILD_STATIC)
 	add_library(libmem STATIC ${LIBMEM_SRC})
-	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-		add_custom_command(
-			TARGET libmem POST_BUILD
-			WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-			COMMAND sh ${PROJECT_SOURCE_DIR}/tools/makebundle.sh
-		)
-	endif()
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
@@ -175,6 +168,46 @@ if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
 endif()
 
 target_link_libraries(libmem ${LIBMEM_DEPS})
+if(LIBMEM_BUILD_STATIC)
+	# Create a bundled static library containing all dependencies (to mimic the shared library behavior)
+	set_target_properties(libmem PROPERTIES OUTPUT_NAME "libmem_partial")
+	set(libmem_bundle_files "$<TARGET_FILE:libmem>")
+
+	get_target_property(libmem_link_libraries libmem LINK_LIBRARIES)
+	foreach(libmem_link_library IN LISTS libmem_link_libraries)
+		if(TARGET "${libmem_link_library}")
+			list(APPEND libmem_bundle_files "$<TARGET_FILE:${libmem_link_library}>")
+		endif()
+	endforeach()
+
+	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
+		file(WRITE "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "CREATE liblibmem.a\n" )
+		foreach(libmem_bundle_file IN LISTS libmem_bundle_files)
+			file(APPEND "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "ADDLIB ${libmem_bundle_file}\n")
+		endforeach()
+		file(APPEND "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "SAVE\nEND\n")
+		file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/liblibmem.ar" INPUT "${CMAKE_BINARY_DIR}/liblibmem.ar.in")
+
+		add_custom_command(
+			TARGET libmem POST_BUILD
+			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+			COMMAND "${CMAKE_AR}" -M < "${CMAKE_BINARY_DIR}/liblibmem.ar"
+			COMMENT "Bundling liblibmem.a"
+			VERBATIM
+		)
+	elseif(MSVC)
+		find_program(LIB_EXECUTABLE lib)
+		add_custom_command(
+			TARGET libmem POST_BUILD
+			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+			COMMAND "${LIB_EXECUTABLE}" /NOLOGO /OUT:libmem.lib ${libmem_bundle_files}
+			COMMENT "Bundling libmem.lib"
+			VERBATIM
+		)
+	else()
+		message(WARNING "Static library bundling not supported on this platform")
+	endif()
+endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)

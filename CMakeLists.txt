@@ -41,8 +41,7 @@ message(STATUS
 )
 
 if (LIBMEM_BUILD_TESTS)
-	set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} --coverage -g -O0)
-    	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} --coverage -g -O0)
+	add_compile_options(--coverage -g -O0)
 	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
 	add_subdirectory(${TESTS_DIR})
 endif()

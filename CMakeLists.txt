@@ -40,6 +40,13 @@ message(STATUS
 	"[*] Build for 32 bits: ${LIBMEM_BUILD_32}"
 )
 
+if (LIBMEM_BUILD_TESTS)
+	set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} --coverage -g -O0)
+    	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} --coverage -g -O0)
+	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
+	add_subdirectory(${TESTS_DIR})
+endif()
+
 if(LIBMEM_BUILD_32 AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows)
     # To compile 32 bits for Windows, use the x86 Visual Studio developer console instead of the x64 Native Tools console
     set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32)
@@ -136,11 +143,6 @@ add_dependencies(libmem
 	keystone-engine
 	lief-project
 )
-
-if (LIBMEM_BUILD_TESTS)
-	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
-	add_subdirectory(${TESTS_DIR})
-endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	set(LIBMEM_DEPS

@@ -1,4 +1,4 @@
-name: Libmem Linux x86
+name: Libmem Linux x86 Tests
 
 on: [push, pull_request]
 
@@ -22,9 +22,9 @@ jobs:
         cmake -S . -B build -DLIBMEM_BUILD_TESTS=ON
         cmake --build build
 
-    - name: Run Tests
+    - name: Run Unit Tests
       run: |
-        tools/test.sh
+        tools/unit_test.sh
         
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
@@ -32,4 +32,4 @@ jobs:
         name: libmem-artifacts
         path: |
           build/
-          
+  

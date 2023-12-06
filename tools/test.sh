@@ -1,7 +1,7 @@
 #!/bin/bash
 
 error=0
-tests=$(find build/tests -type f -executable -name "test*" -o -name "unit*")
+tests=$(find build/tests -type f -executable -o -name "unit*")
 
 for test in $tests; do
     echo "Running $test"

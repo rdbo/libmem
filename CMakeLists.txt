@@ -41,7 +41,6 @@ message(STATUS
 )
 
 if (LIBMEM_BUILD_TESTS)
-	add_compile_options(--coverage -g -O0)
 	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
 	add_subdirectory(${TESTS_DIR})
 endif()

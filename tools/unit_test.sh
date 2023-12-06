@@ -11,6 +11,8 @@ for test in $tests; do
     fi
 done
 
-gcovr -r . --html --html-details -o coverage.html
+mkdir -p coverage
+
+gcovr -r . --html --html-details -o coverage/index.html
 
 exit $error

@@ -24,7 +24,7 @@ jobs:
 
     - name: Run Unit Tests
       run: |
-        tools/unit_test.sh
+        sudo tools/unit_test.sh
         
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2

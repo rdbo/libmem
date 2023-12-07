@@ -107,6 +107,8 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 			-Wpedantic
 			-g
 			-ggdb
+			-O0
+                        --coverage
 		)
 	endif()
 endif()

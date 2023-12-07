@@ -1,4 +1,4 @@
-name: Libmem Linux x86 Tester
+name: Test / Linux / x86
 
 on: [push, pull_request]
 

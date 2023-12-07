@@ -12,8 +12,13 @@ for test in $tests; do
 done
 
 mkdir -p build/coverage
-cd build
 
-gcovr -r ../src --html --html-details -o build/coverage/index.html --verbose
+source_files=$(find src -name "*.c")
+
+for source_file in $source_files; do
+    gcov "$source_file"
+done
+
+gcovr -r . --html --html-details -o build/coverage/index.html
 
 exit $error

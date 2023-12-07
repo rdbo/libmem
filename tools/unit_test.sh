@@ -12,7 +12,8 @@ for test in $tests; do
 done
 
 mkdir -p build/coverage
+cd build
 
-gcovr -r . --html --html-details -o build/coverage/index.html
+gcovr -r ../src --html --html-details -o build/coverage/index.html
 
 exit $error

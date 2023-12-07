@@ -21,12 +21,6 @@ jobs:
       run: |
         cmake -S . -B build -DLIBMEM_BUILD_TESTS=ON
         cmake --build build
-
-    - name: Install Libmem Job
-      run: |
-        cd build
-        sudo make install
-        cd ..
         
     - name: Run Unit Tests Job
       run: |

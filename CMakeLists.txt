@@ -103,7 +103,8 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 			-g
 			-ggdb
 			-O0
-                        --coverage
+                        -fprofile-arcs
+			-ftest-coverage
 		)
 	endif()
 endif()

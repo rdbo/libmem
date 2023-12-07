@@ -40,11 +40,6 @@ message(STATUS
 	"[*] Build for 32 bits: ${LIBMEM_BUILD_32}"
 )
 
-if (LIBMEM_BUILD_TESTS)
-	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
-	add_subdirectory(${TESTS_DIR})
-endif()
-
 if(LIBMEM_BUILD_32 AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows)
     # To compile 32 bits for Windows, use the x86 Visual Studio developer console instead of the x64 Native Tools console
     set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32)
@@ -135,6 +130,11 @@ include_directories(${PROJECT_SOURCE_DIR}
 	${LLVM_INC}
 	${INJECTOR_INC}
 )
+
+if (LIBMEM_BUILD_TESTS)
+	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
+	add_subdirectory(${TESTS_DIR})
+endif()
 
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)

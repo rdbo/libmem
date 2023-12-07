@@ -30,5 +30,6 @@
 	void lua_define_##type(lua_State *L);
 
 DECLTYPE(lm_process)
+DECLTYPE(lm_module)
 
 #endif

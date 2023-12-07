@@ -16,6 +16,7 @@ mkdir -p build/coverage
 source_files=$(find src -name "*.c")
 
 for source_file in $source_files; do
+    echo "Creating gcno for $source_file"
     gcov "$source_file"
 done
 

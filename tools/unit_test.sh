@@ -14,6 +14,6 @@ done
 mkdir -p build/coverage
 cd build
 
-gcovr -r ../src --html --html-details -o build/coverage/index.html
+gcovr -r ../src --html --html-details -o build/coverage/index.html --verbose
 
 exit $error

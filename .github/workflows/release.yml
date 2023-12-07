@@ -45,6 +45,8 @@ jobs:
             --arg filter "^${INPUT_TARGETS:-.*}$" \
             '{include: [.[] | select(.target|test($filter))]}' \
             <<<'
+              {"target": "i686-linux-gnu-shared", "runs-on": "ubuntu-latest"}
+              {"target": "i686-linux-gnu-static", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-gnu-shared", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-gnu-static", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-musl-shared", "runs-on": "ubuntu-latest"}

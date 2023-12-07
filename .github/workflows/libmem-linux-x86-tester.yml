@@ -7,26 +7,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout Repository Job
       uses: actions/checkout@v2
 
-    - name: Install Dependencies
+    - name: Install Dependencies Job
       run: |
         sudo apt-get update
         sudo apt-get install -y gcovr
         sudo chmod +x tools/unit_test.sh
         git submodule update --init --recursive
   
-    - name: Configure and Build
+    - name: Configure and Build Job
       run: |
         cmake -S . -B build -DLIBMEM_BUILD_TESTS=ON
         cmake --build build
 
-    - name: Run Unit Tests
+    - name: Install Libmem Job
+      run: |
+        cd build
+        sudo make install
+        cd ..
+        
+    - name: Run Unit Tests Job
       run: |
         sudo tools/unit_test.sh
         
-    - name: Archive Artifacts
+    - name: Archive Artifacts Job
       uses: actions/upload-artifact@v2
       with:
         name: libmem-artifacts

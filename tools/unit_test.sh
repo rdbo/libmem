@@ -16,8 +16,8 @@ mkdir -p build/coverage
 source_files=$(find src -name "*.c")
 
 for source_file in $source_files; do
-    echo "Creating gcno for $source_file"
-    gcov "$source_file"
+    echo "Processing gcov for $source_file"
+    gcov "$source_file".c
 done
 
 gcovr -r . --html --html-details -o build/coverage/index.html

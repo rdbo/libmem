@@ -4,6 +4,7 @@ shopt -s inherit_errexit
 
 declare -gr NIX_PLATFORMS=(
   # Linux (GNU/glibc)
+  i686-linux-gnu
   x86_64-linux-gnu
   aarch64-linux-gnu
   # Linux (Alpine/musl)
@@ -117,6 +118,11 @@ function _build_in_docker() {
   *-linux-musl-*) docker_os=linux-musl ;;
   esac
   case "$target" in
+  i686-*)
+    # cross-compile i686 from x86_64 (CMake is no longer compiled for i686, etc.)
+    docker_platform=linux/amd64
+    docker_os+='-crossbuild-i686'
+    ;;
   x86_64-*) docker_platform=linux/amd64 ;;
   aarch64-*) docker_platform=linux/arm64 ;;
   esac
@@ -178,6 +184,7 @@ function do_build() {
     *)
       local flags
       case "$_TARGET" in
+      i686-*) flags='-m32 -march=prescott' ;;
       x86_64-*) flags='-march=westmere' ;;
       aarch64-*) flags='-march=armv8-a' ;;
       esac

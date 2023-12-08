@@ -4,11 +4,17 @@ error=0
 tests=$(find build/tests -type f -executable -name "unit*")
 
 for test in $tests; do
+    target=$(find build/tests -type f -executable -name "target*")
+    echo "Running $target"
+    ./$target &
+
     echo "Running $test"
     $test
     if [ $? -ne 0 ]; then
         error=$((error + $?))
     fi
+    
+    pkill -f "$target"
 done
 
 mkdir -p build/coverage

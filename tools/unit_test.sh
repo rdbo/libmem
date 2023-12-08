@@ -13,11 +13,11 @@ done
 
 mkdir -p build/coverage
 
-source_files=$(find src -name "*.c")
+gcda_files=$(find src -name "*.gcda")
 
-for source_file in $source_files; do
-    echo "Processing gcov for $source_file"
-    gcov "$source_file".c
+for gcda_file in $gcda_files; do
+    echo "Processing gcov for $gcda_file"
+    gcov "$gcda_file"
 done
 
 gcovr -r . --html --html-details -o build/coverage/index.html

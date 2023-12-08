@@ -18,6 +18,11 @@ option(LIBMEM_BUILD_TESTS
 	OFF
 )
 
+option(LIBMEM_DEEP_TESTS
+	"Enable extra testing features for deep testing"
+	OFF
+)
+
 option(LIBMEM_BUILD_STATIC
 	"Build a static library"
 	OFF
@@ -30,6 +35,10 @@ option(LIBMEM_BUILD_32
 
 message(STATUS
 	"[*] Build tests: ${LIBMEM_BUILD_TESTS}"
+)
+
+message(STATUS
+	"[*] Deep tests: ${LIBMEM_DEEP_TESTS}"
 )
 
 message(STATUS
@@ -95,7 +104,7 @@ set(LIBMEM_DEPS
 	llvm
 )
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND ${LIBMEM_DEEP_TESTS})
 	if(NOT MSVC)
 		add_compile_options(-Wall
 			-Wextra
@@ -103,7 +112,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 			-g
 			-ggdb
 			-O0
-                        -fprofile-arcs
+			-fprofile-arcs
 			-ftest-coverage
 		)
 	endif()

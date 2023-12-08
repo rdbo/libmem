@@ -207,7 +207,7 @@ function do_build() {
       install -vD -m644 -- "${variant_build_dir}/${1}" "${variant_out_dir}/${2:-$(basename -- "$1")}"
     }
     case "$_TARGET" in
-    *-windows-msvc-shared*) copy_lib 'libmem.dll' ;;
+    *-windows-msvc-shared*) copy_lib 'libmem.dll'; copy_lib 'libmem.lib' ;; # NOTE: 'libmem.lib' is used for load-time linking
     *-windows-msvc-static*) copy_lib 'libmem.lib' ;;
     *-shared) copy_lib 'liblibmem.so' ;;
     *-static) copy_lib 'liblibmem.a' ;;

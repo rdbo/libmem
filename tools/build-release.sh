@@ -8,6 +8,7 @@ declare -gr NIX_PLATFORMS=(
   x86_64-linux-gnu
   aarch64-linux-gnu
   # Linux (Alpine/musl)
+  i686-linux-musl
   x86_64-linux-musl
   aarch64-linux-musl
 )
@@ -118,11 +119,12 @@ function _build_in_docker() {
   *-linux-musl-*) docker_os=linux-musl ;;
   esac
   case "$target" in
-  i686-*)
-    # cross-compile i686 from x86_64 (CMake is no longer compiled for i686, etc.)
+  i686-linux-gnu-*)
+    # cross-compile i686 from x86_64 (CMake is no longer compiled for i686 and we can't rely on the old distro package)
     docker_platform=linux/amd64
     docker_os+='-crossbuild-i686'
     ;;
+  i686-*) docker_platform=linux/386 ;;
   x86_64-*) docker_platform=linux/amd64 ;;
   aarch64-*) docker_platform=linux/arm64 ;;
   esac

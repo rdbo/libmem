@@ -49,6 +49,8 @@ jobs:
               {"target": "i686-linux-gnu-static", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-gnu-shared", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-gnu-static", "runs-on": "ubuntu-latest"}
+              {"target": "i686-linux-musl-shared", "runs-on": "ubuntu-latest"}
+              {"target": "i686-linux-musl-static", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-musl-shared", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-musl-static", "runs-on": "ubuntu-latest"}
               {"target": "i686-windows-msvc-shared-md", "runs-on": "windows-2019"}

@@ -102,6 +102,9 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 			-Wpedantic
 			-g
 			-ggdb
+			-O0
+                        -fprofile-arcs
+			-ftest-coverage
 		)
 	endif()
 endif()
@@ -122,6 +125,11 @@ include_directories(${PROJECT_SOURCE_DIR}
 	${INJECTOR_INC}
 )
 
+if (LIBMEM_BUILD_TESTS)
+	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
+	add_subdirectory(${TESTS_DIR})
+endif()
+
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem
@@ -129,11 +137,6 @@ add_dependencies(libmem
 	keystone-engine
 	lief-project
 )
-
-if (LIBMEM_BUILD_TESTS)
-	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
-	add_subdirectory(${TESTS_DIR})
-endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	set(LIBMEM_DEPS

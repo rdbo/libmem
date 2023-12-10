@@ -119,6 +119,30 @@ inst = LM_Disassemble(bytearray(b"\x55"))
 print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 ```
 
+## CMake Usage (without installing)
+Add the following commands to your `CMakeLists.txt`.
+
+They will fetch `libmem-config.cmake` from the root of this repository, which will download libmem binaries for your system and include libmem in your CMake project.
+
+```cmake
+include(FetchContent)
+
+# Download and set up libmem
+FetchContent_Declare(libmem-config URL "https://raw.githubusercontent.com/rdbo/libmem/config-v1/libmem-config.cmake" DOWNLOAD_NO_EXTRACT TRUE)
+FetchContent_MakeAvailable(libmem-config)
+set(CMAKE_PREFIX_PATH "${libmem-config_SOURCE_DIR}" "${CMAKE_PREFIX_PATH}")
+set(LIBMEM_DOWNLOAD_VERSION "4.4.0-pre1")
+
+# Find libmem package
+find_package(libmem CONFIG REQUIRED)
+```
+
+Use the following to link against libmem (NOTE: might be necessary to link against other dependencies - go to the dependencies section for more information):
+```cmake
+# Link against libmem
+target_link_libraries(<YOUR-TARGET-NAME> PRIVATE libmem::libmem)
+```
+
 ## Installing
 
 ### Windows

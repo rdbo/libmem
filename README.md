@@ -137,10 +137,10 @@ set(LIBMEM_DOWNLOAD_VERSION "4.4.0-pre1")
 find_package(libmem CONFIG REQUIRED)
 ```
 
-Use the following to link against libmem (NOTE: might be necessary to link against other dependencies - go to the dependencies section for more information):
+Use the following to link against libmem (NOTE: it might be necessary to link against other dependencies - go to the `Dependencies` section for more information):
 ```cmake
 # Link against libmem
-target_link_libraries(<YOUR-TARGET-NAME> PRIVATE libmem::libmem)
+target_link_libraries(<YOUR_TARGET_NAME> PRIVATE libmem::libmem)
 ```
 
 ## Installing
@@ -222,7 +222,7 @@ After installing, follow the the proper `Usage` section for your programming lan
 ## Usage (C/C++)
 
 Add `#include <libmem/libmem.h>` (C/C++) or `#include <libmem/libmem.hpp>` (C++) to your source code.
-Link the generated libmem library against your binary (`libmem.so` for Unix-like or `libmem.dll` for Windows).
+Link the generated libmem library against your binary (`liblibmem.so` for Unix-like or `libmem.dll` for Windows).
 *For GCC-like compilers*: add the flag `-llibmem` to your compiler and it should link it.
 ```c
 #include <libmem/libmem.h> /* C/C++ */

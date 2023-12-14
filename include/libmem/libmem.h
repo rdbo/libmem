@@ -635,10 +635,10 @@ LM_ReadMemory(lm_address_t src,
 	      lm_size_t    size);
 
 LM_API lm_size_t
-LM_ReadMemoryEx(lm_process_t *pproc,
-		lm_address_t  src,
-		lm_byte_t    *dst,
-		lm_size_t     size);
+LM_ReadMemoryEx(const lm_process_t *pproc,
+		lm_address_t        src,
+		lm_byte_t          *dst,
+		lm_size_t           size);
 
 LM_API lm_size_t
 LM_WriteMemory(lm_address_t dst,
@@ -646,10 +646,10 @@ LM_WriteMemory(lm_address_t dst,
 	       lm_size_t    size);
 
 LM_API lm_size_t
-LM_WriteMemoryEx(lm_process_t *pproc,
-		 lm_address_t  dst,
-		 lm_bytearr_t  src,
-		 lm_size_t     size);
+LM_WriteMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        dst,
+		 lm_bytearr_t        src,
+		 lm_size_t           size);
 
 LM_API lm_size_t
 LM_SetMemory(lm_address_t dst,
@@ -657,10 +657,10 @@ LM_SetMemory(lm_address_t dst,
 	     lm_size_t    size);
 
 LM_API lm_size_t
-LM_SetMemoryEx(lm_process_t *pproc,
-	       lm_address_t  dst,
-	       lm_byte_t     byte,
-	       lm_size_t     size);
+LM_SetMemoryEx(const lm_process_t *pproc,
+	       lm_address_t        dst,
+	       lm_byte_t           byte,
+	       lm_size_t           size);
 
 LM_API lm_bool_t
 LM_ProtMemory(lm_address_t addr,
@@ -669,29 +669,29 @@ LM_ProtMemory(lm_address_t addr,
 	      lm_prot_t   *oldprot);
 
 LM_API lm_bool_t
-LM_ProtMemoryEx(lm_process_t *pproc,
-		lm_address_t  addr,
-		lm_size_t     size,
-		lm_prot_t     prot,
-		lm_prot_t    *oldprot);
+LM_ProtMemoryEx(const lm_process_t *pproc,
+		lm_address_t        addr,
+		lm_size_t           size,
+		lm_prot_t           prot,
+		lm_prot_t          *oldprot);
 
 LM_API lm_address_t
 LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot);
 
 LM_API lm_address_t
-LM_AllocMemoryEx(lm_process_t *pproc,
-		 lm_size_t     size,
-		 lm_prot_t     prot);
+LM_AllocMemoryEx(const lm_process_t *pproc,
+		 lm_size_t           size,
+		 lm_prot_t           prot);
 
 LM_API lm_bool_t
 LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size);
 
 LM_API lm_bool_t
-LM_FreeMemoryEx(lm_process_t *pproc,
-		lm_address_t  alloc,
-		lm_size_t     size);
+LM_FreeMemoryEx(const lm_process_t *pproc,
+		lm_address_t        alloc,
+		lm_size_t           size);
 
 /****************************************/
 

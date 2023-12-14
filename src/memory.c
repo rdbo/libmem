@@ -87,10 +87,10 @@ LM_ReadMemory(lm_address_t src,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_size_t
-_LM_ReadMemoryEx(lm_process_t *pproc,
-		 lm_address_t  src,
-		 lm_byte_t    *dst,
-		 lm_size_t     size)
+_LM_ReadMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        src,
+		 lm_byte_t          *dst,
+		 lm_size_t           size)
 {
 	lm_size_t rdsize = 0;
 	HANDLE hProcess;
@@ -107,10 +107,10 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 }
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 LM_PRIVATE lm_size_t
-_LM_ReadMemoryEx(lm_process_t *pproc,
-		 lm_address_t  src,
-		 lm_byte_t    *dst,
-		 lm_size_t     size)
+_LM_ReadMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        src,
+		 lm_byte_t          *dst,
+		 lm_size_t           size)
 {
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };
@@ -130,10 +130,10 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 }
 #else
 LM_PRIVATE lm_size_t
-_LM_ReadMemoryEx(lm_process_t *pproc,
-		 lm_address_t  src,
-		 lm_byte_t    *dst,
-		 lm_size_t     size)
+_LM_ReadMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        src,
+		 lm_byte_t          *dst,
+		 lm_size_t           size)
 {
 	int fd;
 	lm_char_t mem_path[LM_PATH_MAX] = { 0 };
@@ -157,10 +157,10 @@ _LM_ReadMemoryEx(lm_process_t *pproc,
 #endif
 
 LM_API lm_size_t
-LM_ReadMemoryEx(lm_process_t *pproc,
-		lm_address_t src,
-		lm_byte_t   *dst,
-		lm_size_t    size)
+LM_ReadMemoryEx(const lm_process_t *pproc,
+		lm_address_t        src,
+		lm_byte_t          *dst,
+		lm_size_t           size)
 {
 	if (!pproc || !LM_VALID_PROCESS(pproc) || src == LM_ADDRESS_BAD || !dst || size == 0)
 		return LM_FALSE;
@@ -190,10 +190,10 @@ LM_WriteMemory(lm_address_t dst,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_size_t
-_LM_WriteMemoryEx(lm_process_t *pproc,
-		  lm_address_t  dst,
-		  lm_bytearr_t  src,
-		  lm_size_t     size)
+_LM_WriteMemoryEx(const lm_process_t *pproc,
+		  lm_address_t        dst,
+		  lm_bytearr_t        src,
+		  lm_size_t           size)
 {
 	lm_size_t wrsize = 0;
 	HANDLE hProcess;
@@ -211,10 +211,10 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 }
 #elif LM_OS == LM_OS_LINUX || LM_OS == LM_OS_ANDROID
 LM_PRIVATE lm_size_t
-_LM_WriteMemoryEx(lm_process_t *pproc,
-		  lm_address_t  dst,
-		  lm_bytearr_t  src,
-		  lm_size_t     size)
+_LM_WriteMemoryEx(const lm_process_t *pproc,
+		  lm_address_t        dst,
+		  lm_bytearr_t        src,
+		  lm_size_t           size)
 {
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };
@@ -233,10 +233,10 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 }
 #else
 LM_PRIVATE lm_size_t
-_LM_WriteMemoryEx(lm_process_t *pproc,
-		  lm_address_t  dst,
-		  lm_bytearr_t  src,
-		  lm_size_t     size)
+_LM_WriteMemoryEx(const lm_process_t *pproc,
+		  lm_address_t        dst,
+		  lm_bytearr_t        src,
+		  lm_size_t           size)
 {
 	int fd;
 	lm_char_t mem_path[LM_PATH_MAX] = { 0 };
@@ -260,10 +260,10 @@ _LM_WriteMemoryEx(lm_process_t *pproc,
 #endif
 
 LM_API lm_size_t
-LM_WriteMemoryEx(lm_process_t *pproc,
-		 lm_address_t  dst,
-		 lm_bytearr_t  src,
-		 lm_size_t     size)
+LM_WriteMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        dst,
+		 lm_bytearr_t        src,
+		 lm_size_t           size)
 {
 	if (!pproc || !LM_VALID_PROCESS(pproc) || dst == LM_ADDRESS_BAD || !src || size == 0)
 		return LM_FALSE;
@@ -292,10 +292,10 @@ LM_SetMemory(lm_address_t dst,
 /********************************/
 
 LM_API lm_size_t
-LM_SetMemoryEx(lm_process_t *pproc,
-	       lm_address_t  dst,
-	       lm_byte_t     byte,
-	       lm_size_t     size)
+LM_SetMemoryEx(const lm_process_t *pproc,
+	       lm_address_t        dst,
+	       lm_byte_t           byte,
+	       lm_size_t           size)
 {
 	lm_size_t  wrsize = 0;
 	lm_byte_t *data;
@@ -380,11 +380,11 @@ LM_ProtMemory(lm_address_t addr,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_ProtMemoryEx(lm_process_t *pproc,
-		 lm_address_t  addr,
-		 lm_size_t     size,
-		 lm_prot_t     prot,
-		 lm_prot_t    *oldprot)
+_LM_ProtMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        addr,
+		 lm_size_t           size,
+		 lm_prot_t           prot,
+		 lm_prot_t          *oldprot)
 {
 	lm_bool_t ret = LM_FALSE;
 	DWORD old_prot;
@@ -406,11 +406,11 @@ CLOSE_RET:
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_ProtMemoryEx(lm_process_t *pproc,
-		 lm_address_t  addr,
-		 lm_size_t     size,
-		 lm_prot_t     prot,
-		 lm_prot_t    *oldprot)
+_LM_ProtMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        addr,
+		 lm_size_t           size,
+		 lm_prot_t           prot,
+		 lm_prot_t          *oldprot)
 {
 	_lm_syscall_data_t data;
 	lm_uintptr_t       syscall_ret = (lm_uintptr_t)-1;
@@ -442,11 +442,11 @@ _LM_ProtMemoryEx(lm_process_t *pproc,
 #endif
 
 LM_API lm_bool_t
-LM_ProtMemoryEx(lm_process_t *pproc,
-		lm_address_t  addr,
-		lm_size_t     size,
-		lm_prot_t     prot,
-		lm_prot_t    *oldprot)
+LM_ProtMemoryEx(const lm_process_t *pproc,
+		lm_address_t        addr,
+		lm_size_t           size,
+		lm_prot_t           prot,
+		lm_prot_t          *oldprot)
 {
 	if (!pproc || !LM_VALID_PROCESS(pproc) || addr == LM_ADDRESS_BAD || !LM_VALID_PROT(prot) || size == 0)
 		return LM_FALSE;
@@ -501,9 +501,9 @@ LM_AllocMemory(lm_size_t size,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_address_t
-_LM_AllocMemoryEx(lm_process_t *pproc,
-		  lm_size_t     size,
-		  lm_prot_t     prot)
+_LM_AllocMemoryEx(const lm_process_t *pproc,
+		  lm_size_t           size,
+		  lm_prot_t           prot)
 {
 	lm_address_t alloc = LM_ADDRESS_BAD;
 	HANDLE hProcess;
@@ -522,9 +522,9 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 }
 #else
 LM_PRIVATE lm_address_t
-_LM_AllocMemoryEx(lm_process_t *pproc,
-		  lm_size_t     size,
-		  lm_prot_t     prot)
+_LM_AllocMemoryEx(const lm_process_t *pproc,
+		  lm_size_t           size,
+		  lm_prot_t           prot)
 {
 	_lm_syscall_data_t data;
 	lm_uintptr_t       syscall_ret = (lm_uintptr_t)MAP_FAILED;
@@ -556,9 +556,9 @@ _LM_AllocMemoryEx(lm_process_t *pproc,
 #endif
 
 LM_API lm_address_t
-LM_AllocMemoryEx(lm_process_t *pproc,
-		 lm_size_t     size,
-		 lm_prot_t     prot)
+LM_AllocMemoryEx(const lm_process_t *pproc,
+		 lm_size_t           size,
+		 lm_prot_t           prot)
 {
 	if (!pproc || !LM_VALID_PROCESS(pproc) || size == 0 || !LM_VALID_PROT(prot))
 		return LM_ADDRESS_BAD;
@@ -598,9 +598,9 @@ LM_FreeMemory(lm_address_t alloc,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_FreeMemoryEx(lm_process_t *pproc,
-		 lm_address_t  alloc,
-		 lm_size_t     size)
+_LM_FreeMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        alloc,
+		 lm_size_t           size)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hProcess;
@@ -616,9 +616,9 @@ _LM_FreeMemoryEx(lm_process_t *pproc,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_FreeMemoryEx(lm_process_t *pproc,
-		 lm_address_t  alloc,
-		 lm_size_t     size)
+_LM_FreeMemoryEx(const lm_process_t *pproc,
+		 lm_address_t        alloc,
+		 lm_size_t           size)
 {
 	_lm_syscall_data_t data;
 #	if LM_OS == LM_OS_LINUX
@@ -636,9 +636,9 @@ _LM_FreeMemoryEx(lm_process_t *pproc,
 #endif
 
 LM_API lm_bool_t
-LM_FreeMemoryEx(lm_process_t *pproc,
-		lm_address_t  alloc,
-		lm_size_t     size)
+LM_FreeMemoryEx(const lm_process_t *pproc,
+		lm_address_t        alloc,
+		lm_size_t           size)
 {
 	if (!pproc || !LM_VALID_PROCESS(pproc) || alloc == LM_ADDRESS_BAD)
 		return LM_FALSE;

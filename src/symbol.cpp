@@ -92,7 +92,7 @@ _LM_EnumElfSyms(lm_module_t *pmod,
                 base = pmod->base;
 
         for (const Symbol &symbol : binary->exported_symbols()) {
-                sym.name = (lm_cstring_t)symbol.name().c_str();
+                sym.name = (lm_cchar_t *)symbol.name().c_str();
                 sym.address = (lm_address_t)LM_OFFSET(base, symbol.value());
                 if (!callback(&sym, arg))
                         break;
@@ -124,11 +124,16 @@ LM_EnumSymbols(lm_module_t *pmod,
 }
 /********************************/
 
+typedef struct {
+	lm_cstring_t name;
+	lm_address_t address;
+} _lm_find_symbol_t;
+
 LM_PRIVATE lm_bool_t
 _LM_FindSymbolAddressCallback(lm_symbol_t *psymbol,
 			      lm_void_t   *arg)
 {
-	lm_symbol_t *parg = (lm_symbol_t *)arg;
+	_lm_find_symbol_t *parg = (_lm_find_symbol_t *)arg;
 
 	if (!LM_STRCMP(psymbol->name, parg->name)) {
 		parg->address = psymbol->address;
@@ -142,7 +147,7 @@ LM_API lm_address_t
 LM_FindSymbolAddress(lm_module_t  *pmod,
 		     lm_cstring_t  name)
 {
-	lm_symbol_t arg;
+	_lm_find_symbol_t arg;
 
 	if (!pmod || !LM_VALID_MODULE(pmod) || !name)
 		return LM_ADDRESS_BAD;
@@ -194,7 +199,7 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 /********************************/
 
 LM_API lm_void_t
-LM_FreeDemangleSymbol(lm_cstring_t symbol)
+LM_FreeDemangleSymbol(lm_cchar_t *symbol)
 {
 	LM_FREE(symbol);
 }
@@ -214,7 +219,7 @@ _LM_EnumSymbolsDemangledCallback(lm_symbol_t *psym,
 	lm_symbol_t newsym;
 	lm_enum_sym_demang_t *cbarg = (lm_enum_sym_demang_t *)arg;
 
-	newsym.name = LM_DemangleSymbol(psym->name, (lm_cchar_t *)LM_NULLPTR, 0);
+	newsym.name = (lm_cchar_t *)LM_DemangleSymbol((lm_cstring_t)psym->name, (lm_cchar_t *)LM_NULLPTR, 0);
 	if (!newsym.name)
 		return LM_TRUE;
 	newsym.address = psym->address;
@@ -248,7 +253,7 @@ LM_API lm_address_t
 LM_FindSymbolAddressDemangled(lm_module_t *pmod,
 			      lm_cstring_t name)
 {
-	lm_symbol_t arg;
+	_lm_find_symbol_t arg;
 
 	if (!pmod || !LM_VALID_MODULE(pmod) || !name)
 		return LM_ADDRESS_BAD;

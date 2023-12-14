@@ -384,10 +384,10 @@ typedef lm_wchar_t         lm_char_t;
 typedef lm_cchar_t         lm_char_t;
 #endif
 
-typedef lm_byte_t         *lm_bytearr_t;
-typedef lm_cchar_t        *lm_cstring_t;
-typedef lm_wchar_t        *lm_wstring_t;
-typedef lm_char_t         *lm_string_t;
+typedef const lm_byte_t   *lm_bytearr_t;
+typedef const lm_cchar_t  *lm_cstring_t;
+typedef const lm_wchar_t  *lm_wstring_t;
+typedef const lm_char_t   *lm_string_t;
 
 /*
 #if LM_OS == LM_OS_WIN
@@ -457,7 +457,7 @@ typedef struct {
 	 * callback function would not be a good idea. The address
 	 * will be still correct. That's why the API function
 	 * LM_FindSymbolAddress works just fine. */
-	lm_cstring_t name;
+	lm_cchar_t  *name;
 	lm_address_t address;
 } lm_symbol_t;
 
@@ -593,7 +593,7 @@ LM_DemangleSymbol(lm_cstring_t symbol,
 		  lm_size_t    maxsize);
 
 LM_API lm_void_t
-LM_FreeDemangleSymbol(lm_cstring_t symbol);
+LM_FreeDemangleSymbol(lm_cchar_t *symbol);
 
 LM_API lm_bool_t
 LM_EnumSymbolsDemangled(lm_module_t *pmod,
@@ -769,7 +769,7 @@ LM_AssembleEx(lm_cstring_t  code,
 	      lm_bytearr_t *pcodebuf);
 
 LM_API lm_void_t
-LM_FreeCodeBuffer(lm_bytearr_t pcodebuf);
+LM_FreeCodeBuffer(lm_byte_t *pcodebuf);
 
 LM_API lm_bool_t
 LM_Disassemble(lm_address_t code,

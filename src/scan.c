@@ -190,14 +190,14 @@ FREE_EXIT:
 
 LM_PRIVATE lm_bool_t
 _LM_ParseSig(lm_string_t   sig,
-	     lm_bytearr_t *ppattern,
-	     lm_string_t  *pmask)
+	     lm_byte_t   **ppattern,
+	     lm_char_t   **pmask)
 {
 	lm_bool_t    ret = LM_FALSE;
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
 	lm_char_t   *mask = (lm_char_t *)LM_NULL;
 	lm_size_t    len = 0;
-	lm_char_t   *ptr;
+	lm_string_t  ptr;
 	
 	for (ptr = sig; ptr; ptr = LM_STRCHR(ptr, LM_STR(' '))) {
 		lm_byte_t  *old_pattern = pattern;
@@ -257,8 +257,8 @@ LM_SigScan(lm_string_t  sig,
 	   lm_size_t    scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
-	lm_bytearr_t pattern = (lm_bytearr_t)LM_NULL;
-	lm_string_t  mask = (lm_string_t)LM_NULL;
+	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
+	lm_char_t   *mask = (lm_char_t *)LM_NULL;
 
 	if (!sig || addr == LM_ADDRESS_BAD || scansize == 0)
 		return match;
@@ -283,8 +283,8 @@ LM_SigScanEx(lm_process_t *pproc,
 	     lm_size_t     scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
-	lm_bytearr_t pattern = (lm_bytearr_t)LM_NULL;
-	lm_string_t  mask = (lm_string_t)LM_NULL;
+	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;
+	lm_char_t   *mask = (lm_char_t *)LM_NULL;
 
 	if (!pproc || !LM_VALID_PROCESS(pproc) || !sig || addr == LM_ADDRESS_BAD || scansize == 0)
 		return match;

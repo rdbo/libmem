@@ -27,7 +27,7 @@ LM_Assemble(lm_cstring_t code,
 	    lm_inst_t   *inst)
 {
 	lm_bool_t    ret = LM_FALSE;
-	lm_bytearr_t codebuf;
+	lm_byte_t   *codebuf;
 
 	LM_ASSERT(code != LM_NULLPTR && inst != LM_NULLPTR);
 
@@ -104,7 +104,7 @@ CLEAN_EXIT:
 /********************************/
 
 LM_API lm_void_t
-LM_FreeCodeBuffer(lm_bytearr_t codebuf)
+LM_FreeCodeBuffer(lm_byte_t *codebuf)
 {
 	LM_ASSERT(codebuf != LM_NULLPTR);
 

@@ -126,10 +126,10 @@ FREE_EXIT:
 /********************************/
 
 LM_API lm_size_t
-LM_HookCodeEx(lm_process_t *pproc,
-	      lm_address_t  from,
-	      lm_address_t  to,
-	      lm_address_t *ptrampoline)
+LM_HookCodeEx(const lm_process_t *pproc,
+	      lm_address_t        from,
+	      lm_address_t        to,
+	      lm_address_t       *ptrampoline)
 {
 	lm_size_t    ret = 0;
 	lm_bytearr_t codebuf;
@@ -225,10 +225,10 @@ LM_UnhookCode(lm_address_t from,
 /********************************/
 
 LM_API lm_bool_t
-LM_UnhookCodeEx(lm_process_t *pproc,
-		lm_address_t  from,
-		lm_address_t  trampoline,
-		lm_size_t     size)
+LM_UnhookCodeEx(const lm_process_t *pproc,
+		lm_address_t        from,
+		lm_address_t        trampoline,
+		lm_size_t           size)
 {
 	lm_prot_t old_prot;
 

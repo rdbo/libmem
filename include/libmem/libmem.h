@@ -702,11 +702,11 @@ LM_DataScan(lm_bytearr_t data,
 	    lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_DataScanEx(lm_process_t *pproc,
-	      lm_bytearr_t  data,
-	      lm_size_t     size,
-	      lm_address_t  addr,
-	      lm_size_t     scansize);
+LM_DataScanEx(const lm_process_t *pproc,
+	      lm_bytearr_t        data,
+	      lm_size_t           size,
+	      lm_address_t        addr,
+	      lm_size_t           scansize);
 
 LM_API lm_address_t
 LM_PatternScan(lm_bytearr_t pattern,
@@ -715,11 +715,11 @@ LM_PatternScan(lm_bytearr_t pattern,
 	       lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_PatternScanEx(lm_process_t *pproc,
-		 lm_bytearr_t  pattern,
-		 lm_string_t   mask,
-		 lm_address_t  addr,
-		 lm_size_t     scansize);
+LM_PatternScanEx(const lm_process_t *pproc,
+		 lm_bytearr_t        pattern,
+		 lm_string_t         mask,
+		 lm_address_t        addr,
+		 lm_size_t           scansize);
 
 LM_API lm_address_t
 LM_SigScan(lm_string_t  sig,
@@ -727,10 +727,10 @@ LM_SigScan(lm_string_t  sig,
 	   lm_size_t    scansize);
 
 LM_API lm_address_t
-LM_SigScanEx(lm_process_t *pproc,
-	     lm_string_t   sig,
-	     lm_address_t  addr,
-	     lm_size_t     scansize);
+LM_SigScanEx(const lm_process_t *pproc,
+	     lm_string_t         sig,
+	     lm_address_t        addr,
+	     lm_size_t           scansize);
 
 /****************************************/
 
@@ -740,10 +740,10 @@ LM_HookCode(lm_address_t  from,
 	    lm_address_t *ptrampoline);
 
 LM_API lm_size_t
-LM_HookCodeEx(lm_process_t *pproc,
-	      lm_address_t  from,
-	      lm_address_t  to,
-	      lm_address_t *ptrampoline);
+LM_HookCodeEx(const lm_process_t *pproc,
+	      lm_address_t        from,
+	      lm_address_t        to,
+	      lm_address_t       *ptrampoline);
 
 LM_API lm_bool_t
 LM_UnhookCode(lm_address_t from,
@@ -751,10 +751,10 @@ LM_UnhookCode(lm_address_t from,
 	      lm_size_t    size);
 
 LM_API lm_bool_t
-LM_UnhookCodeEx(lm_process_t *pproc,
-		lm_address_t  from,
-		lm_address_t  trampoline,
-		lm_size_t     size);
+LM_UnhookCodeEx(const lm_process_t *pproc,
+		lm_address_t        from,
+		lm_address_t        trampoline,
+		lm_size_t           size);
 
 /****************************************/
 

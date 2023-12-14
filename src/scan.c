@@ -58,11 +58,11 @@ LM_DataScan(lm_bytearr_t data,
 /********************************/
 
 LM_API lm_address_t
-LM_DataScanEx(lm_process_t *pproc,
-	      lm_bytearr_t  data,
-	      lm_size_t     size,
-	      lm_address_t  addr,
-	      lm_size_t     scansize)
+LM_DataScanEx(const lm_process_t *pproc,
+	      lm_bytearr_t        data,
+	      lm_size_t           size,
+	      lm_address_t        addr,
+	      lm_size_t           scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
 	lm_byte_t   *scanbuf;
@@ -141,11 +141,11 @@ LM_PatternScan(lm_bytearr_t pattern,
 /********************************/
 
 LM_API lm_address_t
-LM_PatternScanEx(lm_process_t *pproc,
-		 lm_bytearr_t  pattern,
-		 lm_string_t   mask,
-		 lm_address_t  addr,
-		 lm_size_t     scansize)
+LM_PatternScanEx(const lm_process_t *pproc,
+		 lm_bytearr_t        pattern,
+		 lm_string_t         mask,
+		 lm_address_t        addr,
+		 lm_size_t           scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
 	lm_size_t    size;
@@ -277,10 +277,10 @@ LM_SigScan(lm_string_t  sig,
 /********************************/
 
 LM_API lm_address_t
-LM_SigScanEx(lm_process_t *pproc,
-	     lm_string_t   sig,
-	     lm_address_t  addr,
-	     lm_size_t     scansize)
+LM_SigScanEx(const lm_process_t *pproc,
+	     lm_string_t         sig,
+	     lm_address_t        addr,
+	     lm_size_t           scansize)
 {
 	lm_address_t match = LM_ADDRESS_BAD;
 	lm_byte_t   *pattern = (lm_byte_t *)LM_NULL;

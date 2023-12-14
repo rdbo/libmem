@@ -1,6 +1,7 @@
 #include <libmem/libmem.h>
 #include "minunit.h"
 #include "helpers.h"
+#include <stddef.h>
 
 #define ALLOCSIZE 1024
 #define ALLOCPROT LM_PROT_XRW
@@ -183,38 +184,76 @@ char *test_LM_FreeMemoryEx(struct memory_args *arg)
 	return NULL;
 }
 
-struct {
+struct _ptrscan_layer2 {
 	char pad[0x10];
 	int player_health;
 } static pointer_scan_layer2 = { { 0 }, 42 };
 
-struct {
+struct _ptrscan_layer1 {
 	char pad[0xA0];
 	lm_address_t next_layer;
 } static pointer_scan_layer1 = { { 0 }, (lm_address_t)&pointer_scan_layer2 };
 
-struct {
+struct _ptrscan_layer0 {
 	char pad0[0xF0];
 	lm_address_t next_layer;
 } static pointer_scan_layer0 = { { 0 }, (lm_address_t)&pointer_scan_layer1 };
 
 static int *player_health_ptr = &pointer_scan_layer2.player_health;
 
+static lm_address_t deep_ptr_offsets[] = { 0xF0, 0xA0, 0x10 };
+
+static lm_size_t deep_ptr_noffsets = sizeof(deep_ptr_offsets) / sizeof(deep_ptr_offsets[0]);
+
 char *test_LM_DeepPointer(void *arg)
 {
-	lm_address_t offsets[] = { 0xF0, 0xA0, 0x10 };
-	lm_size_t noffsets = sizeof(offsets) / sizeof(offsets[0]);
-
+	lm_address_t *offsets = deep_ptr_offsets;
+	lm_size_t noffsets = deep_ptr_noffsets;
 	int *deep_pointer = (int *)LM_DeepPointer((lm_address_t)&pointer_scan_layer0, offsets, noffsets);
 	mu_assert("failed to resolve deep pointer", deep_pointer != (int *)LM_ADDRESS_BAD);
 	mu_assert("deep pointer does not match expected address", deep_pointer == player_health_ptr);
-	mu_assert("deep pointer value is not the expected value", *deep_pointer == *player_health_ptr);
 
 	printf("<PLAYER HP: %d> ", *deep_pointer);
 	fflush(stdout);
 	
+	mu_assert("deep pointer value is not the expected value", *deep_pointer == *player_health_ptr);
+	
 	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer(LM_ADDRESS_BAD, offsets, noffsets) == LM_ADDRESS_BAD);
 	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer((lm_address_t)&pointer_scan_layer0, LM_NULLPTR, noffsets) == LM_ADDRESS_BAD);
+	
+	return NULL;
+}
+
+char *test_LM_DeepPointerEx(struct memory_args *arg)
+{
+	lm_byte_t writebuf[sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1) + sizeof(pointer_scan_layer2)];
+	lm_address_t layer1addr = *arg->palloc + sizeof(pointer_scan_layer0);
+	lm_address_t layer2addr = layer1addr + sizeof(pointer_scan_layer1);
+	lm_address_t *nextlayer0 = (lm_address_t *)&writebuf[offsetof(struct _ptrscan_layer0, next_layer)];
+	lm_address_t *nextlayer1 = (lm_address_t *)&writebuf[sizeof(pointer_scan_layer0) + offsetof(struct _ptrscan_layer1, next_layer)];
+	lm_address_t expected_addr = *arg->palloc + sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1) + offsetof(struct _ptrscan_layer2, player_health);
+	
+	memcpy(writebuf, &pointer_scan_layer0, sizeof(pointer_scan_layer0));
+	memcpy(&writebuf[sizeof(pointer_scan_layer0)], &pointer_scan_layer1, sizeof(pointer_scan_layer1));
+	memcpy(&writebuf[sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1)], &pointer_scan_layer2, sizeof(pointer_scan_layer2));
+	*nextlayer0 = layer1addr;
+	*nextlayer1 = layer2addr;
+
+	mu_assert("failed to write pointer scan mock to target process", LM_WriteMemoryEx(arg->ptargetproc, *arg->palloc, writebuf, sizeof(writebuf)) == sizeof(writebuf));
+
+	lm_address_t *offsets = deep_ptr_offsets;
+	lm_size_t noffsets = deep_ptr_noffsets;
+	lm_address_t deep_pointer = LM_DeepPointerEx(arg->ptargetproc, *arg->palloc, offsets, noffsets);
+
+	mu_assert("deep pointer does not match expected address", deep_pointer == expected_addr);
+
+	int health = 0;
+	mu_assert("failed to read deep pointer value", LM_ReadMemoryEx(arg->ptargetproc, deep_pointer, (lm_byte_t *)&health, sizeof(health)) == sizeof(health));
+
+	printf("<PLAYER HP: %d> ", health);
+	fflush(stdout);
+	
+	mu_assert("deep pointer value does not match expected value", health == pointer_scan_layer2.player_health);
 	
 	return NULL;
 }

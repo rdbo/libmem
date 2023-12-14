@@ -655,7 +655,8 @@ LM_DeepPointer(lm_address_t        base,
 	       size_t              noffsets)
 {
 	lm_size_t i;
-	
+
+	/* NOTE: NULL 'offsets' is permitted, as long as 'noffsets' is 0 */
 	if (base == LM_ADDRESS_BAD || (!offsets && noffsets > 0))
 		return LM_ADDRESS_BAD;
 
@@ -681,5 +682,35 @@ LM_DeepPointerEx(const lm_process_t *pproc,
 		 const lm_address_t *offsets,
 		 lm_size_t           noffsets)
 {
+	lm_size_t i;
+	lm_address_t deref;
+	lm_size_t ptrsize = sizeof(lm_address_t);
+
+	/* NOTE: NULL 'offsets' is permitted, as long as 'noffsets' is 0 */
+	if (!pproc || !LM_VALID_PROCESS(pproc) || base == LM_ADDRESS_BAD || (!offsets && noffsets > 0))
+		return LM_ADDRESS_BAD;
+
+	if (pproc->bits == 32)
+		ptrsize = 4; /* 4-byte pointer */
+
+	for (i = 0; i < noffsets; ++i) {
+		base += offsets[i];
+
+		/* The last offset won't be dereferenced,
+		 * returning a pointer to the final value
+		 * given by the "pointer scan" offsets */
+		if (i < (noffsets - 1)) {
+			/* NOTE: address size changes for 32 and 64 bits! */
+
+			deref = 0;
+			if (LM_ReadMemoryEx(pproc, base, (lm_byte_t *)&deref, ptrsize) != ptrsize) {
+				base = LM_ADDRESS_BAD;
+				break;
+			}
+
+			base = deref;
+		}
+	}
+	
 	return base;
 }

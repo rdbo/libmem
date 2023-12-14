@@ -23,8 +23,8 @@
 #include "internal.h"
 
 LM_PRIVATE lm_vmt_entry_t *
-_LM_VmtSearch(lm_vmt_t *pvmt,
-	      lm_size_t hkindex)
+_LM_VmtSearch(const lm_vmt_t *pvmt,
+	      lm_size_t       hkindex)
 {
 	lm_vmt_entry_t *entry = LM_NULLPTR;
 
@@ -126,8 +126,8 @@ LM_VmtUnhook(lm_vmt_t *pvmt,
 /********************************/
 
 LM_API lm_address_t
-LM_VmtGetOriginal(lm_vmt_t *pvmt,
-		  lm_size_t fnindex)
+LM_VmtGetOriginal(const lm_vmt_t *pvmt,
+		  lm_size_t       fnindex)
 {
 	lm_vmt_entry_t *entry;
 

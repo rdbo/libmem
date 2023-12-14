@@ -31,10 +31,10 @@
 using namespace LIEF::PE;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPeSyms(lm_module_t *pmod,
-	       lm_bool_t  (*callback)(lm_symbol_t *psymbol,
-				      lm_void_t   *arg),
-	       lm_void_t *arg)
+_LM_EnumPeSyms(const lm_module_t *pmod,
+	       lm_bool_t        (*callback)(lm_symbol_t *psymbol,
+					    lm_void_t   *arg),
+	       lm_void_t         *arg)
 {
 	lm_symbol_t sym;
 	std::unique_ptr<const Binary> binary;
@@ -59,10 +59,10 @@ _LM_EnumPeSyms(lm_module_t *pmod,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumSymbols(lm_module_t *pmod,
-		lm_bool_t  (*callback)(lm_symbol_t *psymbol,
-				       lm_void_t   *arg),
-		lm_void_t   *arg)
+_LM_EnumSymbols(const lm_module_t *pmod,
+		lm_bool_t        (*callback)(lm_symbol_t *psymbol,
+					     lm_void_t   *arg),
+		lm_void_t         *arg)
 {
 	return _LM_EnumPeSyms(pmod, callback, arg);
 }
@@ -72,10 +72,10 @@ _LM_EnumSymbols(lm_module_t *pmod,
 using namespace LIEF::ELF;
 
 LM_PRIVATE lm_bool_t
-_LM_EnumElfSyms(lm_module_t *pmod,
-		lm_bool_t  (*callback)(lm_symbol_t *psymbol,
-				       lm_void_t   *arg),
-		lm_void_t   *arg)
+_LM_EnumElfSyms(const lm_module_t *pmod,
+		lm_bool_t        (*callback)(lm_symbol_t *psymbol,
+					     lm_void_t   *arg),
+		lm_void_t         *arg)
 {
 	lm_symbol_t sym;
 	lm_address_t base = (lm_address_t)0; /* base address for symbol offset */
@@ -102,20 +102,20 @@ _LM_EnumElfSyms(lm_module_t *pmod,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumSymbols(lm_module_t *pmod,
-		lm_bool_t  (*callback)(lm_symbol_t *psymbol,
-				       lm_void_t   *arg),
-		lm_void_t   *arg)
+_LM_EnumSymbols(const lm_module_t *pmod,
+		lm_bool_t        (*callback)(lm_symbol_t *psymbol,
+					     lm_void_t   *arg),
+		lm_void_t         *arg)
 {
 	return _LM_EnumElfSyms(pmod, callback, arg);
 }
 #endif
 
 LM_API lm_bool_t
-LM_EnumSymbols(lm_module_t *pmod,
-	       lm_bool_t  (*callback)(lm_symbol_t *psymbol,
-				      lm_void_t   *arg),
-	       lm_void_t   *arg)
+LM_EnumSymbols(const lm_module_t *pmod,
+	       lm_bool_t        (*callback)(lm_symbol_t *psymbol,
+					    lm_void_t   *arg),
+	       lm_void_t         *arg)
 {
 	if (!pmod || !LM_VALID_MODULE(pmod) || !callback)
 		return LM_FALSE;
@@ -144,8 +144,8 @@ _LM_FindSymbolAddressCallback(lm_symbol_t *psymbol,
 }
 
 LM_API lm_address_t
-LM_FindSymbolAddress(lm_module_t  *pmod,
-		     lm_cstring_t  name)
+LM_FindSymbolAddress(const lm_module_t  *pmod,
+		     lm_cstring_t        name)
 {
 	_lm_find_symbol_t arg;
 
@@ -232,10 +232,10 @@ _LM_EnumSymbolsDemangledCallback(lm_symbol_t *psym,
 }
 
 LM_API lm_bool_t
-LM_EnumSymbolsDemangled(lm_module_t *pmod,
-			lm_bool_t  (*callback)(lm_symbol_t *psymbol,
-					       lm_void_t   *arg),
-			lm_void_t   *arg)
+LM_EnumSymbolsDemangled(const lm_module_t *pmod,
+			lm_bool_t        (*callback)(lm_symbol_t *psymbol,
+						     lm_void_t   *arg),
+			lm_void_t         *arg)
 {
 	lm_enum_sym_demang_t cbarg;
 
@@ -250,8 +250,8 @@ LM_EnumSymbolsDemangled(lm_module_t *pmod,
 /********************************/
 
 LM_API lm_address_t
-LM_FindSymbolAddressDemangled(lm_module_t *pmod,
-			      lm_cstring_t name)
+LM_FindSymbolAddressDemangled(const lm_module_t *pmod,
+			      lm_cstring_t       name)
 {
 	_lm_find_symbol_t arg;
 

@@ -594,6 +594,7 @@ LM_FreeMemory(lm_address_t alloc,
 
 	return _LM_FreeMemory(alloc, size);	
 }
+
 /********************************/
 
 #if LM_OS == LM_OS_WIN
@@ -646,3 +647,39 @@ LM_FreeMemoryEx(const lm_process_t *pproc,
 	return _LM_FreeMemoryEx(pproc, alloc, size);
 }
 
+/********************************/
+
+LM_API lm_address_t
+LM_DeepPointer(lm_address_t        base,
+	       const lm_address_t *offsets,
+	       size_t              noffsets)
+{
+	lm_size_t i;
+	
+	if (base == LM_ADDRESS_BAD || (!offsets && noffsets > 0))
+		return LM_ADDRESS_BAD;
+
+	for (i = 0; i < noffsets; ++i) {
+		base += offsets[i];
+
+		/* The last offset won't be dereferenced,
+		 * returning a pointer to the final value
+		 * given by the "pointer scan" offsets */
+		if (i < (noffsets - 1)) {
+			base = *(lm_address_t *)base;
+		}
+	}
+
+	return base;
+}
+
+/********************************/
+
+LM_API lm_address_t
+LM_DeepPointerEx(const lm_process_t *pproc,
+		 lm_address_t        base,
+		 const lm_address_t *offsets,
+		 lm_size_t           noffsets)
+{
+	return base;
+}

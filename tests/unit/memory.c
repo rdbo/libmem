@@ -182,3 +182,39 @@ char *test_LM_FreeMemoryEx(struct memory_args *arg)
 
 	return NULL;
 }
+
+struct {
+	char pad[0x10];
+	int player_health;
+} static pointer_scan_layer2 = { { 0 }, 42 };
+
+struct {
+	char pad[0xA0];
+	lm_address_t next_layer;
+} static pointer_scan_layer1 = { { 0 }, (lm_address_t)&pointer_scan_layer2 };
+
+struct {
+	char pad0[0xF0];
+	lm_address_t next_layer;
+} static pointer_scan_layer0 = { { 0 }, (lm_address_t)&pointer_scan_layer1 };
+
+static int *player_health_ptr = &pointer_scan_layer2.player_health;
+
+char *test_LM_DeepPointer(void *arg)
+{
+	lm_address_t offsets[] = { 0xF0, 0xA0, 0x10 };
+	lm_size_t noffsets = sizeof(offsets) / sizeof(offsets[0]);
+
+	int *deep_pointer = (int *)LM_DeepPointer((lm_address_t)&pointer_scan_layer0, offsets, noffsets);
+	mu_assert("failed to resolve deep pointer", deep_pointer != (int *)LM_ADDRESS_BAD);
+	mu_assert("deep pointer does not match expected address", deep_pointer == player_health_ptr);
+	mu_assert("deep pointer value is not the expected value", *deep_pointer == *player_health_ptr);
+
+	printf("<PLAYER HP: %d> ", *deep_pointer);
+	fflush(stdout);
+	
+	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer(LM_ADDRESS_BAD, offsets, noffsets) == LM_ADDRESS_BAD);
+	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer((lm_address_t)&pointer_scan_layer0, LM_NULLPTR, noffsets) == LM_ADDRESS_BAD);
+	
+	return NULL;
+}

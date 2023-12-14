@@ -693,6 +693,17 @@ LM_FreeMemoryEx(const lm_process_t *pproc,
 		lm_address_t        alloc,
 		lm_size_t           size);
 
+LM_API lm_address_t
+LM_DeepPointer(lm_address_t        base,
+	       const lm_address_t *offsets,
+	       size_t              noffsets);
+
+LM_API lm_address_t
+LM_DeepPointerEx(const lm_process_t *pproc,
+		 lm_address_t        base,
+		 const lm_address_t *offsets,
+		 lm_size_t           noffsets);
+
 /****************************************/
 
 LM_API lm_address_t

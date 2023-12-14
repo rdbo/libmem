@@ -766,7 +766,7 @@ LM_API lm_size_t
 LM_AssembleEx(lm_cstring_t  code,
 	      lm_size_t     bits,
 	      lm_address_t  runtime_addr,
-	      lm_bytearr_t *pcodebuf);
+	      lm_byte_t   **pcodebuf);
 
 LM_API lm_void_t
 LM_FreeCodeBuffer(lm_byte_t *pcodebuf);

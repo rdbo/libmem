@@ -49,7 +49,7 @@ LM_API lm_size_t
 LM_AssembleEx(lm_cstring_t  code,
 	      lm_size_t     bits,
 	      lm_address_t  runtime_addr,
-	      lm_bytearr_t *pcodebuf)
+	      lm_byte_t   **pcodebuf)
 {
 	lm_size_t      ret = 0;
 	ks_engine     *ks;
@@ -58,7 +58,7 @@ LM_AssembleEx(lm_cstring_t  code,
 	unsigned char *encode;
 	size_t         size;
 	size_t         count;
-	lm_bytearr_t   codebuf;
+	lm_byte_t     *codebuf;
 
 	LM_ASSERT(code != LM_NULLPTR &&
 		  LM_VALID_BITS(bits) &&
@@ -86,7 +86,7 @@ LM_AssembleEx(lm_cstring_t  code,
 	if (ks_asm(ks, code, runtime_addr, &encode, &size, &count) != KS_ERR_OK)
 		goto CLEAN_EXIT;
 
-	codebuf = (lm_bytearr_t)LM_MALLOC(size);
+	codebuf = (lm_byte_t *)LM_MALLOC(size);
 	if (!codebuf)
 		goto FREE_RET;
 

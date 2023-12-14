@@ -608,24 +608,24 @@ LM_FindSymbolAddressDemangled(lm_module_t *pmod,
 /****************************************/
 
 LM_API lm_bool_t
-LM_EnumPages(lm_bool_t(*callback)(lm_page_t *ppage,
-				  lm_void_t *arg),
-	     lm_void_t *arg);
+LM_EnumPages(lm_bool_t (*callback)(lm_page_t *ppage,
+				   lm_void_t *arg),
+	     lm_void_t  *arg);
 
 LM_API lm_bool_t
-LM_EnumPagesEx(lm_process_t *pproc,
-	       lm_bool_t   (*callback)(lm_page_t *ppage,
-				       lm_void_t *arg),
-	       lm_void_t    *arg);
+LM_EnumPagesEx(const lm_process_t *pproc,
+	       lm_bool_t         (*callback)(lm_page_t *ppage,
+					     lm_void_t *arg),
+	       lm_void_t          *arg);
 
 LM_API lm_bool_t
 LM_GetPage(lm_address_t addr,
 	   lm_page_t   *pagebuf);
 
 LM_API lm_bool_t
-LM_GetPageEx(lm_process_t *pproc,
-	     lm_address_t  addr,
-	     lm_page_t    *pagebuf);
+LM_GetPageEx(const lm_process_t *pproc,
+	     lm_address_t        addr,
+	     lm_page_t          *pagebuf);
 
 /****************************************/
 

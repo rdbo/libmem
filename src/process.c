@@ -586,7 +586,7 @@ FREE_EXIT:
 /********************************/
 
 LM_API lm_bool_t
-LM_IsProcessAlive(lm_process_t *pproc)
+LM_IsProcessAlive(const lm_process_t *pproc)
 {
 	if (!pproc || !LM_VALID_PROCESS(pproc))
 		return LM_FALSE;

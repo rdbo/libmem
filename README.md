@@ -324,6 +324,8 @@ LM_AllocMemory
 LM_AllocMemoryEx
 LM_FreeMemory
 LM_FreeMemoryEx
+LM_DeepPointer
+LM_DeepPointerEx
 
 LM_DataScan
 LM_DataScanEx

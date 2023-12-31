@@ -274,6 +274,9 @@
 
 #define LM_PRIVATE
 
+/* Calling Convention */
+#define LM_CALL
+
 /* Others */
 #define LM_NULL    (0)
 #define LM_NULLPTR ((lm_void_t *)LM_NULL)
@@ -491,26 +494,26 @@ typedef struct {
 typedef lm_int_t lm_arch_t;
 
 /* libmem */
-LM_API lm_bool_t
-LM_EnumProcesses(lm_bool_t (*callback)(lm_process_t *pproc,
-				       lm_void_t    *arg),
+LM_API lm_bool_t LM_CALL
+LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *pproc,
+					       lm_void_t    *arg),
 		 lm_void_t *arg);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetProcess(lm_process_t *procbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetProcessEx(lm_pid_t      pid,
 		lm_process_t *procbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FindProcess(lm_string_t   procstr,
 	       lm_process_t *procbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_IsProcessAlive(const lm_process_t *pproc);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_GetSystemBits(lm_void_t);
 
 /****************************************/

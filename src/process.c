@@ -51,7 +51,7 @@ _LM_GetNameFromPath(lm_char_t *path,
 /********************************/
 
 #if LM_OS == LM_OS_WIN
-lm_time_t
+LM_PRIVATE lm_time_t
 _LM_FiletimeToTime(FILETIME *ft)
 {
 	lm_uint64_t time;
@@ -66,7 +66,7 @@ _LM_FiletimeToTime(FILETIME *ft)
 	return (lm_time_t)time;	
 }
 
-lm_time_t
+LM_PRIVATE lm_time_t
 _LM_GetProcessStartTime(lm_pid_t pid)
 {
 	/*
@@ -316,7 +316,7 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 				      lm_void_t    *arg),
 		 lm_void_t *arg)
@@ -349,7 +349,7 @@ _LM_GetProcess(lm_process_t *procbuf)
 	return LM_TRUE;
 }
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetProcess(lm_process_t *procbuf)
 {
 	static lm_process_t self_proc = {
@@ -377,7 +377,7 @@ LM_GetProcess(lm_process_t *procbuf)
 
 /********************************/
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetProcessEx(lm_pid_t      pid,
 		lm_process_t *procbuf)
 {
@@ -432,7 +432,7 @@ _LM_FindProcessCallback(lm_process_t *pproc,
 	return LM_TRUE;
 }
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FindProcess(lm_string_t   procstr,
 	       lm_process_t *procbuf)
 {
@@ -585,7 +585,7 @@ FREE_EXIT:
 
 /********************************/
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_IsProcessAlive(const lm_process_t *pproc)
 {
 	if (!pproc || !LM_VALID_PROCESS(pproc))
@@ -750,7 +750,7 @@ _LM_GetSystemBits(lm_size_t *bits)
 }
 #endif
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_GetSystemBits(lm_void_t)
 {
 	lm_size_t bits = LM_BITS;

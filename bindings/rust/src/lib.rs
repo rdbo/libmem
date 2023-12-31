@@ -10,12 +10,12 @@
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License version 3
  * as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -634,6 +634,17 @@ mod libmem_c {
             alloc: lm_address_t,
             size: lm_size_t,
         ) -> lm_bool_t;
+        pub(super) fn LM_DeepPointer(
+            base: lm_address_t,
+            offsets: *const lm_address_t,
+            noffsets: lm_size_t,
+        ) -> lm_address_t;
+        pub(super) fn LM_DeepPointerEx(
+            proc: *const lm_process_t,
+            base: lm_address_t,
+            offsets: *const lm_address_t,
+            noffsets: lm_size_t,
+        ) -> lm_address_t;
         /****************************************/
         pub(super) fn LM_DataScan(
             data: lm_bytearr_t,
@@ -1350,6 +1361,40 @@ pub fn LM_FreeMemoryEx(pproc: &lm_process_t, alloc: lm_address_t, size: lm_size_
         let pproc = pproc as *const lm_process_t;
         if libmem_c::LM_FreeMemoryEx(pproc, alloc, size) != LM_FALSE {
             Some(())
+        } else {
+            None
+        }
+    }
+}
+
+pub unsafe fn LM_DeepPointer<T>(base: lm_address_t, offsets: Vec<lm_address_t>) -> Option<*mut T> {
+    let offsets_ptr = offsets.as_ptr();
+    let offsets_len = offsets.len();
+
+    unsafe {
+        let ptr_addr = libmem_c::LM_DeepPointer(base, offsets_ptr, offsets_len);
+        if ptr_addr != LM_ADDRESS_BAD {
+            Some(ptr_addr as *mut T)
+        } else {
+            None
+        }
+    }
+}
+
+pub unsafe fn LM_DeepPointerEx(
+    pproc: &lm_process_t,
+    base: lm_address_t,
+    offsets: Vec<lm_address_t>,
+) -> Option<lm_address_t> {
+    let offsets_ptr = offsets.as_ptr();
+    let offsets_len = offsets.len();
+
+    unsafe {
+        let pproc = pproc as *const lm_process_t;
+
+        let ptr_addr = libmem_c::LM_DeepPointerEx(pproc, base, offsets_ptr, offsets_len);
+        if ptr_addr != LM_ADDRESS_BAD {
+            Some(ptr_addr)
         } else {
             None
         }

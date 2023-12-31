@@ -301,6 +301,21 @@ unsafe fn test() {
 
     separator();
 
+    let number: i32 = 10;
+    let pnumber = &number as *const i32;
+    let ppnumber = &pnumber as *const *const i32 as lm_address_t;
+
+    let mut number_ptr = LM_DeepPointer::<i32>(ppnumber, vec![0, 0]).unwrap();
+    println!("[*] LM_DeepPointer result: {:?}", number_ptr);
+    println!(
+        "[*] Deep pointer value (expected: {}): {}",
+        number, *number_ptr
+    );
+    *number_ptr = 1337;
+    println!("[*] Number value after modifying: {}", number);
+
+    separator();
+
     let scan_me: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     let scan_me_addr = scan_me.as_ptr() as lm_address_t;
     let scan_start = scan_me_addr - 0x10; // start the scan before the 'scan_me' address

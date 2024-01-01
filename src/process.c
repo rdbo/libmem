@@ -161,9 +161,9 @@ FREE_EXIT:
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
-				       lm_void_t    *arg),
-		   lm_void_t *arg)
+_LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *pproc,
+						lm_void_t    *arg),
+		   lm_void_t         *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	HANDLE hSnap;
@@ -215,9 +215,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 }
 #elif LM_OS == LM_OS_BSD
 LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
-				       lm_void_t    *arg),
-		  lm_void_t *arg)
+_LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *pproc,
+						lm_void_t    *arg),
+		  lm_void_t          *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	struct procstat *ps;
@@ -271,9 +271,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
-				       lm_void_t    *arg),
-		  lm_void_t *arg)
+_LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *pproc,
+						lm_void_t    *arg),
+		  lm_void_t          *arg)
 {
 	lm_bool_t ret = LM_FALSE;
 	struct dirent *pdirent;
@@ -317,9 +317,9 @@ _LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
 #endif
 
 LM_API lm_bool_t LM_CALL
-LM_EnumProcesses(lm_bool_t(*callback)(lm_process_t *pproc,
-				      lm_void_t    *arg),
-		 lm_void_t *arg)
+LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *pproc,
+					       lm_void_t    *arg),
+		 lm_void_t          *arg)
 {
 	if (!callback)
 		return LM_FALSE;
@@ -414,7 +414,7 @@ typedef struct {
 	lm_size_t     len;
 } _lm_find_pid_t;
 
-LM_PRIVATE lm_bool_t
+LM_PRIVATE lm_bool_t LM_CALL
 _LM_FindProcessCallback(lm_process_t *pproc,
 			lm_void_t    *arg)
 {

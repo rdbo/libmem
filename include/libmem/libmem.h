@@ -497,7 +497,7 @@ typedef lm_int_t lm_arch_t;
 LM_API lm_bool_t LM_CALL
 LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *pproc,
 					       lm_void_t    *arg),
-		 lm_void_t *arg);
+		 lm_void_t          *arg);
 
 LM_API lm_bool_t LM_CALL
 LM_GetProcess(lm_process_t *procbuf);
@@ -518,25 +518,25 @@ LM_GetSystemBits(lm_void_t);
 
 /****************************************/
 
-LM_API lm_bool_t
-LM_EnumThreads(lm_bool_t (*callback)(lm_thread_t *pthr,
-				     lm_void_t   *arg),
-	       lm_void_t *arg);
+LM_API lm_bool_t LM_CALL
+LM_EnumThreads(lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
+					     lm_void_t   *arg),
+	       lm_void_t          *arg);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_EnumThreadsEx(const lm_process_t *pproc,
-		 lm_bool_t         (*callback)(lm_thread_t *pthr,
+		 lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
 					       lm_void_t   *arg),
 		 lm_void_t          *arg);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetThread(lm_thread_t *thrbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetThreadEx(const lm_process_t *pproc,
 	       lm_thread_t        *thrbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetThreadProcess(const lm_thread_t *pthr,
 		    lm_process_t      *procbuf);
 

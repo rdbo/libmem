@@ -26,10 +26,10 @@
 #	include <dirent.h>
 #endif
 
-LM_API lm_bool_t
-LM_EnumThreads(lm_bool_t (*callback)(lm_thread_t *pthr,
-				     lm_void_t   *arg),
-	       lm_void_t *arg)
+LM_API lm_bool_t LM_CALL
+LM_EnumThreads(lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
+					     lm_void_t   *arg),
+	       lm_void_t          *arg)
 {
 	lm_process_t proc;
 
@@ -47,8 +47,8 @@ LM_EnumThreads(lm_bool_t (*callback)(lm_thread_t *pthr,
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_bool_t
 _LM_EnumThreadsEx(const lm_process_t *pproc,
-		  lm_bool_t         (*callback)(lm_thread_t *pthr,
-					        lm_void_t   *arg),
+		  lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
+						lm_void_t   *arg),
 		  lm_void_t          *arg)
 {
 	lm_bool_t ret = LM_FALSE;
@@ -90,11 +90,11 @@ _LM_EnumThreadsEx(const lm_process_t *pproc,
 #elif LM_OS == LM_OS_BSD
 typedef struct {
 	lm_pid_t pid;
-	lm_bool_t (*callback)(lm_thread_t *pthr, lm_void_t *arg);
+	lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr, lm_void_t *arg);
 	lm_void_t *arg;
 } _lm_enum_tids_t;
 
-LM_PRIVATE lm_bool_t
+LM_PRIVATE lm_bool_t LM_CALL
 _LM_EnumThreadsExCallback(const lm_process_t *pproc,
 			  lm_void_t          *arg)
 {
@@ -112,7 +112,7 @@ _LM_EnumThreadsExCallback(const lm_process_t *pproc,
 
 LM_PRIVATE lm_bool_t
 _LM_EnumThreadsEx(const lm_process_t *pproc,
-		  lm_bool_t         (*callback)(lm_thread_t *pthr,
+		  lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
 						lm_void_t   *arg),
 		  lm_void_t          *arg)
 {
@@ -125,7 +125,7 @@ _LM_EnumThreadsEx(const lm_process_t *pproc,
 #else
 LM_PRIVATE lm_bool_t
 _LM_EnumThreadsEx(const lm_process_t *pproc,
-		  lm_bool_t         (*callback)(lm_thread_t *pthr,
+		  lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
 						lm_void_t   *arg),
 		  lm_void_t          *arg)
 {
@@ -157,9 +157,9 @@ _LM_EnumThreadsEx(const lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_EnumThreadsEx(const lm_process_t *pproc,
-		 lm_bool_t         (*callback)(lm_thread_t *pthr,
+		 lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
 					       lm_void_t   *arg),
 		   lm_void_t        *arg)
 {
@@ -188,7 +188,7 @@ _LM_GetThread(lm_thread_t *thrbuf)
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetThread(lm_thread_t *thrbuf)
 {
 	if (!thrbuf)
@@ -198,7 +198,7 @@ LM_GetThread(lm_thread_t *thrbuf)
 
 /********************************/
 
-LM_PRIVATE lm_bool_t
+LM_PRIVATE lm_bool_t LM_CALL
 _LM_GetThreadExCallback(lm_thread_t *pthr,
 			lm_void_t   *arg)
 {
@@ -207,7 +207,7 @@ _LM_GetThreadExCallback(lm_thread_t *pthr,
 	return LM_FALSE;
 }
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetThreadEx(const lm_process_t *pproc,
 	       lm_thread_t        *thrbuf)
 {
@@ -221,7 +221,7 @@ LM_GetThreadEx(const lm_process_t *pproc,
 
 #if LM_OS == LM_OS_WIN
 LM_PRIVATE lm_pid_t
-_LM_GetPidFromThread(lm_thread_t *pthr)
+_LM_GetPidFromThread(const lm_thread_t *pthr)
 {
 	lm_pid_t pid = LM_PID_BAD;
 	HANDLE hThread;
@@ -237,13 +237,13 @@ _LM_GetPidFromThread(lm_thread_t *pthr)
 }
 #else
 LM_PRIVATE lm_pid_t
-_LM_GetPidFromThread(lm_thread_t *pthr)
+_LM_GetPidFromThread(const lm_thread_t *pthr)
 {
 	return (lm_pid_t)pthr->tid;
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetThreadProcess(const lm_thread_t *pthr,
 		    lm_process_t      *procbuf)
 {

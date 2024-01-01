@@ -542,39 +542,39 @@ LM_GetThreadProcess(const lm_thread_t *pthr,
 
 /****************************************/
 
-LM_API lm_bool_t
-LM_EnumModules(lm_bool_t (*callback)(lm_module_t *pmod,
-				     lm_void_t   *arg),
-	       lm_void_t  *arg);
+LM_API lm_bool_t LM_CALL
+LM_EnumModules(lm_bool_t (LM_CALL *callback)(lm_module_t *pmod,
+					     lm_void_t   *arg),
+	       lm_void_t          *arg);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_EnumModulesEx(const lm_process_t *pproc,
-		 lm_bool_t         (*callback)(lm_module_t *pmod,
+		 lm_bool_t (LM_CALL *callback)(lm_module_t *pmod,
 					       lm_void_t   *arg),
 		 lm_void_t          *arg);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FindModule(lm_string_t  name,
 	      lm_module_t *modbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FindModuleEx(const lm_process_t *pproc,
 		lm_string_t         name,
 		lm_module_t        *modbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_LoadModule(lm_string_t  path,
 	      lm_module_t *modbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_LoadModuleEx(const lm_process_t *pproc,
 		lm_string_t         path,
 		lm_module_t        *modbuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_UnloadModule(lm_module_t *pmod);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_UnloadModuleEx(const lm_process_t *pproc,
 		  lm_module_t        *pmod);
 

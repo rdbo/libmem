@@ -24,11 +24,11 @@
 
 #if LM_OS == LM_OS_WIN
 typedef struct {
-	lm_bool_t (*callback)(lm_page_t *ppage, lm_void_t *arg);
-	lm_void_t  *arg;
+	lm_bool_t (LM_CALL *callback)(lm_page_t *ppage, lm_void_t *arg);
+	lm_void_t          *arg;
 } _lm_enum_pages_t;
 
-LM_PRIVATE lm_bool_t
+LM_PRIVATE lm_bool_t LM_CALL
 _LM_EnumPagesCallback(lm_module_t *pmod,
 		      lm_void_t   *arg)
 {
@@ -53,9 +53,9 @@ _LM_EnumPagesCallback(lm_module_t *pmod,
 }
 
 LM_PRIVATE lm_bool_t
-_LM_EnumPages(lm_bool_t (*callback)(lm_page_t *ppage,
-				    lm_void_t *arg),
-	      lm_void_t *arg)
+_LM_EnumPages(lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
+					    lm_void_t *arg),
+	      lm_void_t          *arg)
 {
 	_lm_enum_pages_t data;
 
@@ -66,9 +66,9 @@ _LM_EnumPages(lm_bool_t (*callback)(lm_page_t *ppage,
 }
 #else
 LM_PRIVATE lm_bool_t
-_LM_EnumPages(lm_bool_t (*callback)(lm_page_t *ppage,
-				    lm_void_t *arg),
-	      lm_void_t  *arg)
+_LM_EnumPages(lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
+					    lm_void_t *arg),
+	      lm_void_t          *arg)
 {
 	lm_process_t proc;
 
@@ -79,10 +79,10 @@ _LM_EnumPages(lm_bool_t (*callback)(lm_page_t *ppage,
 }
 #endif
 
-LM_API lm_bool_t
-LM_EnumPages(lm_bool_t (*callback)(lm_page_t *ppage,
-				   lm_void_t *arg),
-	     lm_void_t  *arg)
+LM_API lm_bool_t LM_CALL
+LM_EnumPages(lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
+					   lm_void_t *arg),
+	     lm_void_t          *arg)
 {
 	if (!callback)
 		return LM_FALSE;
@@ -95,12 +95,12 @@ LM_EnumPages(lm_bool_t (*callback)(lm_page_t *ppage,
 #if LM_OS == LM_OS_WIN
 typedef struct {
 	const lm_process_t *pproc;
-	lm_bool_t (*callback)(lm_page_t *ppage, lm_void_t *arg);
+	lm_bool_t (LM_CALL *callback)(lm_page_t *ppage, lm_void_t *arg);
 	lm_void_t *arg;
 	HANDLE hProcess;
 } _lm_enum_pages_ex_t;
 
-LM_PRIVATE lm_bool_t
+LM_PRIVATE lm_bool_t LM_CALL
 _LM_EnumPagesExCallback(lm_module_t *pmod,
 			lm_void_t   *arg)
 {
@@ -126,7 +126,7 @@ _LM_EnumPagesExCallback(lm_module_t *pmod,
 
 LM_PRIVATE lm_bool_t
 _LM_EnumPagesEx(const lm_process_t *pproc,
-		lm_bool_t         (*callback)(lm_page_t *ppage,
+		lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
 					      lm_void_t *arg),
 		lm_void_t          *arg)
 {
@@ -149,7 +149,7 @@ _LM_EnumPagesEx(const lm_process_t *pproc,
 #else
 LM_PRIVATE lm_bool_t
 _LM_EnumPagesEx(const lm_process_t *pproc,
-		lm_bool_t         (*callback)(lm_page_t *ppage,
+		lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
 					      lm_void_t *arg),
 		lm_void_t          *arg)
 {
@@ -220,9 +220,9 @@ FREE_EXIT:
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_EnumPagesEx(const lm_process_t *pproc,
-	       lm_bool_t         (*callback)(lm_page_t *ppage,
+	       lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
 					     lm_void_t *arg),
 	       lm_void_t          *arg)
 {
@@ -257,7 +257,7 @@ typedef struct {
 	lm_page_t   *pagebuf;
 } _lm_get_page_t;
 
-LM_PRIVATE lm_bool_t
+LM_PRIVATE lm_bool_t LM_CALL
 _LM_GetPageCallback(lm_page_t *ppage,
 		    lm_void_t *arg)
 {
@@ -293,7 +293,7 @@ _LM_GetPage(lm_address_t addr,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetPage(lm_address_t addr,
 	   lm_page_t   *pagebuf)
 {
@@ -354,7 +354,7 @@ _LM_GetPageEx(const lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_GetPageEx(const lm_process_t *pproc,
 	     lm_address_t        addr,
 	     lm_page_t          *pagebuf)

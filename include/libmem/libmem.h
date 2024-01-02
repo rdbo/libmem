@@ -632,76 +632,76 @@ LM_GetPageEx(const lm_process_t *pproc,
 
 /****************************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_ReadMemory(lm_address_t src,
 	      lm_byte_t   *dst,
 	      lm_size_t    size);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *pproc,
 		lm_address_t        src,
 		lm_byte_t          *dst,
 		lm_size_t           size);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_WriteMemory(lm_address_t dst,
 	       lm_bytearr_t src,
 	       lm_size_t    size);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_WriteMemoryEx(const lm_process_t *pproc,
 		 lm_address_t        dst,
 		 lm_bytearr_t        src,
 		 lm_size_t           size);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_SetMemory(lm_address_t dst,
 	     lm_byte_t    byte,
 	     lm_size_t    size);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_SetMemoryEx(const lm_process_t *pproc,
 	       lm_address_t        dst,
 	       lm_byte_t           byte,
 	       lm_size_t           size);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_ProtMemory(lm_address_t addr,
 	      lm_size_t    size,
 	      lm_prot_t    prot,
 	      lm_prot_t   *oldprot);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_ProtMemoryEx(const lm_process_t *pproc,
 		lm_address_t        addr,
 		lm_size_t           size,
 		lm_prot_t           prot,
 		lm_prot_t          *oldprot);
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot);
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_AllocMemoryEx(const lm_process_t *pproc,
 		 lm_size_t           size,
 		 lm_prot_t           prot);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FreeMemoryEx(const lm_process_t *pproc,
 		lm_address_t        alloc,
 		lm_size_t           size);
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_DeepPointer(lm_address_t        base,
 	       const lm_address_t *offsets,
 	       size_t              noffsets);
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_DeepPointerEx(const lm_process_t *pproc,
 		 lm_address_t        base,
 		 const lm_address_t *offsets,

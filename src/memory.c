@@ -67,7 +67,7 @@ _LM_GetProt(lm_prot_t real_prot)
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_ReadMemory(lm_address_t src,
 	      lm_byte_t   *dst,
 	      lm_size_t    size)
@@ -156,7 +156,7 @@ _LM_ReadMemoryEx(const lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *pproc,
 		lm_address_t        src,
 		lm_byte_t          *dst,
@@ -170,7 +170,7 @@ LM_ReadMemoryEx(const lm_process_t *pproc,
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_WriteMemory(lm_address_t dst,
 	       lm_bytearr_t src,
 	       lm_size_t    size)
@@ -259,7 +259,7 @@ _LM_WriteMemoryEx(const lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_WriteMemoryEx(const lm_process_t *pproc,
 		 lm_address_t        dst,
 		 lm_bytearr_t        src,
@@ -273,7 +273,7 @@ LM_WriteMemoryEx(const lm_process_t *pproc,
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_SetMemory(lm_address_t dst,
 	     lm_byte_t    byte,
 	     lm_size_t    size)
@@ -291,7 +291,7 @@ LM_SetMemory(lm_address_t dst,
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_SetMemoryEx(const lm_process_t *pproc,
 	       lm_address_t        dst,
 	       lm_byte_t           byte,
@@ -363,7 +363,7 @@ _LM_ProtMemory(lm_address_t addr,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_ProtMemory(lm_address_t addr,
 	      lm_size_t    size,
 	      lm_prot_t    prot,
@@ -441,7 +441,7 @@ _LM_ProtMemoryEx(const lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_ProtMemoryEx(const lm_process_t *pproc,
 		lm_address_t        addr,
 		lm_size_t           size,
@@ -487,7 +487,7 @@ _LM_AllocMemory(lm_size_t size,
 }
 #endif
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot)
 {
@@ -555,7 +555,7 @@ _LM_AllocMemoryEx(const lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_AllocMemoryEx(const lm_process_t *pproc,
 		 lm_size_t           size,
 		 lm_prot_t           prot)
@@ -584,7 +584,7 @@ _LM_FreeMemory(lm_address_t alloc,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size)
 {
@@ -636,7 +636,7 @@ _LM_FreeMemoryEx(const lm_process_t *pproc,
 }
 #endif
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_FreeMemoryEx(const lm_process_t *pproc,
 		lm_address_t        alloc,
 		lm_size_t           size)
@@ -649,7 +649,7 @@ LM_FreeMemoryEx(const lm_process_t *pproc,
 
 /********************************/
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_DeepPointer(lm_address_t        base,
 	       const lm_address_t *offsets,
 	       size_t              noffsets)
@@ -676,7 +676,7 @@ LM_DeepPointer(lm_address_t        base,
 
 /********************************/
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_DeepPointerEx(const lm_process_t *pproc,
 		 lm_address_t        base,
 		 const lm_address_t *offsets,

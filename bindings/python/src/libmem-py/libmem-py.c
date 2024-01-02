@@ -995,6 +995,44 @@ py_LM_FreeMemoryEx(PyObject *self,
 /****************************************/
 
 static PyObject *
+py_LM_DeepPointer(PyObject *self,
+		  PyObject *args)
+{
+	lm_address_t  base;
+	PyObject     *pyoffsets;
+	lm_address_t *offsets;
+	lm_size_t     noffsets;
+	lm_address_t  pointer;
+	lm_size_t     i;
+
+	if (!PyArg_ParseTuple(args, "kO", &base, &pyoffsets))
+		return NULL;
+
+	noffsets = PyList_Size(pyoffsets);
+	if (noffsets == 0)
+		return PyLong_FromSize_t(base);
+
+	offsets = LM_CALLOC(sizeof(lm_address_t), noffsets);
+	if (!offsets)
+		return NULL;
+
+	for (i = 0; i < noffsets; ++i) {
+		offsets[i] = (lm_address_t)PyLong_AsSize_t(PyList_GetItem(pyoffsets, i));
+	}
+
+	pointer = LM_DeepPointer(base, offsets, noffsets);
+
+	LM_FREE(offsets);
+
+	if (pointer == LM_ADDRESS_BAD)
+		return Py_BuildValue("");
+
+	return PyLong_FromSize_t(pointer);
+}
+
+/****************************************/
+
+static PyObject *
 py_LM_DataScan(PyObject *self,
 	       PyObject *args)
 {
@@ -1445,6 +1483,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_AllocMemoryEx", py_LM_AllocMemoryEx, METH_VARARGS, "Allocate memory in a remote process" },
 	{ "LM_FreeMemory", py_LM_FreeMemory, METH_VARARGS, "Free memory in the current process" },
 	{ "LM_FreeMemoryEx", py_LM_FreeMemoryEx, METH_VARARGS, "Free memory in a remote process" },
+	{ "LM_DeepPointer", py_LM_DeepPointer, METH_VARARGS, "Dereference a deep pointer in the current process, usually result of a pointer map or pointer scan" },
 	/****************************************/
 	{ "LM_DataScan", py_LM_DataScan, METH_VARARGS, "Search for a byte array in the current process" },
 	{ "LM_DataScanEx", py_LM_DataScanEx, METH_VARARGS, "Search for a byte array in a remote process" },

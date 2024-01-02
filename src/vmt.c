@@ -50,7 +50,7 @@ _LM_VmtSearchPrev(lm_vmt_t       *pvmt,
 	return entry;
 }
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_VmtNew(lm_address_t *vtable,
 	  lm_vmt_t     *vmtbuf)
 {
@@ -63,7 +63,7 @@ LM_VmtNew(lm_address_t *vtable,
 
 /********************************/
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_VmtHook(lm_vmt_t    *pvmt,
 	   lm_size_t    fnindex,
 	   lm_address_t dst)
@@ -96,7 +96,7 @@ LM_VmtHook(lm_vmt_t    *pvmt,
 
 /********************************/
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_VmtUnhook(lm_vmt_t *pvmt,
 	     lm_size_t fnindex)
 {
@@ -125,7 +125,7 @@ LM_VmtUnhook(lm_vmt_t *pvmt,
 
 /********************************/
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_VmtGetOriginal(const lm_vmt_t *pvmt,
 		  lm_size_t       fnindex)
 {
@@ -143,7 +143,7 @@ LM_VmtGetOriginal(const lm_vmt_t *pvmt,
 
 /********************************/
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_VmtReset(lm_vmt_t *pvmt)
 {
 	lm_vmt_entry_t *entry;
@@ -163,7 +163,7 @@ LM_VmtReset(lm_vmt_t *pvmt)
 
 /********************************/
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_VmtFree(lm_vmt_t *pvmt)
 {
 	LM_VmtReset(pvmt);

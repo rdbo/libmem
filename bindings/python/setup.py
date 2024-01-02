@@ -4,24 +4,24 @@ from sys import platform
 import pathlib
 import os
 
-src_dir = f"src{os.sep}libmem-py"
-libs = ["libmem"]
-readme = ""
+def get_version():
+	return "5.0.0-pre0"
 
-with open("README.md", "r") as f:
-	readme = f.read()
+def readme():
+	f = open("README.md", "r")
+	content = f.read()
 	f.close()
+	return content
 
-if platform == "win32":
-	libs.append("user32")
-	libs.append("psapi")
-elif platform.startswith("linux"):
-	libs.append("dl")
-elif platform.find("bsd") != -1:
-	libs.append("dl")
-	libs.append("kvm")
-	libs.append("procstat")
-	libs.append("elf")
+def platform_libs():
+	libs = []
+	if platform == "win32":
+		libs.extend(["user32", "psapi"])
+	elif platform.startswith("linux"):
+		libs.append("dl")
+	elif platform.find("bsd") != -1:
+		libs.extend(["dl", "kvm", "procstat", "elf"])
+	return libs
 
 def get_sources(src_dir):
     sources = []
@@ -33,15 +33,15 @@ def get_sources(src_dir):
 
 libmem_py = Extension(
 	name = "libmem",
-	sources = get_sources(src_dir),
-	libraries = libs
+	sources = get_sources(f"src{os.sep}libmem-py"),
+	libraries = platform_libs()
 )
 
 setup(
 	name = "libmem",
-	version = "4.4.0",
+	version = get_version(),
 	description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
-	long_description = readme,
+	long_description = readme(),
 	long_description_content_type = "text/markdown",
 	author = "rdbo",
 	url = "https://github.com/rdbo/libmem",

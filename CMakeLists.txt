@@ -28,11 +28,6 @@ option(LIBMEM_BUILD_STATIC
 	OFF
 )
 
-option(LIBMEM_BUILD_32
-	"Build for 32 bits"
-	OFF
-)
-
 message(STATUS
 	"[*] Build tests: ${LIBMEM_BUILD_TESTS}"
 )
@@ -48,14 +43,6 @@ message(STATUS
 message(STATUS
 	"[*] Build for 32 bits: ${LIBMEM_BUILD_32}"
 )
-
-if(LIBMEM_BUILD_32 AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows)
-    # To compile 32 bits for Windows, use the x86 Visual Studio developer console instead of the x64 Native Tools console
-    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32)
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -m32)
-    add_compile_options(-m32)
-    add_link_options(-m32)
-endif()
 
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

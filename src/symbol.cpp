@@ -49,7 +49,7 @@ _LM_EnumPeSyms(const lm_module_t  *pmod,
 		return LM_FALSE;
 
 	for (const ExportEntry &symbol : ex->entries()) {
-		sym.name = (lm_cstring_t)symbol.name().c_str();
+		sym.name = (lm_cchar_t *)symbol.name().c_str();
 		sym.address = (lm_address_t)LM_OFFSET(pmod->base, symbol.value());
 		if (!callback(&sym, arg))
 			break;

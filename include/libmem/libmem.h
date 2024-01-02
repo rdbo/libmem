@@ -772,24 +772,24 @@ LM_UnhookCodeEx(const lm_process_t *pproc,
 
 /****************************************/
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_Assemble(lm_cstring_t code,
 	    lm_inst_t   *inst);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_AssembleEx(lm_cstring_t  code,
 	      lm_size_t     bits,
 	      lm_address_t  runtime_addr,
 	      lm_byte_t   **pcodebuf);
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_FreeCodeBuffer(lm_byte_t *pcodebuf);
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_Disassemble(lm_address_t code,
 	       lm_inst_t   *inst);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_DisassembleEx(lm_address_t code,
 		 lm_size_t    bits,
 		 lm_size_t    size,
@@ -797,14 +797,14 @@ LM_DisassembleEx(lm_address_t code,
 		 lm_address_t runtime_addr,
 		 lm_inst_t  **pinsts);
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_FreeInstructions(lm_inst_t *insts);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_CodeLength(lm_address_t code,
 	      lm_size_t    minlength);
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_CodeLengthEx(lm_process_t *pproc,
 		lm_address_t  code,
 		lm_size_t     minlength);

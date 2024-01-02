@@ -22,7 +22,7 @@
 
 #include "internal.h"
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_Assemble(lm_cstring_t code,
 	    lm_inst_t   *inst)
 {
@@ -45,7 +45,7 @@ LM_Assemble(lm_cstring_t code,
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_AssembleEx(lm_cstring_t  code,
 	      lm_size_t     bits,
 	      lm_address_t  runtime_addr,
@@ -103,7 +103,7 @@ CLEAN_EXIT:
 
 /********************************/
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_FreeCodeBuffer(lm_byte_t *codebuf)
 {
 	LM_ASSERT(codebuf != LM_NULLPTR);
@@ -113,7 +113,7 @@ LM_FreeCodeBuffer(lm_byte_t *codebuf)
 
 /********************************/
 
-LM_API lm_bool_t
+LM_API lm_bool_t LM_CALL
 LM_Disassemble(lm_address_t code,
 	       lm_inst_t   *inst)
 {
@@ -134,7 +134,7 @@ LM_Disassemble(lm_address_t code,
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_DisassembleEx(lm_address_t code,
 		 lm_size_t    bits,
 		 lm_size_t    size,
@@ -198,7 +198,7 @@ CLEAN_EXIT:
 
 /********************************/
 
-LM_API lm_void_t
+LM_API lm_void_t LM_CALL
 LM_FreeInstructions(lm_inst_t *insts)
 {
 	LM_ASSERT(insts != LM_NULLPTR);
@@ -208,7 +208,7 @@ LM_FreeInstructions(lm_inst_t *insts)
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_CodeLength(lm_address_t code,
 	      lm_size_t    minlength)
 {
@@ -228,7 +228,7 @@ LM_CodeLength(lm_address_t code,
 
 /********************************/
 
-LM_API lm_size_t
+LM_API lm_size_t LM_CALL
 LM_CodeLengthEx(lm_process_t *pproc,
 		lm_address_t  code,
 		lm_size_t     minlength)

@@ -22,7 +22,7 @@
 
 #include "internal.h"
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_DataScan(lm_bytearr_t data,
 	    lm_size_t    size,
 	    lm_address_t addr,
@@ -57,7 +57,7 @@ LM_DataScan(lm_bytearr_t data,
 
 /********************************/
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_DataScanEx(const lm_process_t *pproc,
 	      lm_bytearr_t        data,
 	      lm_size_t           size,
@@ -100,7 +100,7 @@ FREE_EXIT:
 
 /********************************/
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_PatternScan(lm_bytearr_t pattern,
 	       lm_string_t  mask,
 	       lm_address_t addr,
@@ -140,7 +140,7 @@ LM_PatternScan(lm_bytearr_t pattern,
 
 /********************************/
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_PatternScanEx(const lm_process_t *pproc,
 		 lm_bytearr_t        pattern,
 		 lm_string_t         mask,
@@ -251,7 +251,7 @@ _LM_ParseSig(lm_string_t   sig,
 	return ret;
 }
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_SigScan(lm_string_t  sig,
 	   lm_address_t addr,
 	   lm_size_t    scansize)
@@ -276,7 +276,7 @@ LM_SigScan(lm_string_t  sig,
 
 /********************************/
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_SigScanEx(const lm_process_t *pproc,
 	     lm_string_t         sig,
 	     lm_address_t        addr,

@@ -1,12 +1,28 @@
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-from sys import platform
+import sys
 import pathlib
 import os
 import sysconfig
+import platform
 
 def get_version():
 	return "5.0.0-pre0"
+
+def get_operating_system():
+	if sys.platform.find("bsd") != -1:
+		return "bsd"
+
+	if sys.platform == "win32":
+		return "windows"
+
+	return sys.platform
+
+def get_target():
+	machine = platform.machine()
+	operating_system = get_operating_system()
+	target = f"{machine}-{operating_system}"
+	return target
 
 def readme():
 	f = open("README.md", "r")
@@ -30,17 +46,30 @@ def search_installed_libmem():
 
 	return False
 
-def platform_libs():
-	libs = []
-	if platform == "win32":
-		libs.extend(["user32", "psapi"])
-	elif platform.startswith("linux"):
-		libs.append("dl")
-	elif platform.find("bsd") != -1:
-		libs.extend(["dl", "kvm", "procstat", "elf"])
+def download_and_extract_libmem():
+	print("Downloading libmem binary release...")
+	cache_dir = "build"
+	os.mkdir(cache_dir)
 
-	if search_installed_libmem():
-		libs.append("libmem")
+	version = get_version()
+	target = get_target()
+	libmem_archive = f"libmem-{version}-{target}"
+	print(f"Download archive name: {libmem_archive}")
+
+def platform_libs():
+	libs = ["libmem"]
+	operating_system = get_operating_system()
+	os_libs = {
+		"windows": ["user32", "psapi"],
+		"linux": ["dl"],
+		"bsd": ["dl", "kvm", "procstat", "elf"]
+	}
+
+	if operating_system in os_libs:
+		libs.extend(os_libs[operating_system])
+
+	if not search_installed_libmem():
+		download_and_extract_libmem()
 	
 	return libs
 

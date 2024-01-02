@@ -13,6 +13,9 @@ def readme():
 	f.close()
 	return content
 
+def search_installed_libmem():
+	return True
+
 def platform_libs():
 	libs = []
 	if platform == "win32":
@@ -21,6 +24,10 @@ def platform_libs():
 		libs.append("dl")
 	elif platform.find("bsd") != -1:
 		libs.extend(["dl", "kvm", "procstat", "elf"])
+
+	if search_installed_libmem():
+		libs.append("libmem")
+	
 	return libs
 
 def get_sources(src_dir):

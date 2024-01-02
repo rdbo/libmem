@@ -3,6 +3,7 @@ from setuptools.command.build_ext import build_ext
 from sys import platform
 import pathlib
 import os
+import sysconfig
 
 def get_version():
 	return "5.0.0-pre0"
@@ -14,7 +15,20 @@ def readme():
 	return content
 
 def search_installed_libmem():
-	return True
+	libmem_libs = ["liblibmem.so", "liblibmem.a", "libmem.lib", "libmem.dll"]
+	lib_dirs = [sysconfig.get_config_var("LIBDIR")]
+
+	print(f"Library dirs: {lib_dirs}")
+
+	for dir in lib_dirs:
+		for file in os.listdir(dir):
+			if file in libmem_libs:
+				print(f"Found installed libmem: {dir}{os.sep}{file}")
+				return True
+
+	print("Unable to find installed libmem")
+
+	return False
 
 def platform_libs():
 	libs = []
@@ -35,7 +49,7 @@ def get_sources(src_dir):
     for file in os.listdir(src_dir):
         if file.endswith(".c"):
             sources.append(os.path.join(src_dir, file))
-    print(sources)
+    print(f"libmem-py sources: {sources}")
     return sources
 
 libmem_py = Extension(

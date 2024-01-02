@@ -44,7 +44,28 @@ git push origin your-branch-name
 ### **NOTE**
 
 LEGAL: Every commit submitted through a pull request must be under the same license as libmem (in this case, the GNU AGPLv3.0)
-- In case of creating new source code files, make sure to put the following license:
+- In case of creating new source code files, make sure to put the following license on the top of the file, commented using the syntax of the programming language used:
+
+
+         ----------------------------------
+        |         libmem - by rdbo         |
+        |      Memory Hacking Library      |
+         ----------------------------------
+
+        Copyright (C) <year>    <author>
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Affero General Public License version 3
+        as published by the Free Software Foundation.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Affero General Public License for more details.
+  
+        You should have received a copy of the GNU Affero General Public License
+        along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+  C/C++ Example:
 
 
         /*

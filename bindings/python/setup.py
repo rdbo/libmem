@@ -5,6 +5,11 @@ import pathlib
 import os
 import sysconfig
 import platform
+from urllib.request import urlretrieve
+import tarfile
+
+additional_include_dirs = []
+additional_library_dirs = []
 
 def get_version():
 	return "5.0.0-pre0"
@@ -17,12 +22,6 @@ def get_operating_system():
 		return "windows"
 
 	return sys.platform
-
-def get_target():
-	machine = platform.machine()
-	operating_system = get_operating_system()
-	target = f"{machine}-{operating_system}"
-	return target
 
 def readme():
 	f = open("README.md", "r")
@@ -48,21 +47,52 @@ def search_installed_libmem():
 
 def download_and_extract_libmem():
 	print("Downloading libmem binary release...")
-	cache_dir = "build"
-	os.mkdir(cache_dir)
+	cache_dir = "build/libmem-release"
+	pathlib.Path(cache_dir).mkdir(parents=True, exist_ok=True)
 
 	version = get_version()
-	target = get_target()
-	libmem_archive = f"libmem-{version}-{target}"
+	machine = platform.machine()
+	operating_system = get_operating_system()
+	build_type = ""
+
+	if operating_system == "windows":
+		build_type = "msvc-static-mt"
+	elif operating_system == "linux":
+		build_type = "musl-static"
+
+	libmem_fullname = f"libmem-{version}-{machine}-{operating_system}-{build_type}"
+	libmem_archive = f"{libmem_fullname}.tar.gz"
 	print(f"Download archive name: {libmem_archive}")
+
+	download_url=f"https://github.com/rdbo/libmem/releases/download/{version}/{libmem_archive}"
+	archive_path=f"{cache_dir}{os.sep}{libmem_archive}"
+
+	if os.path.exists(archive_path):
+		print("Archive already downloaded, skipping...")
+	else:
+		print(f"Fetching libmem archive...")
+		urlretrieve(download_url, archive_path)
+
+	extract_dir = f"{cache_dir}{os.sep}{libmem_fullname}"
+	if os.path.exists(extract_dir):
+		print("Archive already extracted, skipping...")
+	else:
+		print("Extracting archive...")
+		tar = tarfile.open(archive_path, "r:gz")
+		tar.extractall(path=cache_dir)
+
+	include_dir = f"{extract_dir}/include"
+	lib_dir = f"{extract_dir}/lib"
+	additional_include_dirs.append(include_dir)
+	additional_library_dirs.append(lib_dir)
 
 def platform_libs():
 	libs = ["libmem"]
 	operating_system = get_operating_system()
 	os_libs = {
 		"windows": ["user32", "psapi"],
-		"linux": ["dl"],
-		"bsd": ["dl", "kvm", "procstat", "elf"]
+		"linux": ["dl", "stdc++"],
+		"bsd": ["dl", "kvm", "procstat", "elf", "stdc++"]
 	}
 
 	if operating_system in os_libs:
@@ -84,7 +114,9 @@ def get_sources(src_dir):
 libmem_py = Extension(
 	name = "libmem",
 	sources = get_sources(f"src{os.sep}libmem-py"),
-	libraries = platform_libs()
+	libraries = platform_libs(),
+	include_dirs = additional_include_dirs,
+	library_dirs = additional_library_dirs
 )
 
 setup(

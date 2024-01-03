@@ -94,6 +94,8 @@ separator()
 print("[*] Symbol Address Search")
 
 symaddr = LM_FindSymbolAddress(curmod, "Py_BytesMain")
+if symaddr == None:
+    symaddr = LM_FindSymbolAddress(curmod, "_start_c")
 print(f"[*] Py_BytesMain Address: {symaddr}")
 
 separator()
@@ -185,6 +187,22 @@ separator()
 alloc = LM_AllocMemoryEx(proc, alloc_size, LM_PROT_XRW)
 print(f"[*] Allocated Memory - Remote Process: {hex(alloc)}")
 LM_FreeMemoryEx(proc, alloc, alloc_size)
+
+separator()
+
+addr1 = LM_AllocMemory(4, LM_PROT_RW)
+addr2 = LM_AllocMemory(8, LM_PROT_RW)
+
+LM_WriteMemory(addr1, bytearray(b"\x10\x00\x00\x00"))
+LM_WriteMemory(addr2, bytearray(addr1.to_bytes(8, byteorder="little")))
+print("[*] Address 1: ", hex(addr1))
+print("[*] Address 2: ", hex(addr2))
+
+deep_ptr = LM_DeepPointer(addr2, [0, 0])
+print("[*] Deep Pointer result: " + hex(deep_ptr))
+
+value = int.from_bytes(LM_ReadMemory(deep_ptr, 4), byteorder="little")
+print("[*] Deep Pointer value: " + hex(value))
 
 separator()
 

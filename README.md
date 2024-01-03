@@ -35,7 +35,8 @@ NOTE: Submodules and external dependencies might have their own licenses! Check 
 
 ## Examples
 
-For more examples and API manual, access the [documentation](https://github.com/rdbo/libmem/blob/master/docs/DOCS.md)
+For the API manual, access the [documentation](https://github.com/rdbo/libmem/blob/master/docs/README.md)
+For more examples, access the [examples directory](https://github.com/rdbo/libmem/blob/master/examples/README.md)
 
 ### C/C++
 ```c

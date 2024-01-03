@@ -31,7 +31,11 @@ def readme():
 
 def search_installed_libmem():
 	libmem_libs = ["liblibmem.so", "liblibmem.a", "libmem.lib", "libmem.dll"]
-	lib_dirs = [sysconfig.get_config_var("LIBDIR")]
+	lib_dirs = []
+	
+	var_libdir = sysconfig.get_config_var("LIBDIR")
+	if var_libdir != None:
+		lib_dirs.append(var_libdir)
 
 	print(f"Library dirs: {lib_dirs}")
 

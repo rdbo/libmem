@@ -6,3 +6,4 @@ bindings/python/build/
 bindings/python/src/libmem.*
 docs/examples/rust/target/
 clang-format
+.idea/*

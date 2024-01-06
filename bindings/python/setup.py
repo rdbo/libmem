@@ -55,7 +55,7 @@ def download_and_extract_libmem():
 	pathlib.Path(cache_dir).mkdir(parents=True, exist_ok=True)
 
 	version = get_version()
-	machine = platform.machine()
+	machine = platform.machine() if platform.machine() != "AMD64" else "x86_64"
 	operating_system = get_operating_system()
 	build_type = ""
 
@@ -87,6 +87,8 @@ def download_and_extract_libmem():
 
 	include_dir = f"{extract_dir}/include"
 	lib_dir = f"{extract_dir}/lib"
+	if operating_system == "windows":
+	    lib_dir = f"{lib_dir}/release"
 	additional_include_dirs.append(include_dir)
 	additional_library_dirs.append(lib_dir)
 
@@ -94,7 +96,7 @@ def platform_libs():
 	libs = ["libmem"]
 	operating_system = get_operating_system()
 	os_libs = {
-		"windows": ["user32", "psapi"],
+		"windows": ["user32", "psapi", "shell32", "ntdll"],
 		"linux": ["dl", "stdc++"],
 		"bsd": ["dl", "kvm", "procstat", "elf", "stdc++"]
 	}

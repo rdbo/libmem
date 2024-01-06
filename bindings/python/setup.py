@@ -86,7 +86,7 @@ def download_and_extract_libmem():
 		tar.extractall(path=cache_dir)
 
 	include_dir = f"{extract_dir}/include"
-	lib_dir = f"{extract_dir}/lib"
+	lib_dir = f"{extract_dir}/lib/release"
 	additional_include_dirs.append(include_dir)
 	additional_library_dirs.append(lib_dir)
 
@@ -94,7 +94,7 @@ def platform_libs():
 	libs = ["libmem"]
 	operating_system = get_operating_system()
 	os_libs = {
-		"windows": ["user32", "psapi"],
+		"windows": ["user32", "psapi", "shell32", "ntdll"],
 		"linux": ["dl", "stdc++"],
 		"bsd": ["dl", "kvm", "procstat", "elf", "stdc++"]
 	}

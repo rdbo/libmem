@@ -1,3 +1,7 @@
+# TODO - New stub generation method:
+#   - Make the documentation declaration be exactly like how it would be on `.pyi`
+#   - Get the lines between the two ``` for each API in the documentation and place them directly in the `.pyi`
+
 import os
 import re
 

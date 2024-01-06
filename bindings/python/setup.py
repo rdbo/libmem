@@ -55,7 +55,7 @@ def download_and_extract_libmem():
 	pathlib.Path(cache_dir).mkdir(parents=True, exist_ok=True)
 
 	version = get_version()
-	machine = platform.machine()
+	machine = platform.machine() if platform.machine() != "AMD64" else "x86_64"
 	operating_system = get_operating_system()
 	build_type = ""
 

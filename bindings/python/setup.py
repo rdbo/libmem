@@ -119,7 +119,7 @@ def get_sources(src_dir):
 
 libmem_py = Extension(
 	name = "libmem",
-	sources = get_sources(f"src{os.sep}libmem-py"),
+	sources = get_sources(f"src{os.sep}libmem"),
 	libraries = platform_libs(),
 	include_dirs = additional_include_dirs,
 	library_dirs = additional_library_dirs

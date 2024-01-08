@@ -1,7 +1,7 @@
 # LM_CodeLength
 
 ```python
-def LM_CodeLength(code : int, minlength : int)
+def LM_CodeLength(code: int, minlength: int) -> Optional[int]
 ```
 
 # Description

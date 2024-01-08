@@ -1,7 +1,7 @@
 # LM_AllocMemory
 
 ```python
-def LM_AllocMemory(size : int, prot : int)
+def LM_AllocMemory(size: int, prot: int) -> Optional[int]
 ```
 
 # Description

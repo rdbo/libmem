@@ -1,7 +1,7 @@
 # LM_EnumModules
 
 ```python
-def LM_EnumModules()
+def LM_EnumModules() -> Optional[List[lm_module_t]]
 ```
 
 # Description

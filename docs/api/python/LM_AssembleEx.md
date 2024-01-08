@@ -1,7 +1,7 @@
 # LM_AssembleEx
 
 ```python
-def LM_AssembleEx(code : str, bits : int, runtime_addr : int)
+def LM_AssembleEx(code: str, bits: int, runtime_addr: int) -> Optional[bytearray]
 ```
 
 # Description

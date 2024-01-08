@@ -23,11 +23,11 @@ from typing import Optional, List, Tuple
 def LM_FreeMemory(alloc : int, size : int):
     return _libmem.LM_FreeMemory(alloc , size )
 
-def LM_Assemble(code : str):
-    return _libmem.LM_Assemble(code )
+def LM_Assemble(code: str) -> Optional[lm_inst_t]:
+    return _libmem.LM_Assemble(code)
 
-def LM_DemangleSymbol(symbol : str):
-    return _libmem.LM_DemangleSymbol(symbol )
+def LM_DemangleSymbol(symbol: str) -> Optional[str]:
+    return _libmem.LM_DemangleSymbol(symbol)
 
 def LM_EnumPagesEx(pproc: lm_process_t) -> Optional[List[lm_page_t]]:
     return _libmem.LM_EnumPagesEx(pproc)
@@ -44,11 +44,11 @@ def LM_IsProcessAlive(pproc : lm_process_t):
 def LM_SetMemory(dst : int, byte : bytes, size : int):
     return _libmem.LM_SetMemory(dst , byte , size )
 
-def LM_AllocMemory(size : int, prot : int):
-    return _libmem.LM_AllocMemory(size , prot )
+def LM_AllocMemory(size: int, prot: int) -> Optional[int]:
+    return _libmem.LM_AllocMemory(size, prot)
 
-def LM_DataScan(data : bytearray, addr : int, scansize : int):
-    return _libmem.LM_DataScan(data , addr , scansize )
+def LM_DataScan(data: bytearray, addr: int, scansize: int) -> Optional[int]:
+    return _libmem.LM_DataScan(data, addr, scansize)
 
 def LM_UnhookCode(from_: int, trampoline: Tuple[int, int]) -> None:
     return _libmem.LM_UnhookCode(from_, trampoline, int)
@@ -77,20 +77,20 @@ def LM_EnumModulesEx(pproc : lm_process_t):
 def LM_HookCodeEx(pproc: lm_process_t, from_: int, to: int) -> Tuple[int, int]:
     return _libmem.LM_HookCodeEx(pproc, from_, to)
 
-def LM_CodeLength(code : int, minlength : int):
-    return _libmem.LM_CodeLength(code , minlength )
+def LM_CodeLength(code: int, minlength: int) -> Optional[int]:
+    return _libmem.LM_CodeLength(code, minlength)
 
 def LM_FreeMemoryEx(pproc : lm_process_t, alloc : int, size : int):
     return _libmem.LM_FreeMemoryEx(pproc , alloc , size )
 
-def LM_DisassembleEx(code : int, bits : int, size : int, count : int, runtime_addr : int):
-    return _libmem.LM_DisassembleEx(code , bits , size , count , runtime_addr )
+def LM_DisassembleEx(code: int, bits: int, size: int, count: int, runtime_addr: int) -> Optional[List[lm_inst_t]]:
+    return _libmem.LM_DisassembleEx(code, bits, size, count, runtime_addr)
 
-def LM_CodeLengthEx(pproc : lm_process_t, code : int, minlength : int):
-    return _libmem.LM_CodeLengthEx(pproc , code , minlength )
+def LM_CodeLengthEx(pproc: lm_process_t, code: int, minlength: int) -> Optional[int]:
+    return _libmem.LM_CodeLengthEx(pproc, code, minlength)
 
-def LM_Disassemble(code : int):
-    return _libmem.LM_Disassemble(code )
+def LM_Disassemble(code: int) -> Optional[lm_inst_t]:
+    return _libmem.LM_Disassemble(code)
 
 def LM_GetPageEx(pproc : lm_process_t, addr : int):
     return _libmem.LM_GetPageEx(pproc , addr )
@@ -113,8 +113,8 @@ def LM_GetThread():
 def LM_LoadModuleEx(pproc : lm_process_t, modpath : str):
     return _libmem.LM_LoadModuleEx(pproc , modpath )
 
-def LM_DataScanEx(pproc : lm_process_t, data : bytearray, addr : int, scansize : int):
-    return _libmem.LM_DataScanEx(pproc , data , addr , scansize )
+def LM_DataScanEx(pproc: lm_process_t, data: bytearray, addr: int, scansize: int) -> Optional[int]:
+    return _libmem.LM_DataScanEx(pproc, data, addr, scansize)
 
 def LM_HookCode(from_: int, to: int) -> Tuple[int, int]:
     return _libmem.LM_HookCode(from_, to)
@@ -152,14 +152,14 @@ def LM_PatternScan(pattern : bytearray, mask : str, addr : int, scansize : int):
 def LM_FindProcess(procstr : str):
     return _libmem.LM_FindProcess(procstr )
 
-def LM_EnumModules():
+def LM_EnumModules() -> Optional[List[lm_module_t]]:
     return _libmem.LM_EnumModules()
 
 def LM_FindSymbolAddress(pmod : lm_module_t, name : str):
     return _libmem.LM_FindSymbolAddress(pmod , name )
 
-def LM_AssembleEx(code : str, bits : int, runtime_addr : int):
-    return _libmem.LM_AssembleEx(code , bits , runtime_addr )
+def LM_AssembleEx(code: str, bits: int, runtime_addr: int) -> Optional[bytearray]:
+    return _libmem.LM_AssembleEx(code, bits, runtime_addr)
 
 def LM_ReadMemory(src : int, size : int):
     return _libmem.LM_ReadMemory(src , size )
@@ -185,5 +185,5 @@ def LM_EnumSymbols(pmod : lm_module_t):
 def LM_UnhookCodeEx(pproc: lm_process_t, from_: int, trampoline: Tuple[int, int]) -> None:
     return _libmem.LM_UnhookCodeEx(pproc, from_, trampoline, int)
 
-def LM_AllocMemoryEx(pproc : lm_process_t, size : int, prot : int):
-    return _libmem.LM_AllocMemoryEx(pproc , size , prot )
+def LM_AllocMemoryEx(pproc: lm_process_t, size: int, prot: int) -> Optional[int]:
+    return _libmem.LM_AllocMemoryEx(pproc, size, prot)

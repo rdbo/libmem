@@ -1,7 +1,7 @@
 # LM_DataScan
 
 ```python
-def LM_DataScan(data : bytearray, addr : int, scansize : int)
+def LM_DataScan(data: bytearray, addr: int, scansize: int) -> Optional[int]
 ```
 
 # Description

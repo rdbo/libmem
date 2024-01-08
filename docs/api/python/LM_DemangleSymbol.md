@@ -1,7 +1,7 @@
 # LM_DemangleSymbol
 
 ```python
-def LM_DemangleSymbol(symbol : str)
+def LM_DemangleSymbol(symbol: str) -> Optional[str]
 ```
 
 # Description

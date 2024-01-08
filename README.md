@@ -24,6 +24,7 @@ NOTE: Submodules and external dependencies might have their own licenses! Check 
 - *Read/Write/Set Memory*
 - *Allocate/Protect Memory*
 - *Scan Memory by Pattern/Signature*
+- Resolve pointer scans/pointer maps
 - *Hook/Unhook Functions*
 - *Assemble/Dissassemble Code (JIT)*
 - *Do VMT Hooking/Unhooking*

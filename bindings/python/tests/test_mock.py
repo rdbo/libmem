@@ -38,12 +38,12 @@ class TestLibmemFunctions(unittest.TestCase):
         mock_enum_symbols_demangled.return_value = None
         self.assertIsNone(LM_EnumSymbolsDemangled(lm_module_t()))
 
-    # @patch('libmem._libmem.LM_ProtMemory')
-    # def test_LM_ProtMemory(self, mock_prot_memory):
-    #     mock_prot_memory.return_value = lm_prot_t()
-    #     self.assertIsInstance(LM_ProtMemory(1234, 100, lm_prot_t()), lm_prot_t)
-    #     mock_prot_memory.return_value = None
-    #     self.assertIsNone(LM_ProtMemory(1234, 100, lm_prot_t()))
+@patch('libmem._libmem.LM_ProtMemory')
+    def test_LM_ProtMemory(self, mock_prot_memory):
+        mock_prot_memory.return_value = lm_prot_t()
+       self.assertIsInstance(LM_ProtMemory(1234, 100, lm_prot_t()), lm_prot_t)
+        mock_prot_memory.return_value = None
+        self.assertIsNone(LM_ProtMemory(1234, 100, lm_prot_t()))
 
     @patch('libmem._libmem.LM_IsProcessAlive')
     def test_LM_IsProcessAlive(self, mock_is_process_alive):
@@ -69,10 +69,10 @@ class TestLibmemFunctions(unittest.TestCase):
         mock_data_scan.return_value = None
         self.assertIsNone(LM_DataScan(bytearray(b'\x00\x01\x02'), 0, 3))
 
-    # @patch('libmem.LM_UnhookCode')
-    # def test_LM_UnhookCode(self, mock_unhook_code):
-    #     mock_unhook_code.return_value = None
-    #     self.assertIsNone(LM_UnhookCode(1234, (0, 1)))
+    @patch('libmem.LM_UnhookCode')
+    def test_LM_UnhookCode(self, mock_unhook_code):
+        mock_unhook_code.return_value = None
+        self.assertIsNone(LM_UnhookCode(1234, (0, 1)))
 
     @patch('libmem._libmem.LM_SetMemoryEx')
     def test_LM_SetMemoryEx(self, mock_set_memory_ex):
@@ -274,36 +274,36 @@ class TestLibmemFunctions(unittest.TestCase):
         mock_find_symbol_address_demangled.return_value = None
         self.assertIsNone(LM_FindSymbolAddressDemangled(lm_module_t(), "symbol_name"))
 
-    # @patch('libmem._libmem.LM_WriteMemoryEx')
-    # def test_LM_WriteMemoryEx(self, mock_write_memory_ex):
-    #     mock_write_memory_ex.return_value = True
-    #     self.assertTrue(LM_WriteMemoryEx(lm_process_t(), 1234, bytearray(b"\x01\x02")))
-    #
-    # @patch('libmem._libmem.LM_SigScan')
-    # def test_LM_SigScan(self, mock_sig_scan):
-    #     mock_sig_scan.return_value = 1234
-    #     self.assertEqual(LM_SigScan("signature", 0, 100), 1234)
-    #     mock_sig_scan.return_value = None
-    #     self.assertIsNone(LM_SigScan("signature", 0, 100))
-    #
-    # @patch('libmem._libmem.LM_EnumSymbols')
-    # def test_LM_EnumSymbols(self, mock_enum_symbols):
-    #     mock_enum_symbols.return_value = lm_symbol_t()
-    #     self.assertIsInstance(LM_EnumSymbols(lm_module_t()), lm_symbol_t)
-    #     mock_enum_symbols.return_value = None
-    #     self.assertIsNone(LM_EnumSymbols(lm_module_t()))
-    #
-    # @patch('libmem._libmem.LM_UnhookCodeEx')
-    # def test_LM_UnhookCodeEx(self, mock_unhook_code_ex):
-    #     mock_unhook_code_ex.return_value = None
-    #     self.assertIsNone(LM_UnhookCodeEx(lm_process_t(), 1234, (5678, 9012)))
-    #
-    # @patch('libmem._libmem.LM_AllocMemoryEx')
-    # def test_LM_AllocMemoryEx(self, mock_alloc_memory_ex):
-    #     mock_alloc_memory_ex.return_value = 1234
-    #     self.assertEqual(LM_AllocMemoryEx(lm_process_t(), 100, 1), 1234)
-    #     mock_alloc_memory_ex.return_value = None
-    #     self.assertIsNone(LM_AllocMemoryEx(lm_process_t(), 100, 1))
+    @patch('libmem._libmem.LM_WriteMemoryEx')
+    def test_LM_WriteMemoryEx(self, mock_write_memory_ex):
+        mock_write_memory_ex.return_value = True
+        self.assertTrue(LM_WriteMemoryEx(lm_process_t(), 1234, bytearray(b"\x01\x02")))
+   
+    @patch('libmem._libmem.LM_SigScan')
+    def test_LM_SigScan(self, mock_sig_scan):
+        mock_sig_scan.return_value = 1234
+        self.assertEqual(LM_SigScan("signature", 0, 100), 1234)
+        mock_sig_scan.return_value = None
+        self.assertIsNone(LM_SigScan("signature", 0, 100))
+   
+    @patch('libmem._libmem.LM_EnumSymbols')
+    def test_LM_EnumSymbols(self, mock_enum_symbols):
+        mock_enum_symbols.return_value = lm_symbol_t()
+        self.assertIsInstance(LM_EnumSymbols(lm_module_t()), lm_symbol_t)
+        mock_enum_symbols.return_value = None
+        self.assertIsNone(LM_EnumSymbols(lm_module_t()))
+   
+    @patch('libmem._libmem.LM_UnhookCodeEx')
+    def test_LM_UnhookCodeEx(self, mock_unhook_code_ex):
+        mock_unhook_code_ex.return_value = None
+        self.assertIsNone(LM_UnhookCodeEx(lm_process_t(), 1234, (5678, 9012)))
+   
+    @patch('libmem._libmem.LM_AllocMemoryEx')
+    def test_LM_AllocMemoryEx(self, mock_alloc_memory_ex):
+        mock_alloc_memory_ex.return_value = 1234
+        self.assertEqual(LM_AllocMemoryEx(lm_process_t(), 100, 1), 1234)
+        mock_alloc_memory_ex.return_value = None
+        self.assertIsNone(LM_AllocMemoryEx(lm_process_t(), 100, 1))
 
 
 if __name__ == '__main__':

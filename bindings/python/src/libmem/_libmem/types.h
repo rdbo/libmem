@@ -27,7 +27,7 @@
 #include <Python.h>
 #include <structmember.h>
 
-#define T_SIZE T_PYSSIZE_T
+#define T_SIZE T_PYSSIZET
 
 /* lm_process_t */
 typedef struct {

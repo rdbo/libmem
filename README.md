@@ -358,6 +358,9 @@ LM_VmtReset
 LM_VmtFree
 ```
 
+## Contributing
+Read the file `CONTRIBUTING.md` in the root directory of this repository
+
 ## Projects
 Made with libmem:  
 - [AssaultCube Multihack](https://github.com/rdbo/AssaultCube-Multihack)  

@@ -18,6 +18,7 @@
 
 import libmem._libmem as _libmem
 from libmem._libmem import lm_process_t, lm_thread_t, lm_module_t, lm_symbol_t, lm_prot_t, lm_page_t, lm_inst_t, lm_vmt_t
+from libmem._libmem import LM_PROT_X, LM_PROT_R, LM_PROT_W, LM_PROT_XR, LM_PROT_XW, LM_PROT_RW, LM_PROT_XRW, LM_BITS
 from typing import Optional, List, Tuple
 
 def LM_FreeMemory(alloc: int, size: int) -> bool:

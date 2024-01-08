@@ -27,8 +27,7 @@ header = '''
 
 import libmem._libmem as _libmem
 from libmem._libmem import lm_process_t, lm_thread_t, lm_module_t, lm_symbol_t, lm_prot_t, lm_page_t, lm_inst_t, lm_vmt_t
-from typing import Optional
-
+from typing import Optional, List, Tuple
 '''
 header = header[1:] # skip first new line
 
@@ -83,12 +82,23 @@ def parse_args(decl: str):
 
     return arg_list
 
-test_doc = "LM_FindModuleEx.md"
-file = open(docs_dir / test_doc)
-decl = lines_between(file.read(), '```python\n', '\n```')
-args = parse_args(decl)
-wrapper.write(decl + ":\n")
-args_exp = ', '.join(args)
-wrapper.write(f"    return _libmem.{test_doc[:-3]}({args_exp})")
+# TODO: exit on error
+for doc in os.listdir(docs_dir):
+    if not doc.startswith("LM_"):
+        continue
+
+    method = doc[:-3] # Remove file extension
+    print(f"Generating {method} wrapper...")
+    file = open(docs_dir / doc)
+
+    decl = lines_between(file.read(), '```python\n', '\n```')
+    args = parse_args(decl)
+    args_exp = ', '.join(args)
+
+    wrapper.write("\n")
+    wrapper.write(decl + ":\n")
+    wrapper.write(f"    return _libmem.{method}({args_exp})\n")
+
+    file.close()
 
 wrapper.close()

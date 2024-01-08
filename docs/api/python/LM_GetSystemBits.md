@@ -1,6 +1,6 @@
 # LM_GetSystemBits
 
-```rust
+```python
 def LM_GetSystemBits() -> int
 ```
 

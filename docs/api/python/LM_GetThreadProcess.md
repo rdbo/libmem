@@ -1,7 +1,7 @@
 # LM_GetThreadProcess
 
-```rust
-def LM_GetThreadProcess(pthr : lm_thread_t)
+```python
+def LM_GetThreadProcess(pthr: lm_thread_t) -> Optional[lm_process_t]
 ```
 
 # Description

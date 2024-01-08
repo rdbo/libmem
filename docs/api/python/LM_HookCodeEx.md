@@ -1,7 +1,7 @@
 # LM_HookCodeEx
 
 ```python
-def LM_HookCodeEx(pproc : lm_process_t, from : int, to : int)
+def LM_HookCodeEx(pproc: lm_process_t, from_: int, to: int) -> Tuple[int, int]
 ```
 
 # Description

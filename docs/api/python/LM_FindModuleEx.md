@@ -1,7 +1,7 @@
 # LM_FindModuleEx
 
 ```python
-def LM_FindModuleEx(pproc : lm_process_t, name : str)
+def LM_FindModuleEx(pproc: lm_process_t, name: str) -> Optional[lm_module_t]
 ```
 
 # Description

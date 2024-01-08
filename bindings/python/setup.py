@@ -104,7 +104,7 @@ def platform_libs():
 	if operating_system in os_libs:
 		libs.extend(os_libs[operating_system])
 
-	if not search_installed_libmem():
+	if not search_installed_libmem() and "clean" not in sys.argv:
 		download_and_extract_libmem()
 	
 	return libs

@@ -47,6 +47,9 @@ def LM_SetMemory(dst: int, byte: bytes, size: int) -> bool:
 def LM_AllocMemory(size: int, prot: int) -> Optional[int]:
     return _libmem.LM_AllocMemory(size, prot)
 
+def LM_DeepPointerEx(pproc: lm_process_t, base: int, offsets: List[int]) -> Optional[int]:
+    return _libmem.LM_DeepPointerEx(pproc, base, offsets)
+
 def LM_DataScan(data: bytearray, addr: int, scansize: int) -> Optional[int]:
     return _libmem.LM_DataScan(data, addr, scansize)
 
@@ -181,6 +184,9 @@ def LM_SigScan(sig: str, addr: int, scansize: int) -> Optional[int]:
 
 def LM_EnumSymbols(pmod: lm_module_t) -> Optional[lm_symbol_t]:
     return _libmem.LM_EnumSymbols(pmod)
+
+def LM_DeepPointer(base: int, offsets: List[int]) -> Optional[int]:
+    return _libmem.LM_DeepPointer(base, offsets)
 
 def LM_UnhookCodeEx(pproc: lm_process_t, from_: int, trampoline: Tuple[int, int]) -> None:
     return _libmem.LM_UnhookCodeEx(pproc, from_, trampoline, int)

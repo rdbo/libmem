@@ -18,19 +18,19 @@ NOTE: Submodules and external dependencies might have their own licenses! Check 
 - Cross Architecture (x86/x64/ARM/ARM64)
 
 `libmem` can:
-- *Find Processes*
-- *Find Modules*
-- *Find Symbols*
-- *Read/Write/Set Memory*
-- *Allocate/Protect Memory*
-- *Scan Memory by Pattern/Signature*
+- Find Processes
+- Find Modules
+- Find Symbols
+- Read/Write/Set Memory
+- Allocate/Protect Memory
+- Scan Memory by Pattern/Signature
 - Resolve pointer scans/pointer maps
-- *Hook/Unhook Functions*
-- *Assemble/Dissassemble Code (JIT)*
-- *Do VMT Hooking/Unhooking*
-- *Load/Unload Modules*
-- *Get Page Information*
-- *Enumerate Process Threads*
+- Hook/Unhook Functions
+- Assemble/Dissassemble Code (JIT)
+- Do VMT Hooking/Unhooking
+- Load/Unload Modules
+- Get Page Information
+- Enumerate Process Threads
 
 ***And much more!***
 

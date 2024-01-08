@@ -1286,15 +1286,11 @@ py_LM_UnhookCode(PyObject *self,
 		 PyObject *args)
 {
 	lm_address_t from;
-	PyObject *pytrampoline;
 	lm_address_t trampoline;
 	lm_size_t    size;
 
-	if (!PyArg_ParseTuple(args, "k(kk)", &from, &pytrampoline))
+	if (!PyArg_ParseTuple(args, "k(kk)", &from, &trampoline, &size))
 		return NULL;
-
-	trampoline = (lm_address_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 0));
-	size = (lm_size_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 1));
 
 	if (!LM_UnhookCode(from, trampoline, size))
 		Py_RETURN_FALSE;
@@ -1310,15 +1306,11 @@ py_LM_UnhookCodeEx(PyObject *self,
 {
 	py_lm_process_obj *pyproc;
 	lm_address_t from;
-	PyObject *pytrampoline;
 	lm_address_t trampoline;
 	lm_size_t    size;
 
-	if (!PyArg_ParseTuple(args, "Ok(kk)", &pyproc, &from, &pytrampoline))
+	if (!PyArg_ParseTuple(args, "Ok(kk)", &pyproc, &from, &trampoline, &size))
 		return NULL;
-
-	trampoline = (lm_address_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 0));
-	size = (lm_size_t)PyLong_AsSize_t(PyTuple_GetItem(pytrampoline, 1));
 
 	if (!LM_UnhookCodeEx(&pyproc->proc, from, trampoline, size))
 		Py_RETURN_FALSE;

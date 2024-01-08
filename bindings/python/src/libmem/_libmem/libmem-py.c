@@ -1548,14 +1548,14 @@ static PyMethodDef libmem_methods[] = {
 
 static PyModuleDef libmem_mod = {
 	PyModuleDef_HEAD_INIT,
-	"libmem",
+	"_libmem",
 	NULL,
 	-1,
 	libmem_methods
 };
 
 PyMODINIT_FUNC
-PyInit_libmem(void)
+PyInit__libmem(void)
 {
 	PyObject *pymod;
 	PyObject *global; /* used in the DECL_GLOBAL macro */

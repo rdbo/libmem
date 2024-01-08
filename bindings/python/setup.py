@@ -117,9 +117,9 @@ def get_sources(src_dir):
     print(f"libmem-py sources: {sources}")
     return sources
 
-libmem_py = Extension(
-	name = "libmem",
-	sources = get_sources(f"src{os.sep}libmem"),
+libmem_raw_py = Extension(
+	name = "_libmem",
+	sources = get_sources(f"src{os.sep}libmem{os.sep}_libmem"),
 	libraries = platform_libs(),
 	include_dirs = additional_include_dirs,
 	library_dirs = additional_library_dirs
@@ -143,5 +143,6 @@ setup(
 	package_dir = { "" : "src" },
 	packages = find_packages(where="src"),
 	python_requires = ">=3.6",
-	ext_modules = [libmem_py],
+	ext_package = "libmem",
+	ext_modules = [libmem_raw_py],
 )

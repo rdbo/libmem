@@ -10,7 +10,7 @@ Allocates `size` bytes of memory with protection flags `prot` in a remote proces
 
 # Parameters
 
-- pproc: immutable pointer to a process which will have memory be allocated.
+- pproc: immutable reference to a process which will have memory be allocated.
 - size: the size of the region to change the protection flags.
 - prot: the protection flags (`LM_PROT_*`).
 

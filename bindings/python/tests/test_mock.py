@@ -38,7 +38,7 @@ class TestLibmemFunctions(unittest.TestCase):
         mock_enum_symbols_demangled.return_value = None
         self.assertIsNone(LM_EnumSymbolsDemangled(lm_module_t()))
 
-@patch('libmem._libmem.LM_ProtMemory')
+    @patch('libmem._libmem.LM_ProtMemory')
     def test_LM_ProtMemory(self, mock_prot_memory):
         mock_prot_memory.return_value = lm_prot_t()
        self.assertIsInstance(LM_ProtMemory(1234, 100, lm_prot_t()), lm_prot_t)

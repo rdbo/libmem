@@ -74,10 +74,12 @@ def parse_args(decl: str):
         ident = args_text[:colon]
         arg_list.append(ident)
 
-        next_str = ", "
-        next_idx = args_text.find(next_str)
-        if next_idx == -1:
+        next_colon = args_text.find(":", colon + 1)
+        if next_colon == -1:
             break
+        
+        next_str = ", "
+        next_idx = args_text.rfind(next_str, 0, next_colon)
         args_text = args_text[next_idx + len(next_str):]
 
     return arg_list

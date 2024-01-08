@@ -1,7 +1,7 @@
 # LM_EnumThreads
 
 ```python
-def LM_EnumThreadsEx(pproc : lm_process_t)
+def LM_EnumThreadsEx(pproc: lm_process_t) -> Optional[List[lm_thread_t]]
 ```
 
 # Description

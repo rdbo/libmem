@@ -1,7 +1,7 @@
 # LM_SetMemory
 
 ```python
-def LM_SetMemory(dst : int, byte : bytes, size : int)
+def LM_SetMemory(dst: int, byte: bytes, size: int) -> bool
 ```
 
 # Description

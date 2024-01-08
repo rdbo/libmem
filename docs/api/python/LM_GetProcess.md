@@ -1,7 +1,7 @@
 # LM_GetProcess
 
 ```python
-def LM_GetProcess()
+def LM_GetProcess() -> Optional[lm_process_t]
 ```
 
 # Description

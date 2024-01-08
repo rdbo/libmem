@@ -1,7 +1,7 @@
 # LM_SigScanEx
 
 ```python
-def LM_SigScanEx(pproc : lm_process_t, sig : str, addr : int, scansize : int)
+def LM_SigScanEx(pproc: lm_process_t, sig: str, addr: int, scansize: int) -> Optional[int]
 ```
 
 # Description

@@ -1,7 +1,7 @@
 # LM_WriteMemory
 
 ```python
-def LM_WriteMemory(dst : int, src : bytearray)
+def LM_WriteMemory(dst: int, src: bytearray) -> bool
 ```
 
 # Description

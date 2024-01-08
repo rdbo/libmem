@@ -1,7 +1,7 @@
 # LM_LoadModule
 
 ```python
-def LM_LoadModule(modpath : str)
+def LM_LoadModule(modpath: str) -> Optional[lm_module_t]
 ```
 
 # Description

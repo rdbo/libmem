@@ -1,7 +1,7 @@
 # LM_SetMemoryEx
 
 ```python
-def LM_SetMemoryEx(pproc : lm_process_t, dst : int, byte : bytes, size : int)
+def LM_SetMemoryEx(pproc: lm_process_t, dst: int, byte: bytes, size: int) -> bool
 ```
 
 # Description

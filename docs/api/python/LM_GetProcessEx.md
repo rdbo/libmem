@@ -1,7 +1,7 @@
 # LM_GetProcessEx
 
 ```python
-def LM_GetProcessEx(pid : int)
+def LM_GetProcessEx(pid: int) -> Optional[lm_process_t]
 ```
 
 # Description

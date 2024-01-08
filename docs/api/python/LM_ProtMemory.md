@@ -1,7 +1,7 @@
 # LM_ProtMemory
 
 ```python
-def LM_ProtMemory(addr : int, size : int, prot : lm_prot_t)
+def LM_ProtMemory(addr: int, size: int, prot: lm_prot_t) -> Optional[lm_prot_t]
 ```
 
 # Description

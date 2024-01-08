@@ -20,7 +20,7 @@ git clone https://github.com/<your-username>/libmem.git)
 **3.** Navigate to the project directory.
 
 ```bash
-cd libmen
+cd libmem
 ```
 
 **4.** Follow libmem's coding style as much as you can (especially when aligning things)

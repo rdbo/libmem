@@ -1381,7 +1381,7 @@ pub unsafe fn LM_DeepPointer<T>(base: lm_address_t, offsets: Vec<lm_address_t>) 
     }
 }
 
-pub unsafe fn LM_DeepPointerEx(
+pub fn LM_DeepPointerEx(
     pproc: &lm_process_t,
     base: lm_address_t,
     offsets: Vec<lm_address_t>,

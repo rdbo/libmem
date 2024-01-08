@@ -386,7 +386,7 @@ static PyTypeObject py_lm_inst_t = {
 
 /****************************************/
 
-/* lm_process_t */
+/* lm_vmt_t */
 typedef struct {
 	PyObject_HEAD
 	lm_vmt_t vmt;

@@ -1,7 +1,7 @@
 # LM_Assemble
 
 ```python
-def LM_Assemble(code: str) -> Optional[lm_inst_t]
+def LM_Assemble(code : str : code : str) -> Optional[None]:
 ```
 
 # Description

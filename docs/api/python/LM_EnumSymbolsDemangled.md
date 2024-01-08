@@ -1,7 +1,7 @@
 # LM_EnumSymbolsDemangled
 
 ```python
-def LM_EnumSymbolsDemangled(pmod : lm_module_t)
+def LM_EnumSymbolsDemangled(pmod : lm_module_t : pmod : lm_module_t) -> Optional[None]:
 ```
 
 # Description

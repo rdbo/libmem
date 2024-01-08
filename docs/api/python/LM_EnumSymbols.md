@@ -1,7 +1,7 @@
 # LM_EnumSymbols
 
 ```python
-def LM_EnumSymbols(pmod : lm_module_t)
+def LM_EnumSymbols(pmod : lm_module_t : pmod : lm_module_t) -> Optional[None]:
 ```
 
 # Description

@@ -1,7 +1,7 @@
 # LM_ReadMemory
 
 ```python
-def LM_ReadMemory(src : int, size : int)
+def LM_ReadMemory(src : int : src : int, size : int : size : int) -> Optional[None]:
 ```
 
 # Description

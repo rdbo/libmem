@@ -1,7 +1,7 @@
 # LM_FreeMemory
 
 ```python
-def LM_FreeMemory(alloc : int, size : int)
+def LM_FreeMemory(alloc : int : alloc : int, size : int : size : int) -> Optional[None]:
 ```
 
 # Description

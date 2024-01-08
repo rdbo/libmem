@@ -1,7 +1,7 @@
 # LM_UnloadModule
 
 ```python
-def LM_UnloadModule(pmod : lm_module_t)
+def LM_UnloadModule(pmod : lm_module_t : pmod : lm_module_t) -> Optional[None]:
 ```
 
 # Description

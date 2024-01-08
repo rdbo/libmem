@@ -1,7 +1,7 @@
 # LM_EnumPages
 
 ```python
-def LM_EnumPages()
+def LM_EnumPages() -> Optional[None]:
 ```
 
 # Description

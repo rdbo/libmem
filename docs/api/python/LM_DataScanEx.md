@@ -1,7 +1,7 @@
 # LM_DataScanEx
 
 ```python
-def LM_DataScanEx(pproc: lm_process_t, data: bytearray, addr: int, scansize: int) -> Optional[int]
+def LM_DataScanEx(pproc : lm_process_t : pproc : lm_process_t, data : bytearray : data : bytearray, addr : int : addr : int, scansize : int : scansize : int) -> Optional[None]:
 ```
 
 # Description

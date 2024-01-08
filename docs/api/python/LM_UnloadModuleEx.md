@@ -1,7 +1,7 @@
 # LM_UnloadModuleEx
 
 ```python
-def LM_UnloadModuleEx(pproc : lm_process_t, pmod : lm_module_t)
+def LM_UnloadModuleEx(pproc : lm_process_t : pproc : lm_process_t, pmod : lm_module_t : pmod : lm_module_t) -> Optional[None]:
 ```
 
 # Description

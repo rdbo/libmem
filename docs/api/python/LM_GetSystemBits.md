@@ -1,7 +1,7 @@
 # LM_GetSystemBits
 
-```python
-def LM_GetSystemBits() -> int
+```rust
+def LM_GetSystemBits() -> Optional[int]:
 ```
 
 # Description

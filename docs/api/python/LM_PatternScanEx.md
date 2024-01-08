@@ -1,7 +1,7 @@
 # LM_PatternScanEx
 
 ```python
-def LM_PatternScanEx(pproc : lm_process_t, pattern : bytearray, mask : str, addr : int, scansize : int)
+def LM_PatternScanEx(pproc : lm_process_t : pproc : lm_process_t, pattern : bytearray : pattern : bytearray, mask : str : mask : str, addr : int : addr : int, scansize : int : scansize : int) -> Optional[None]:
 ```
 
 # Description

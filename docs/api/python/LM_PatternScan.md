@@ -1,7 +1,7 @@
 # LM_PatternScan
 
 ```python
-def LM_PatternScan(pattern : bytearray, mask : str, addr : int, scansize : int)
+def LM_PatternScan(pattern : bytearray : pattern : bytearray, mask : str : mask : str, addr : int : addr : int, scansize : int : scansize : int) -> Optional[None]:
 ```
 
 # Description

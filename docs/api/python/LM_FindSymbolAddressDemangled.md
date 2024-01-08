@@ -1,7 +1,7 @@
 # LM_FindSymbolAddressDemangled
 
 ```python
-def LM_FindSymbolAddressDemangled(pmod : lm_module_t, name : str)
+def LM_FindSymbolAddressDemangled(pmod : lm_module_t : pmod : lm_module_t, name : str : name : str) -> Optional[None]:
 ```
 
 # Description

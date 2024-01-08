@@ -1,7 +1,7 @@
 # LM_EnumPagesEx
 
-```python
-def LM_EnumPagesEx(pproc: lm_process_t) -> Optional[List[lm_page_t]]
+```rust
+pub fn LM_EnumPagesEx(pproc : &lm_process_t) -> Option<Vec<lm_page_t>>
 ```
 
 # Description

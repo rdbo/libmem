@@ -1,7 +1,7 @@
 # LM_SigScan
 
 ```python
-def LM_SigScan(sig : str, addr : int, scansize : int)
+def LM_SigScan(sig : str : sig : str, addr : int : addr : int, scansize : int : scansize : int) -> Optional[None]:
 ```
 
 # Description

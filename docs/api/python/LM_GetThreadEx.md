@@ -1,7 +1,7 @@
 # LM_GetThreadEx
 
 ```python
-def LM_GetThreadEx(pproc : lm_process_t)
+def LM_GetThreadEx(pproc : lm_process_t : pproc : lm_process_t) -> Optional[None]:
 ```
 
 # Description

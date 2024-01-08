@@ -1,7 +1,7 @@
 # LM_Disassemble
 
 ```python
-def LM_Disassemble(code: int) -> Optional[lm_inst_t]
+def LM_Disassemble(code : int : code : int) -> Optional[None]:
 ```
 
 # Description

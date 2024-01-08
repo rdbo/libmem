@@ -1,7 +1,7 @@
 # LM_DisassembleEx
 
 ```python
-def LM_DisassembleEx(code: int, bits: int, size: int, count: int, runtime_addr: int) -> Optional[List[lm_inst_t]]
+def LM_DisassembleEx(code : int : code : int, bits : int : bits : int, size : int : size : int, count : int : count : int, runtime_addr : int : runtime_addr : int) -> Optional[None]:
 ```
 
 # Description

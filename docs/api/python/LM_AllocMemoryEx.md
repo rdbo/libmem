@@ -1,7 +1,7 @@
 # LM_AllocMemoryEx
 
 ```python
-def LM_AllocMemoryEx(pproc: lm_process_t, size: int, prot: int) -> Optional[int]
+def LM_AllocMemoryEx(pproc : lm_process_t : pproc : lm_process_t, size : int : size : int, prot : int : prot : int) -> Optional[None]:
 ```
 
 # Description

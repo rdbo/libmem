@@ -1,7 +1,7 @@
 # LM_GetThread
 
 ```python
-def LM_GetThread()
+def LM_GetThread() -> Optional[None]:
 ```
 
 # Description

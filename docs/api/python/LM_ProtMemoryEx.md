@@ -1,7 +1,7 @@
 # LM_ProtMemory
 
 ```python
-def LM_ProtMemoryEx(pproc : lm_process_t, addr : int, size : int, prot : lm_prot_t)
+def LM_ProtMemoryEx(pproc : lm_process_t : pproc : lm_process_t, addr : int : addr : int, size : int : size : int, prot : lm_prot_t : prot : lm_prot_t) -> Optional[None]:
 ```
 
 # Description

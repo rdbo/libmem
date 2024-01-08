@@ -1,7 +1,7 @@
 # LM_FreeMemoryEx
 
 ```python
-def LM_FreeMemoryEx(pproc : lm_process_t, alloc : int, size : int)
+def LM_FreeMemoryEx(pproc : lm_process_t : pproc : lm_process_t, alloc : int : alloc : int, size : int : size : int) -> Optional[None]:
 ```
 
 # Description

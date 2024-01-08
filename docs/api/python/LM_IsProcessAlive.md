@@ -1,7 +1,7 @@
 # LM_IsProcessAlive
 
 ```python
-def LM_IsProcessAlive(pproc : lm_process_t)
+def LM_IsProcessAlive(pproc : lm_process_t : pproc : lm_process_t) -> Optional[None]:
 ```
 
 # Description

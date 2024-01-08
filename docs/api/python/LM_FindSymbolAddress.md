@@ -1,7 +1,7 @@
 # LM_FindSymbolAddress
 
 ```python
-def LM_FindSymbolAddress(pmod : lm_module_t, name : str)
+def LM_FindSymbolAddress(pmod : lm_module_t : pmod : lm_module_t, name : str : name : str) -> Optional[None]:
 ```
 
 # Description

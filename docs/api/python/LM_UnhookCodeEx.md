@@ -1,7 +1,7 @@
 # LM_UnhookCodeEx
 
 ```python
-def LM_UnhookCodeEx(pproc: lm_process_t, from_: int, trampoline: Tuple[int, int]) -> None
+def LM_UnhookCodeEx(pproc : lm_process_t : pproc : lm_process_t, trampoline : (int, int) : trampoline : (int, int), _from : int : _from : int) -> Optional[None]:
 ```
 
 # Description

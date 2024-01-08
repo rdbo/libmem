@@ -1,7 +1,7 @@
 # LM_EnumProcesses
 
 ```python
-def LM_EnumProcesses()
+def LM_EnumProcesses() -> Optional[None]:
 ```
 
 # Description

@@ -1,7 +1,7 @@
 # LM_UnhookCode
 
 ```python
-def LM_UnhookCode(from_: int, trampoline: Tuple[int, int]) -> None
+def LM_UnhookCode(trampoline : (int, int) : trampoline : (int, int), _from : int : _from : int) -> Optional[None]:
 ```
 
 # Description

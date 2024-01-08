@@ -1,7 +1,7 @@
 # LM_GetPageEx
 
 ```python
-def LM_GetPageEx(pproc : lm_process_t, addr : int)
+def LM_GetPageEx(pproc : lm_process_t : pproc : lm_process_t, addr : int : addr : int) -> Optional[None]:
 ```
 
 # Description

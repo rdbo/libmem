@@ -1,7 +1,7 @@
 # LM_CodeLengthEx
 
 ```python
-def LM_CodeLengthEx(pproc: lm_process_t, code: int, minlength: int) -> Optional[int]
+def LM_CodeLengthEx(pproc : lm_process_t : pproc : lm_process_t, code : int : code : int, minlength : int : minlength : int) -> Optional[None]:
 ```
 
 # Description

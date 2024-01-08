@@ -1,7 +1,7 @@
 # LM_HookCode
 
 ```python
-def LM_HookCode(from_: int, to: int) -> Tuple[int, int]
+def LM_HookCode(to : int : to : int, _from : int : _from : int) -> Optional[None]:
 ```
 
 # Description

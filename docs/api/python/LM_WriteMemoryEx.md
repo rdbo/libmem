@@ -1,7 +1,7 @@
 # LM_WriteMemoryEx
 
 ```python
-def LM_WriteMemoryEx(pproc : lm_process_t, dst : int, src : bytearray)
+def LM_WriteMemoryEx(pproc : lm_process_t : pproc : lm_process_t, dst : int : dst : int, src : bytearray : src : bytearray) -> Optional[None]:
 ```
 
 # Description

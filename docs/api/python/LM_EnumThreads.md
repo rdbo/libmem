@@ -1,7 +1,7 @@
 # LM_EnumThreads
 
 ```python
-def LM_EnumThreads()
+def LM_EnumThreads() -> Optional[None]:
 ```
 
 # Description

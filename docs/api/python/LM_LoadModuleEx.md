@@ -1,7 +1,7 @@
 # LM_LoadModuleEx
 
 ```python
-def LM_LoadModuleEx(pproc : lm_process_t, modpath : str)
+def LM_LoadModuleEx(pproc : lm_process_t : pproc : lm_process_t, modpath : str : modpath : str) -> Optional[None]:
 ```
 
 # Description

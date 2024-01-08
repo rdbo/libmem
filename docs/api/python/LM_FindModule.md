@@ -1,7 +1,7 @@
 # LM_FindModule
 
 ```python
-def LM_FindModule(name : str)
+def LM_FindModule(name : str : name : str) -> Optional[None]:
 ```
 
 # Description

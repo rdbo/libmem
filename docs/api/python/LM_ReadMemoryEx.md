@@ -1,7 +1,7 @@
 # LM_ReadMemory
 
 ```python
-def LM_ReadMemoryEx(pproc : lm_process_t, src : int, size : int)
+def LM_ReadMemoryEx(pproc : lm_process_t : pproc : lm_process_t, src : int : src : int, size : int : size : int) -> Optional[None]:
 ```
 
 # Description

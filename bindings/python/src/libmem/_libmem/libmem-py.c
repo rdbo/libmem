@@ -681,7 +681,7 @@ py_LM_GetPage(PyObject *self,
 	lm_page_t page;
 	py_lm_page_obj *pypage;
 
-	if (!PyArg_ParseTuple(args, "k", &address))
+	if (!PyArg_ParseTuple(args, "n", &address))
 		return NULL;
 
 	if (!LM_GetPage(address, &page))
@@ -705,7 +705,7 @@ py_LM_GetPageEx(PyObject *self,
 	lm_page_t page;
 	py_lm_page_obj *pypage;
 
-	if (!PyArg_ParseTuple(args, "Ok", &pyproc, &address))
+	if (!PyArg_ParseTuple(args, "On", &pyproc, &address))
 		return NULL;
 
 	if (!LM_GetPageEx(&pyproc->proc, address, &page))
@@ -729,7 +729,7 @@ py_LM_ReadMemory(PyObject *self,
 	lm_byte_t *dst;
 	PyObject *pybuf;
 
-	if (!PyArg_ParseTuple(args, "kk", &src, &size))
+	if (!PyArg_ParseTuple(args, "nn", &src, &size))
 		return NULL;
 
 	dst = LM_MALLOC(size);
@@ -759,7 +759,7 @@ py_LM_ReadMemoryEx(PyObject *self,
 	lm_byte_t *dst;
 	PyObject *pybuf;
 
-	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &src, &size))
+	if (!PyArg_ParseTuple(args, "Onn", &pyproc, &src, &size))
 		return NULL;
 
 	dst = LM_MALLOC(size);
@@ -788,7 +788,7 @@ py_LM_WriteMemory(PyObject *self,
 	lm_bytearr_t src;
 	lm_size_t size;
 
-	if (!PyArg_ParseTuple(args, "kY", &dst, &pysrc))
+	if (!PyArg_ParseTuple(args, "nY", &dst, &pysrc))
 		return NULL;
 
 	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
@@ -812,7 +812,7 @@ py_LM_WriteMemoryEx(PyObject *self,
 	lm_bytearr_t src;
 	lm_size_t size;
 
-	if (!PyArg_ParseTuple(args, "OkY", &pyproc, &dst, &pysrc))
+	if (!PyArg_ParseTuple(args, "OnY", &pyproc, &dst, &pysrc))
 		return NULL;
 
 	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
@@ -834,7 +834,7 @@ py_LM_SetMemory(PyObject *self,
 	lm_byte_t byte;
 	lm_size_t size;
 
-	if (!PyArg_ParseTuple(args, "kck", &dst, &byte, &size))
+	if (!PyArg_ParseTuple(args, "ncn", &dst, &byte, &size))
 		return NULL;
 
 	if (LM_SetMemory(dst, byte, size) != size)
@@ -854,7 +854,7 @@ py_LM_SetMemoryEx(PyObject *self,
 	lm_byte_t byte;
 	lm_size_t size;
 
-	if (!PyArg_ParseTuple(args, "kck", &pyproc, &dst, &byte, &size))
+	if (!PyArg_ParseTuple(args, "ncn", &pyproc, &dst, &byte, &size))
 		return NULL;
 
 	if (LM_SetMemoryEx(&pyproc->proc, dst, byte, size) != size)
@@ -875,7 +875,7 @@ py_LM_ProtMemory(PyObject *self,
 	lm_prot_t oldprot;
 	py_lm_prot_obj *pyoldprot;
 
-	if (!PyArg_ParseTuple(args, "kkO", &addr, &size, &pyprot))
+	if (!PyArg_ParseTuple(args, "nnO", &addr, &size, &pyprot))
 		return NULL;
 
 	if (!LM_ProtMemory(addr, size, pyprot->prot, &oldprot))
@@ -899,7 +899,7 @@ py_LM_ProtMemoryEx(PyObject *self,
 	lm_prot_t oldprot;
 	py_lm_prot_obj *pyoldprot;
 
-	if (!PyArg_ParseTuple(args, "OkkO", &pyproc, &addr, &size, &pyprot))
+	if (!PyArg_ParseTuple(args, "OnnO", &pyproc, &addr, &size, &pyprot))
 		return NULL;
 
 	if (!LM_ProtMemoryEx(&pyproc->proc, addr, size, pyprot->prot, &oldprot))
@@ -920,7 +920,7 @@ py_LM_AllocMemory(PyObject *self,
 	py_lm_prot_obj *pyprot;
 	lm_address_t alloc;
 
-	if (!PyArg_ParseTuple(args, "kO", &size, &pyprot))
+	if (!PyArg_ParseTuple(args, "nO", &size, &pyprot))
 		return NULL;
 
 
@@ -942,7 +942,7 @@ py_LM_AllocMemoryEx(PyObject *self,
 	py_lm_prot_obj *pyprot;
 	lm_address_t alloc;
 
-	if (!PyArg_ParseTuple(args, "OkO", &pyproc, &size, &pyprot))
+	if (!PyArg_ParseTuple(args, "OnO", &pyproc, &size, &pyprot))
 		return NULL;
 
 
@@ -962,7 +962,7 @@ py_LM_FreeMemory(PyObject *self,
 	lm_address_t alloc;
 	lm_size_t size;
 
-	if (!PyArg_ParseTuple(args, "kk", &alloc, &size))
+	if (!PyArg_ParseTuple(args, "nn", &alloc, &size))
 		return NULL;
 
 
@@ -982,7 +982,7 @@ py_LM_FreeMemoryEx(PyObject *self,
 	lm_address_t alloc;
 	lm_size_t size;
 
-	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &alloc, &size))
+	if (!PyArg_ParseTuple(args, "Onn", &pyproc, &alloc, &size))
 		return NULL;
 
 
@@ -1005,7 +1005,7 @@ py_LM_DeepPointer(PyObject *self,
 	lm_address_t  pointer;
 	lm_size_t     i;
 
-	if (!PyArg_ParseTuple(args, "kO", &base, &pyoffsets))
+	if (!PyArg_ParseTuple(args, "nO", &base, &pyoffsets))
 		return NULL;
 
 	noffsets = PyList_Size(pyoffsets);
@@ -1044,7 +1044,7 @@ py_LM_DeepPointerEx(PyObject *self,
 	lm_address_t  pointer;
 	lm_size_t     i;
 
-	if (!PyArg_ParseTuple(args, "OkO", &pyproc, &base, &pyoffsets))
+	if (!PyArg_ParseTuple(args, "OnO", &pyproc, &base, &pyoffsets))
 		return NULL;
 
 	noffsets = PyList_Size(pyoffsets);
@@ -1082,7 +1082,7 @@ py_LM_DataScan(PyObject *self,
 	lm_size_t size;
 	lm_address_t scan_match;
 
-	if (!PyArg_ParseTuple(args, "Ykk", &pydata, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "Ynn", &pydata, &addr, &scansize))
 		return NULL;
 
 	data = (lm_bytearr_t)PyByteArray_AsString(pydata);
@@ -1109,7 +1109,7 @@ py_LM_DataScanEx(PyObject *self,
 	lm_size_t size;
 	lm_address_t scan_match;
 
-	if (!PyArg_ParseTuple(args, "OYkk", &pyproc, &pydata, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "OYnn", &pyproc, &pydata, &addr, &scansize))
 		return NULL;
 
 	data = (lm_bytearr_t)PyByteArray_AsString(pydata);
@@ -1136,10 +1136,10 @@ py_LM_PatternScan(PyObject *self,
 	lm_address_t scan_match;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "Yukk", &pypattern, &mask, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "Yunn", &pypattern, &mask, &addr, &scansize))
 		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "Yskk", &pypattern, &mask, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "Ysnn", &pypattern, &mask, &addr, &scansize))
 		return NULL;
 #	endif
 
@@ -1167,10 +1167,10 @@ py_LM_PatternScanEx(PyObject *self,
 	lm_address_t scan_match;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "OYukk", &pyproc, &pypattern, &mask, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "OYunn", &pyproc, &pypattern, &mask, &addr, &scansize))
 		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "OYskk", &pyproc, &pypattern, &mask, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "OYsnn", &pyproc, &pypattern, &mask, &addr, &scansize))
 		return NULL;
 #	endif
 
@@ -1195,10 +1195,10 @@ py_LM_SigScan(PyObject *self,
 	lm_address_t scan_match;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "ukk", &sig, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "unn", &sig, &addr, &scansize))
 		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "skk", &sig, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "snn", &sig, &addr, &scansize))
 		return NULL;
 #	endif
 
@@ -1222,10 +1222,10 @@ py_LM_SigScanEx(PyObject *self,
 	lm_address_t scan_match;
 
 #	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "Oukk", &pyproc, &sig, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "Ounn", &pyproc, &sig, &addr, &scansize))
 		return NULL;
 #	else
-	if (!PyArg_ParseTuple(args, "Oskk", &pyproc, &sig, &addr, &scansize))
+	if (!PyArg_ParseTuple(args, "Osnn", &pyproc, &sig, &addr, &scansize))
 		return NULL;
 #	endif
 
@@ -1247,14 +1247,14 @@ py_LM_HookCode(PyObject *self,
 	lm_address_t trampoline;
 	lm_size_t    size;
 
-	if (!PyArg_ParseTuple(args, "kk", &from, &to))
+	if (!PyArg_ParseTuple(args, "nn", &from, &to))
 		return NULL;
 
 	size = LM_HookCode(from, to, &trampoline);
 	if (!size)
 		return Py_BuildValue("");
 
-	return Py_BuildValue("(kk)", trampoline, size);
+	return Py_BuildValue("(nn)", trampoline, size);
 }
 
 /****************************************/
@@ -1269,14 +1269,14 @@ py_LM_HookCodeEx(PyObject *self,
 	lm_address_t trampoline;
 	lm_size_t    size;
 
-	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &from, &to))
+	if (!PyArg_ParseTuple(args, "Onn", &pyproc, &from, &to))
 		return NULL;
 
 	size = LM_HookCodeEx(&pyproc->proc, from, to, &trampoline);
 	if (!size)
 		return Py_BuildValue("");
 
-	return Py_BuildValue("(kk)", trampoline, size);
+	return Py_BuildValue("(nn)", trampoline, size);
 }
 
 /****************************************/
@@ -1289,7 +1289,7 @@ py_LM_UnhookCode(PyObject *self,
 	lm_address_t trampoline;
 	lm_size_t    size;
 
-	if (!PyArg_ParseTuple(args, "k(kk)", &from, &trampoline, &size))
+	if (!PyArg_ParseTuple(args, "n(nn)", &from, &trampoline, &size))
 		return NULL;
 
 	if (!LM_UnhookCode(from, trampoline, size))
@@ -1309,7 +1309,7 @@ py_LM_UnhookCodeEx(PyObject *self,
 	lm_address_t trampoline;
 	lm_size_t    size;
 
-	if (!PyArg_ParseTuple(args, "Ok(kk)", &pyproc, &from, &trampoline, &size))
+	if (!PyArg_ParseTuple(args, "On(nn)", &pyproc, &from, &trampoline, &size))
 		return NULL;
 
 	if (!LM_UnhookCodeEx(&pyproc->proc, from, trampoline, size))
@@ -1353,7 +1353,7 @@ py_LM_AssembleEx(PyObject *self,
 	lm_size_t codelen;
 	PyObject *pycodebuf;
 
-	if (!PyArg_ParseTuple(args, "skk", &code, &bits, &runtime_addr))
+	if (!PyArg_ParseTuple(args, "snn", &code, &bits, &runtime_addr))
 		return NULL;
 
 	codelen = LM_AssembleEx(code, bits, runtime_addr, &codebuf);
@@ -1377,7 +1377,7 @@ py_LM_Disassemble(PyObject *self,
 	lm_inst_t inst;
 	py_lm_inst_obj *pyinst;
 
-	if (!PyArg_ParseTuple(args, "k", &code))
+	if (!PyArg_ParseTuple(args, "n", &code))
 		return NULL;
 
 	if (!LM_Disassemble(code, &inst))
@@ -1406,7 +1406,7 @@ py_LM_DisassembleEx(PyObject *self,
 	lm_size_t i;
 	py_lm_inst_obj *pyinst;
 
-	if (!PyArg_ParseTuple(args, "kkkkk", &code, &bits, &size, &count, &runtime_addr))
+	if (!PyArg_ParseTuple(args, "nnnnn", &code, &bits, &size, &count, &runtime_addr))
 		return NULL;
 
 	inst_count = LM_DisassembleEx(code, bits, size, count, runtime_addr, &insts);
@@ -1435,7 +1435,7 @@ py_LM_CodeLength(PyObject *self,
 	lm_size_t minlength;
 	lm_size_t aligned_length;
 
-	if (!PyArg_ParseTuple(args, "kk", &code, &minlength))
+	if (!PyArg_ParseTuple(args, "nn", &code, &minlength))
 		return NULL;
 
 	aligned_length = LM_CodeLength(code, minlength);
@@ -1456,7 +1456,7 @@ py_LM_CodeLengthEx(PyObject *self,
 	lm_size_t minlength;
 	lm_size_t aligned_length;
 
-	if (!PyArg_ParseTuple(args, "Okk", &pyproc, &code, &minlength))
+	if (!PyArg_ParseTuple(args, "Onn", &pyproc, &code, &minlength))
 		return NULL;
 
 	aligned_length = LM_CodeLengthEx(&pyproc->proc, code, minlength);

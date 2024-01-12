@@ -45,13 +45,13 @@ class TestLibMem(unittest.TestCase):
         length = LM_CodeLengthEx(self.ex_program, self.ex_program_module.base, 8)
         self.assertIsNotNone(length)
 
-    # def test_LM_Datascan(self):
-    #     # def LM_DataScan(data: bytearray, addr: int, scansize: int) -> Optional[int]:
-    #     self.assertIsNotNone(LM_DataScan(self.test_pattern, self.normal_program_module.base, 0x1000))
+    def test_LM_Datascan(self):
+        # def LM_DataScan(data: bytearray, addr: int, scansize: int) -> Optional[int]:
+        self.assertIsNotNone(LM_DataScan(bytearray([0x00, 0x00]), self.normal_program_module.base, 1024))
 
-    # def test_LM_DataScanEx(self):
-    #     # def LM_DataScanEx(pproc: lm_process_t, data: bytearray, addr: int, scansize: int) -> Optional[int]:
-    #     self.assertIsNotNone(LM_DataScanEx(self.ex_program, self.test_pattern, self.ex_program_module.base, 0x1000))
+    def test_LM_DataScanEx(self):
+        # def LM_DataScanEx(pproc: lm_process_t, data: bytearray, addr: int, scansize: int) -> Optional[int]:
+        self.assertIsNotNone(LM_DataScanEx(self.ex_program, bytearray([0x00, 0x00]), self.ex_program_module.base, 0x1000))
 
     def test_LM_DeepPointer(self):
         # def LM_DeepPointer(base: int, offsets: List[int]) -> Optional[int]:
@@ -70,7 +70,7 @@ class TestLibMem(unittest.TestCase):
 
     # def test_LM_DisassembleEx(self):
     #     # def LM_DisassembleEx(code: int, bits: int, size: int, count: int, runtime_addr: int) -> Optional[List[lm_inst_t]]:
-    #     self.assertIsNotNone(LM_DisassembleEx(self.ex_program_module.base, self.ex_program.bits, 8, 1, 1))
+    #     self.assertIsNotNone(LM_DisassembleEx(self.ex_program_module.base, self.ex_program.bits, 8, 0, self.ex_program_module.base))
 
     def test_LM_EnumModules(self):
         # def LM_EnumModules() -> Optional[List[lm_module_t]]:
@@ -248,11 +248,11 @@ class TestLibMem(unittest.TestCase):
 
     def test_LM_WriteMemory(self):
         # def LM_WriteMemory(dst: int, src: bytearray) -> bool:
-        self.assertTrue(LM_WriteMemory(self.normal_program_module.base, bytearray(b"\x00")))
+        self.assertTrue(LM_WriteMemory(self.normal_program_module.base, bytearray(b"\x4D")))
 
     def test_LM_WriteMemoryEx(self):
         # def LM_WriteMemoryEx(pproc: lm_process_t, dst: int, src: bytearray) -> bool:
-        self.assertTrue(LM_WriteMemoryEx(self.ex_program, self.ex_program_module.base, bytearray(b"\x00")))
+        self.assertTrue(LM_WriteMemoryEx(self.ex_program, self.ex_program_module.base, bytearray(b"\x4D")))
 
 
 if __name__ == '__main__':

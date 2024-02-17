@@ -25,7 +25,7 @@
 #![allow(non_snake_case)]
 
 use std::{
-    ffi::{CStr, CString},
+    ffi::{CStr, CString, c_char},
     fmt, mem, ptr,
 };
 
@@ -1100,7 +1100,7 @@ pub fn LM_DemangleSymbol(symbol: &str) -> Option<String> {
             return None;
         }
 
-        let cstr = CStr::from_ptr(newsym_raw as *const i8).to_owned();
+        let cstr = CStr::from_ptr(newsym_raw as *const c_char).to_owned();
         let newsym = string_from_cstring(cstr.as_bytes_with_nul());
 
         libmem_c::LM_FreeDemangleSymbol(newsym_raw);

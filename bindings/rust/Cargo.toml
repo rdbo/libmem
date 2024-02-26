@@ -1,6 +1,6 @@
 [package]
 name = "libmem"
-version = "4.4.0"
+version = "5.0.0-pre0"
 authors = ["rdbo"]
 edition = "2021"
 # rust-version: "1.64.0"
@@ -20,12 +20,14 @@ categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "o
 name = "libmem"
 
 [features]
-default = ["fetch", "static"]
+default = ["fetch"]
 static = []
-fetch = ["dep:reqwest"]
+fetch = ["static", "dep:reqwest", "dep:flate2", "dep:tar"] # Currently, this feature will not do dynamic linking
 
 [[bin]]
 name = "tests"
 
-[dependencies]
+[build-dependencies]
 reqwest = { version = "0.10", features = ["blocking"], optional = true }
+flate2 = { version = "1", optional = true }
+tar = { version = "0.4", optional = true }

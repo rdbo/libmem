@@ -305,7 +305,7 @@ unsafe fn test() {
     let pnumber = &number as *const i32;
     let ppnumber = &pnumber as *const *const i32 as lm_address_t;
 
-    let mut number_ptr = LM_DeepPointer::<i32>(ppnumber, vec![0, 0]).unwrap();
+    let number_ptr = LM_DeepPointer::<i32>(ppnumber, vec![0, 0]).unwrap();
     println!("[*] LM_DeepPointer result: {:?}", number_ptr);
     println!(
         "[*] Deep pointer value (expected: {}): {}",

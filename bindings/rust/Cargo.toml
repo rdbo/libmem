@@ -20,9 +20,12 @@ categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "o
 name = "libmem"
 
 [features]
+default = ["fetch", "static"]
 static = []
+fetch = ["dep:reqwest"]
 
 [[bin]]
 name = "tests"
 
 [dependencies]
+reqwest = { version = "0.10", features = ["blocking"], optional = true }

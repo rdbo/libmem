@@ -32,9 +32,6 @@ _LM_OpenProc(lm_pid_t pid,
 LM_PRIVATE lm_void_t
 _LM_CloseProc(HANDLE *handle);
 
-LM_PRIVATE lm_size_t
-_LM_GetProcessBitsEx(lm_pid_t pid);
-
 LM_PRIVATE lm_bool_t
 _LM_OpenThr(lm_tid_t tid,
 	    HANDLE  *hThread);

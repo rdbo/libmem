@@ -24,14 +24,8 @@ _LM_GetProcessPathEx(lm_pid_t   pid,
 		     lm_char_t *pathbuf,
 		     lm_size_t  maxlen);
 
-/* TODO: Unify this API! */
-#if LM_OS == LM_OS_WIN
-	LM_PRIVATE lm_size_t
-	_LM_GetProcessBitsEx(lm_pid_t pid);
-#else
-	LM_PRIVATE lm_size_t
-	_LM_GetProcessBitsEx(lm_char_t *elfpath);
-#endif
+LM_PRIVATE lm_size_t
+_LM_GetProcessBitsEx(lm_process_t *partial_proc);
 
 LM_PRIVATE lm_size_t
 _LM_GetNameFromPath(lm_char_t *path,

@@ -163,14 +163,14 @@ _LM_GetProcessPathEx(lm_pid_t   pid,
 /********************************/
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessBitsEx(lm_pid_t pid)
+_LM_GetProcessBitsEx(lm_process_t *partial_proc)
 {
 	BOOL IsWow64;
 	lm_size_t sysbits;
 	HANDLE hProcess;
 	lm_size_t bits = LM_BITS;
 
-	if (!_LM_OpenProc(pid, &hProcess))
+	if (!_LM_OpenProc(partial_proc->pid, &hProcess))
 		return bits;
 
 	if (!IsWow64Process(hProcess, &IsWow64))

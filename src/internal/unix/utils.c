@@ -53,11 +53,11 @@ _LM_GetElfBits(lm_char_t *path)
 }
 
 LM_PRIVATE lm_size_t
-_LM_GetProcessBitsEx(lm_char_t *elfpath)
+_LM_GetProcessBitsEx(lm_process_t *partial_proc)
 {
 	lm_size_t elf_bits;
 
-	elf_bits = _LM_GetElfBits(elfpath);
+	elf_bits = _LM_GetElfBits(partial_proc->path);
 	if (!elf_bits)
 		elf_bits = LM_BITS;
 

@@ -103,11 +103,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 		return LM_FALSE;
 
 	/* TODO: Unify different '_LM_GetProcessBitsEx' */
-#	if LM_OS == LM_OS_WIN
-	procbuf->bits = _LM_GetProcessBitsEx(procbuf->pid);
-#	else
-	procbuf->bits = _LM_GetProcessBitsEx(procbuf->path);
-#	endif
+	procbuf->bits = _LM_GetProcessBitsEx(procbuf);
 
 	return LM_TRUE;
 }

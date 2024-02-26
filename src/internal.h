@@ -40,6 +40,25 @@
 
 /* Internal wrappers used in functions that are different across platforms */
 LM_PRIVATE lm_bool_t
+_LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *pproc,
+						lm_void_t    *arg),
+		   lm_void_t         *arg);
+
+LM_PRIVATE lm_void_t
+_LM_GetSystemBits(lm_size_t *bits);
+
+/* TODO: Unify this API! */
+#if LM_OS == LM_OS_WIN
+	LM_PRIVATE lm_size_t
+	_LM_GetProcessBitsEx(lm_pid_t pid);
+#else
+	LM_PRIVATE lm_size_t
+	_LM_GetProcessBitsEx(lm_char_t *elfpath);
+#endif
+
+/********************************/
+
+LM_PRIVATE lm_bool_t
 _LM_EnumPages(lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
 					    lm_void_t *arg),
 	      lm_void_t          *arg);
@@ -55,6 +74,10 @@ _LM_GetPage(lm_address_t addr,
 	    lm_page_t   *pagebuf);
 
 /* Internal functions used throughout the codebase */
+/* TODO: Put them in a single place, e.g "utils.h" */
+LM_PRIVATE lm_time_t
+_LM_GetProcessStartTime(lm_pid_t pid);
+
 LM_PRIVATE lm_pid_t
 _LM_GetProcessId(lm_void_t);
 

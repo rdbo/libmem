@@ -38,13 +38,13 @@
 #include <elf.h>
 
 typedef struct {
-	 lm_int_t      syscall_num;
-	 lm_uintptr_t  arg0;
-	 lm_uintptr_t  arg1;
-	 lm_uintptr_t  arg2;
-	 lm_uintptr_t  arg3;
-	 lm_uintptr_t  arg4;
-	 lm_uintptr_t  arg5;
+	lm_int_t      syscall_num;
+	lm_uintptr_t  arg0;
+	lm_uintptr_t  arg1;
+	lm_uintptr_t  arg2;
+	lm_uintptr_t  arg3;
+	lm_uintptr_t  arg4;
+	lm_uintptr_t  arg5;
 } _lm_syscall_data_t;
 
 typedef struct {

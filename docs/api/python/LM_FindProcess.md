@@ -1,7 +1,7 @@
 # LM_FindProcess
 
 ```python
-def LM_FindProcess(procstr : str)
+def LM_FindProcess(procstr: str) -> Optional[lm_process_t]
 ```
 
 # Description

@@ -1,7 +1,7 @@
 #include <libmem/libmem.h>
 
 #define LOAD_STR " <LIBTEST LOADED> "
-#define UNLOAD_STR " <LIBTEST_UNLOADED> "
+#define UNLOAD_STR " <LIBTEST UNLOADED> "
 
 #if LM_OS == LM_OS_WIN
 BOOL APIENTRY

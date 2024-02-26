@@ -2,7 +2,7 @@ use std::env;
 
 fn main() {
     if cfg!(windows) {
-        if let Ok(path) = env::var("LIBMEM_SEARCH_PATH") {
+        if let Ok(path) = env::var("LIBMEM_DIR") {
             println!("cargo:rustc-link-search={}", path);
         }
 

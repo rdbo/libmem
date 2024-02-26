@@ -40,119 +40,6 @@ LM_EnumThreads(lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
 
 /********************************/
 
-#if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_bool_t
-_LM_EnumThreadsEx(const lm_process_t *pproc,
-		  lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
-						lm_void_t   *arg),
-		  lm_void_t          *arg)
-{
-	lm_bool_t ret = LM_FALSE;
-	HANDLE hSnap;
-	THREADENTRY32 entry;
-	lm_thread_t thread;
-
-	hSnap = CreateToolhelp32Snapshot(
-		TH32CS_SNAPTHREAD,
-		0
-	);
-
-	if (hSnap == INVALID_HANDLE_VALUE)
-		return ret;
-
-	entry.dwSize = sizeof(THREADENTRY32);
-
-	if (Thread32First(hSnap, &entry)) {
-		do {
-			lm_tid_t tid;
-
-			if (entry.th32OwnerProcessID !=
-			    pproc->pid)
-				continue;
-
-			thread.tid = (lm_tid_t)entry.th32ThreadID;
-
-			if (callback(&thread, arg) == LM_FALSE)
-				break;
-		} while (Thread32Next(hSnap, &entry));
-
-		ret = LM_TRUE;
-	}
-
-	CloseHandle(hSnap);
-
-	return ret;
-}
-#elif LM_OS == LM_OS_BSD
-typedef struct {
-	lm_pid_t pid;
-	lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr, lm_void_t *arg);
-	lm_void_t *arg;
-} _lm_enum_tids_t;
-
-LM_PRIVATE lm_bool_t LM_CALL
-_LM_EnumThreadsExCallback(const lm_process_t *pproc,
-			  lm_void_t          *arg)
-{
-	_lm_enum_tids_t *data = (_lm_enum_tids_t *)arg;
-	lm_thread_t thread;
-	/* if the given pid owns the current pid, it is its thread or it's the target process */
-	/* NOTE: this could be optimized by just calling the callback with the PID right away */
-	if (pproc->ppid == data->pid || pproc->pid == data->pid) {
-		thread.tid = (lm_tid_t)pproc->pid;
-		if (!data->callback(&thread, data->arg))
-			return LM_FALSE;
-	}
-	return LM_TRUE;
-}
-
-LM_PRIVATE lm_bool_t
-_LM_EnumThreadsEx(const lm_process_t *pproc,
-		  lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
-						lm_void_t   *arg),
-		  lm_void_t          *arg)
-{
-	_lm_enum_tids_t data;
-	data.pid = pproc->pid;
-	data.callback = callback;
-	data.arg = arg;
-	return LM_EnumProcesses(_LM_EnumThreadsExCallback, (lm_void_t *)&data);
-}
-#else
-LM_PRIVATE lm_bool_t
-_LM_EnumThreadsEx(const lm_process_t *pproc,
-		  lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
-						lm_void_t   *arg),
-		  lm_void_t          *arg)
-{
-	DIR *pdir;
-	struct dirent *pdirent;
-	lm_char_t task_path[LM_PATH_MAX] = { 0 };
-	lm_thread_t thread;
-
-	LM_SNPRINTF(task_path, LM_ARRLEN(task_path),
-		    LM_STR("/proc/%d/task"), pproc->pid);
-
-	pdir = opendir(task_path);
-	if (!pdir)
-		return LM_FALSE;
-		
-	while ((pdirent = readdir(pdir))) {
-		thread.tid = LM_ATOI(pdirent->d_name);
-
-		if (!thread.tid && LM_STRCMP(pdirent->d_name, "0"))
-			continue;
-
-		if (!callback(&thread, arg))
-			break;
-	}
-
-	closedir(pdir);
-
-	return LM_TRUE;
-}
-#endif
-
 LM_API lm_bool_t LM_CALL
 LM_EnumThreadsEx(const lm_process_t *pproc,
 		 lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
@@ -166,23 +53,6 @@ LM_EnumThreadsEx(const lm_process_t *pproc,
 }
 
 /********************************/
-
-#if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_bool_t
-_LM_GetThread(lm_thread_t *thrbuf)
-{
-	thrbuf->tid = (lm_tid_t)GetCurrentThreadId();
-	return LM_TRUE;
-}
-#else
-LM_PRIVATE lm_bool_t
-_LM_GetThread(lm_thread_t *thrbuf)
-{
-	/* the process id and the thread id are the same (threads are also processes) */
-	thrbuf->tid = (lm_tid_t)getpid();
-	return LM_TRUE;
-}
-#endif
 
 LM_API lm_bool_t LM_CALL
 LM_GetThread(lm_thread_t *thrbuf)
@@ -214,30 +84,6 @@ LM_GetThreadEx(const lm_process_t *pproc,
 }
 
 /********************************/
-
-#if LM_OS == LM_OS_WIN
-LM_PRIVATE lm_pid_t
-_LM_GetPidFromThread(const lm_thread_t *pthr)
-{
-	lm_pid_t pid = LM_PID_BAD;
-	HANDLE hThread;
-	if (!_LM_OpenThr(pthr->tid, &hThread))
-		return pid;
-
-	pid = (lm_pid_t)GetProcessIdOfThread(hThread);
-	if (!pid)
-		pid = LM_PID_BAD;
-
-	return pid;
-
-}
-#else
-LM_PRIVATE lm_pid_t
-_LM_GetPidFromThread(const lm_thread_t *pthr)
-{
-	return (lm_pid_t)pthr->tid;
-}
-#endif
 
 LM_API lm_bool_t LM_CALL
 LM_GetThreadProcess(const lm_thread_t *pthr,

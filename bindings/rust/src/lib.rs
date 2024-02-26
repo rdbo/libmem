@@ -25,7 +25,7 @@
 #![allow(non_snake_case)]
 
 use std::{
-    ffi::{CStr, CString, c_char},
+    ffi::{c_char, CStr, CString},
     fmt, mem, ptr,
 };
 

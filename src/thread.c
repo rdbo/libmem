@@ -22,10 +22,6 @@
 
 #include "internal.h"
 
-#if LM_OS != LM_OS_WIN
-#	include <dirent.h>
-#endif
-
 LM_API lm_bool_t LM_CALL
 LM_EnumThreads(lm_bool_t (LM_CALL *callback)(lm_thread_t *pthr,
 					     lm_void_t   *arg),

@@ -5,7 +5,7 @@ authors = ["rdbo"]
 edition = "2021"
 # rust-version: "1.64.0"
 description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)"
-documentation = "https://github.com/rdbo/libmem/blob/master/docs/DOCS.md"
+documentation = "https://github.com/rdbo/libmem/blob/master/docs/README.md"
 readme = "README.md"
 homepage = "https://github.com/rdbo/libmem"
 repository = "https://github.com/rdbo/libmem"

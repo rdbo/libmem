@@ -38,6 +38,23 @@
 #	endif
 #endif
 
+/* Internal wrappers used in functions that are different across platforms */
+LM_PRIVATE lm_bool_t
+_LM_EnumPages(lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
+					    lm_void_t *arg),
+	      lm_void_t          *arg);
+
+LM_PRIVATE lm_bool_t
+_LM_EnumPagesEx(const lm_process_t *pproc,
+		lm_bool_t (LM_CALL *callback)(lm_page_t *ppage,
+					      lm_void_t *arg),
+		lm_void_t          *arg);
+
+LM_PRIVATE lm_bool_t
+_LM_GetPage(lm_address_t addr,
+	    lm_page_t   *pagebuf);
+
+/* Internal functions used throughout the codebase */
 LM_PRIVATE lm_pid_t
 _LM_GetProcessId(lm_void_t);
 

@@ -50,12 +50,16 @@
 #define LM_CALL
 
 /* Constants */
-#define LM_FALSE (0)
-#define LM_TRUE  (1)
-#define LM_NULL  (0)
+#define LM_FALSE   (0)
+#define LM_TRUE    (1)
+#define LM_NULL    (0)
+#define LM_NULLPTR ((void *)LM_NULL)
+
+#define LM_PID_BAD ((lm_pid_t)(-1)) /* PID 0 is valid, so can't be used here. -1 could be valid, but it's unlikely */
+#define LM_ADDRESS_BAD ((lm_address_t)-1) /* Both 0 and -1 are a good idea here */
 
 #define LM_PATH_MAX (2048) /* Fits up to 512 4-byte UTF-8 characters */
-#define LM_INST_MAX (64)
+#define LM_INST_MAX (16) /* Maximum size of a single instruction */
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,7 +111,7 @@ typedef struct {
 	lm_pid_t  pid;
 	lm_pid_t  ppid;
 	lm_size_t size;
-	lm_time_t start_timestamp; /* Process start timestamp, in milliseconds since last boot */
+	lm_time_t start_time; /* Process start timestamp, in milliseconds since last boot */
 	lm_char_t path[LM_PATH_MAX];
 	lm_char_t name[LM_PATH_MAX];
 } lm_process_t;

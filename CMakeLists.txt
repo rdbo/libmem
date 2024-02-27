@@ -74,23 +74,15 @@ set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMA
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
-file(GLOB LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
+set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
+
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-	file(GLOB_RECURSE LIBMEM_INTERNAL_SRC "${LIBMEM_DIR}/src/internal/win/*.c")
-else()
-	file(GLOB_RECURSE LIBMEM_INTERNAL_SRC "${LIBMEM_DIR}/src/internal/unix/*.c")
-	if(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
-		file(GLOB_RECURSE LIBMEM_OS_SRC "${LIBMEM_DIR}/src/internal/linux/*.c")
-		set(LIBMEM_INTERNAL_SRC ${LIBMEM_INTERNAL_SRC} ${LIBMEM_OS_SRC})
-	elseif(${CMAKE_SYSTEM_NAME STREQUAL FreeBSD})
-		file(GLOB_RECURSE LIBMEM_OS_SRC "${LIBMEM_DIR}/src/internal/bsd/*.c")
-		set(LIBMEM_INTERNAL_SRC ${LIBMEM_INTERNAL_SRC} ${LIBMEM_OS_SRC})
-	endif()
+	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/linux/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/linux/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c")
 endif()
-set(LIBMEM_SRC
-	${LIBMEM_SRC}
-	${LIBMEM_INTERNAL_SRC}
-)
 set(LIBMEM_DEPS
 	capstone
 	keystone
@@ -117,7 +109,7 @@ if (LIBMEM_BUILD_STATIC)
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
-target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src")
+target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}")
 
 include_directories(${PROJECT_SOURCE_DIR}
 	${LIBMEM_INC}

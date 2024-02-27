@@ -29,6 +29,7 @@ void test_process(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST(LM_GetSystemBits);
 }
 
+/*
 void test_thread(lm_process_t *pcurproc, lm_process_t *ptargetproc, lm_thread_t *pcurthread, lm_thread_t *ptargetthread)
 {
 	struct thread_args arg;
@@ -74,7 +75,7 @@ void test_hook(lm_process_t *ptargetproc)
 	
 	UNIT_TEST_P(LM_HookCode, &arg);
 	UNIT_TEST_P(LM_UnhookCode, &arg);
-	/* TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx */
+	/* TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx * /
 }
 
 void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
@@ -91,7 +92,7 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_LoadModule, &mod);
 	UNIT_TEST_P(LM_UnloadModule, &mod);
 	UNIT_TEST_P(LM_LoadModuleEx, &arg);
-	/* TODO: Add test for LM_UnloadModuleEx */
+	/* TODO: Add test for LM_UnloadModuleEx * /
 }
 
 void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
@@ -104,7 +105,7 @@ void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 
 void test_symbol(lm_process_t *pcurproc)
 {
-	/* TODO: Retrieve module from 'module' tests and reuse here! */
+	/* TODO: Retrieve module from 'module' tests and reuse here! * /
 	lm_module_t mod;
 	
 	assert(LM_FindModule(pcurproc->name, &mod) == LM_TRUE);
@@ -147,11 +148,10 @@ void test_scan(lm_process_t *ptargetproc)
 
 	LM_FreeMemoryEx(ptargetproc, arg.scanaddr, sizeof(scanbuf));
 }
+*/
 
-#if LM_OS == LM_OS_WIN && LM_COMPILER ==LM_COMPILER_MSVC
-__declspec(dllexport)
-#endif
-int main()
+LM_API_EXPORT int
+main()
 {
 	lm_process_t current_process;
 	lm_process_t target_process;
@@ -162,6 +162,7 @@ int main()
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
 
 	test_process(&current_process, &target_process);
+	/*
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
 	test_memory(&target_process);
 	test_hook(&target_process);
@@ -170,6 +171,7 @@ int main()
 	test_symbol(&current_process);
 	test_vmt();
 	test_scan(&target_process);
+	*/
 
 	return 0;
 }

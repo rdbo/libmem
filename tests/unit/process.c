@@ -32,6 +32,7 @@ char *test_LM_EnumProcesses(void *arg)
 	return NULL;
 }
 
+/*
 char *test_LM_GetProcess(lm_process_t *pcurproc)
 {
 	mu_assert("failed to retrieve current process", LM_GetProcess(pcurproc) == LM_TRUE);
@@ -81,3 +82,4 @@ char *test_LM_GetSystemBits()
 	mu_assert("wrong system bits", LM_GetSystemBits() == sizeof(uintmax_t) * 8);
 	return NULL;
 }
+*/

@@ -1,17 +1,19 @@
 #include <libmem/libmem.h>
+#include <string.h>
+#include <stdio.h>
 
 #define CHECK_PROCESS(proc) ( \
 	(proc)->pid != LM_PID_BAD && \
-	LM_STRLEN((proc)->path) > 0 && \
-	LM_STRLEN((proc)->name) > 0 \
+	strlen((proc)->path) > 0 && \
+	strlen((proc)->name) > 0 \
 )
 
 #define EQUAL_PROCESSES(p1, p2) ( \
 	(p1)->pid == (p2)->pid && \
 	(p1)->ppid == (p2)->ppid && \
 	(p1)->start_time == (p2)->start_time && \
-	!LM_STRCMP((p1)->path, (p2)->path) && \
-	!LM_STRCMP((p1)->name, (p2)->name) \
+	!strcmp((p1)->path, (p2)->path) && \
+	!strcmp((p1)->name, (p2)->name) \
 )
 
 #define CHECK_THREAD(thread) ((thread)->tid != LM_TID_BAD)
@@ -21,8 +23,8 @@
 	(mod)->base != LM_ADDRESS_BAD && \
 	(mod)->end != LM_ADDRESS_BAD && \
 	(mod)->size > 0 && \
-	LM_STRLEN((mod)->path) > 0 && \
-	LM_STRLEN((mod)->name) > 0 \
+	strlen((mod)->path) > 0 && \
+	strlen((mod)->name) > 0 \
 )
 
 #define CHECK_PAGE(page) ( \

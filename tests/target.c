@@ -1,7 +1,7 @@
 #include <libmem/libmem.h>
 #include <stdio.h>
 
-#if LM_OS == LM_OS_WIN
+#ifdef _WIN32
 #	include <windows.h>
 #	define do_sleep() Sleep(1000)
 #else

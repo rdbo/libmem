@@ -110,7 +110,7 @@ typedef uint32_t lm_prot_t;
 typedef struct {
 	lm_pid_t  pid;
 	lm_pid_t  ppid;
-	lm_size_t size;
+	lm_size_t bits;
 	lm_time_t start_time; /* Process start timestamp, in milliseconds since last boot */
 	lm_char_t path[LM_PATH_MAX];
 	lm_char_t name[LM_PATH_MAX];
@@ -161,6 +161,25 @@ typedef struct {
 	lm_address_t  *vtable;
 	lm_vmtentry_t *entries;
 } lm_vmt_t;
+
+/*
+ * API guidelines
+ *
+ * 1. User facing functions should return when receiving bad parameters
+ * 2. Internal functions should 'assert' to check for bad parameters
+ * 3. Immutable struct pointers should be 'const'
+ * 4. Immutable strings should be 'lm_string_t'
+ * 5. Output variable pointers in functions should be at the end, unless
+      it doesn't make sense to put it there
+ * 6. All user facing functions should have the 'LM_API' prefix for
+      automatic importing and exporting
+ * 7. All user facing callables should have the 'LM_CALL' infix to ensure 
+      that the calling convention for all callables is the same.
+      This includes callbacks.
+ * 8. Functions that run callbacks should have an 'lm_void_t *arg' argument
+      so that the caller can pass values into the callback without globals
+      or hacks.
+ */
 
 /* Process API */
 LM_API lm_bool_t LM_CALL

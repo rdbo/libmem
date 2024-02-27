@@ -26,6 +26,9 @@
 #include <elfutils/elfutils.h>
 #include "consts.h"
 #include <stdio.h>
+#include <assert.h>
+#include <limits.h>
+#include <string.h>
 #include <dirent.h>
 #include <unistd.h>
 
@@ -110,6 +113,9 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 					       lm_void_t    *arg),
 		 lm_void_t          *arg)
 {
+	if (callback == NULL)
+		return LM_FALSE;
+
 	struct dirent *dirent;
 	DIR *dir;
 	lm_process_t process;
@@ -125,7 +131,7 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 
 		/* Since 'atoi' returns 0 on failure, we need to check if the PID is 0, or 
 		 * the function actually failed. If the PID is invalid, skip */
-		if (!process.pid && LM_STRCMP(dirent->d_name, "0"))
+		if (!process.pid && strcmp(dirent->d_name, "0"))
 			continue;
 
 		if (!get_stat_info(process.pid, &process.ppid, &process.start_time)) {
@@ -134,6 +140,10 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 
 		if (get_process_path(process.pid, process.path, sizeof(process.path)) == 0)
 			continue;
+
+		if (get_name_from_path(process.path, process.name, sizeof(process.name)) == 0) {
+			continue;
+		}
 
 		process.bits = sizeof(void *); /* Assume target process bits == size of pointer by default */
 		elf = fopen(process.path, "r");

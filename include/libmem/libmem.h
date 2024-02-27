@@ -165,20 +165,33 @@ typedef struct {
 /*
  * API guidelines
  *
- * 1. User facing functions should return when receiving bad parameters
- * 2. Internal functions should 'assert' to check for bad parameters
- * 3. Immutable struct pointers should be 'const'
- * 4. Immutable strings should be 'lm_string_t'
- * 5. Output variable pointers in functions should be at the end, unless
-      it doesn't make sense to put it there
- * 6. All user facing functions should have the 'LM_API' prefix for
-      automatic importing and exporting
- * 7. All user facing callables should have the 'LM_CALL' infix to ensure 
-      that the calling convention for all callables is the same.
-      This includes callbacks.
- * 8. Functions that run callbacks should have an 'lm_void_t *arg' argument
-      so that the caller can pass values into the callback without globals
-      or hacks.
+ * 1.  User facing functions should return when receiving bad parameters
+ *
+ * 2.  Internal functions should 'assert' to check for bad parameters
+ *
+ * 3.  Immutable struct pointers should be 'const'
+ *
+ * 4.  Immutable strings should be 'lm_string_t'
+ *
+ * 5.  Output variable pointers in functions should be at the end, unless
+ *     it doesn't make sense to put it there
+ *
+ * 6.  All user facing functions should have the 'LM_API' prefix for
+ *     automatic importing and exporting
+ *
+ * 7.  All user facing callables should have the 'LM_CALL' infix to ensure 
+ *     that the calling convention for all callables is the same.
+ *     This includes callbacks.
+ *
+ * 8.  Functions that run callbacks should have an 'lm_void_t *arg' argument
+ *     so that the caller can pass values into the callback without globals
+ *     or hacks.
+ *
+ * 9.  All user facing functions should have the 'LM_' prefix before their name,
+ *     and after that, they should be PascalCase
+ *
+ * 10. All user facing types should have the 'lm_' prefix before their name,
+ *     and after that, they should be snake_case
  */
 
 /* Process API */

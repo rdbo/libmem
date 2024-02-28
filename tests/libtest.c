@@ -5,6 +5,8 @@
 #define UNLOAD_STR " <LIBTEST UNLOADED> "
 
 #ifdef _WIN32
+#include <windows.h>
+
 BOOL APIENTRY
 DllMain(HMODULE hModule,
 	DWORD   dwReason,

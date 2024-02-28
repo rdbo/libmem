@@ -25,6 +25,7 @@
 
 #include <libmem/libmem.h>
 #include <winutils/winutils.h>
+#include <assert.h>
 
 typedef lm_bool_t (LM_CALL *lm_enum_processes_cb_t)(lm_process_t *process, lm_void_t *arg);
 
@@ -165,7 +166,8 @@ LM_GetProcessEx(lm_pid_t      pid,
 	
 	process_out->pid = pid;
 
-	if (!open_process(pid, PROCESS_QUERY_LIMITED_INFORMATION))
+	hproc = open_process(pid, PROCESS_QUERY_LIMITED_INFORMATION);
+	if (!hproc)
 		return LM_FALSE;
 
 	if (!get_process_entry(process_out->pid, &entry))

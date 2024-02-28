@@ -197,9 +197,9 @@ enum_process_entries(BOOL (*callback)(PROCESSENTRY32W *entry, void *arg), void *
 			break;
 	} while (Process32NextW(hsnap, &entry));
 
-	ret = LM_TRUE;
+	result = TRUE;
 CLEAN_EXIT:
 	CloseHandle(hsnap);
 
-	return ret;
+	return result;
 }

@@ -27,10 +27,10 @@
 #include <stdlib.h>
 
 char *
-wcstoutf8(WCHAR *widestr, char *utf8buf);
+wcstoutf8(WCHAR *widestr, char *utf8buf, size_t buflen);
 
 WCHAR *
-utf8towcs(char *utf8str, WCHAR *wcsbuf);
+utf8towcs(char *utf8str, WCHAR *wcsbuf, size_t buflen);
 
 HANDLE
 open_process(DWORD pid, DWORD access);

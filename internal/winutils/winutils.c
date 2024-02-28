@@ -23,6 +23,7 @@
 #include "winutils.h"
 #include <assert.h>
 #include <ntstatus.h>
+#include <stringapiset.h>
 
 /* NOTE: If 'utf8buf' is NULL, the function will allocate the
  *       string dynamically. It must be 'free'd by the caller. */
@@ -76,7 +77,7 @@ utf8towcs(char *utf8str, WCHAR *wcsbuf, size_t buflen)
 	}
 
 	/* This function automatically inserts the NULL terminator when passing -1 to 'cchWideChar' */
-	if (WideCharToMultiByte(CP_UTF8, 0, utf8str, -1, wcsbuf, buflen) == 0) {
+	if (MultiByteToWideChar(CP_UTF8, 0, utf8str, -1, wcsbuf, buflen) == 0) {
 		if (is_allocated)
 			free(wcsbuf);
 		return NULL;
@@ -103,7 +104,7 @@ close_handle(HANDLE handle)
 size_t
 get_system_bits()
 {
-	lm_size_t bits = sizeof(void *); /* Assume system bits == process bits by default */
+	size_t bits = sizeof(void *); /* Assume system bits == process bits by default */
 	SYSTEM_INFO sysinfo = { 0 };
 
 	GetNativeSystemInfo(&sysinfo);

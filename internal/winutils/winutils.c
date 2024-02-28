@@ -174,3 +174,33 @@ get_process_start_time(HANDLE hproc, uint64_t *timestamp_out)
 
 	return TRUE;
 }
+
+BOOL
+enum_process_entries(BOOL (*callback)(PROCESSENTRY32W *entry, void *arg), void *arg)
+{
+	BOOL result = FALSE;
+	HANDLE hsnap;
+	PROCESSENTRY32W entry;
+	HANDLE hproc;
+
+	assert(callback != NULL);
+
+	hsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hsnap == INVALID_HANDLE_VALUE)
+		return result;
+
+	entry.dwSize = sizeof(entry);
+	if (!Process32FirstW(hsnap, &entry))
+		goto CLEAN_EXIT;
+
+	do {
+		if (!callback(&entry, arg))
+			break;
+	} while (Process32NextW(hsnap, &entry));
+
+	ret = LM_TRUE;
+CLEAN_EXIT:
+	CloseHandle(hsnap);
+
+	return ret;
+}

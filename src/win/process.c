@@ -23,64 +23,125 @@
 #include <libmem/libmem.h>
 #include <winutils/winutils.h>
 
+typedef lm_bool_t (LM_CALL *lm_enum_processes_cb_t)(lm_process_t *process, lm_void_t *arg);
+
+typedef struct {
+	lm_enum_processes_cb_t callback;
+	lm_void_t *arg;
+} enum_processes_t;
+
+BOOL
+enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
+{
+	lm_process_t process;
+	WCHAR path[MAX_PATH + 1] = { 0 };
+
+	enum_processes_t *parg = (enum_processes_t *)arg;
+
+	process.pid = (lm_pid_t)entry->th32ProcessID;
+	process.ppid = (lm_pid_t)entry->th32ParentProcessID;
+
+	hproc = open_process(process.pid, PROCESS_QUERY_LIMITED_INFORMATION);
+	if (!hproc)
+		return TRUE;
+
+	if (!wcstoutf8(entry->szExeFile, process.name, sizeof(process.name)))
+		goto CLOSE_CONTINUE;
+
+	if (!QueryFullProcessImageNameW(hproc, path, LM_ARRLEN(path)))
+		goto CLOSE_CONTINUE;
+
+	if (!wcstoutf8(path, process.path, sizeof(process.path)))
+		goto CLOSE_CONTINUE;
+
+	if (!get_process_start_time(hproc, &process.start_time))
+		goto CLOSE_CONTINUE;
+
+	process.bits = get_process_bits(hproc);
+
+	if (!parg->callback(&process, parg->arg))
+		return FALSE;
+
+CLOSE_CONTINUE:
+	close_handle(hproc);
+	return TRUE;
+}
+
 LM_API lm_bool_t LM_CALL
 LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 					       lm_void_t    *arg),
 		 lm_void_t          *arg)
 {
-	lm_bool_t result = LM_FALSE;
-	HANDLE hsnap;
-	PROCESSENTRY32W entry;
-	lm_process_t process;
-	HANDLE hproc;
-	WCHAR path[MAX_PATH + 1] = { 0 };
+	enum_processes_t parg;
 
-	if (!callback)
-		return result;
+	parg.callback = callback;
+	parg.arg = arg;
 
-	hsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (hsnap == INVALID_HANDLE_VALUE)
-		return result;
-
-	entry.dwSize = sizeof(entry);
-	if (!Process32FirstW(hsnap, &entry))
-		goto CLEAN_EXIT;
-
-	do {
-		process.pid = (lm_pid_t)entry.th32ProcessID;
-		process.ppid = (lm_pid_t)entry.th32ParentProcessID;
-
-		hproc = open_process(process.pid, PROCESS_QUERY_LIMITED_INFORMATION);
-		if (!hproc)
-			continue;
-
-		if (!wcstoutf8(entry.szExeFile, process.name, sizeof(process.name)))
-			goto CLOSE_CONTINUE;
-
-		if (!QueryFullProcessImageNameW(hproc, path, LM_ARRLEN(path)))
-			goto CLOSE_CONTINUE;
-
-		if (!wcstoutf8(path, process.path, sizeof(process.path)))
-			goto CLOSE_CONTINUE;
-
-		if (!get_process_start_time(hproc, &process.start_time))
-			goto CLOSE_CONTINUE;
-
-		process.bits = get_process_bits(hproc);
-
-		if (!callback(&process, arg))
-			break;
-
-	CLOSE_CONTINUE:
-		close_handle(hproc);
-	} while (Process32NextW(hsnap, &entry));
-
-	ret = LM_TRUE;
-CLEAN_EXIT:
-	CloseHandle(hsnap);
-
-	return ret;
+	return enum_process_entries(enum_processes_callback, (void *)&parg) ? LM_TRUE : LM_FALSE;
 }
 
 /********************************/
 
+typedef struct {
+	lm_pid_t pid;
+	PROCESSENTRY32W *entry;
+} get_process_entry_t;
+
+BOOL
+get_process_entry_callback(PROCESSENTRY32W *entry, void *arg)
+{
+	get_process_entry_t *parg = (get_process_entry_t *)arg;
+
+	if ((lm_pid_t)entry->th32ProcessID != parg->pid)
+		return TRUE;
+
+	*parg->entry = entry;
+
+	return FALSE;
+}
+
+lm_bool_t
+get_process_entry(lm_pid_t pid, PROCESSENTRY32W *entry)
+{
+	get_process_entry_t *parg;
+
+	assert(pid != LM_PID_BAD && entry != NULL);
+
+	parg.pid = pid;
+	parg->entry = entry;
+	parg->entry->th32ProcessID = LM_PID_BAD;
+
+	enum_process_entries(get_process_entry_callback, (void *)&parg);
+
+	return entry->th32ProcessID == pid ? LM_TRUE : LM_FALSE;
+}
+
+LM_API lm_bool_t LM_CALL
+LM_GetProcess(lm_process_t *process_out)
+{
+	WCHAR path[MAX_PATH + 1] = { 0 };
+	DWORD dwlen;
+	PROCESSENTRY32W entry;
+	
+	process_out->pid = (lm_pid_t)GetCurrentProcessId();
+
+	if (!get_process_entry(process_out->pid, &entry))
+		return LM_FALSE;
+
+	process_out->ppid = (lm_pid_t)entry.th32ParentProcessID;
+
+	if (!wcstoutf8(entry.szExeFile, process.name, sizeof(process.name)))
+		return LM_FALSE;
+
+	dwlen = GetModuleFileNameW(NULL, path, LM_ARRLEN(path));
+	if (dwlen == 0)
+		return LM_FALSE;
+
+	if (!wcstoutf8(path, process.path, sizeof(process.path)))
+		return LM_FALSE;
+
+	if (!get_process_start_time(GetCurrentProcess(), &process.start_time))
+		return LM_FALSE;
+
+	process.bits = sizeof(void *); /* Assume process bits == size of pointer */
+}

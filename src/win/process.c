@@ -39,7 +39,7 @@ enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 	lm_process_t process;
 	HANDLE hproc;
 	WCHAR path[MAX_PATH + 1] = { 0 };
-	size_t path_len = LM_ARRLEN(path);
+	DWORD path_len = LM_ARRLEN(path);
 
 	enum_processes_t *parg = (enum_processes_t *)arg;
 
@@ -159,7 +159,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 {
 	lm_bool_t result = LM_FALSE;
 	WCHAR path[MAX_PATH + 1] = { 0 };
-	size_t path_len = LM_ARRLEN(path);
+	DWORD path_len = LM_ARRLEN(path);
 	PROCESSENTRY32W entry;
 	HANDLE hproc;
 	
@@ -177,7 +177,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 		goto CLEAN_EXIT;
 
 	if (!QueryFullProcessImageNameW(hproc, 0, path, &path_len))
-		goto CLOSE_CONTINUE;
+		goto CLEAN_EXIT;
 
 	if (!wcstoutf8(path, process_out->path, sizeof(process_out->path)))
 		goto CLEAN_EXIT;

@@ -23,8 +23,10 @@
 #ifndef WINUTILS_H
 #define WINUTILS_H
 
-#include <windows.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <windows.h>
+#include <psapi.h>
 
 char *
 wcstoutf8(WCHAR *widestr, char *utf8buf, size_t buflen);

@@ -26,5 +26,7 @@ jobs:
         run: |
           dir
           dir .\build
+          echo "Starting target..."
           start .\build\tests\target.exe
+          echo "Starting unit tests..."
           .\build\tests\unit.exe

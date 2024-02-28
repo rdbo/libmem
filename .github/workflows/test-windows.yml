@@ -17,7 +17,7 @@ jobs:
       - name: Configure and Build
         run: |
           mkdir build
-          cmake -S . -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DLIBMEM_BUILD_TESTS=ON
+          cmake -S . -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DLIBMEM_BUILD_TESTS=ON -DLIBMEM_BUILD_STATIC=ON
           cd build
           nmake
           cd ..

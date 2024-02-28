@@ -39,6 +39,7 @@ enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 	lm_process_t process;
 	HANDLE hproc;
 	WCHAR path[MAX_PATH + 1] = { 0 };
+	size_t path_len = LM_ARRLEN(path);
 
 	enum_processes_t *parg = (enum_processes_t *)arg;
 
@@ -52,7 +53,7 @@ enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 	if (!wcstoutf8(entry->szExeFile, process.name, sizeof(process.name)))
 		goto CLOSE_CONTINUE;
 
-	if (!QueryFullProcessImageNameW(hproc, 0, path, LM_ARRLEN(path)))
+	if (!QueryFullProcessImageNameW(hproc, 0, path, &path_len))
 		goto CLOSE_CONTINUE;
 
 	if (!wcstoutf8(path, process.path, sizeof(process.path)))
@@ -158,6 +159,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 {
 	lm_bool_t result = LM_FALSE;
 	WCHAR path[MAX_PATH + 1] = { 0 };
+	size_t path_len = LM_ARRLEN(path);
 	PROCESSENTRY32W entry;
 	HANDLE hproc;
 	
@@ -171,22 +173,22 @@ LM_GetProcessEx(lm_pid_t      pid,
 
 	process_out->ppid = (lm_pid_t)entry.th32ParentProcessID;
 
-	if (!wcstoutf8(entry.szExeFile, process.name, sizeof(process.name)))
+	if (!wcstoutf8(entry.szExeFile, process_out->name, sizeof(process_out->name)))
 		goto CLEAN_EXIT;
 
-	if (!QueryFullProcessImageNameW(hproc, 0, path, LM_ARRLEN(path)))
+	if (!QueryFullProcessImageNameW(hproc, 0, path, &path_len))
 		goto CLOSE_CONTINUE;
 
-	if (!wcstoutf8(path, process.path, sizeof(process.path)))
+	if (!wcstoutf8(path, process_out->path, sizeof(process_out->path)))
 		goto CLEAN_EXIT;
 
-	if (!get_process_start_time(GetCurrentProcess(), &process.start_time))
+	if (!get_process_start_time(GetCurrentProcess(), &process_out->start_time))
 		goto CLEAN_EXIT;
 
 	result = LM_TRUE;
 CLEAN_EXIT:
 	close_handle(hproc);
-	process.bits = sizeof(void *); /* Assume process bits == size of pointer */
+	process_out->bits = sizeof(void *); /* Assume process bits == size of pointer */
 	return result;
 }
 

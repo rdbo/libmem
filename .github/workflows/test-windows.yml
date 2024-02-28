@@ -11,6 +11,9 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Resolve Visual Studio Build Tools
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Configure and Build
         run: |
           mkdir build

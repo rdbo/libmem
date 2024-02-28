@@ -27,6 +27,9 @@
 #include <stdint.h>
 #include <windows.h>
 #include <psapi.h>
+#include <tlhelp32.h>
+#include <winternl.h>
+#include <ntstatus.h>
 
 char *
 wcstoutf8(WCHAR *widestr, char *utf8buf, size_t buflen);

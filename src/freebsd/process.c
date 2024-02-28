@@ -155,3 +155,11 @@ CLOSE_EXIT:
 	procstat_close(ps);
 	return result;
 }
+
+/********************************/
+
+LM_API lm_size_t LM_CALL
+LM_GetSystemBits(lm_void_t)
+{
+	return (lm_size_t)get_system_bits();
+}

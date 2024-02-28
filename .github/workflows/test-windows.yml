@@ -1,0 +1,24 @@
+name: Windows Build/Test
+
+on: [workflow_dispatch]
+
+jobs:
+  build-and-test:
+    runs-on: windows-2019
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Configure and Build
+        run: |
+          mkdir build
+          cmake -S . -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DLIBMEM_BUILD_TESTS=ON
+          cd build
+          nmake
+          cd ..
+
+      - name: Run Unit Tests
+        run: |
+          .\tools\unit_test.bat

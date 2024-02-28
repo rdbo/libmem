@@ -23,7 +23,8 @@ jobs:
           cd ..
 
       - name: Run Unit Tests
-        shell: pwsh
         run: |
-          Start-Process .\build\tests\target.exe
+          dir
+          dir .\build
+          start /b .\build\tests\target.exe
           .\build\tests\unit.exe

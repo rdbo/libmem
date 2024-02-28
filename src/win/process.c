@@ -41,8 +41,9 @@ enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 	HANDLE hproc;
 	WCHAR path[MAX_PATH + 1] = { 0 };
 	DWORD path_len = LM_ARRLEN(path);
-
 	enum_processes_t *parg = (enum_processes_t *)arg;
+
+	assert(entry != NULL && parg != NULL);
 
 	process.pid = (lm_pid_t)entry->th32ProcessID;
 	process.ppid = (lm_pid_t)entry->th32ParentProcessID;
@@ -101,6 +102,8 @@ get_process_entry_callback(PROCESSENTRY32W *entry, void *arg)
 {
 	get_process_entry_t *parg = (get_process_entry_t *)arg;
 
+	assert(entry != NULL && parg != NULL);
+
 	if ((lm_pid_t)entry->th32ProcessID != parg->pid)
 		return TRUE;
 
@@ -130,6 +133,9 @@ LM_GetProcess(lm_process_t *process_out)
 {
 	WCHAR path[MAX_PATH + 1] = { 0 };
 	PROCESSENTRY32W entry;
+
+	if (!process_out)
+		return LM_FALSE;
 	
 	process_out->pid = (lm_pid_t)GetCurrentProcessId();
 
@@ -166,6 +172,9 @@ LM_GetProcessEx(lm_pid_t      pid,
 	DWORD path_len = LM_ARRLEN(path);
 	PROCESSENTRY32W entry;
 	HANDLE hproc;
+
+	if (pid == LM_PID_BAD || !process_out)
+		return LM_FALSE;
 	
 	process_out->pid = pid;
 

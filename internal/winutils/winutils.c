@@ -121,7 +121,7 @@ get_process_bits(HANDLE hproc)
 	BOOL is_wow64;
 	size_t bits;
 
-	assert(hproc != INVALID_HANDLE_VALUE);
+	assert(hproc != NULL);
 
 	bits = get_system_bits();
 
@@ -158,7 +158,7 @@ get_process_start_time(HANDLE hproc, uint64_t *timestamp_out)
 	uint64_t last_boot;
 	uint64_t timestamp;
 
-	assert(hproc != INVALID_HANDLE_VALUE && timestamp_out != NULL);
+	assert(hproc != NULL && timestamp_out != NULL);
 
 	/* Get the last boot time */
 	if (NtQuerySystemInformation(SystemTimeOfDayInformation, &systime, sizeof(systime), NULL) != STATUS_SUCCESS)

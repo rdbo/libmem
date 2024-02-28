@@ -55,9 +55,6 @@ set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/s
 set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
 set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
 set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
-set(LIEF_DIR "${EXTERNAL_DEPENDENCIES_DIR}/LIEF")
-set(LIEF_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/lief-project-prefix/src/lief-project-build")
-set(LIEF_INC "${LIEF_DIR}/include" "${LIEF_IMPORT_DIR}/include")
 set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
 set(LLVM_INC "${LLVM_DIR}/include")
 set(INJECTOR_DIR "${EXTERNAL_DEPENDENCIES_DIR}/injector")
@@ -68,8 +65,6 @@ add_library(capstone STATIC IMPORTED)
 set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
 add_library(keystone STATIC IMPORTED)
 set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
-add_library(LIEF STATIC IMPORTED)
-set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}LIEF${CMAKE_STATIC_LIBRARY_SUFFIX})
 # End of external dependencies
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
@@ -86,7 +81,6 @@ endif()
 set(LIBMEM_DEPS
 	capstone
 	keystone
-	LIEF
 	llvm
 )
 
@@ -115,7 +109,6 @@ include_directories(${PROJECT_SOURCE_DIR}
 	${LIBMEM_INC}
 	${CAPSTONE_INC}
 	${KEYSTONE_INC}
-	${LIEF_INC}
 	${LLVM_INC}
 	${INJECTOR_INC}
 )
@@ -130,7 +123,6 @@ target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem
 	capstone-engine
 	keystone-engine
-	lief-project
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)

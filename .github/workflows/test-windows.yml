@@ -26,5 +26,5 @@ jobs:
         run: |
           dir
           dir .\build
-          start /b .\build\tests\target.exe
+          start .\build\tests\target.exe
           .\build\tests\unit.exe

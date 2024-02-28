@@ -47,4 +47,7 @@ get_process_bits(HANDLE hproc);
 BOOL
 get_process_start_time(HANDLE hproc, uint64_t *timestamp_out);
 
+BOOL
+enum_process_entries(BOOL (*callback)(PROCESSENTRY32W *entry, void *arg), void *arg);
+
 #endif

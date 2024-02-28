@@ -6,10 +6,6 @@
 	path = external/keystone
 	url = https://github.com/keystone-engine/keystone
 	branch = master
-[submodule "LIEF"]
-	path = external/LIEF
-	url = https://github.com/lief-project/LIEF
-	branch = master
 [submodule "injector"]
 	path = external/injector
 	url = https://github.com/rdbo/injector

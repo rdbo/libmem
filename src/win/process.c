@@ -80,6 +80,9 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 {
 	enum_processes_t parg;
 
+	if (!callback)
+		return LM_FALSE;
+
 	parg.callback = callback;
 	parg.arg = arg;
 

@@ -22,6 +22,7 @@
 
 #include "winutils.h"
 #include <assert.h>
+#include <ntstatus.h>
 
 /* NOTE: If 'utf8buf' is NULL, the function will allocate the
  *       string dynamically. It must be 'free'd by the caller. */
@@ -85,16 +86,91 @@ utf8towcs(char *utf8str, WCHAR *wcsbuf, size_t buflen)
 }
 
 HANDLE
-open_process(DWORD pid)
+open_process(DWORD pid, DWORD access)
 {
 	if (pid == GetCurrentProcessId())
 		return GetCurrentProcess();
 
-	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	return OpenProcess(access, FALSE, pid);
 }
 
 void
 close_handle(HANDLE handle)
 {
 	CloseHandle(handle);
+}
+
+size_t
+get_system_bits()
+{
+	lm_size_t bits = sizeof(void *); /* Assume system bits == process bits by default */
+	SYSTEM_INFO sysinfo = { 0 };
+
+	GetNativeSystemInfo(&sysinfo);
+	switch (sysinfo.wProcessorArchitecture) {
+	case PROCESSOR_ARCHITECTURE_AMD64:
+	case PROCESSOR_ARCHITECTURE_ARM64:
+		bits = 64;
+	}
+
+	return bits;
+}
+
+size_t
+get_process_bits(HANDLE hproc)
+{
+	BOOL is_wow64;
+	size_t bits;
+
+	assert(hproc != INVALID_HANDLE_VALUE);
+
+	bits = get_system_bits();
+
+	if (!IsWow64Process(hproc, &is_wow64))
+		return bits;
+
+	if (is_wow64)
+		bits = 32;
+
+	return bits;
+}
+
+uint64_t
+filetime_to_number(FILETIME *filetime)
+{
+	uint64_t number = 0;
+
+	/* The filetime struct is not little endian, so we need to
+	 * assign the low and high parts manually */
+	((uint32_t *)&number)[1] = filetime->dwLowDateTime;
+	((uint32_t *)&number)[0] = filetime->dwHighDateTime;
+
+	return number;
+}
+
+BOOL
+get_process_start_time(HANDLE hproc, uint64_t *timestamp_out)
+{
+	SYSTEM_TIMEOFDAY_INFORMATION systime;
+	FILETIME creation_time;
+	FILETIME tmp;
+	uint64_t last_boot;
+	uint64_t timestamp;
+
+	assert(hproc != INVALID_HANDLE_VALUE && timestamp_out != NULL);
+
+	/* Get the last boot time */
+	if (NtQuerySystemInformation(SystemTimeOfDayInformation, &systime, sizeof(systime), NULL) != STATUS_SUCCESS)
+		return FALSE;
+
+	if (!GetProcessTimes(hproc, &creation_time, &tmp, &tmp, &tmp))
+		return FALSE;
+
+	last_boot = filetime_to_number((FILETIME *)&systime);
+	timestamp = filetime_to_number(&creation_time) - last_boot;
+
+	/* Convert timestamp to milliseconds */
+	*timestamp_out = (uint64_t)(timestamp / 10000.0L);
+
+	return TRUE;
 }

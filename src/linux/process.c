@@ -77,7 +77,7 @@ get_stat_info(lm_pid_t pid, lm_pid_t *ppid_out, lm_time_t *start_time_out)
 
 		/* Convert ticks to milliseconds */
 		ticks_per_sec = sysconf(_SC_CLK_TCK);
-		*start_time_out = (lm_time_t)(starttime * (ticks_per_sec / 1000.0l));
+		*start_time_out = (lm_time_t)(starttime * (ticks_per_sec / 1000.0L));
 	}
 
 	result = LM_TRUE;

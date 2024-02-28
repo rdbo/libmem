@@ -33,9 +33,18 @@ WCHAR *
 utf8towcs(char *utf8str, WCHAR *wcsbuf);
 
 HANDLE
-open_process(DWORD pid);
+open_process(DWORD pid, DWORD access);
 
 void
 close_handle(HANDLE handle);
+
+size_t
+get_system_bits();
+
+size_t
+get_process_bits(HANDLE hproc);
+
+BOOL
+get_process_start_time(HANDLE hproc, uint64_t *timestamp_out);
 
 #endif

@@ -61,6 +61,9 @@
 #define LM_PATH_MAX (2048) /* Fits up to 512 4-byte UTF-8 characters */
 #define LM_INST_MAX (16) /* Maximum size of a single instruction */
 
+/* Helpers */
+#define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+
 #ifdef __cplusplus
 extern "C" {
 #endif

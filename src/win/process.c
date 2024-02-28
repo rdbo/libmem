@@ -20,6 +20,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* TODO: Perhaps make abstraction for getting a 'lm_process_t' with a PROCESSENTRY32W,
+ *       since that happens pretty often */
+
 #include <libmem/libmem.h>
 #include <winutils/winutils.h>
 
@@ -120,7 +123,6 @@ LM_API lm_bool_t LM_CALL
 LM_GetProcess(lm_process_t *process_out)
 {
 	WCHAR path[MAX_PATH + 1] = { 0 };
-	DWORD dwlen;
 	PROCESSENTRY32W entry;
 	
 	process_out->pid = (lm_pid_t)GetCurrentProcessId();
@@ -133,8 +135,7 @@ LM_GetProcess(lm_process_t *process_out)
 	if (!wcstoutf8(entry.szExeFile, process.name, sizeof(process.name)))
 		return LM_FALSE;
 
-	dwlen = GetModuleFileNameW(NULL, path, LM_ARRLEN(path));
-	if (dwlen == 0)
+	if (GetModuleFileNameW(NULL, path, LM_ARRLEN(path)) == 0)
 		return LM_FALSE;
 
 	if (!wcstoutf8(path, process.path, sizeof(process.path)))
@@ -144,4 +145,54 @@ LM_GetProcess(lm_process_t *process_out)
 		return LM_FALSE;
 
 	process.bits = sizeof(void *); /* Assume process bits == size of pointer */
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_GetProcessEx(lm_pid_t      pid,
+		lm_process_t *process_out)
+{
+	lm_bool_t result = LM_FALSE;
+	WCHAR path[MAX_PATH + 1] = { 0 };
+	PROCESSENTRY32W entry;
+	HANDLE hproc;
+	
+	process_out->pid = pid;
+
+	if (!open_process(pid, PROCESS_QUERY_LIMITED_INFORMATION))
+		return LM_FALSE;
+
+	if (!get_process_entry(process_out->pid, &entry))
+		goto CLEAN_EXIT;
+
+	process_out->ppid = (lm_pid_t)entry.th32ParentProcessID;
+
+	if (!wcstoutf8(entry.szExeFile, process.name, sizeof(process.name)))
+		goto CLEAN_EXIT;
+
+	if (!QueryFullProcessImageNameW(hproc, path, LM_ARRLEN(path)))
+		goto CLOSE_CONTINUE;
+
+	if (!wcstoutf8(path, process.path, sizeof(process.path)))
+		goto CLEAN_EXIT;
+
+	if (!get_process_start_time(GetCurrentProcess(), &process.start_time))
+		goto CLEAN_EXIT;
+
+	result = LM_TRUE;
+CLEAN_EXIT:
+	close_handle(hproc);
+	process.bits = sizeof(void *); /* Assume process bits == size of pointer */
+	return result;
+}
+
+/********************************/
+
+LM_API lm_size_t LM_CALL
+LM_GetSystemBits(lm_void_t)
+{
+	return (lm_size_t)get_system_bits();
 }

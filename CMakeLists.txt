@@ -79,9 +79,9 @@ set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
-	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/linux/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c")
+	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/linux/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/linux/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c")
+	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c")
 endif()
 set(LIBMEM_DEPS
 	capstone

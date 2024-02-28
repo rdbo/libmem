@@ -41,7 +41,6 @@ char *test_LM_GetProcess(lm_process_t *pcurproc)
 	return NULL;
 }
 
-/*
 char *test_LM_GetProcessEx(lm_process_t *pcurproc)
 {
 	lm_process_t proc;
@@ -82,4 +81,3 @@ char *test_LM_GetSystemBits()
 	mu_assert("wrong system bits", LM_GetSystemBits() == sizeof(uintmax_t) * 8);
 	return NULL;
 }
-*/

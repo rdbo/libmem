@@ -200,3 +200,50 @@ LM_GetProcess(lm_process_t *process_out)
 
 	return LM_TRUE;
 }
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_GetProcessEx(lm_pid_t      pid,
+		lm_process_t *process_out)
+{
+	if (pid == LM_PID_BAD || !process_out)
+		return LM_FALSE;
+	
+	process_out->pid = pid;
+
+	if (get_process_path(process_out->pid, process_out->path, sizeof(process_out->path)) == 0) {
+		return LM_FALSE;
+	}
+
+	if (get_name_from_path(process_out->path, process_out->name, sizeof(process_out->name)) == 0) {
+		return LM_FALSE;
+	}
+
+	if (!get_stat_info(process_out->pid, &process_out->ppid, &process_out->start_time)) {
+		return LM_FALSE;
+	}
+
+	process_out->bits = sizeof(void *);
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_FindProcess(lm_string_t   process_name,
+	       lm_process_t *process_out);
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_IsProcessAlive(const lm_process_t *process);
+
+/********************************/
+
+LM_API lm_size_t LM_CALL
+LM_GetSystemBits(lm_void_t)
+{
+	return (lm_size_t)get_system_bits();
+}

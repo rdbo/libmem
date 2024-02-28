@@ -20,6 +20,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <libmem/libmem.h>
-#include <winutils/winutils.h>
+#ifndef WINUTILS_H
+#define WINUTILS_H
 
+#include <windows.h>
+#include <stdlib.h>
+
+char *
+wcstoutf8(WCHAR *widestr, char *utf8buf);
+
+WCHAR *
+utf8towcs(char *utf8str, WCHAR *wcsbuf);
+
+HANDLE
+open_process(DWORD pid);
+
+void
+close_handle(HANDLE handle);
+
+#endif

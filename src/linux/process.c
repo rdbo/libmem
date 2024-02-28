@@ -41,7 +41,9 @@ get_stat_info(lm_pid_t pid, lm_pid_t *ppid_out, lm_time_t *start_time_out)
 	char path[PATH_MAX];
 	FILE *stat_file;
 
-	assert(pid != LM_PID_BAD);
+	/* At least one of the 'out' variables must be not NULL,
+	 * otherwise, this function would just be a big no-op */
+	assert(pid != LM_PID_BAD && (ppid_out || start_time_out));
 
 	snprintf(path, sizeof(path), "%s/%d/stat", PROCFS_PATH, pid);
 	stat_file = fopen(path, "r");
@@ -161,6 +163,40 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 	}
 
 	closedir(dir);
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+/*
+ * NOTE: Previously, libmem had a caching mechanism for getting the current
+ *       process by using a static variable. That is not a good idea, because
+ *       the current process can 'fork()' for example, and suddenly this
+ *       function gives a bad value.
+ */
+LM_API lm_bool_t LM_CALL
+LM_GetProcess(lm_process_t *process_out)
+{
+	if (!process_out)
+		return LM_FALSE;
+	
+	process_out->pid = getpid();
+	process_out->ppid = getppid();
+
+	if (get_process_path(process_out->pid, process_out->path, sizeof(process_out->path)) == 0) {
+		return LM_FALSE;
+	}
+
+	if (get_name_from_path(process_out->path, process_out->name, sizeof(process_out->name)) == 0) {
+		return LM_FALSE;
+	}
+
+	if (!get_stat_info(process_out->pid, LM_NULLPTR, &process_out->start_time)) {
+		return LM_FALSE;
+	}
+
+	process_out->bits = sizeof(void *);
 
 	return LM_TRUE;
 }

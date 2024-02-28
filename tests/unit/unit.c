@@ -22,8 +22,8 @@
 void test_process(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
 	UNIT_TEST(LM_EnumProcesses);
-	/*
 	UNIT_TEST_P(LM_GetProcess, pcurproc);
+	/*
 	UNIT_TEST_P(LM_GetProcessEx, pcurproc);
 	UNIT_TEST_P(LM_FindProcess, ptargetproc);
 	UNIT_TEST_P(LM_IsProcessAlive, pcurproc);

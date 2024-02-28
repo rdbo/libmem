@@ -231,17 +231,6 @@ LM_GetProcessEx(lm_pid_t      pid,
 
 /********************************/
 
-LM_API lm_bool_t LM_CALL
-LM_FindProcess(lm_string_t   process_name,
-	       lm_process_t *process_out);
-
-/********************************/
-
-LM_API lm_bool_t LM_CALL
-LM_IsProcessAlive(const lm_process_t *process);
-
-/********************************/
-
 LM_API lm_size_t LM_CALL
 LM_GetSystemBits(lm_void_t)
 {

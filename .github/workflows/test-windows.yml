@@ -25,4 +25,5 @@ jobs:
       - name: Run Unit Tests
         shell: pwsh
         run: |
-          .\tools\unit_test.ps1
+          Start-Process .\build\tests\target.exe
+          .\build\tests\unit.exe

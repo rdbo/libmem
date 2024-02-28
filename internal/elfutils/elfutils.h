@@ -5,6 +5,9 @@
 #include <stdlib.h>
 
 size_t
-get_elf_bits(FILE *elf);
+get_elf_bits(const char *path);
+
+size_t
+read_elf_bits(FILE *elf);
 
 #endif

@@ -37,6 +37,7 @@ BOOL
 enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 {
 	lm_process_t process;
+	HANDLE hproc;
 	WCHAR path[MAX_PATH + 1] = { 0 };
 
 	enum_processes_t *parg = (enum_processes_t *)arg;
@@ -51,7 +52,7 @@ enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 	if (!wcstoutf8(entry->szExeFile, process.name, sizeof(process.name)))
 		goto CLOSE_CONTINUE;
 
-	if (!QueryFullProcessImageNameW(hproc, path, LM_ARRLEN(path)))
+	if (!QueryFullProcessImageNameW(hproc, 0, path, LM_ARRLEN(path)))
 		goto CLOSE_CONTINUE;
 
 	if (!wcstoutf8(path, process.path, sizeof(process.path)))
@@ -98,7 +99,7 @@ get_process_entry_callback(PROCESSENTRY32W *entry, void *arg)
 	if ((lm_pid_t)entry->th32ProcessID != parg->pid)
 		return TRUE;
 
-	*parg->entry = entry;
+	*parg->entry = *entry;
 
 	return FALSE;
 }
@@ -106,13 +107,13 @@ get_process_entry_callback(PROCESSENTRY32W *entry, void *arg)
 lm_bool_t
 get_process_entry(lm_pid_t pid, PROCESSENTRY32W *entry)
 {
-	get_process_entry_t *parg;
+	get_process_entry_t parg;
 
 	assert(pid != LM_PID_BAD && entry != NULL);
 
 	parg.pid = pid;
-	parg->entry = entry;
-	parg->entry->th32ProcessID = LM_PID_BAD;
+	parg.entry = entry;
+	parg.entry->th32ProcessID = LM_PID_BAD;
 
 	enum_process_entries(get_process_entry_callback, (void *)&parg);
 
@@ -132,19 +133,19 @@ LM_GetProcess(lm_process_t *process_out)
 
 	process_out->ppid = (lm_pid_t)entry.th32ParentProcessID;
 
-	if (!wcstoutf8(entry.szExeFile, process.name, sizeof(process.name)))
+	if (!wcstoutf8(entry.szExeFile, process_out->name, sizeof(process_out->name)))
 		return LM_FALSE;
 
 	if (GetModuleFileNameW(NULL, path, LM_ARRLEN(path)) == 0)
 		return LM_FALSE;
 
-	if (!wcstoutf8(path, process.path, sizeof(process.path)))
+	if (!wcstoutf8(path, process_out->path, sizeof(process_out->path)))
 		return LM_FALSE;
 
-	if (!get_process_start_time(GetCurrentProcess(), &process.start_time))
+	if (!get_process_start_time(GetCurrentProcess(), &process_out->start_time))
 		return LM_FALSE;
 
-	process.bits = sizeof(void *); /* Assume process bits == size of pointer */
+	process_out->bits = sizeof(void *); /* Assume process bits == size of pointer */
 
 	return LM_TRUE;
 }
@@ -173,7 +174,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 	if (!wcstoutf8(entry.szExeFile, process.name, sizeof(process.name)))
 		goto CLEAN_EXIT;
 
-	if (!QueryFullProcessImageNameW(hproc, path, LM_ARRLEN(path)))
+	if (!QueryFullProcessImageNameW(hproc, 0, path, LM_ARRLEN(path)))
 		goto CLOSE_CONTINUE;
 
 	if (!wcstoutf8(path, process.path, sizeof(process.path)))

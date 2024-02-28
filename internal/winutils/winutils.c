@@ -22,8 +22,6 @@
 
 #include "winutils.h"
 #include <assert.h>
-#include <ntstatus.h>
-#include <stringapiset.h>
 
 /* NOTE: If 'utf8buf' is NULL, the function will allocate the
  *       string dynamically. It must be 'free'd by the caller. */

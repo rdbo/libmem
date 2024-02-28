@@ -23,5 +23,6 @@ jobs:
           cd ..
 
       - name: Run Unit Tests
+        shell: pwsh
         run: |
-          .\tools\unit_test.bat
+          .\tools\unit_test.ps1

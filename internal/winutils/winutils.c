@@ -139,6 +139,8 @@ filetime_to_number(FILETIME *filetime)
 {
 	uint64_t number = 0;
 
+	assert(filetime != NULL);
+
 	/* The filetime struct is not little endian, so we need to
 	 * assign the low and high parts manually */
 	((uint32_t *)&number)[1] = filetime->dwLowDateTime;

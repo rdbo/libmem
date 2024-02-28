@@ -32,7 +32,6 @@ char *test_LM_EnumProcesses(void *arg)
 	return NULL;
 }
 
-/*
 char *test_LM_GetProcess(lm_process_t *pcurproc)
 {
 	mu_assert("failed to retrieve current process", LM_GetProcess(pcurproc) == LM_TRUE);
@@ -42,6 +41,7 @@ char *test_LM_GetProcess(lm_process_t *pcurproc)
 	return NULL;
 }
 
+/*
 char *test_LM_GetProcessEx(lm_process_t *pcurproc)
 {
 	lm_process_t proc;

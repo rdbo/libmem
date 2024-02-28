@@ -147,16 +147,7 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 			continue;
 		}
 
-		process.bits = sizeof(void *); /* Assume target process bits == size of pointer by default */
-		elf = fopen(process.path, "r");
-		if (elf) {
-			size_t bits = get_elf_bits(elf);
-			if (bits > 0) {
-				process.bits = bits;
-			}
-
-			fclose(elf);
-		}
+		process.bits = get_elf_bits(process.path);
 
 		if (callback(&process, arg) == LM_FALSE)
 			break;

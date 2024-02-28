@@ -59,28 +59,59 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 		if (procstat_getpathname(ps, &procs[i], process.path, sizeof(process.path)))
 			continue;
 
-		if (get_name_from_path(process.path, process.name, sizeof(process.name)) == 0) {
+		if (get_name_from_path(process.path, process.name, sizeof(process.name)) == 0)
 			continue;
-		}
 
 		process.start_time = get_process_start_time(&procs[i]);
 
-		process.bits = sizeof(void *); /* Assume target process bits == size of pointer by default */
-		elf = fopen(process.path, "r");
-		if (elf) {
-			size_t bits = get_elf_bits(elf);
-			if (bits > 0) {
-				process.bits = bits;
-			}
-
-			fclose(elf);
-		}
+		process.bits = get_elf_bits(process.path);
 
 		if (callback(&process, arg) == LM_FALSE)
 			break;
 	}
 
+	result = LM_TRUE;
+
 	procstat_freeprocs(ps, procs);
 CLOSE_EXIT:
 	procstat_close(ps);
+	return result;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_GetProcess(lm_process_t *process_out)
+{
+	lm_bool_t result = LM_FALSE;
+	struct procstat *ps;
+	struct kinfo_proc *procs;
+	unsigned int nprocs;
+
+	ps = procstat_open_sysctl();
+	if (!ps)
+		return LM_FALSE;
+
+	process_out->pid = (lm_pid_t)getpid();
+	process_out->ppid = (lm_pid_t)getppid();
+
+	procs = procstat_getprocs(ps, KERN_PROC_PID, (pid_t)process_out->pid, &nprocs);
+	if (!procs)
+		goto CLOSE_EXIT;
+
+	if (procstat_getpathname(ps, &procs[0], process.path, sizeof(process.path)))
+		continue;
+
+	if (get_name_from_path(process.path, process.name, sizeof(process.name)) == 0)
+		continue;
+
+	process_out->start_time = get_process_start_time(procs);
+	process_out->bits = get_elf_bits(process_out->path);
+
+	result = LM_TRUE;
+
+	procstat_freeprocs(ps, procs);
+CLOSE_EXIT:
+	procstat_clowsoe(ps);
+	return result;
 }

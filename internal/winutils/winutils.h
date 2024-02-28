@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <windows.h>
+#include <windef.h>
 #include <psapi.h>
 #include <tlhelp32.h>
 #include <winternl.h>

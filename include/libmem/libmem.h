@@ -55,7 +55,8 @@
 #define LM_NULL    (0)
 #define LM_NULLPTR ((void *)LM_NULL)
 
-#define LM_PID_BAD ((lm_pid_t)(-1)) /* PID 0 is valid, so can't be used here. -1 could be valid, but it's unlikely */
+#define LM_PID_BAD ((lm_pid_t)-1) /* PID 0 is valid, so can't be used here. -1 could be valid, but it's unlikely */
+#define LM_TID_BAD ((lm_tid_t)-1)
 #define LM_ADDRESS_BAD ((lm_address_t)-1) /* Both 0 and -1 are a good idea here */
 
 #define LM_PATH_MAX (4096) /* Fits up to 1024 4-byte UTF-8 characters */
@@ -121,6 +122,7 @@ typedef struct {
 
 typedef struct {
 	lm_tid_t tid;
+	lm_pid_t owner_pid;
 } lm_thread_t;
 
 typedef struct {

@@ -29,7 +29,6 @@ void test_process(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST(LM_GetSystemBits);
 }
 
-/*
 void test_thread(lm_process_t *pcurproc, lm_process_t *ptargetproc, lm_thread_t *pcurthread, lm_thread_t *ptargetthread)
 {
 	struct thread_args arg;
@@ -45,6 +44,7 @@ void test_thread(lm_process_t *pcurproc, lm_process_t *ptargetproc, lm_thread_t 
 	UNIT_TEST_P(LM_GetThreadProcess, &arg);
 }
 
+/*
 void test_memory(lm_process_t *ptargetproc)
 {
 	lm_address_t alloc;
@@ -162,8 +162,8 @@ main()
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
 
 	test_process(&current_process, &target_process);
-	/*
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
+	/*
 	test_memory(&target_process);
 	test_hook(&target_process);
 	test_module(&current_process, &target_process);

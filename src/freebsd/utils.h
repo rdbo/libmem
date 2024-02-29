@@ -25,8 +25,9 @@
 
 #include <libmem/libmem.h>
 #include <unistd.h>
-#include <libprocstat.h>
 #include <sys/user.h>
+#include <sys/sysctl.h>
+#include <libprocstat.h>
 
 lm_time_t
 get_process_start_time(struct kinfo_proc *proc);

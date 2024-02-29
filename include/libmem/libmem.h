@@ -58,7 +58,7 @@
 #define LM_PID_BAD ((lm_pid_t)(-1)) /* PID 0 is valid, so can't be used here. -1 could be valid, but it's unlikely */
 #define LM_ADDRESS_BAD ((lm_address_t)-1) /* Both 0 and -1 are a good idea here */
 
-#define LM_PATH_MAX (2048) /* Fits up to 512 4-byte UTF-8 characters */
+#define LM_PATH_MAX (4096) /* Fits up to 1024 4-byte UTF-8 characters */
 #define LM_INST_MAX (16) /* Maximum size of a single instruction */
 
 /* Helpers */

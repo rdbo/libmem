@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <assert.h>
 #include <unistd.h>
 #include <libprocstat.h>
 #include <sys/user.h>

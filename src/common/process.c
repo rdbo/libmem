@@ -30,7 +30,8 @@ typedef struct {
 	lm_size_t     len;
 } find_pid_t;
 
-lm_bool_t find_process_callback(lm_process_t *process, lm_void_t *arg)
+lm_bool_t LM_CALL
+find_process_callback(lm_process_t *process, lm_void_t *arg)
 {
 	find_pid_t *parg = (find_pid_t *)arg;
 	lm_size_t len;

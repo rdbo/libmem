@@ -27,15 +27,7 @@
 #include <sys/user.h>
 #include <sys/sysctl.h>
 #include <libprocstat.h>
-
-lm_time_t
-get_process_start_time(struct kinfo_proc *proc)
-{
-	assert(proc != NULL);
-	
-	/* Turn the seconds and the microseconds from the 'struct timeval' into milliseconds */
-	return (lm_time_t)((proc->ki_start.tv_sec * 1000) + (proc->ki_start.tv_usec / 1000.0L));
-}
+#include "utils.h"
 
 LM_API lm_bool_t LM_CALL
 LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,

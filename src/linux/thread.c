@@ -20,7 +20,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE /* Required for 'gettid' */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1 /* Required for 'gettid' */
+#endif
 #include <libmem/libmem.h>
 #include "consts.h"
 #include "utils.h"

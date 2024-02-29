@@ -55,7 +55,7 @@ LM_EnumThreadsEx(const lm_process_t *process,
 		if (thread.tid == 0 && strcmp(dirent->d_name, "0"))
 			continue;
 
-		if (!callback(&thread, arg))
+		if (callback(&thread, arg) == LM_FALSE)
 			break;
 	}
 

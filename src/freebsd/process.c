@@ -27,6 +27,8 @@
 lm_time_t
 get_process_start_time(struct kinfo_proc *proc)
 {
+	assert(proc != NULL);
+	
 	/* Turn the seconds and the microseconds from the 'struct timeval' into milliseconds */
 	return (lm_time_t)((proc->ki_start.tv_sec * 1000) + (proc->ki_start.tv_usec / 1000.0L));
 }
@@ -43,6 +45,9 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 	unsigned int i;
 	lm_process_t process;
 	FILE *elf;
+
+	if (!callback)
+		return result;
 
 	ps = procstat_open_sysctl();
 	if (!ps)
@@ -88,9 +93,12 @@ LM_GetProcess(lm_process_t *process_out)
 	struct kinfo_proc *procs;
 	unsigned int nprocs;
 
+	if (!process_out)
+		return result;
+
 	ps = procstat_open_sysctl();
 	if (!ps)
-		return LM_FALSE;
+		return result;
 
 	process_out->pid = (lm_pid_t)getpid();
 	process_out->ppid = (lm_pid_t)getppid();
@@ -127,9 +135,12 @@ LM_GetProcessEx(lm_pid_t      pid,
 	struct kinfo_proc *procs;
 	unsigned int nprocs;
 
+	if (pid == LM_PID_BAD || !process_out)
+		return result;
+
 	ps = procstat_open_sysctl();
 	if (!ps)
-		return LM_FALSE;
+		return result;
 
 	process_out->pid = pid;
 

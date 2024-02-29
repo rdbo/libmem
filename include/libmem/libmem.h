@@ -168,19 +168,19 @@ typedef struct {
 /*
  * API guidelines
  *
- * 1.  User facing functions should return when receiving bad parameters
+ * 1.  User facing functions should return when receiving bad parameters.
  *
- * 2.  Internal functions should 'assert' to check for bad parameters
+ * 2.  Internal functions should 'assert' to check for bad parameters.
  *
- * 3.  Immutable struct pointers should be 'const'
+ * 3.  Immutable struct pointers should be 'const'.
  *
- * 4.  Immutable strings should be 'lm_string_t'
+ * 4.  Immutable strings should be 'lm_string_t'.
  *
  * 5.  Output variable pointers in functions should be at the end, unless
- *     it doesn't make sense to put it there
+ *     it doesn't make sense to put it there.
  *
  * 6.  All user facing functions should have the 'LM_API' prefix for
- *     automatic importing and exporting
+ *     automatic importing and exporting.
  *
  * 7.  All user facing callables should have the 'LM_CALL' infix to ensure 
  *     that the calling convention for all callables is the same.
@@ -191,10 +191,12 @@ typedef struct {
  *     or hacks.
  *
  * 9.  All user facing functions should have the 'LM_' prefix before their name,
- *     and after that, they should be PascalCase
+ *     and after that, they should be PascalCase.
  *
- * 10. All user facing types should have the 'lm_' prefix before their name,
- *     and after that, they should be snake_case
+ * 10. All user facing types should have the 'lm_' prefix before their name.
+ *     After that, they should be snake_case, and also end with '_t'.
+ *
+ * 11. Exclusively output arguments in functions should have the '_out' suffix.
  */
 
 /* Process API */
@@ -219,6 +221,29 @@ LM_IsProcessAlive(const lm_process_t *process);
 
 LM_API lm_size_t LM_CALL
 LM_GetSystemBits(lm_void_t);
+
+/* Thread API */
+LM_API lm_bool_t LM_CALL
+LM_EnumThreads(lm_bool_t (LM_CALL *callback)(lm_thread_t *thread,
+					     lm_void_t   *arg),
+	       lm_void_t          *arg);
+
+LM_API lm_bool_t LM_CALL
+LM_EnumThreadsEx(const lm_process_t *process,
+		 lm_bool_t (LM_CALL *callback)(lm_thread_t *thread,
+					       lm_void_t   *arg),
+		 lm_void_t          *arg);
+
+LM_API lm_bool_t LM_CALL
+LM_GetThread(lm_thread_t *thread_out);
+
+LM_API lm_bool_t LM_CALL
+LM_GetThreadEx(const lm_process_t *process,
+	       lm_thread_t        *thread_out);
+
+LM_API lm_bool_t LM_CALL
+LM_GetThreadProcess(const lm_thread_t *thread,
+		    lm_process_t      *process_out);
 
 #ifdef __cplusplus
 }

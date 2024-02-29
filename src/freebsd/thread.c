@@ -54,7 +54,7 @@ LM_EnumThreadsEx(const lm_process_t *process,
 	for (i = 0; i < nprocs; ++i) {
 		thread.tid = (lm_tid_t)procs[i].ki_tid;
 
-		if (!callback(&thread, arg))
+		if (callback(&thread, arg) == LM_FALSE)
 			break;
 	}
 

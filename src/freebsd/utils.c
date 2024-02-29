@@ -1,4 +1,6 @@
 #include "utils.h"
+#include <unistd.h>
+#include <libprocstat.h>
 #include <sys/user.h>
 
 lm_time_t

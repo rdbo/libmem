@@ -1,5 +1,5 @@
 #include "utils.h"
-#include <libprocstat.h>
+#include <sys/user.h>
 
 lm_time_t
 get_process_start_time(struct kinfo_proc *proc)

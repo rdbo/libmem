@@ -22,6 +22,8 @@
 
 #include <libmem/libmem.h>
 #include <windows.h>
+#include <psapi.h>
+#include <tlhelp32.h>
 
 LM_API lm_bool_t LM_CALL
 LM_EnumThreadsEx(const lm_process_t *process,

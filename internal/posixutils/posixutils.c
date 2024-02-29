@@ -58,7 +58,10 @@ get_name_from_path(char *path, char *namebuf, size_t namesize)
 	assert(path != NULL && namebuf != NULL && namesize > 0);
 
 	last_separator = strrchr(path, '/');
-	name = &last_separator[1]; /* 'name' starts at 'last path separator + 1' */
+	if (last_separator == NULL)
+		name = path;
+	else
+		name = &last_separator[1]; /* 'name' starts at 'last path separator + 1' */
 	namelen = strlen(name);
 
 	/* Truncate name if necessary */

@@ -22,6 +22,9 @@
 #include <libmem/libmem.h>
 #include <posixutils/posixutils.h>
 #include <elfutils/elfutils.h>
+#include <assert.h>
+#include <unistd.h>
+#include <sys/user.h>
 #include <libprocstat.h>
 
 lm_time_t
@@ -108,10 +111,10 @@ LM_GetProcess(lm_process_t *process_out)
 		goto CLOSE_EXIT;
 
 	if (procstat_getpathname(ps, &procs[0], process.path, sizeof(process.path)))
-		continue;
+		goto CLOSE_EXIT;
 
 	if (get_name_from_path(process.path, process.name, sizeof(process.name)) == 0)
-		continue;
+		goto CLOSE_EXIT;
 
 	process_out->start_time = get_process_start_time(procs);
 	process_out->bits = get_elf_bits(process_out->path);
@@ -150,11 +153,11 @@ LM_GetProcessEx(lm_pid_t      pid,
 
 	process_out->ppid = procs[0].ki_ppid;
 
-	if (procstat_getpathname(ps, &procs[0], process.path, sizeof(process.path)))
-		continue;
+	if (procstat_getpathname(ps, &procs[0], process_out->path, sizeof(process_out->path)))
+		goto CLOSE_EXIT;
 
-	if (get_name_from_path(process.path, process.name, sizeof(process.name)) == 0)
-		continue;
+	if (get_name_from_path(process_out->path, process_out->name, sizeof(process_out->name)) == 0)
+		goto CLOSE_EXIT;
 
 	process_out->start_time = get_process_start_time(procs);
 	process_out->bits = get_elf_bits(process_out->path);

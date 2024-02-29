@@ -20,14 +20,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE /* Required for 'gettid' */
 #include <libmem/libmem.h>
 #include "consts.h"
 #include "utils.h"
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <dirent.h>
 #include <limits.h>
+#include <unistd.h>
 
 LM_API lm_bool_t LM_CALL
 LM_EnumThreadsEx(const lm_process_t *process,
@@ -73,20 +74,17 @@ LM_GetThread(lm_thread_t *thread_out)
 	
 	if (!thread_out)
 		return LM_FALSE;
-	
-	/* Thread are the same as processes */
-	thread_out->tid = (lm_tid_t)getpid();
 
-	/* Check if current process owns its thread (task) */
-	snprintf(path, sizeof(path), "%s/%d/task/%d", PROCFS_PATH, thread_out->tid, thread_out->tid);
-	if ((dir = opendir(path))) {
-		/* Process owns its thread */
-		thread_out->owner_pid = (lm_pid_t)getpid();
-		closedir(dir);
-	} else {
-		/* Process doesn't own its thread, so the parent owns it */
-		thread_out->owner_pid = (lm_pid_t)getppid();
-	}
+	/*
+	 * From: https://www.man7.org/linux/man-pages/man2/gettid.2.html
+	 *
+	 * "In a single-threaded process, the thread ID is equal to the process ID (PID,
+         * as returned by getpid(2)).  In a multithreaded process, all
+         * threads have the same PID, but each one has a unique TID."
+	 */
+
+	thread_out->tid = (lm_tid_t)gettid();
+	thread_out->owner_pid = (lm_pid_t)getpid();
 
 	return LM_TRUE;
 }

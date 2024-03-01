@@ -28,29 +28,29 @@
 char *
 wcstoutf8(WCHAR *widestr, char *utf8buf, size_t buflen)
 {
-	int is_allocated = 0;
+	char *cvt = utf8buf;
 	
 	/* Either the UTF-8 buffer is NULL (string will be allocated), or it's not NULL and buflen > 0 */
 	assert(widestr != NULL && (utf8buf == NULL || buflen > 0));
 
-	if (utf8buf == NULL) {
+	if (cvt == NULL) {
 		/*
 		 * NOTE: When the 'cbMultiByte' is set to 0, the function will calculate
 		 *       the required size in bytes to convert the string.
 		 */
 		buflen = WideCharToMultiByte(CP_UTF8, 0, widestr, -1, NULL, 0, NULL, NULL);
-		utf8buf = malloc(buflen);
-		is_allocated = 1;
+		cvt = (char *)malloc(buflen);
 	}
 
 	/* This function automatically inserts the NULL terminator when passing -1 to 'cchWideChar' */
-	if (WideCharToMultiByte(CP_UTF8, 0, widestr, -1, utf8buf, buflen, NULL, NULL) == 0) {
-		if (is_allocated)
-			free(utf8buf);
+	if (WideCharToMultiByte(CP_UTF8, 0, widestr, -1, cvt, buflen, NULL, NULL) == 0) {
+		/* Deallocate string if it is allocated */
+		if (!utf8buf)
+			free(cvt);
 		return NULL;
 	}
 
-	return utf8buf;
+	return cvt;
 }
 
 /* NOTE: If 'wcsbuf' is NULL, the function will allocate the
@@ -58,29 +58,28 @@ wcstoutf8(WCHAR *widestr, char *utf8buf, size_t buflen)
 WCHAR *
 utf8towcs(char *utf8str, WCHAR *wcsbuf, size_t buflen)
 {
-	int is_allocated = 0;
+	WCHAR *cvt = wcsbuf;
 
 	/* Either the UTF-8 buffer is NULL (string will be allocated), or it's not NULL and buflen > 0 */
 	assert(utf8str != NULL && (wcsbuf == NULL || buflen > 0));
 
-	if (wcsbuf == NULL) {
+	if (cvt == NULL) {
 		/*
 		 * NOTE: When the 'cchWideChar' is set to 0, the function will calculate
 		 *       the required size in characters to convert the string.
 		 */
 		buflen = MultiByteToWideChar(CP_UTF8, 0, utf8str, -1, NULL, 0);
-		wcsbuf = malloc(buflen * 2); /* We need to multiply by 2 because the wchars are UTF-16 (2 bytes per wchar) */
-		is_allocated = 1;
+		cvt = malloc(buflen * 2); /* We need to multiply by 2 because the wchars are UTF-16 (2 bytes per wchar) */
 	}
 
 	/* This function automatically inserts the NULL terminator when passing -1 to 'cchWideChar' */
-	if (MultiByteToWideChar(CP_UTF8, 0, utf8str, -1, wcsbuf, buflen) == 0) {
-		if (is_allocated)
-			free(wcsbuf);
+	if (MultiByteToWideChar(CP_UTF8, 0, utf8str, -1, cvt, buflen) == 0) {
+		if (!wcsbuf)
+			free(cvt);
 		return NULL;
 	}
 
-	return wcsbuf;
+	return cvt;
 }
 
 HANDLE

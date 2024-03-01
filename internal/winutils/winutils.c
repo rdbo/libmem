@@ -180,7 +180,6 @@ enum_process_entries(BOOL (*callback)(PROCESSENTRY32W *entry, void *arg), void *
 	BOOL result = FALSE;
 	HANDLE hsnap;
 	PROCESSENTRY32W entry;
-	HANDLE hproc;
 
 	assert(callback != NULL);
 

@@ -21,6 +21,7 @@
  */
 
 #include <libmem/libmem.h>
+#include <string.h>
 
 LM_API lm_bool_t LM_CALL
 LM_EnumModules(lm_bool_t (LM_CALL *callback)(lm_module_t *module,
@@ -36,4 +37,70 @@ LM_EnumModules(lm_bool_t (LM_CALL *callback)(lm_module_t *module,
 		return LM_FALSE;
 	
 	return LM_EnumModulesEx(&process, callback, arg);
+}
+
+/********************************/
+
+typedef struct {
+	lm_string_t name;
+	lm_size_t name_len;
+	lm_module_t *module_out;
+} find_module_t;
+
+lm_bool_t LM_CALL
+find_module_callback(lm_module_t *module, lm_void_t *arg)
+{
+	find_module_t *parg = (find_module_t *)arg;
+	lm_size_t len;
+
+	len = strlen(module->path);
+	if (len < parg->name_len)
+		return LM_TRUE;
+
+	/* Compare the last characters from the path against the name */
+	if (!strcmp(&module->path[len - parg->name_len], parg->name)) {
+		*parg->module_out = *module;
+		return LM_FALSE;
+	}
+
+	return LM_TRUE;
+}
+
+LM_API lm_bool_t LM_CALL
+LM_FindModule(lm_string_t  name,
+	      lm_module_t *module_out)
+{
+	find_module_t arg;
+	
+	if (!name || !module_out)
+		return LM_FALSE;
+	
+	module_out->size = 0;
+	arg.name = name;
+	arg.name_len = strlen(name);
+	arg.module_out = module_out;
+
+	return LM_EnumModules(find_module_callback, (lm_void_t *)&arg) == LM_TRUE && module_out->size > 0 ?
+		LM_TRUE : LM_FALSE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_FindModuleEx(const lm_process_t *process,
+		lm_string_t         name,
+		lm_module_t        *module_out)
+{
+	find_module_t arg;
+	
+	if (!process || !name || !module_out)
+		return LM_FALSE;
+	
+	module_out->size = 0;
+	arg.name = name;
+	arg.name_len = strlen(name);
+	arg.module_out = module_out;
+
+	return LM_EnumModulesEx(process, find_module_callback, (lm_void_t *)&arg) == LM_TRUE && module_out->size > 0 ?
+		LM_TRUE : LM_FALSE;
 }

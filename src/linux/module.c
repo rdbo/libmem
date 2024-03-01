@@ -28,6 +28,8 @@
 #include <limits.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <dlfcn.h>
+#include <link.h>
 
 LM_API lm_bool_t LM_CALL
 LM_EnumModulesEx(const lm_process_t *process,
@@ -114,5 +116,76 @@ LM_EnumModulesEx(const lm_process_t *process,
 
 CLOSE_EXIT:
 	closedir(map_files);
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_LoadModule(lm_string_t  path,
+	      lm_module_t *module_out)
+{
+	if (!path)
+		return LM_FALSE;
+	
+	if (!dlopen(path, RTLD_LAZY))
+		return LM_FALSE;
+
+	if (module_out)
+		return LM_FindModule(path, module_out);
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_UnloadModule(const lm_module_t *module)
+{
+	void *handle;
+	struct link_map *link_map;
+	size_t modpath_len;
+	size_t len;
+
+	if (!module)
+		return LM_FALSE;
+
+	handle = dlopen(NULL, 0); /* Get process first handle */
+	if (!handle)
+		return LM_FALSE;
+
+	modpath_len = strlen(module->path);
+
+	/*
+	 * NOTE: A handle is just 'struct link_map *' internally,
+	 *       so we can loop through the link map chain and find
+	 *       the module handle
+	 * WARN: This may change in the future!
+	 */
+
+	for (link_map = (struct link_map *)handle; link_map; link_map = link_map->l_next) {
+		len = strlen(link_map->l_name);
+		if (len > modpath_len)
+			continue;
+
+		/* NOTE: There can be multiple instances of a module loaded in the link_map chain,
+		 *       so we can't break the loop until all of them are gone */
+		if (!strcmp(&module->path[modpath_len - len], link_map->l_name)) {
+			handle = (void *)link_map;
+
+			/*
+			 * NOTE: This may not be enough to unload a library
+			 * NOTE: dlclose on musl is a no-op as of now
+			 */
+			dlclose(handle);
+
+			/*
+			 * NOTE: Although not deeply tested, it seems that the link_map chain
+			 *       does not delete items that have been dlclosed, so we don't have
+			 *       to do anything special to handle the state of the linked list.
+			 */
+		}
+	}
+
 	return LM_TRUE;
 }

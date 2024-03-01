@@ -58,7 +58,7 @@ LM_EnumThreadsEx(const lm_process_t *process,
 	if (hsnap == INVALID_HANDLE_VALUE)
 		return result;
 
-	entry.dwSize = sizeof(THREADENTRY32);
+	entry.dwSize = sizeof(entry);
 	if (!Thread32First(hsnap, &entry))
 		goto CLOSE_EXIT;
 

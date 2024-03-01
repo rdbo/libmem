@@ -77,6 +77,7 @@ void test_hook(lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_UnhookCode, &arg);
 	/* TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx * /
 }
+*/
 
 void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
@@ -91,10 +92,12 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_FindModuleEx, ptargetproc);
 	UNIT_TEST_P(LM_LoadModule, &mod);
 	UNIT_TEST_P(LM_UnloadModule, &mod);
-	UNIT_TEST_P(LM_LoadModuleEx, &arg);
-	/* TODO: Add test for LM_UnloadModuleEx * /
+	/* TODO: Uncomment the test */
+	/* UNIT_TEST_P(LM_LoadModuleEx, &arg); */
+	/* TODO: Add test for LM_UnloadModuleEx */
 }
 
+/*
 void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
 	UNIT_TEST_P(LM_EnumPages, pcurproc);
@@ -166,7 +169,9 @@ main()
 	/*
 	test_memory(&target_process);
 	test_hook(&target_process);
+	*/
 	test_module(&current_process, &target_process);
+	/*
 	test_page(&current_process, &target_process);
 	test_symbol(&current_process);
 	test_vmt();

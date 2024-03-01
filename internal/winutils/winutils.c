@@ -53,8 +53,7 @@ wcstoutf8(WCHAR *widestr, char *utf8buf, size_t buflen)
 	return utf8buf;
 }
 
-
-/* NOTE: If 'utf8buf' is NULL, the function will allocate the
+/* NOTE: If 'wcsbuf' is NULL, the function will allocate the
  *       string dynamically. It must be 'free'd by the caller. */
 WCHAR *
 utf8towcs(char *utf8str, WCHAR *wcsbuf, size_t buflen)

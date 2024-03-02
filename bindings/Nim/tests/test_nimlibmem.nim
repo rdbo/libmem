@@ -3,7 +3,7 @@ import ../release/nimlibmem
 import strutils
 import winim/winstr
 
-let test_process = "notepad.exe"
+const test_process = "notepad.exe"
 
 ## Getprocess tests
 var p: processt
@@ -95,35 +95,40 @@ echo threadList2.len
 
 
 ## Findmodule tests currently not working for me
-# proc Enummodules*(callback: proc (a0: ptr modulet; a1: pointer): boolt {.cdecl.};
-#                   arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModules".}
-# proc Enummodulesex*(process: ptr processt; callback: proc (a0: ptr modulet;
-#     a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModulesEx".}
+var
+  moduleList: seq[modulet]
+  pmodule: modulet
 
-# var
-#   moduleList: seq[modulet]
-#   pmodule: modulet
-#
-# proc enumModuleCallback(pmodule: ptr modulet, arg: pointer): boolt {.cdecl.} =
-#   moduleList.add(pmodule[])
-#   result = 1
-#
-# var status10: boolt = Enummodules(enumModuleCallback, nil)
-# echo status10
-# echo moduleList.len
-# for m in moduleList:
-#   echo "Module Name: ", nullTerminated($$m.name), "\nModule Path: ", nullTerminated($$m.path)
-#
+proc enumModuleCallback(pmodule: ptr modulet, arg: pointer): boolt {.cdecl.} =
+  moduleList.add(pmodule[])
+  result = 1
 
-#structmodulet* {.pure, inheritable, bycopy.} = object
-#     base*: addresst
-#     endfield*: addresst
-#     size*: sizet
-#     path*: array[4096'i64, chart]
-#     name*: array[4096'i64, chart]
-#
-# var test_module = "ntdll.dll"
-# var m: modulet
-# var status11: boolt = Findmodule(test_module, m.addr)
-# echo status11
-# echo "Module Name: ", nullTerminated($$m.name), "\nModule Path: ", nullTerminated($$m.path), "\nModule Base: ", m.base, "\nModule Size: ", m.size
+var status10: boolt = Enummodules(enumModuleCallback, nil)
+echo status10
+echo moduleList.len
+for m in moduleList:
+  echo "Module Name: ", nullTerminated($$m.name), "\nModule Path: ", nullTerminated($$m.path)
+
+const test_module = "ntdll.dll"
+var m: modulet
+var status11: boolt = Findmodule(test_module, m.addr)
+echo status11
+echo "Module Name: ", nullTerminated($$m.name), "\nModule Path: ", nullTerminated($$m.path), "\nModule Base: ", m.base, "\nModule Size: ", m.size
+
+var m2: modulet
+var status12: boolt = Findmoduleex(p2.addr, test_module, m2.addr)
+echo status12
+echo "Module Name: ", nullTerminated($$m2.name), "\nModule Path: ", nullTerminated($$m2.path), "\nModule Base: ", m2.base, "\nModule Size: ", m2.size
+
+
+## Loading in the local process seems to work, but unloading does not
+## The Ex versions of the functions cant even get imported
+const loadtests = r"C:\Windows\System32\FXSEVENT.dll"
+const unloadtest = r"C:\Windows\System32\oleaccrc.dll"
+var mt: modulet
+var status13: boolt = Loadmodule(loadtests, mt.addr)
+echo status13
+echo Findmodule("FXSEVENT.dll", mt.addr)
+echo mt.base
+status13 = Unloadmodule(mt.addr)
+echo status13

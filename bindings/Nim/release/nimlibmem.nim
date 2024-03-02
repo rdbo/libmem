@@ -1,5 +1,5 @@
 const
-  libname = "src/libmem.dll"
+  libname = "bindings/Nim/src/libmem.dll"
 
 
 const
@@ -110,23 +110,19 @@ when 16 is static:
     Instmax* = 16            
 else:
   let Instmax* = 16          
-proc Enumprocesses*(callback: proc (a0: ptr processt; a1: pointer): boolt {.
-    cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumProcesses".}
+proc Enumprocesses*(callback: proc (a0: ptr processt; a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumProcesses".}
 proc Getprocess*(processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_GetProcess".}
 proc Getprocessex*(pid: pidt; processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_GetProcessEx".}
 proc Findprocess*(processname: stringt; processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_FindProcess".}
 proc Isprocessalive*(process: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_IsProcessAlive".}
 proc Getsystembits*(): sizet {.dynlib: libname, cdecl, importc: "LM_GetSystemBits".}
 proc Enumthreads*(callback: proc (a0: ptr threadt; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumThreads".}
-proc Enumthreadsex*(process: ptr processt; callback: proc (a0: ptr threadt;
-    a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumThreadsEx".}
+proc Enumthreadsex*(process: ptr processt; callback: proc (a0: ptr threadt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumThreadsEx".}
 proc Getthread*(threadout: ptr threadt): boolt {.dynlib: libname, cdecl, importc: "LM_GetThread".}
 proc Getthreadex*(process: ptr processt; threadout: ptr threadt): boolt {.dynlib: libname, cdecl, importc: "LM_GetThreadEx".}
 proc Getthreadprocess*(thread: ptr threadt; processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_GetThreadProcess".}
-proc Enummodules*(callback: proc (a0: ptr modulet; a1: pointer): boolt {.cdecl.};
-                  arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModules".}
-proc Enummodulesex*(process: ptr processt; callback: proc (a0: ptr modulet;
-    a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModulesEx".}
+proc Enummodules*(callback: proc (a0: ptr modulet; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModules".}
+proc Enummodulesex*(process: ptr processt; callback: proc (a0: ptr modulet;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModulesEx".}
 proc Findmodule*(name: stringt; moduleout: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_FindModule".}
 proc Findmoduleex*(process: ptr processt; name: stringt; moduleout: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_FindModuleEx".}
 proc Loadmodule*(path: stringt; moduleout: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_LoadModule".}

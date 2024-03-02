@@ -142,7 +142,7 @@ typedef struct {
 } lm_page_t;
 
 typedef struct {
-	lm_string_t  name; /* NOTE: This string might be deallocated after the callback for symbol enumeration ends */
+	lm_string_t  name;
 	lm_address_t address;
 } lm_symbol_t;
 
@@ -284,6 +284,35 @@ LM_UnloadModule(const lm_module_t *module);
 LM_API lm_bool_t LM_CALL
 LM_UnloadModuleEx(const lm_process_t *process,
 		  const lm_module_t  *module);
+
+/* Symbol API */
+LM_API lm_bool_t LM_CALL
+LM_EnumSymbols(const lm_module_t  *module,
+	       lm_bool_t (LM_CALL *callback)(lm_symbol_t *symbol,
+					     lm_void_t   *arg),
+	       lm_void_t          *arg);
+
+LM_API lm_address_t LM_CALL
+LM_FindSymbolAddress(const lm_module_t *module,
+		     lm_string_t        name);
+
+LM_API lm_string_t LM_CALL
+LM_DemangleSymbol(lm_string_t symbol_name,
+		  lm_char_t  *demangled_buf,
+		  lm_size_t   maxsize);
+
+LM_API lm_void_t LM_CALL
+LM_FreeDemangleSymbol(lm_char_t *symbol_name);
+
+LM_API lm_bool_t LM_CALL
+LM_EnumSymbolsDemangled(const lm_module_t  *module,
+			lm_bool_t (LM_CALL *callback)(lm_symbol_t *symbol,
+						      lm_void_t   *arg),
+			lm_void_t          *arg);
+
+LM_API lm_address_t
+LM_FindSymbolAddressDemangled(const lm_module_t *module,
+			      lm_string_t        name);
 
 #ifdef __cplusplus
 }

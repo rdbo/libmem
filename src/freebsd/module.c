@@ -22,6 +22,7 @@
 
 #include <libmem/libmem.h>
 #include <posixutils/posixutils.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/user.h>
 #include <sys/sysctl.h>
@@ -68,7 +69,7 @@ LM_EnumModulesEx(const lm_process_t *process,
 
 		/* Get maximum sequential address range for a module
 		 * (similar to how the linux version of this API is done) */
-		for (j = i + 1; j < count && (lm_address_t)vmmap[j].start == module.end && !strcmp(vmmap[j].kvm_path, module.path); ++j) {
+		for (j = i + 1; j < count && (lm_address_t)vmmap[j].start == module.end && !strcmp(vmmap[j].kve_path, module.path); ++j) {
 			module.end = (lm_address_t)vmmap[j].kve_end;
 		}
 

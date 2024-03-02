@@ -2,7 +2,7 @@
 
 version       = "0.1.0"
 author        = "Hypnootika"
-description   = "A new awesome nimble package"
+description   = "Nim bindings for Libmem"
 license       = "MIT"
 srcDir        = "src"
 binDir        = "release"

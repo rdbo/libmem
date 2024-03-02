@@ -1,0 +1,4 @@
+1. Automate the generation of the wrapper.
+2. Add another layer on top of the wrapper to make it more user-friendly and less C-ish.
+3. Find out why i cant link this statically and fix it.
+(4. Document the actual generation of the wrapper. This is only necessary if the wrapper is not generated automatically.)

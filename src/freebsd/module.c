@@ -22,6 +22,8 @@
 
 #include <libmem/libmem.h>
 #include <posixutils/posixutils.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/user.h>
@@ -50,7 +52,7 @@ LM_EnumModulesEx(const lm_process_t *process,
 	if (!ps)
 		return result;
 
-	proc = procstat_getprocs(KERN_PROC_PID, process->pid, &count);
+	proc = procstat_getprocs(ps, KERN_PROC_PID, process->pid, &count);
 	if (!proc)
 		goto CLOSE_EXIT;
 
@@ -69,7 +71,7 @@ LM_EnumModulesEx(const lm_process_t *process,
 
 		/* Get maximum sequential address range for a module
 		 * (similar to how the linux version of this API is done) */
-		for (j = i + 1; j < count && (lm_address_t)vmmap[j].start == module.end && !strcmp(vmmap[j].kve_path, module.path); ++j) {
+		for (j = i + 1; j < count && (lm_address_t)vmmap[j].kve_start == module.end && !strcmp(vmmap[j].kve_path, module.path); ++j) {
 			module.end = (lm_address_t)vmmap[j].kve_end;
 		}
 

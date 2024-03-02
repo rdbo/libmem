@@ -6,7 +6,7 @@ description   = "Nim bindings for Libmem"
 license       = "MIT"
 srcDir        = "src"
 binDir        = "release"
-bin           = @["nimlibmem"]
+bin           = @["nimlibmem.dll"]
 # Dependencies
 
 requires "nim >= 2.0.0, winim, futhark"

@@ -1,0 +1,28 @@
+1. Automate the generation of the wrapper.
+2. Add another layer on top of the wrapper to make it more user-friendly and less C-ish.
+3. Find out why i cant link this statically and fix it.
+(4. Document the actual generation of the wrapper. This is only necessary if the wrapper is not generated automatically.)
+
+
+
+Notes regarding 3 and 4:
+proc NimMain() {.cdecl, importc.}
+This needs to get called to initialize the Nim runtime.
+
+everything with {.exportc, dynlib, cdecl.} will be exported to the dll and can be called from C.
+proc library_init() {.exportc, dynlib, cdecl.} =
+  NimMain()
+  echo "Hello from our dynamic library!"
+
+proc library_do_something(arg: cint): cint {.exportc, dynlib, cdecl.} =
+  echo "We got the argument ", arg
+  echo "Returning 0 to indicate that everything went fine!"
+  return 0 # This will be automatically converted to a cint
+
+According to "https://peterme.net/dynamic-libraries-in-nim.html" we need to garbage collect the memory we used in the library.
+proc library_deinit() {.exportc, dynlib, cdecl.} =
+  echo "Nothing to do here since we don't have any global memory"
+  GC_FullCollect()
+
+nim c -d:release --app:lib --noMain --gc:orc ourlibrary.nim
+example cmd line

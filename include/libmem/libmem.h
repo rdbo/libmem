@@ -50,8 +50,6 @@
 #define LM_CALL
 
 /* Constants */
-#define LM_FALSE   (0)
-#define LM_TRUE    (1)
 #define LM_NULL    (0)
 #define LM_NULLPTR ((void *)LM_NULL)
 
@@ -74,7 +72,10 @@ extern "C" {
 
 /* Primitive types */
 typedef void     lm_void_t;
-typedef int32_t  lm_bool_t;
+typedef enum {
+	LM_FALSE = 0,
+	LM_TRUE = 1
+}  lm_bool_t;
 typedef uint8_t  lm_byte_t;
 typedef uint64_t lm_address_t;
 typedef uint64_t lm_size_t;

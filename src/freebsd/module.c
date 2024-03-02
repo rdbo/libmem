@@ -63,8 +63,10 @@ LM_EnumModulesEx(const lm_process_t *process,
 		goto CLOSE_EXIT;
 
 	for (i = 0; i < count;) {
-		if (strlen(vmmap[i].kve_path) == 0)
+		if (strlen(vmmap[i].kve_path) == 0) {
+			++i;
 			continue;
+		}
 
 		module.base = (lm_address_t)vmmap[i].kve_start;
 		module.end = (lm_address_t)vmmap[i].kve_end;

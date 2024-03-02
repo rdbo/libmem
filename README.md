@@ -122,6 +122,14 @@ inst = LM_Disassemble(bytearray(b"\x55"))
 print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 ```
 
+## Unnoficial Bindings
+These bindings are done by the community/third-parties and are not affiliated with the libmem project or its author.
+
+Their code can have their own licenses as well, diverging from libmem's.
+
+- [Nim_Libmem](https://github.com/Hypnootika/Nim_Libmem)
+- [Crazymem (NodeJS)](https://github.com/karliky/Crazymem)
+
 ## CMake Usage (without installing)
 Add the following commands to your `CMakeLists.txt`.
 
@@ -370,5 +378,3 @@ Made with libmem:
 - [DirectX11 BaseHook](https://github.com/rdbo/DX11-BaseHook)  
 - [OpenGL BaseHook](https://github.com/rdbo/GL-BaseHook)  
 - [Counter-Strike 1.6 BaseHook](https://github.com/rdbo/cstrike-basehook)  
-- [Crazymem - NodeJS Memory Library](https://github.com/karliky/Crazymem)  
-  

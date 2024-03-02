@@ -29,6 +29,7 @@
 #include <sys/user.h>
 #include <sys/sysctl.h>
 #include <libprocstat.h>
+#include <dlfcn.h>
 
 LM_API lm_bool_t LM_CALL
 LM_EnumModulesEx(const lm_process_t *process,
@@ -91,4 +92,44 @@ LM_EnumModulesEx(const lm_process_t *process,
 CLOSE_EXIT:
 	procstat_close(ps);
 	return result;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_LoadModule(lm_string_t  path,
+	      lm_module_t *module_out)
+{
+	if (!path)
+		return LM_FALSE;
+	
+	if (!dlopen(path, RTLD_LAZY))
+		return LM_FALSE;
+
+	if (module_out)
+		return LM_FindModule(path, module_out);
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_UnloadModule(const lm_module_t *module)
+{
+	void *handle;
+
+	if (!module)
+		return LM_FALSE;
+
+	handle = dlopen(module->path, RTLD_NOLOAD); /* Increases the reference count by 1 */
+	if (!handle)
+		return LM_FALSE;
+
+	/* Decrease the reference count and possibly force the module to unload */
+	/* NOTE: It is not guaranteed that the module will unload after this! */
+	dlclose(handle);
+	dlclose(handle);
+
+	return LM_TRUE;
 }

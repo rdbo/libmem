@@ -39,7 +39,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 	if (!module || !callback)
 		return LM_FALSE;
 	
-	enum_elf_symbols(module->path, enum_symbols_callback, NULL);
+	enum_elf_symbols(module->path, module->base, enum_symbols_callback, NULL);
 	
 	return LM_TRUE;
 }

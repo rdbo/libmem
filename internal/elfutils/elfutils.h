@@ -12,6 +12,6 @@ size_t
 read_elf_bits(FILE *elf);
 
 int
-enum_elf_symbols(const char *path, int (*callback)(char *name, uint64_t address, void *arg), void *arg);
+enum_elf_symbols(const char *path, uint64_t base_address, int (*callback)(char *name, uint64_t address, void *arg), void *arg);
 
 #endif

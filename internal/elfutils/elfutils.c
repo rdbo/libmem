@@ -51,13 +51,13 @@ get_elf_bits(const char *path)
 }
 
 int
-enum_elf32_symbols(FILE *elf, int (*callback)(char *name, uint64_t address, void *arg), void *arg)
+enum_elf32_symbols(FILE *elf, uint64_t base_address, int (*callback)(char *name, uint64_t address, void *arg), void *arg)
 {
 	
 }
 
 int
-enum_elf64_symbols(FILE *elf, int (*callback)(char *name, uint64_t address, void *arg), void *arg)
+enum_elf64_symbols(FILE *elf, uint64_t base_address, int (*callback)(char *name, uint64_t address, void *arg), void *arg)
 {
 	int result = -1;
 	Elf64_Ehdr ehdr;
@@ -78,6 +78,11 @@ enum_elf64_symbols(FILE *elf, int (*callback)(char *name, uint64_t address, void
 	fseek(elf, 0, SEEK_SET);
 	if (fread(&ehdr, sizeof(ehdr), 1, elf) == 0)
 		return result;
+
+	/* NOTE: Files with 'ET_EXEC' as the ELF header type have absolute addresses on symbols */
+	/* TODO: Double check that this is always the case */
+	if (ehdr.e_type == ET_EXEC)
+		base_address = 0;
 
 	/* Read shstrtab section header */
 	fseek(elf, ehdr.e_shoff + (ehdr.e_shstrndx * ehdr.e_shentsize), SEEK_SET);
@@ -137,7 +142,7 @@ enum_elf64_symbols(FILE *elf, int (*callback)(char *name, uint64_t address, void
 			continue;
 
 		symbol_name = &strtab[sym.st_name];
-		if (!callback(symbol_name, (uint64_t)sym.st_value, arg))
+		if (!callback(symbol_name, base_address + (uint64_t)sym.st_value, arg))
 			break;
 	}
 
@@ -150,7 +155,7 @@ SHSTRTAB_EXIT:
 }
 
 int
-enum_elf_symbols(const char *path, int (*callback)(char *name, uint64_t address, void *arg), void *arg)
+enum_elf_symbols(const char *path, uint64_t base_address, int (*callback)(char *name, uint64_t address, void *arg), void *arg)
 {
 	int result = -1;
 	FILE *elf;
@@ -167,9 +172,9 @@ enum_elf_symbols(const char *path, int (*callback)(char *name, uint64_t address,
 		goto CLOSE_EXIT;
 
 	if (bits == 32)
-		result = enum_elf32_symbols(elf, callback, arg);
+		result = enum_elf32_symbols(elf, base_address, callback, arg);
 	else if (bits == 64)
-		result = enum_elf64_symbols(elf, callback, arg);
+		result = enum_elf64_symbols(elf, base_address, callback, arg);
 
 CLOSE_EXIT:
 	fclose(elf);

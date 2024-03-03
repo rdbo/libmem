@@ -23,10 +23,23 @@
 #include <libmem/libmem.h>
 #include <elfutils/elfutils.h>
 
+typedef struct {
+	lm_bool_t (LM_CALL *callback)(lm_symbol_t *, lm_void_t *);
+	lm_void_t *arg;
+} enum_symbols_t;
+
 int
 enum_symbols_callback(char *name, uint64_t address, void *arg)
 {
-	printf("%s @ %p\n", name, (void *)address);
+	enum_symbols_t *parg = (enum_symbols_t *)arg;
+	lm_symbol_t symbol;
+
+	symbol.name = (lm_string_t)name;
+	symbol.address = (lm_address_t)address;
+
+	if (parg->callback(&symbol, parg->arg) == LM_FALSE)
+		return 0;
+	
 	return 1;
 }
 
@@ -36,10 +49,15 @@ LM_EnumSymbols(const lm_module_t  *module,
 					     lm_void_t   *arg),
 	       lm_void_t          *arg)
 {
+	enum_symbols_t parg;
+	
 	if (!module || !callback)
 		return LM_FALSE;
+
+	parg.callback = callback;
+	parg.arg = arg;
 	
-	enum_elf_symbols(module->path, module->base, enum_symbols_callback, NULL);
+	enum_elf_symbols(module->path, module->base, enum_symbols_callback, (lm_void_t *)&parg);
 	
 	return LM_TRUE;
 }

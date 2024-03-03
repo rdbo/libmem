@@ -5,12 +5,12 @@
 extern int main();
 
 static const lm_address_t real_symbol_addr = (lm_address_t)main;
-static const lm_cstring_t real_symbol = "main";
-static lm_cstring_t alloc_symbol;
+static const lm_string_t real_symbol = "main";
+static lm_char_t *alloc_symbol;
 
 lm_bool_t _LM_EnumSymbolsCallback(lm_symbol_t *psymbol, lm_void_t *arg)
 {
-	if (!LM_CSTRCMP(psymbol->name, real_symbol)) {
+	if (!strcmp(psymbol->name, real_symbol)) {
 		*(lm_address_t *)arg = psymbol->address;
 		return LM_FALSE;
 	}
@@ -46,12 +46,16 @@ char *test_LM_FindSymbolAddress(lm_module_t *pmod)
 
 char *test_LM_DemangleSymbol(lm_void_t *_arg)
 {
-	const lm_cstring_t mangled = "_ZN4llvm11ms_demangle14ArenaAllocator5allocINS0_29LiteralOperatorIdentifierNodeEJEEEPT_DpOT0_";
-	const lm_cstring_t demangled = "llvm::ms_demangle::LiteralOperatorIdentifierNode* llvm::ms_demangle::ArenaAllocator::alloc<llvm::ms_demangle::LiteralOperatorIdentifierNode>()";
+	const lm_string_t mangled = "_ZN4llvm11ms_demangle14ArenaAllocator5allocINS0_29LiteralOperatorIdentifierNodeEJEEEPT_DpOT0_";
+	const lm_string_t demangled = "llvm::ms_demangle::LiteralOperatorIdentifierNode* llvm::ms_demangle::ArenaAllocator::alloc<llvm::ms_demangle::LiteralOperatorIdentifierNode>()";
 
 	alloc_symbol = LM_DemangleSymbol(mangled, LM_NULLPTR, 0);
 	mu_assert("failed to demangle symbol", alloc_symbol != LM_NULLPTR);
-	mu_assert("demangled symbol does not match expected value", !LM_CSTRCMP(demangled, alloc_symbol));
+
+	printf(" <SYMBOL: '%s'> ", alloc_symbol);
+	fflush(stdout);
+
+	mu_assert("demangled symbol does not match expected value", !strcmp(demangled, alloc_symbol));
 	mu_assert("function attempted to run with bad arguments (invalid symbol)", LM_DemangleSymbol(LM_NULLPTR, LM_NULLPTR, 0) == LM_FALSE);
 
 	/* TODO: test pre-allocated buffer */
@@ -59,9 +63,9 @@ char *test_LM_DemangleSymbol(lm_void_t *_arg)
 	return NULL;
 }
 
-char *test_LM_FreeDemangleSymbol(lm_void_t *_arg)
+char *test_LM_FreeDemangledSymbol(lm_void_t *_arg)
 {
-	LM_FreeDemangleSymbol(alloc_symbol);
+	LM_FreeDemangledSymbol(alloc_symbol);
 
 	return NULL;
 }
@@ -86,8 +90,8 @@ char *test_LM_FindSymbolAddressDemangled(lm_module_t *pmod)
 
 	mu_assert("invalid symbol address", symaddr != LM_ADDRESS_BAD);
 	mu_assert("incorrect symbol address", symaddr == real_symbol_addr);
-	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_FindSymbolAddressDemangled(LM_NULLPTR, real_symbol) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_FindSymbolAddressDemangled(pmod, LM_NULLPTR) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_FindSymbolAddressDemangled(LM_NULLPTR, real_symbol) == LM_ADDRESS_BAD);
+	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_FindSymbolAddressDemangled(pmod, LM_NULLPTR) == LM_ADDRESS_BAD);
 	
 	return NULL;
 }

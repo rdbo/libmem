@@ -27,10 +27,8 @@
 #include <winutils/winutils.h>
 #include <assert.h>
 
-typedef lm_bool_t (LM_CALL *lm_enum_processes_cb_t)(lm_process_t *process, lm_void_t *arg);
-
 typedef struct {
-	lm_enum_processes_cb_t callback;
+	lm_bool_t (LM_CALL *callback)(lm_process_t *, lm_void_t *);
 	lm_void_t *arg;
 } enum_processes_t;
 

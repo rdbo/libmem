@@ -294,15 +294,15 @@ LM_EnumSymbols(const lm_module_t  *module,
 
 LM_API lm_address_t LM_CALL
 LM_FindSymbolAddress(const lm_module_t *module,
-		     lm_string_t        name);
+		     lm_string_t        symbol_name);
 
-LM_API lm_string_t LM_CALL
+LM_API lm_char_t * LM_CALL
 LM_DemangleSymbol(lm_string_t symbol_name,
 		  lm_char_t  *demangled_buf,
 		  lm_size_t   maxsize);
 
 LM_API lm_void_t LM_CALL
-LM_FreeDemangleSymbol(lm_char_t *symbol_name);
+LM_FreeDemangledSymbol(lm_char_t *symbol_name);
 
 LM_API lm_bool_t LM_CALL
 LM_EnumSymbolsDemangled(const lm_module_t  *module,
@@ -312,7 +312,7 @@ LM_EnumSymbolsDemangled(const lm_module_t  *module,
 
 LM_API lm_address_t
 LM_FindSymbolAddressDemangled(const lm_module_t *module,
-			      lm_string_t        name);
+			      lm_string_t        symbol_name);
 
 #ifdef __cplusplus
 }

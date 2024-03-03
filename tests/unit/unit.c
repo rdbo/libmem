@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define UNIT_TEST_P(func, arg) { \
 	extern char *test_##func(void *); \
@@ -105,10 +106,10 @@ void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_GetPage, pcurproc);
 	UNIT_TEST_P(LM_GetPageEx, ptargetproc);
 }
-
+*/
 void test_symbol(lm_process_t *pcurproc)
 {
-	/* TODO: Retrieve module from 'module' tests and reuse here! * /
+	/* TODO: Retrieve module from 'module' tests and reuse here! */
 	lm_module_t mod;
 	
 	assert(LM_FindModule(pcurproc->name, &mod) == LM_TRUE);
@@ -116,11 +117,12 @@ void test_symbol(lm_process_t *pcurproc)
 	UNIT_TEST_P(LM_EnumSymbols, &mod);
 	UNIT_TEST_P(LM_FindSymbolAddress, &mod);
 	UNIT_TEST(LM_DemangleSymbol);
-	UNIT_TEST(LM_FreeDemangleSymbol);
+	UNIT_TEST(LM_FreeDemangledSymbol);
 	UNIT_TEST_P(LM_EnumSymbolsDemangled, &mod);
 	UNIT_TEST_P(LM_FindSymbolAddressDemangled, &mod);
 }
 
+/*
 void test_vmt()
 {
 	lm_vmt_t vmt;
@@ -164,11 +166,6 @@ main()
 	printf("[*] Unit Tests\n");
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
 
-
-	lm_module_t mod;
-	LM_FindModule("unit", &mod);
-	LM_EnumSymbols(&mod, (void *)1, NULL);
-
 	test_process(&current_process, &target_process);
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
 	/*
@@ -178,7 +175,9 @@ main()
 	test_module(&current_process, &target_process);
 	/*
 	test_page(&current_process, &target_process);
+	*/
 	test_symbol(&current_process);
+	/*
 	test_vmt();
 	test_scan(&target_process);
 	*/

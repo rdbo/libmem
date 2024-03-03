@@ -50,10 +50,100 @@ get_elf_bits(const char *path)
 	return bits;
 }
 
+/* TODO: Don't duplicate the ELF symbol enumeration functions */
 int
 enum_elf32_symbols(FILE *elf, uint64_t base_address, int (*callback)(char *name, uint64_t address, void *arg), void *arg)
 {
-	
+	int result = -1;
+	Elf32_Ehdr ehdr;
+	Elf32_Shdr shstrtab_shdr; /* String table section header (contains only section header strings) */
+	char *shstrtab;
+	char *section_name;
+	Elf32_Shdr symtab_shdr; /* Symbol table section header */
+	Elf32_Shdr strtab_shdr; /* String table section header */
+	Elf32_Half i;
+	Elf32_Shdr shdr;
+	char *strtab; /* String table */
+	Elf32_Sym sym;
+	char *symbol_name;
+	size_t count;
+
+	assert(elf != NULL && callback != NULL);
+
+	fseek(elf, 0, SEEK_SET);
+	if (fread(&ehdr, sizeof(ehdr), 1, elf) == 0)
+		return result;
+
+	/* NOTE: Files with 'ET_EXEC' as the ELF header type have absolute addresses on symbols */
+	/* TODO: Double check that this is always the case */
+	if (ehdr.e_type == ET_EXEC)
+		base_address = 0;
+
+	/* Read shstrtab section header */
+	fseek(elf, ehdr.e_shoff + (ehdr.e_shstrndx * ehdr.e_shentsize), SEEK_SET);
+	if (fread(&shstrtab_shdr, sizeof(shstrtab_shdr), 1, elf) == 0)
+		return result;
+
+	/* Cache section header string table for easier retrieval */
+	shstrtab = (char *)malloc(shstrtab_shdr.sh_size);
+	if (!shstrtab)
+		return result;
+	fseek(elf, shstrtab_shdr.sh_offset, SEEK_SET);
+	if (fread(shstrtab, shstrtab_shdr.sh_size, 1, elf) == 0)
+		goto SHSTRTAB_EXIT;
+
+	/* Read and store necessary section headers from the ELF file */
+	strtab_shdr.sh_offset = 0;
+	symtab_shdr.sh_offset = 0;
+	fseek(elf, ehdr.e_shoff, SEEK_SET);
+	for (i = 0; i < ehdr.e_shnum && (strtab_shdr.sh_offset == 0 || symtab_shdr.sh_offset == 0); ++i) {
+		if (fread(&shdr, sizeof(shdr), 1, elf) == 0)
+			goto SHSTRTAB_EXIT;
+
+		switch (shdr.sh_type) {
+		case SHT_SYMTAB:
+			/* There is only 1 section with 'SHT_SYMTAB' type, so no extra checking needed */
+			symtab_shdr = shdr;
+			break;
+		case SHT_STRTAB:
+			section_name = &shstrtab[shdr.sh_name];
+			if (!strcmp(section_name, ".strtab"))
+				strtab_shdr = shdr;
+			break;
+		};
+	}
+
+	if (symtab_shdr.sh_offset == 0 || strtab_shdr.sh_offset == 0)
+		goto SHSTRTAB_EXIT;
+
+	/* Cache string table in memory for easier retrieval */
+	strtab = (char *)malloc(strtab_shdr.sh_size);
+	if (!strtab)
+		goto SHSTRTAB_EXIT;
+	fseek(elf, strtab_shdr.sh_offset, SEEK_SET);
+	if (fread(strtab, 1, strtab_shdr.sh_size, elf) != strtab_shdr.sh_size)
+		goto STRTAB_EXIT;
+
+	/* Loop through symbol table */
+	fseek(elf, symtab_shdr.sh_offset, SEEK_SET);
+	for (i = 0; i < (symtab_shdr.sh_size / symtab_shdr.sh_entsize); ++i) {
+		if (fread(&sym, sizeof(sym), 1, elf) == 0)
+			goto STRTAB_EXIT;
+
+		if (sym.st_name == 0)
+			continue;
+
+		symbol_name = &strtab[sym.st_name];
+		if (!callback(symbol_name, base_address + (uint64_t)sym.st_value, arg))
+			break;
+	}
+
+	result = 0;
+STRTAB_EXIT:
+	free(strtab);
+SHSTRTAB_EXIT:
+	free(shstrtab);
+	return result;
 }
 
 int
@@ -104,9 +194,6 @@ enum_elf64_symbols(FILE *elf, uint64_t base_address, int (*callback)(char *name,
 	for (i = 0; i < ehdr.e_shnum && (strtab_shdr.sh_offset == 0 || symtab_shdr.sh_offset == 0); ++i) {
 		if (fread(&shdr, sizeof(shdr), 1, elf) == 0)
 			goto SHSTRTAB_EXIT;
-
-		printf("SHDR TYPE: %d\n", shdr.sh_type);
-		printf("SHDR OFFSET: %p\n", (void *)shdr.sh_offset);
 
 		switch (shdr.sh_type) {
 		case SHT_SYMTAB:

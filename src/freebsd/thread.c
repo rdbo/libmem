@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/user.h>
 #include <sys/sysctl.h>
+#include <sys/thr.h>
 #include <libprocstat.h>
 
 LM_API lm_bool_t LM_CALL

@@ -67,7 +67,7 @@ LM_DemangleSymbol(lm_string_t symbol_name,
 		  lm_size_t   maxsize)
 {
 	if (!symbol_name)
-		return LM_FALSE;
+		return LM_NULLPTR;
 	
 	return demangle(symbol_name, demangled_buf, maxsize);
 }

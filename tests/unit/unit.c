@@ -164,6 +164,11 @@ main()
 	printf("[*] Unit Tests\n");
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
 
+
+	lm_module_t mod;
+	LM_FindModule("unit", &mod);
+	LM_EnumSymbols(&mod, (void *)1, NULL);
+
 	test_process(&current_process, &target_process);
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
 	/*

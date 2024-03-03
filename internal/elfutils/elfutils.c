@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <elf.h>
 
+#define ELFW_ST_TYPE(elf) (elf.st_info & 0xf)
+
 #define ENUM_ELFW_SYMBOLS(elf_type) \
 int \
 enum_elf##elf_type##_symbols(FILE *elf, uint64_t base_address, int (*callback)(char *name, uint64_t address, void *arg), void *arg) \
@@ -83,7 +85,7 @@ enum_elf##elf_type##_symbols(FILE *elf, uint64_t base_address, int (*callback)(c
 		if (fread(&sym, sizeof(sym), 1, elf) == 0) \
 			goto STRTAB_EXIT; \
 \
-		if (sym.st_name == 0) \
+		if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE) \
 			continue; \
 \
 		symbol_name = &strtab[sym.st_name]; \

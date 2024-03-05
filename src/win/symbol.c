@@ -42,9 +42,11 @@ LM_EnumSymbols(const lm_module_t  *module,
 	lm_symbol_t symbol;
 
 	/* Load library purely for getting resources, and not executing */
+	printf("\nLOADING LIB\n");
 	hmod = LoadLibraryExW(module->path, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
 	if (!hmod)
 		return result;
+	printf("LIB LOADED\n");
 
 	/*
 	 * From: https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-moduleinfo
@@ -54,12 +56,18 @@ LM_EnumSymbols(const lm_module_t  *module,
 	modbase = (lm_address_t)hmod;
 
 	pdoshdr = (PIMAGE_DOS_HEADER)modbase;
+	printf("DOS HEADER: %p\n", (void *)pdoshdr);
 	pnthdr = (PIMAGE_NT_HEADERS)(modbase + (lm_address_t)pdoshdr->e_lfanew);
+	printf("NT HEADER: %p\n", (void *)pnthdr);
 	pexportdir = (PIMAGE_EXPORT_DIRECTORY)(
 		modbase + pnthdr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress
 	);
+	printf("Export Dir: %p\n", (void *)pexportdir);
 	export_names = (DWORD *)(modbase + pexportdir->AddressOfNames);
+	printf("EXPORT NAMES: %p\n", export_names);
 	export_funcs = (DWORD *)(modbase + pexportdir->AddressOfFunctions);
+	printf("EXPORT FUNCS: %p\n", export_funcs);
+	printf("NUMBER OF FUNCS: %d\n", (int)pexportdir->NumberOfFunctions);
 
 	for (i = 0; i < pexportdir->NumberOfNames && i < pexportdir->NumberOfFunctions; ++i) {
 		symbol.name = (lm_string_t)(modbase + export_names[i]);

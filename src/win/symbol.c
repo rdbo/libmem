@@ -21,12 +21,56 @@
  */
 
 #include <libmem/libmem.h>
+#include <windows.h>
 
+/* TODO: Verify that this function works with 64 bit process and 32 bit library */
 LM_API lm_bool_t LM_CALL
 LM_EnumSymbols(const lm_module_t  *module,
 	       lm_bool_t (LM_CALL *callback)(lm_symbol_t *symbol,
 					     lm_void_t   *arg),
 	       lm_void_t          *arg)
 {
+	lm_bool_t result = LM_FALSE;
+	HMODULE hmod;
+	lm_address_t modbase;
+	PIMAGE_DOS_HEADER pdoshdr;
+	PIMAGE_NT_HEADERS pnthdr;
+	PIMAGE_EXPORT_DIRECTORY pexportdir;
+	DWORD *export_names;
+	DWORD *export_funcs;
+	DWORD i;
+	lm_symbol_t symbol;
+
+	/* Load library purely for getting resources, and not executing */
+	hmod = LoadLibraryExW(module->path, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+	if (!hmod)
+		return result;
+
+	/*
+	 * From: https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-moduleinfo
+	 *
+	 * "The load address of a module is the same as the HMODULE value."
+	 */
+	modbase = (lm_address_t)hmod;
+
+	pdoshdr = (PIMAGE_DOS_HEADER)modbase;
+	pnthdr = (PIMAGE_NT_HEADERS)(modbase + (lm_address_t)pdoshdr->e_lfanew);
+	pexportdir = (PIMAGE_EXPORT_DIRECTORY)(
+		modbase + pnthdr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress
+	);
+	export_names = (DWORD *)(modbase + pexportdir->AddressOfNames);
+	export_funcs = (DWORD *)(modbase + pexportdir->AddressOfFunctions);
+
+	for (i = 0; i < pexportdir->NumberOfNames && i < pexportdir->NumberOfFunctions; ++i) {
+		symbol.name = (lm_string_t)(modbase + export_names[i]);
+		symbol.address = (lm_address_t)(module->base, export_funcs[i]);
+
+		if (callback(&symbol, arg) == LM_FALSE)
+			break;
+	}
 	
+	result = LM_TRUE;
+CLOSE_EXIT:
+	CloseHandle(hmod);
+	return result;
 }

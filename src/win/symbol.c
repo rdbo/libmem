@@ -32,6 +32,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 	       lm_void_t          *arg)
 {
 	lm_bool_t result = LM_FALSE;
+	WCHAR *wpath;
 	BOOL is_loaded = FALSE;
 	HMODULE hmod;
 	lm_address_t modbase;
@@ -43,23 +44,29 @@ LM_EnumSymbols(const lm_module_t  *module,
 	DWORD i;
 	lm_symbol_t symbol;
 
+	wpath = wcstoutf8(module->path, NULL, 0);
+	if (!wpath)
+		return result;
+
 	/* Attempt to get the module handle without loading the library */
-	hmod = GetModuleHandle(module->path);
+	printf("GETTING MODULE HANLDE\n");
+	hmod = GetModuleHandleW(module->path);
+	/* WARN: 'wpath' MUST BE FREE'd unconditionally inside the following conditional blocks */
 	if (!hmod) {
-		WCHAR *wpath;
-
-		wpath = wcstoutf8(module->path, NULL, 0);
-		if (!wpath)
-			return result;
-
 		/* Load library purely for getting resources, and not executing */
-		hmod = LoadLibraryExW(module->path, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+		printf("LOADING LIB\n");
+		hmod = LoadLibraryExW(wpath, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
 		free(wpath);
 
 		if (!hmod)
 			return result;
 
+		printf("MODULE LOADED\n");
+
 		is_loaded = TRUE;
+	} else {
+		printf("GOT HANDLE\n");
+		free(wpath);
 	}
 
 	/*

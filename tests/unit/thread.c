@@ -38,6 +38,7 @@ char *test_LM_EnumThreads(struct thread_args *thrarg)
 
 	mu_assert("failed to enumerate threads", LM_EnumThreads(_LM_EnumThreadsCallback, (lm_void_t *)&arg) == LM_TRUE);
 	mu_assert("could not find current thread", arg.check == LM_TRUE);
+	mu_assert("thread owner_pid does not match the expected process id", arg.thread->owner_pid == thrarg->pcurproc->pid);
 	mu_assert("function attempted to run with bad arguments", LM_EnumThreads(LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
@@ -50,6 +51,7 @@ char *test_LM_GetThreadEx(struct thread_args *thrarg)
 	
 	mu_assert("failed to get a thread from the target process", LM_GetThreadEx(ptargetproc, ptargetthread) == LM_TRUE);
 	mu_assert("retrieved thread is invalid", CHECK_THREAD(ptargetthread));
+	mu_assert("thread owner_pid does not match the expected process id", ptargetthread->owner_pid == ptargetproc->pid);
 	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_GetThreadEx(LM_NULLPTR, ptargetthread) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid thread)", LM_GetThreadEx(ptargetproc, LM_NULLPTR) == LM_FALSE);
 
@@ -66,6 +68,7 @@ char *test_LM_EnumThreadsEx(struct thread_args *thrarg)
 
 	mu_assert("failed to enumerate threads", LM_EnumThreadsEx(ptargetproc, _LM_EnumThreadsCallback, (lm_void_t *)&arg) == LM_TRUE);
 	mu_assert("could not find retrieved thread", arg.check == LM_TRUE);
+	mu_assert("thread owner_pid does not match the expected process id", arg.thread->owner_pid == ptargetproc->pid);
 	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_EnumThreadsEx(LM_NULLPTR, _LM_EnumThreadsCallback, LM_NULLPTR) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_EnumThreadsEx(ptargetproc, LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 

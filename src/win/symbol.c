@@ -31,6 +31,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 	       lm_void_t          *arg)
 {
 	lm_bool_t result = LM_FALSE;
+	BOOL is_loaded = FALSE;
 	HMODULE hmod;
 	lm_address_t modbase;
 	PIMAGE_DOS_HEADER pdoshdr;
@@ -41,12 +42,16 @@ LM_EnumSymbols(const lm_module_t  *module,
 	DWORD i;
 	lm_symbol_t symbol;
 
-	/* Load library purely for getting resources, and not executing */
-	printf("\nLOADING LIB\n");
-	hmod = LoadLibraryExW(module->path, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
-	if (!hmod)
-		return result;
-	printf("LIB LOADED\n");
+	/* Attempt to get the module handle without loading the library */
+	hmod = GetModuleHandle(module->path);
+	if (!hmod) {
+		/* Load library purely for getting resources, and not executing */
+		hmod = LoadLibraryExW(module->path, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+		if (!hmod)
+			return result;
+
+		is_loaded = TRUE;
+	}
 
 	/*
 	 * From: https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-moduleinfo
@@ -79,6 +84,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 	
 	result = LM_TRUE;
 CLOSE_EXIT:
-	CloseHandle(hmod);
+	if (is_loaded)
+		CloseHandle(hmod);
 	return result;
 }

@@ -44,7 +44,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 	DWORD i;
 	lm_symbol_t symbol;
 
-	wpath = wcstoutf8(module->path, NULL, 0);
+	wpath = utf8towcs(module->path, NULL, 0);
 	if (!wpath)
 		return result;
 

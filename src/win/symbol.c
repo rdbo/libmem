@@ -22,6 +22,7 @@
 
 #include <libmem/libmem.h>
 #include <windows.h>
+#include <winutils/winutils.h>
 
 /* TODO: Verify that this function works with 64 bit process and 32 bit library */
 LM_API lm_bool_t LM_CALL
@@ -45,8 +46,16 @@ LM_EnumSymbols(const lm_module_t  *module,
 	/* Attempt to get the module handle without loading the library */
 	hmod = GetModuleHandle(module->path);
 	if (!hmod) {
+		WCHAR *wpath;
+
+		wpath = wcstoutf8(module->path, NULL, 0);
+		if (!wpath)
+			return result;
+
 		/* Load library purely for getting resources, and not executing */
 		hmod = LoadLibraryExW(module->path, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+		free(wpath);
+
 		if (!hmod)
 			return result;
 

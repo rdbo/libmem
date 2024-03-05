@@ -85,7 +85,10 @@ LM_EnumSymbols(const lm_module_t  *module,
 
 	for (i = 0; i < pexportdir->NumberOfNames && i < pexportdir->NumberOfFunctions; ++i) {
 		symbol.name = (lm_string_t)(modbase + export_names[i]);
+		printf("symbol name: %s\n", symbol.name);
+
 		symbol.address = (lm_address_t)(module->base, export_funcs[i]);
+		printf("symbol address: %p\n", (void *)symbol.address);
 
 		if (callback(&symbol, arg) == LM_FALSE)
 			break;

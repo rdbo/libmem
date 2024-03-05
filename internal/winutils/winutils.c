@@ -40,6 +40,8 @@ wcstoutf8(WCHAR *widestr, char *utf8buf, size_t buflen)
 		 */
 		buflen = WideCharToMultiByte(CP_UTF8, 0, widestr, -1, NULL, 0, NULL, NULL);
 		cvt = (char *)malloc(buflen);
+		if (!cvt)
+			return NULL;
 	}
 
 	/* This function automatically inserts the NULL terminator when passing -1 to 'cchWideChar' */
@@ -70,6 +72,8 @@ utf8towcs(char *utf8str, WCHAR *wcsbuf, size_t buflen)
 		 */
 		buflen = MultiByteToWideChar(CP_UTF8, 0, utf8str, -1, NULL, 0);
 		cvt = malloc(buflen * 2); /* We need to multiply by 2 because the wchars are UTF-16 (2 bytes per wchar) */
+		if (!cvt)
+			return NULL;
 	}
 
 	/* This function automatically inserts the NULL terminator when passing -1 to 'cchWideChar' */

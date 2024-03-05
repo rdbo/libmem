@@ -50,7 +50,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 
 	/* Attempt to get the module handle without loading the library */
 	printf("GETTING MODULE HANLDE\n");
-	hmod = GetModuleHandleW(module->path);
+	hmod = GetModuleHandleW(wpath);
 	/* WARN: 'wpath' MUST BE FREE'd unconditionally inside the following conditional blocks */
 	if (!hmod) {
 		/* Load library purely for getting resources, and not executing */

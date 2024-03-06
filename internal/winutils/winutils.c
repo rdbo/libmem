@@ -71,7 +71,7 @@ utf8towcs(char *utf8str, WCHAR *wcsbuf, size_t buflen)
 		 *       the required size in characters to convert the string.
 		 */
 		buflen = MultiByteToWideChar(CP_UTF8, 0, utf8str, -1, NULL, 0);
-		cvt = malloc(buflen * 2); /* We need to multiply by 2 because the wchars are UTF-16 (2 bytes per wchar) */
+		cvt = malloc(buflen * sizeof(WCHAR));
 		if (!cvt)
 			return NULL;
 	}

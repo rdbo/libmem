@@ -44,6 +44,10 @@ LM_EnumSymbols(const lm_module_t  *module,
 	DWORD i;
 	lm_symbol_t symbol;
 
+	if (!module || !callback)
+		return result;
+
+	printf("CONVERTING PATH TO UTF8");
 	wpath = utf8towcs(module->path, NULL, 0);
 	if (!wpath)
 		return result;

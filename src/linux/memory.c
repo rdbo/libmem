@@ -20,8 +20,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
+
 #include <libmem/libmem.h>
+#include "osprot.h"
+#include <unistd.h>
 #include <sys/uio.h>
+#include <sys/mman.h>
 
 LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *process,
@@ -75,4 +82,59 @@ LM_WriteMemoryEx(const lm_process_t *process,
 		return 0;
 
 	return (lm_size_t)wrsize;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_ProtMemory(lm_address_t address,
+	      lm_size_t    size,
+	      lm_prot_t    prot,
+	      lm_prot_t   *oldprot)
+{
+	int osprot;
+	
+	if (address == LM_ADDRESS_BAD)
+		return LM_FALSE;
+
+	if (size == 0)
+		size = (lm_size_t)getpagesize();
+
+	osprot = get_os_prot(prot);
+
+	return mprotect((void *)address, size, osprot) != -1 ? LM_TRUE : LM_FALSE;
+}
+
+/********************************/
+
+LM_API lm_address_t LM_CALL
+LM_AllocMemory(lm_size_t size,
+	       lm_prot_t prot)
+{
+	int osprot;
+	void *alloc;
+
+	/* NOTE: The function is page aligned, so if size == 0, it will just allocate a full page */
+	if (size == 0)
+		size = (lm_size_t)getpagesize();
+
+	osprot = get_os_prot(prot);
+
+	alloc = mmap(NULL, size, osprot, MAP_PRIVATE | MAP_ANON, -1, 0);
+	if (alloc == MAP_FAILED)
+		return LM_ADDRESS_BAD;
+
+	return (lm_address_t)alloc;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_FreeMemory(lm_address_t alloc,
+	      lm_size_t    size)
+{
+	if (size == 0)
+		size = (lm_size_t)getpagesize();
+
+	return munmap((void *)alloc, size) == 0 ? LM_TRUE : LM_FALSE;
 }

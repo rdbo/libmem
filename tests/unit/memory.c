@@ -3,7 +3,7 @@
 #include "helpers.h"
 #include <stddef.h>
 
-#define ALLOCSIZE 1024
+#define ALLOCSIZE 0
 #define ALLOCPROT LM_PROT_XRW
 #define BADPROT 0xDEADBEEF
 
@@ -14,16 +14,19 @@ char *test_LM_AllocMemory(lm_address_t *palloc)
 	
 	printf("<ADDRESS: %p> ", (void *)*palloc);
 	fflush(stdout);
-	
-	mu_assert("function attempted to run with bad arguments (invalid size)", LM_AllocMemory(0, LM_PROT_NONE) == LM_ADDRESS_BAD);
-	mu_assert("function attempted to run with bad arguments (invalid prot)", LM_AllocMemory(ALLOCSIZE, BADPROT) == LM_ADDRESS_BAD);
+
+	/* NOTE: LM_AllocMemory is now page-aligned, so size == 0 should work */
+	/* mu_assert("function attempted to run with bad arguments (invalid size)", LM_AllocMemory(0, LM_PROT_NONE) == LM_ADDRESS_BAD); */
+
+	/* NOTE: Running LM_AllocMemory with a bad protection will just result in pages allocated with LM_PROT_NONE */
+	/* mu_assert("function attempted to run with bad arguments (invalid prot)", LM_AllocMemory(ALLOCSIZE, BADPROT) == LM_ADDRESS_BAD); */
 	
 	return NULL;
 }
 
 char *test_LM_ProtMemory(lm_address_t *palloc)
 {
-	lm_prot_t oldprot;
+	lm_prot_t oldprot = LM_PROT_NONE;
 
 	mu_assert("failed to change protection of memory", LM_ProtMemory(*palloc, ALLOCSIZE, LM_PROT_RW, &oldprot) == LM_TRUE);
 	mu_assert("old protection does not match its real value", oldprot == ALLOCPROT);
@@ -39,8 +42,6 @@ char *test_LM_FreeMemory(lm_address_t *palloc)
 {
 	mu_assert("failed to deallocate memory", LM_FreeMemory(*palloc, ALLOCSIZE) == LM_TRUE);
 	mu_assert("function attempted to run with bad arguments (invalid alloc)", LM_FreeMemory(LM_ADDRESS_BAD, ALLOCSIZE) == LM_FALSE);
-	/* NOTE: size can be 0 on Windows, where that parameter is unused - on other platforms, it's recommended to pass the actual size or '1' to deallocate the full page */
-	// mu_assert("function attempted to run with bad arguments (invalid size)", LM_FreeMemory(*palloc, 0) == LM_FALSE);
 
 	return NULL;
 }
@@ -53,7 +54,7 @@ char *test_LM_ReadMemory(void *arg)
 	mu_assert("failed to read buffer into copy buffer", LM_ReadMemory((lm_address_t)buf, buf_copy, sizeof(buf_copy)) == sizeof(buf_copy));
 	mu_assert("copy buffer does not match original buffer", memcmp(buf, buf_copy, sizeof(buf_copy)) == 0);
 	mu_assert("function attempted to run with bad arguments (invalid src)", LM_ReadMemory(LM_ADDRESS_BAD, buf_copy, sizeof(buf_copy)) == 0);
-	mu_assert("function attempted to run with bad arguments (invalid dst)", LM_ReadMemory((lm_address_t)buf, LM_ADDRESS_BAD, sizeof(buf_copy)) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid dst)", LM_ReadMemory((lm_address_t)buf, LM_NULLPTR, sizeof(buf_copy)) == 0);
 	mu_assert("function attempted to run with bad arguments (invalid size)", LM_ReadMemory((lm_address_t)buf, buf_copy, 0) == 0);
 	
 	return NULL;
@@ -64,11 +65,51 @@ char *test_LM_WriteMemory(void *arg)
 	int number = 0;
 	int new_number = 1337;
 
-	mu_assert("failed to read buffer into copy buffer", LM_WriteMemory((lm_address_t)&number, (lm_bytearr_t)&new_number, sizeof(new_number)) == sizeof(new_number));
+	mu_assert("failed to read buffer into copy buffer", LM_WriteMemory((lm_address_t)&number, (lm_bytearray_t)&new_number, sizeof(new_number)) == sizeof(new_number));
 	mu_assert("written buffer does not match src buffer", number == new_number);
-	mu_assert("function attempted to run with bad arguments (invalid dst)", LM_WriteMemory(LM_ADDRESS_BAD, (lm_bytearr_t)&new_number, sizeof(new_number)) == 0);
-	mu_assert("function attempted to run with bad arguments (invalid src)", LM_WriteMemory((lm_address_t)&number, LM_ADDRESS_BAD, sizeof(new_number)) == 0);
-	mu_assert("function attempted to run with bad arguments (invalid size)", LM_WriteMemory((lm_address_t)&number, (lm_bytearr_t)&new_number, 0) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid dst)", LM_WriteMemory(LM_ADDRESS_BAD, (lm_bytearray_t)&new_number, sizeof(new_number)) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid src)", LM_WriteMemory((lm_address_t)&number, LM_NULLPTR, sizeof(new_number)) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid size)", LM_WriteMemory((lm_address_t)&number, (lm_bytearray_t)&new_number, 0) == 0);
+	
+	return NULL;
+}
+
+struct _ptrscan_layer2 {
+	char pad[0x10];
+	int player_health;
+} static pointer_scan_layer2 = { { 0 }, 42 };
+
+struct _ptrscan_layer1 {
+	char pad[0xA0];
+	lm_address_t next_layer;
+} static pointer_scan_layer1 = { { 0 }, (lm_address_t)&pointer_scan_layer2 };
+
+struct _ptrscan_layer0 {
+	char pad0[0xF0];
+	lm_address_t next_layer;
+} static pointer_scan_layer0 = { { 0 }, (lm_address_t)&pointer_scan_layer1 };
+
+static int *player_health_ptr = &pointer_scan_layer2.player_health;
+
+static lm_address_t deep_ptr_offsets[] = { 0xF0, 0xA0, 0x10 };
+
+static lm_size_t deep_ptr_noffsets = sizeof(deep_ptr_offsets) / sizeof(deep_ptr_offsets[0]);
+
+char *test_LM_DeepPointer(void *arg)
+{
+	lm_address_t *offsets = deep_ptr_offsets;
+	lm_size_t noffsets = deep_ptr_noffsets;
+	int *deep_pointer = (int *)LM_DeepPointer((lm_address_t)&pointer_scan_layer0, offsets, noffsets);
+	mu_assert("failed to resolve deep pointer", deep_pointer != (int *)LM_ADDRESS_BAD);
+	mu_assert("deep pointer does not match expected address", deep_pointer == player_health_ptr);
+
+	printf("<PLAYER HP: %d> ", *deep_pointer);
+	fflush(stdout);
+	
+	mu_assert("deep pointer value is not the expected value", *deep_pointer == *player_health_ptr);
+	
+	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer(LM_ADDRESS_BAD, offsets, noffsets) == LM_ADDRESS_BAD);
+	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer((lm_address_t)&pointer_scan_layer0, LM_NULLPTR, noffsets) == LM_ADDRESS_BAD);
 	
 	return NULL;
 }
@@ -90,6 +131,7 @@ char *test_LM_SetMemory(void *arg)
 	return NULL;
 }
 
+/*
 char *test_LM_AllocMemoryEx(struct memory_args *arg)
 {
 	lm_process_t *ptargetproc = arg->ptargetproc;
@@ -112,7 +154,7 @@ char *test_LM_ProtMemoryEx(struct memory_args *arg)
 {
 	lm_process_t *ptargetproc = arg->ptargetproc;
 	lm_address_t *palloc = arg->palloc;
-	lm_prot_t oldprot;
+	lm_prot_t oldprot = LM_PROT_NONE;
 
 	mu_assert("failed to change protection of memory", LM_ProtMemoryEx(ptargetproc, *palloc, ALLOCSIZE, LM_PROT_RW, &oldprot) == LM_TRUE);
 	mu_assert("old protection does not match its real value", oldprot == ALLOCPROT);
@@ -131,11 +173,11 @@ char *test_LM_WriteMemoryEx(struct memory_args *arg)
 	lm_address_t *palloc = arg->palloc;
 	lm_uint32_t number = 1337;
 
-	mu_assert("failed to write memory", LM_WriteMemoryEx(ptargetproc, *palloc, (lm_bytearr_t)&number, sizeof(number)) == sizeof(number));
-	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_WriteMemoryEx(LM_NULLPTR, *palloc, (lm_bytearr_t)&number, sizeof(number)) == 0);
-	mu_assert("function attempted to run with bad arguments (invalid dst)", LM_WriteMemoryEx(ptargetproc, LM_ADDRESS_BAD, (lm_bytearr_t)&number, sizeof(number)) == 0);
+	mu_assert("failed to write memory", LM_WriteMemoryEx(ptargetproc, *palloc, (lm_bytearray_t)&number, sizeof(number)) == sizeof(number));
+	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_WriteMemoryEx(LM_NULLPTR, *palloc, (lm_bytearray_t)&number, sizeof(number)) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid dst)", LM_WriteMemoryEx(ptargetproc, LM_ADDRESS_BAD, (lm_bytearray_t)&number, sizeof(number)) == 0);
 	mu_assert("function attempted to run with bad arguments (invalid src)", LM_WriteMemoryEx(ptargetproc, *palloc, LM_ADDRESS_BAD, sizeof(number)) == 0);
-	mu_assert("function attempted to run with bad arguments (invalid size)", LM_WriteMemoryEx(ptargetproc, *palloc, (lm_bytearr_t)&number, 0) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid size)", LM_WriteMemoryEx(ptargetproc, *palloc, (lm_bytearray_t)&number, 0) == 0);
 	
 	return NULL;
 }
@@ -184,46 +226,6 @@ char *test_LM_FreeMemoryEx(struct memory_args *arg)
 	return NULL;
 }
 
-struct _ptrscan_layer2 {
-	char pad[0x10];
-	int player_health;
-} static pointer_scan_layer2 = { { 0 }, 42 };
-
-struct _ptrscan_layer1 {
-	char pad[0xA0];
-	lm_address_t next_layer;
-} static pointer_scan_layer1 = { { 0 }, (lm_address_t)&pointer_scan_layer2 };
-
-struct _ptrscan_layer0 {
-	char pad0[0xF0];
-	lm_address_t next_layer;
-} static pointer_scan_layer0 = { { 0 }, (lm_address_t)&pointer_scan_layer1 };
-
-static int *player_health_ptr = &pointer_scan_layer2.player_health;
-
-static lm_address_t deep_ptr_offsets[] = { 0xF0, 0xA0, 0x10 };
-
-static lm_size_t deep_ptr_noffsets = sizeof(deep_ptr_offsets) / sizeof(deep_ptr_offsets[0]);
-
-char *test_LM_DeepPointer(void *arg)
-{
-	lm_address_t *offsets = deep_ptr_offsets;
-	lm_size_t noffsets = deep_ptr_noffsets;
-	int *deep_pointer = (int *)LM_DeepPointer((lm_address_t)&pointer_scan_layer0, offsets, noffsets);
-	mu_assert("failed to resolve deep pointer", deep_pointer != (int *)LM_ADDRESS_BAD);
-	mu_assert("deep pointer does not match expected address", deep_pointer == player_health_ptr);
-
-	printf("<PLAYER HP: %d> ", *deep_pointer);
-	fflush(stdout);
-	
-	mu_assert("deep pointer value is not the expected value", *deep_pointer == *player_health_ptr);
-	
-	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer(LM_ADDRESS_BAD, offsets, noffsets) == LM_ADDRESS_BAD);
-	mu_assert("function attempted to run with bad arguments (invalid base)", LM_DeepPointer((lm_address_t)&pointer_scan_layer0, LM_NULLPTR, noffsets) == LM_ADDRESS_BAD);
-	
-	return NULL;
-}
-
 char *test_LM_DeepPointerEx(struct memory_args *arg)
 {
 	lm_byte_t writebuf[sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1) + sizeof(pointer_scan_layer2)];
@@ -257,3 +259,4 @@ char *test_LM_DeepPointerEx(struct memory_args *arg)
 	
 	return NULL;
 }
+*/

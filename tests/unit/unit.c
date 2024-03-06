@@ -45,7 +45,6 @@ void test_thread(lm_process_t *pcurproc, lm_process_t *ptargetproc, lm_thread_t 
 	UNIT_TEST_P(LM_GetThreadProcess, &arg);
 }
 
-/*
 void test_memory(lm_process_t *ptargetproc)
 {
 	lm_address_t alloc;
@@ -59,16 +58,19 @@ void test_memory(lm_process_t *ptargetproc)
 	UNIT_TEST(LM_ReadMemory);
 	UNIT_TEST(LM_WriteMemory);
 	UNIT_TEST(LM_SetMemory);
+	UNIT_TEST(LM_DeepPointer);
+	/*
 	UNIT_TEST_P(LM_AllocMemoryEx, &arg);
 	UNIT_TEST_P(LM_ProtMemoryEx, &arg);
 	UNIT_TEST_P(LM_WriteMemoryEx, &arg);
 	UNIT_TEST_P(LM_SetMemoryEx, &arg);
 	UNIT_TEST_P(LM_ReadMemoryEx, &arg);
-	UNIT_TEST(LM_DeepPointer);
 	UNIT_TEST_P(LM_DeepPointerEx, &arg);
 	UNIT_TEST_P(LM_FreeMemoryEx, &arg);
+	*/
 }
 
+/*
 void test_hook(lm_process_t *ptargetproc)
 {
 	struct hook_args arg;
@@ -168,8 +170,8 @@ main()
 
 	test_process(&current_process, &target_process);
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
-	/*
 	test_memory(&target_process);
+	/*
 	test_hook(&target_process);
 	*/
 	test_module(&current_process, &target_process);

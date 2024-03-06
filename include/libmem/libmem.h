@@ -317,6 +317,9 @@ LM_FindSymbolAddressDemangled(const lm_module_t *module,
 			      lm_string_t        symbol_name);
 
 /* Memory API */
+
+/* NOTE: Memory allocation/protection/freeing functions are page aligned */
+
 LM_API lm_size_t LM_CALL
 LM_ReadMemory(lm_address_t source,
 	      lm_byte_t   *dest,

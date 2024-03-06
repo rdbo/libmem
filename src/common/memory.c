@@ -102,3 +102,30 @@ FREE_EXIT:
 	free(buf);
 	return wrsize;
 }
+
+/********************************/
+
+LM_API lm_address_t LM_CALL
+LM_DeepPointer(lm_address_t        base,
+	       const lm_address_t *offsets,
+	       size_t              noffsets)
+{
+	lm_size_t i;
+
+	/* NOTE: NULL 'offsets' is permitted, as long as 'noffsets' is 0 */
+	if (base == LM_ADDRESS_BAD || (!offsets && noffsets == 0))
+		return LM_ADDRESS_BAD;
+
+	for (i = 0; i < noffsets; ++i) {
+		base += offsets[i];
+
+		/* The last offset won't be dereferenced,
+		 * returning a pointer to the final value
+		 * given by the "pointer scan" offsets */
+		if (i < (noffsets - 1)) {
+			base = *(lm_address_t *)base;
+		}
+	}
+
+	return base;
+}

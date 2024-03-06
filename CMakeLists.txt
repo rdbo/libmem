@@ -40,10 +40,6 @@ message(STATUS
 	"[*] Build static library: ${LIBMEM_BUILD_STATIC}"
 )
 
-message(STATUS
-	"[*] Build for 32 bits: ${LIBMEM_BUILD_32}"
-)
-
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
@@ -74,7 +70,12 @@ set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/winutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
-	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/linux/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
+	if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL x86_64)
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/linux/ptrace/x64/*.c")
+	else()
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/linux/ptrace/x86/*.c")
+	endif()
+	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/linux/*.c" "${LIBMEM_DIR}/src/linux/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
 	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 endif()

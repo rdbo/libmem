@@ -47,23 +47,18 @@ LM_EnumSymbols(const lm_module_t  *module,
 	if (!module || !callback)
 		return result;
 
-	printf("CONVERTING PATH TO UTF8");
 	if (!utf8towcs(module->path, wpath, LM_PATH_MAX))
 		return result;
 
 	/* Attempt to get the module handle without loading the library */
-	printf("GETTING MODULE HANLDE\n");
 	hmod = GetModuleHandleW(wpath);
 	/* WARN: 'wpath' MUST BE FREE'd unconditionally inside the following conditional blocks */
 	if (!hmod) {
 		/* Load library purely for getting resources, and not executing */
-		printf("LOADING LIB\n");
 		hmod = LoadLibraryExW(wpath, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
 
 		if (!hmod)
 			return result;
-
-		printf("MODULE LOADED\n");
 
 		is_loaded = TRUE;
 	}
@@ -76,25 +71,16 @@ LM_EnumSymbols(const lm_module_t  *module,
 	modbase = (lm_address_t)hmod;
 
 	pdoshdr = (PIMAGE_DOS_HEADER)modbase;
-	printf("DOS HEADER: %p\n", (void *)pdoshdr);
 	pnthdr = (PIMAGE_NT_HEADERS)(modbase + (lm_address_t)pdoshdr->e_lfanew);
-	printf("NT HEADER: %p\n", (void *)pnthdr);
 	pexportdir = (PIMAGE_EXPORT_DIRECTORY)(
 		modbase + pnthdr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress
 	);
-	printf("Export Dir: %p\n", (void *)pexportdir);
 	export_names = (DWORD *)(modbase + pexportdir->AddressOfNames);
-	printf("EXPORT NAMES: %p\n", export_names);
 	export_funcs = (DWORD *)(modbase + pexportdir->AddressOfFunctions);
-	printf("EXPORT FUNCS: %p\n", export_funcs);
-	printf("NUMBER OF FUNCS: %d\n", (int)pexportdir->NumberOfFunctions);
 
 	for (i = 0; i < pexportdir->NumberOfNames && i < pexportdir->NumberOfFunctions; ++i) {
 		symbol.name = (lm_string_t)(modbase + export_names[i]);
-		printf("symbol name: %s\n", symbol.name);
-
 		symbol.address = (lm_address_t)(module->base + export_funcs[i]);
-		printf("symbol address: %p\n", (void *)symbol.address);
 
 		if (callback(&symbol, arg) == LM_FALSE)
 			break;

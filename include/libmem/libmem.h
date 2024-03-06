@@ -83,6 +83,7 @@ typedef uint64_t lm_size_t;
 /* String types */
 typedef char             lm_char_t; /* UTF-8 encoded character */
 typedef const lm_char_t *lm_string_t;
+typedef const lm_byte_t *lm_bytearray_t;
 
 /* OS primitive types */
 typedef uint32_t lm_pid_t;
@@ -180,7 +181,8 @@ typedef struct {
  * 4.  Immutable strings should be 'lm_string_t'.
  *
  * 5.  Output variable pointers in functions should be at the end, unless
- *     it doesn't make sense to put it there.
+ *     it doesn't make sense to put it there (for example, when there is
+ *     a size parameter after a mutable buffer).
  *
  * 6.  All user facing functions should have the 'LM_API' prefix for
  *     automatic importing and exporting.
@@ -313,6 +315,82 @@ LM_EnumSymbolsDemangled(const lm_module_t  *module,
 LM_API lm_address_t
 LM_FindSymbolAddressDemangled(const lm_module_t *module,
 			      lm_string_t        symbol_name);
+
+/* Memory API */
+LM_API lm_size_t LM_CALL
+LM_ReadMemory(lm_address_t source,
+	      lm_byte_t   *dest,
+	      lm_size_t    size);
+
+LM_API lm_size_t LM_CALL
+LM_ReadMemoryEx(const lm_process_t *process,
+		lm_address_t        source,
+		lm_byte_t          *dest,
+		lm_size_t           size);
+
+LM_API lm_size_t LM_CALL
+LM_WriteMemory(lm_address_t   dest,
+	       lm_bytearray_t source,
+	       lm_size_t      size);
+
+LM_API lm_size_t LM_CALL
+LM_WriteMemoryEx(const lm_process_t *process,
+		 lm_address_t        dest,
+		 lm_bytearray_t      source,
+		 lm_size_t           size);
+
+LM_API lm_size_t LM_CALL
+LM_SetMemory(lm_address_t dest,
+	     lm_byte_t    byte,
+	     lm_size_t    size);
+
+LM_API lm_size_t LM_CALL
+LM_SetMemoryEx(const lm_process_t *process,
+	       lm_address_t        dest,
+	       lm_byte_t           byte,
+	       lm_size_t           size);
+
+LM_API lm_bool_t LM_CALL
+LM_ProtMemory(lm_address_t address,
+	      lm_size_t    size,
+	      lm_prot_t    prot,
+	      lm_prot_t   *oldprot);
+
+LM_API lm_bool_t LM_CALL
+LM_ProtMemoryEx(const lm_process_t *process,
+		lm_address_t        address,
+		lm_size_t           size,
+		lm_prot_t           prot,
+		lm_prot_t          *oldprot);
+
+LM_API lm_address_t LM_CALL
+LM_AllocMemory(lm_size_t size,
+	       lm_prot_t prot);
+
+LM_API lm_address_t LM_CALL
+LM_AllocMemoryEx(const lm_process_t *process,
+		 lm_size_t           size,
+		 lm_prot_t           prot);
+
+LM_API lm_bool_t LM_CALL
+LM_FreeMemory(lm_address_t alloc,
+	      lm_size_t    size);
+
+LM_API lm_bool_t LM_CALL
+LM_FreeMemoryEx(const lm_process_t *process,
+		lm_address_t        alloc,
+		lm_size_t           size);
+
+LM_API lm_address_t LM_CALL
+LM_DeepPointer(lm_address_t        base,
+	       const lm_address_t *offsets,
+	       size_t              noffsets);
+
+LM_API lm_address_t LM_CALL
+LM_DeepPointerEx(const lm_process_t *process,
+		 lm_address_t        base,
+		 const lm_address_t *offsets,
+		 lm_size_t           noffsets);
 
 #ifdef __cplusplus
 }

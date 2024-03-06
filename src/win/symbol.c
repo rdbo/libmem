@@ -32,7 +32,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 	       lm_void_t          *arg)
 {
 	lm_bool_t result = LM_FALSE;
-	WCHAR *wpath;
+	WCHAR wpath[LM_PATH_MAX];
 	BOOL is_loaded = FALSE;
 	HMODULE hmod;
 	lm_address_t modbase;
@@ -48,8 +48,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 		return result;
 
 	printf("CONVERTING PATH TO UTF8");
-	wpath = utf8towcs(module->path, NULL, 0);
-	if (!wpath)
+	if (!utf8towcs(module->path, wpath, LM_PATH_MAX))
 		return result;
 
 	/* Attempt to get the module handle without loading the library */
@@ -60,7 +59,6 @@ LM_EnumSymbols(const lm_module_t  *module,
 		/* Load library purely for getting resources, and not executing */
 		printf("LOADING LIB\n");
 		hmod = LoadLibraryExW(wpath, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
-		free(wpath);
 
 		if (!hmod)
 			return result;
@@ -68,9 +66,6 @@ LM_EnumSymbols(const lm_module_t  *module,
 		printf("MODULE LOADED\n");
 
 		is_loaded = TRUE;
-	} else {
-		printf("GOT HANDLE\n");
-		free(wpath);
 	}
 
 	/*

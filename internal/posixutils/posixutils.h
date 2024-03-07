@@ -24,11 +24,18 @@
 #define POSIXUTILS_H
 
 #include <stdlib.h>
+#include <libmem/libmem.h>
 
 size_t
 get_system_bits();
 
 size_t
 get_name_from_path(char *path, char *namebuf, size_t namesize);
+
+int
+get_os_prot(lm_prot_t prot);
+
+lm_prot_t
+get_prot(int osprot);
 
 #endif

@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <sys/utsname.h>
+#include <sys/mman.h>
 
 size_t
 get_system_bits()
@@ -72,4 +73,16 @@ get_name_from_path(char *path, char *namebuf, size_t namesize)
 	namebuf[namelen] = '\0';
 
 	return namelen;
+}
+
+int
+get_os_prot(lm_prot_t prot)
+{
+	return (int)(prot & LM_PROT_XRW);
+}
+
+lm_prot_t
+get_prot(int osprot)
+{
+	return (lm_prot_t)(osprot & (PROT_EXEC | PROT_READ | PROT_WRITE));
 }

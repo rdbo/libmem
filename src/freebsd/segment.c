@@ -21,7 +21,7 @@
  */
 
 #include <libmem/libmem.h>
-#include "osprot.h"
+#include <posixutils/posixutils.h>
 #include <unistd.h>
 #include <sys/user.h>
 #include <sys/sysctl.h>

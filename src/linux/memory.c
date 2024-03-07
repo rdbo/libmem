@@ -25,7 +25,7 @@
 #endif
 
 #include <libmem/libmem.h>
-#include "osprot.h"
+#include <posixutils/posixutils.h>
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/mman.h>

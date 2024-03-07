@@ -90,7 +90,7 @@ LM_API lm_bool_t LM_CALL
 LM_ProtMemory(lm_address_t address,
 	      lm_size_t    size,
 	      lm_prot_t    prot,
-	      lm_prot_t   *oldprot)
+	      lm_prot_t   *oldprot_out)
 {
 	int osprot;
 	

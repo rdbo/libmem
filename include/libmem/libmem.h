@@ -316,10 +316,29 @@ LM_API lm_address_t
 LM_FindSymbolAddressDemangled(const lm_module_t *module,
 			      lm_string_t        symbol_name);
 
+/* Segment API */
+LM_API lm_bool_t LM_CALL
+LM_EnumSegments(lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
+                			      lm_void_t    *arg),
+		lm_void_t          *arg);
+
+LM_API lm_bool_t LM_CALL
+LM_EnumSegmentsEx(const lm_process_t *process,
+                  lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
+						lm_void_t    *arg),
+		  lm_void_t          *arg);
+
+LM_API lm_bool_t LM_CALL
+LM_FindSegment(lm_address_t  address,
+	       lm_segment_t *segment_out);
+
+LM_API lm_bool_t LM_CALL
+LM_FindSegmentEx(const lm_process_t *process,
+		 lm_address_t        address,
+		 lm_segment_t       *segment_out);
+
 /* Memory API */
-
-/* NOTE: Memory allocation/protection/freeing functions are page aligned */
-
+/* NOTE: Memory allocation/protection/free functions are page aligned */
 LM_API lm_size_t LM_CALL
 LM_ReadMemory(lm_address_t source,
 	      lm_byte_t   *dest,
@@ -357,14 +376,14 @@ LM_API lm_bool_t LM_CALL
 LM_ProtMemory(lm_address_t address,
 	      lm_size_t    size,
 	      lm_prot_t    prot,
-	      lm_prot_t   *oldprot);
+	      lm_prot_t   *oldprot_out);
 
 LM_API lm_bool_t LM_CALL
 LM_ProtMemoryEx(const lm_process_t *process,
 		lm_address_t        address,
 		lm_size_t           size,
 		lm_prot_t           prot,
-		lm_prot_t          *oldprot);
+		lm_prot_t          *oldprot_out);
 
 LM_API lm_address_t LM_CALL
 LM_AllocMemory(lm_size_t size,
@@ -394,9 +413,6 @@ LM_DeepPointerEx(const lm_process_t *process,
 		 lm_address_t        base,
 		 const lm_address_t *offsets,
 		 lm_size_t           noffsets);
-
-/* Segment API */
-
 
 #ifdef __cplusplus
 }

@@ -23,6 +23,7 @@
 #include <libmem/libmem.h>
 #include <windows.h>
 #include <winutils/winutils.h>
+#include "osprot.h"
 
 LM_API lm_bool_t LM_CALL
 LM_EnumSegmentsEx(const lm_process_t *process,

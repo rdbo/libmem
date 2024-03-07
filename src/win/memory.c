@@ -87,6 +87,13 @@ LM_ProtMemory(lm_address_t address,
 	if (address == LM_ADDRESS_BAD || !LM_CHECK_PROT(prot))
 		return LM_FALSE;
 
+	if (size == 0) {
+		SYSTEM_INFO sysinfo;
+
+		GetSystemInfo(&sysinfo);
+		size = (lm_size_t)sysinfo.dwPageSize;
+	}
+
 	osprot = get_os_prot(prot);
 	if (!VirtualProtect(address, size, osprot, &old_osprot))
 		return LM_FALSE;

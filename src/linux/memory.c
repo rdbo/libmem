@@ -93,15 +93,22 @@ LM_ProtMemory(lm_address_t address,
 	      lm_prot_t   *oldprot_out)
 {
 	int osprot;
+	lm_segment_t segment;
 	
-	if (address == LM_ADDRESS_BAD)
+	if (address == LM_ADDRESS_BAD || !LM_CHECK_PROT(prot))
 		return LM_FALSE;
 
 	if (size == 0)
 		size = (lm_size_t)getpagesize();
 
-	osprot = get_os_prot(prot);
+	if (oldprot_out) {
+		if (LM_FindSegment(address, &segment))
+			*oldprot_out = segment.prot;
+		else
+			*oldprot_out = LM_PROT_NONE;
+	}
 
+	osprot = get_os_prot(prot);
 	return mprotect((void *)address, size, osprot) != -1 ? LM_TRUE : LM_FALSE;
 }
 
@@ -113,6 +120,9 @@ LM_AllocMemory(lm_size_t size,
 {
 	int osprot;
 	void *alloc;
+
+	if (!LM_CHECK_PROT(prot))
+		return LM_ADDRESS_BAD;
 
 	/* NOTE: The function is page aligned, so if size == 0, it will just allocate a full page */
 	if (size == 0)

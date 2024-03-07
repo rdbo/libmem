@@ -7,6 +7,8 @@
 #define ALLOCPROT LM_PROT_XRW
 #define BADPROT 0xDEADBEEF
 
+/* TODO: Check if allocations have correct memory protection flags */
+
 char *test_LM_AllocMemory(lm_address_t *palloc)
 {
 	*palloc = LM_AllocMemory(ALLOCSIZE, ALLOCPROT);
@@ -18,8 +20,7 @@ char *test_LM_AllocMemory(lm_address_t *palloc)
 	/* NOTE: LM_AllocMemory is now page-aligned, so size == 0 should work */
 	/* mu_assert("function attempted to run with bad arguments (invalid size)", LM_AllocMemory(0, LM_PROT_NONE) == LM_ADDRESS_BAD); */
 
-	/* NOTE: Running LM_AllocMemory with a bad protection will just result in pages allocated with LM_PROT_NONE */
-	/* mu_assert("function attempted to run with bad arguments (invalid prot)", LM_AllocMemory(ALLOCSIZE, BADPROT) == LM_ADDRESS_BAD); */
+	mu_assert("function attempted to run with bad arguments (invalid prot)", LM_AllocMemory(ALLOCSIZE, BADPROT) == LM_ADDRESS_BAD);
 	
 	return NULL;
 }
@@ -29,10 +30,15 @@ char *test_LM_ProtMemory(lm_address_t *palloc)
 	lm_prot_t oldprot = LM_PROT_NONE;
 
 	mu_assert("failed to change protection of memory", LM_ProtMemory(*palloc, ALLOCSIZE, LM_PROT_RW, &oldprot) == LM_TRUE);
+	printf("<OLDPROT: %d> ", oldprot);
+	fflush(stdout);
 	mu_assert("old protection does not match its real value", oldprot == ALLOCPROT);
 	mu_assert("failed to restore old protection of memory", LM_ProtMemory(*palloc, ALLOCSIZE, oldprot, LM_NULLPTR) == LM_TRUE);
 	mu_assert("function attempted to run with bad arguments (invalid address)", LM_ProtMemory(LM_ADDRESS_BAD, ALLOCSIZE, LM_PROT_XR, LM_NULLPTR) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid size)", LM_ProtMemory(*palloc, 0, LM_PROT_XR, LM_NULLPTR) == LM_FALSE);
+
+	/* NOTE: LM_ProtMemory is now page-aligned, so size == 0 should work */
+	/* mu_assert("function attempted to run with bad arguments (invalid size)", LM_ProtMemory(*palloc, 0, LM_PROT_XR, LM_NULLPTR) == LM_FALSE); */
+
 	mu_assert("function attempted to run with bad arguments (invalid prot)", LM_ProtMemory(*palloc, ALLOCSIZE, BADPROT, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;

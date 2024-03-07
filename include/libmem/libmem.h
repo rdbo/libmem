@@ -62,6 +62,7 @@
 
 /* Helpers */
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+#define LM_CHECK_PROT(prot) ((prot & LM_PROT_XRW) == prot)
 
 #ifdef __cplusplus
 extern "C" {
@@ -339,7 +340,13 @@ LM_FindSegmentEx(const lm_process_t *process,
 		 lm_segment_t       *segment_out);
 
 /* Memory API */
-/* NOTE: Memory allocation/protection/free functions are page aligned */
+/*
+ * NOTE: Memory allocation/protection/free functions are page aligned
+ * NOTE: In LM_ProtMemory(Ex), the `oldprot_out` parameter contains the
+ *       old protection of the first page of the whole region, which is
+ *       enough for most cases. You should pick the old protections yourself
+ *       with LM_FindSegments(Ex) in case of a multi-segment memory protection.
+ */
 LM_API lm_size_t LM_CALL
 LM_ReadMemory(lm_address_t source,
 	      lm_byte_t   *dest,

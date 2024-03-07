@@ -27,13 +27,11 @@
 	strlen((mod)->name) > 0 \
 )
 
-#define CHECK_PROT(prot) ((prot & LM_PROT_XRW) == prot)
-
 #define CHECK_SEGMENT(segment) ( \
 	(segment)->base != LM_ADDRESS_BAD && \
 	(segment)->end != LM_ADDRESS_BAD && \
 	(segment)->size > 0 && \
-	CHECK_PROT((segment)->prot) \
+	LM_CHECK_PROT((segment)->prot) \
 )
 
 struct thread_args {

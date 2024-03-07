@@ -21,7 +21,7 @@
  */
 
 #include "osprot.h"
-#include <sys/mman.h>
+#include <windows.h>
 
 DWORD
 get_os_prot(lm_prot_t prot)

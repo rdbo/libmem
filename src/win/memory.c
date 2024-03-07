@@ -25,6 +25,15 @@
 #include <winutils/winutils.h>
 #include <windows.h>
 
+size_t
+get_page_size()
+{
+	SYSTEM_INFO sysinfo;
+
+	GetSystemInfo(&sysinfo);
+	return (lm_size_t)sysinfo.dwPageSize;
+}
+
 LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *process,
 		lm_address_t        source,
@@ -87,12 +96,8 @@ LM_ProtMemory(lm_address_t address,
 	if (address == LM_ADDRESS_BAD || !LM_CHECK_PROT(prot))
 		return LM_FALSE;
 
-	if (size == 0) {
-		SYSTEM_INFO sysinfo;
-
-		GetSystemInfo(&sysinfo);
-		size = (lm_size_t)sysinfo.dwPageSize;
-	}
+	if (size == 0)
+		size = get_page_size();
 
 	osprot = get_os_prot(prot);
 	if (!VirtualProtect(address, size, osprot, &old_osprot))
@@ -102,6 +107,43 @@ LM_ProtMemory(lm_address_t address,
 		*oldprot_out = get_prot(old_osprot);
 
 	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_ProtMemoryEx(const lm_process_t *process,
+		lm_address_t        address,
+		lm_size_t           size,
+		lm_prot_t           prot,
+		lm_prot_t          *oldprot_out)
+{
+	lm_bool_t result = LM_FALSE;
+	HANDLE hproc;
+	DWORD osprot;
+	DWORD old_osprot;
+
+	if (!process || address == LM_ADDRESS_BAD || !LM_CHECK_PROT(prot))
+		return result;
+
+	if (size == 0)
+		size = get_page_size();
+
+	hproc = open_process(process->pid, PROCESS_VM_OPERATION);
+	if (!hproc)
+		return result;
+
+	osprot = get_os_prot(prot);
+	if (!VirtualProtectEx(hproc, address, size, osprot, &old_osprot))
+		goto CLOSE_EXIT;
+
+	if (oldprot_out)
+		*oldprot_out = get_prot(old_osprot);
+
+	result = LM_TRUE;
+CLOSE_EXIT:
+	close_handle(hproc);
+	return result;
 }
 
 /********************************/
@@ -116,12 +158,8 @@ LM_AllocMemory(lm_size_t size,
 	if (!LM_CHECK_PROT(prot))
 		return LM_ADDRESS_BAD;
 
-	if (size == 0) {
-		SYSTEM_INFO sysinfo;
-
-		GetSystemInfo(&sysinfo);
-		size = (lm_size_t)sysinfo.dwPageSize;
-	}
+	if (size == 0)
+		size = get_page_size();
 
 	osprot = get_os_prot(prot);
 	alloc = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, osprot);
@@ -129,6 +167,34 @@ LM_AllocMemory(lm_size_t size,
 		return LM_ADDRESS_BAD;
 
 	return (lm_address_t)alloc;
+}
+
+/********************************/
+
+LM_API lm_address_t LM_CALL
+LM_AllocMemoryEx(const lm_process_t *process,
+		 lm_size_t           size,
+		 lm_prot_t           prot)
+{
+	LPVOID alloc;
+	HANDLE hproc;
+	DWORD osprot;
+
+	if (!process || !LM_CHECK_PROT(prot))
+		return LM_ADDRESS_BAD;
+
+	if (size == 0)
+		size = get_page_size();
+
+	hproc = open_process(process->pid, PROCESS_VM_OPERATION);
+	if (!hproc)
+		return LM_ADDRESS_BAD;
+
+	osprot = get_os_prot(prot);
+	alloc = VirtualAllocEx(hproc, NULL, size, MEM_COMMIT | MEM_RESERVE, osprot);
+	close_handle(hproc);
+
+	return alloc != NULL ? (lm_address_t)alloc : LM_ADDRESS_BAD;
 }
 
 /********************************/
@@ -147,4 +213,29 @@ LM_FreeMemory(lm_address_t alloc,
 
 	size = 0;
 	return VirtualFree(alloc, size, MEM_RELEASE) ? LM_TRUE : LM_FALSE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_FreeMemoryEx(const lm_process_t *process,
+		lm_address_t        alloc,
+		lm_size_t           size)
+{
+	HANDLE hproc;
+	BOOL ret;
+	
+	if (!process)
+		return LM_FALSE;
+
+	hproc = open_process(process->pid, PROCESS_VM_OPERATION);
+	if (!hproc)
+		return LM_FALSE;
+
+	size = 0;
+	ret = VirtualFreeEx(hproc, alloc, size, MEM_RELEASE);
+
+	close_handle(hproc);
+
+	return ret ? LM_TRUE : LM_FALSE;
 }

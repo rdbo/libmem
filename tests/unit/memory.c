@@ -137,7 +137,6 @@ char *test_LM_SetMemory(void *arg)
 	return NULL;
 }
 
-/*
 char *test_LM_AllocMemoryEx(struct memory_args *arg)
 {
 	lm_process_t *ptargetproc = arg->ptargetproc;
@@ -149,13 +148,15 @@ char *test_LM_AllocMemoryEx(struct memory_args *arg)
 
 	printf("<ADDRESS: %p> ", (void *)*palloc);
 	fflush(stdout);
-	
-	mu_assert("function attempted to run with bad arguments (invalid size)", LM_AllocMemoryEx(ptargetproc, 0, LM_PROT_XRW) == LM_ADDRESS_BAD);
+
+	/* NOTE: LM_AllocMemory is now page-aligned, so size == 0 should work */
+	/* mu_assert("function attempted to run with bad arguments (invalid size)", LM_AllocMemoryEx(ptargetproc, 0, LM_PROT_XRW) == LM_ADDRESS_BAD); */
 	mu_assert("function attempted to run with bad arguments (invalid prot)", LM_AllocMemoryEx(ptargetproc, ALLOCSIZE, BADPROT) == LM_ADDRESS_BAD);
 
 	return NULL;
 }
 
+/*
 char *test_LM_ProtMemoryEx(struct memory_args *arg)
 {
 	lm_process_t *ptargetproc = arg->ptargetproc;

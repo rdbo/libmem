@@ -45,23 +45,17 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys);
 void
 ptrace_detach(pid_t pid);
 
-void
-ptrace_free_regs(void *regs);
-
 /* Architecture-specific functions */
-void *
-ptrace_get_regs(pid_t pid);
-
-long
-ptrace_get_pc(void *regs);
-
 long
 ptrace_get_syscall_ret(pid_t pid);
 
 size_t
-ptrace_setup_syscall(pid_t pid, size_t bits, long shellcode_addr, ptrace_syscall_t *ptsys);
+ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **orig_regs, void **orig_code);
 
 void
-ptrace_restore_syscall(pid_t pid, void *orig_regs, size_t shellcode_size);
+ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size);
+
+long
+ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot);
 
 #endif

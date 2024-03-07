@@ -26,9 +26,11 @@
 
 #include <libmem/libmem.h>
 #include <posixutils/posixutils.h>
+#include "ptrace/ptrace.h"
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
+#include <sys/syscall.h>
 
 LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *process,
@@ -133,6 +135,33 @@ LM_AllocMemory(lm_size_t size,
 	alloc = mmap(NULL, size, osprot, MAP_PRIVATE | MAP_ANON, -1, 0);
 	if (alloc == MAP_FAILED)
 		return LM_ADDRESS_BAD;
+
+	return (lm_address_t)alloc;
+}
+
+/********************************/
+
+LM_API lm_address_t LM_CALL
+LM_AllocMemoryEx(const lm_process_t *process,
+		 lm_size_t           size,
+		 lm_prot_t           prot)
+{
+	long alloc;
+
+	if (!process || !LM_CHECK_PROT(prot))
+		return LM_ADDRESS_BAD;
+
+	if (size == 0)
+		size = getpagesize();
+
+	if (ptrace_attach(process->pid))
+		return LM_ADDRESS_BAD;
+
+	alloc = ptrace_alloc(process->pid, process->bits, size, get_os_prot(prot));
+	if (alloc == -1)
+		alloc = (long)LM_ADDRESS_BAD;
+
+	ptrace_detach(process->pid);
 
 	return (lm_address_t)alloc;
 }

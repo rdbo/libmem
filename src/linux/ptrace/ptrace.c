@@ -105,22 +105,18 @@ long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 {
 	long pc;
-	void *orig_regs;
+	void *orig_regs = NULL;
+	void *orig_code = NULL;
 	size_t shellcode_size;
 
-	orig_regs = ptrace_get_regs(pid);
-	if (!orig_regs)
-		return -1;
-
-	/* Get program counter, which is where the code will be injected */
-	errno = 0;
-	pc = ptrace_get_pc(orig_regs);
-	if (pc == -1 && errno)
-		return -1;
-
 	/* Write shellcode and setup regs */
-	if ((shellcode_size = ptrace_setup_syscall(pid, bits, pc, ptsys)) == 0)
+	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0) {
+		if (orig_code)
+			goto RESTORE_EXIT;
+		if (orig_regs)
+			free(orig_regs);
 		return -1;
+	}
 
 	/* Step to system call */
 	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
@@ -131,7 +127,8 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	waitpid(pid, NULL, 0);
 
 	/* Restore program state prior to syscall */
-	ptrace_restore_syscall(pid, orig_regs, shellcode_size);
+RESTORE_EXIT:
+	ptrace_restore_syscall(pid, orig_regs, orig_code, shellcode_size);
 
 	return ptrace_get_syscall_ret(pid);
 }
@@ -140,11 +137,4 @@ void
 ptrace_detach(pid_t pid)
 {
 	ptrace(PTRACE_DETACH, pid, NULL, NULL);
-}
-
-
-void
-ptrace_free_regs(void *regs)
-{
-	free(regs);
 }

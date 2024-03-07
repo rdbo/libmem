@@ -22,38 +22,14 @@
 
 #include "../ptrace.h"
 #include <stdlib.h>
+#include <alloca.h>
 #include <assert.h>
 #include <errno.h>
 #include <sys/ptrace.h>
 #include <sys/reg.h>
 #include <sys/user.h>
-
-void *
-ptrace_get_regs(pid_t pid)
-{
-	struct user_regs_struct *pregs;
-
-	pregs = (struct user_regs_struct *)malloc(sizeof(*pregs));
-	if (!pregs)
-		return NULL;
-
-	if (ptrace(PTRACE_GETREGS, pid, NULL, pregs) == -1) {
-		free(pregs);
-		pregs = NULL;
-	}
-
-	return pregs;
-}
-
-long
-ptrace_get_pc(void *regs)
-{
-	struct user_regs_struct *pregs = (struct user_regs_struct *)regs;
-
-	assert(pregs != NULL);
-
-	return (long)pregs->rip;
-}
+#include <sys/syscall.h>
+#include <sys/mman.h>
 
 long
 ptrace_get_syscall_ret(pid_t pid)
@@ -62,25 +38,28 @@ ptrace_get_syscall_ret(pid_t pid)
 	return ptrace(PTRACE_PEEKUSER, pid, ORIG_RAX * sizeof(long), NULL);
 }
 
-/* TODO: Do better clean up in target process if function fails */
+/* NOTE: If this function fails and `*orig_code` is not NULL, you must restore the state of the target process */
 size_t
-ptrace_setup_syscall(pid_t pid, size_t bits, long shellcode_addr, ptrace_syscall_t *ptsys)
+ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **orig_regs, void **orig_code)
 {
 	static const char shellcode32[] = { 0xcd, 0x80 };
 	static const char shellcode64[] = { 0x0f, 0x05 };
 	struct user_regs_struct regs;
 	char *shellcode;
 	size_t shellcode_size = 0;
-	char *orig_code;
 
-	assert((bits == 64 || bits == 32) && ptsys != NULL);
+	assert((bits == 64 || bits == 32) && ptsys != NULL && orig_regs != NULL && *orig_regs == NULL && orig_code != NULL && *orig_code == NULL);
 
 	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
 		return 0;
 
+	*orig_regs = malloc(sizeof(regs));
+	if (*orig_regs == NULL)
+		return 0;
+	*(struct user_regs_struct *)(*orig_regs) = regs;
+
 	/* Setup registers */
 	regs.rax = ptsys->syscall_num;
-	regs.rip = shellcode_addr;
 	if (bits == 64) {
 		regs.rdi = ptsys->args[0];
 		regs.rsi = ptsys->args[1];
@@ -98,46 +77,66 @@ ptrace_setup_syscall(pid_t pid, size_t bits, long shellcode_addr, ptrace_syscall
 		regs.rdi = ptsys->args[4];
 		regs.rbp = ptsys->args[5];
 		shellcode = (char *)shellcode32;
-		shellcode_size = sizeof(shellcode64);
+		shellcode_size = sizeof(shellcode32);
 	}
 	regs.rsp = (regs.rsp - shellcode_size) & -16;
+
+	/* Backup original code to restore later */
+	*orig_code = malloc(shellcode_size);
+	if (*orig_code == NULL)
+		return 0;
+	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size) {
+		free(*orig_code);
+		*orig_code = NULL;
+		return 0;
+	}
+	
 	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
 		return 0;
 
-	/* Backup original code in the stack to restore later */
-	orig_code = (char *)malloc(shellcode_size);
-	if (!orig_code)
-		return 0;
-
-	if (ptrace_read(pid, shellcode_addr, orig_code, shellcode_size) != shellcode_size) {
-		shellcode_size = 0;
-		goto FREE_EXIT;
-	}
-
 	shellcode_size = ptrace_write(pid, (long)regs.rsp, shellcode, shellcode_size);
-FREE_EXIT:
-	free(orig_code);
 	return shellcode_size;
 }
 
 void
-ptrace_restore_syscall(pid_t pid, void *orig_regs, size_t shellcode_size)
+ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
 	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
 	struct user_regs_struct regs;
-	char *orig_code;
 
-	assert(orig_regs != NULL && shellcode_size > 0);
+	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
-		return;
-
-	orig_code = (char *)malloc(shellcode_size);
-	if (!orig_code)
-		return;
-
-	ptrace_read(pid, regs.rsp, orig_code, shellcode_size);
-	ptrace(PTRACE_SETREGS, pid, NULL, orig_regs);
+	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
 	ptrace_write(pid, pregs->rip, orig_code, shellcode_size);
+
+	free(orig_regs);
 	free(orig_code);
+}
+
+long
+ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
+{
+	long alloc;
+	ptrace_syscall_t ptsys;
+	
+	if (bits == 32) {
+		ptsys.syscall_num = 192; /* mmap2 syscall number */
+	} else {
+		ptsys.syscall_num = SYS_mmap;
+	}
+
+	/* Setup mmap arguments */
+	ptsys.args[0] = 0;    /* `void *addr` */
+	ptsys.args[1] = size; /* `size_t length` */
+	ptsys.args[2] = prot; /* `int prot` */
+	ptsys.args[3] = 0;    /* `int flags` */
+	ptsys.args[4] = -1L;  /* `int fd` */
+	ptsys.args[5] = 0;    /* `off_t offset` */
+
+	alloc = ptrace_syscall(pid, bits, &ptsys);
+	/* NOTE: Testing if `alloc <= 0x100` is useful to avoid weird values, like 0x23 */
+	if (alloc == -1 && errno || (void *)alloc == MAP_FAILED || alloc <= 0x100)
+		alloc = -1;
+
+	return alloc;
 }

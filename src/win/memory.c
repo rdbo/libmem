@@ -112,7 +112,7 @@ LM_AllocMemory(lm_size_t size,
 	if (size == 0) {
 		SYSTEM_INFO sysinfo;
 
-		GetSystemInformation(&sysinfo);
+		GetSystemInfo(&sysinfo);
 		size = (lm_size_t)sysinfo.dwPageSize;
 	}
 

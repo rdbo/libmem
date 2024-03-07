@@ -109,6 +109,13 @@ LM_AllocMemory(lm_size_t size,
 	if (!LM_CHECK_PROT(prot))
 		return LM_ADDRESS_BAD;
 
+	if (size == 0) {
+		SYSTEM_INFO sysinfo;
+
+		GetSystemInformation(&sysinfo);
+		size = (lm_size_t)sysinfo.dwPageSize;
+	}
+
 	osprot = get_os_prot(prot);
 	alloc = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, osprot);
 	if (!alloc)

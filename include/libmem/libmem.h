@@ -140,7 +140,7 @@ typedef struct {
 	lm_address_t end;
 	lm_size_t    size;
 	lm_prot_t    prot;
-} lm_page_t;
+} lm_segment_t;
 
 typedef struct {
 	lm_string_t  name;
@@ -394,6 +394,9 @@ LM_DeepPointerEx(const lm_process_t *process,
 		 lm_address_t        base,
 		 const lm_address_t *offsets,
 		 lm_size_t           noffsets);
+
+/* Segment API */
+
 
 #ifdef __cplusplus
 }

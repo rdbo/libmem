@@ -172,6 +172,9 @@ LM_API lm_bool_t LM_CALL
 LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size)
 {
+	if (alloc == LM_ADDRESS_BAD)
+		return LM_FALSE;
+	
 	if (size == 0)
 		size = (lm_size_t)getpagesize();
 

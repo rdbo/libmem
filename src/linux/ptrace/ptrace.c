@@ -61,7 +61,7 @@ ptrace_read(pid_t pid, long src, char *dst, size_t size)
 			read_diff = diff;
 		}
 
-		memcpy(&dst[bytes_read], &data, data_size);
+		memcpy(&dst[bytes_read], &data, read_diff);
 	}
 
 	return bytes_read;
@@ -104,6 +104,7 @@ ptrace_write(pid_t pid, long dst, char *src, size_t size)
 long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 {
+	long alloc = -1;
 	long pc;
 	void *orig_regs = NULL;
 	void *orig_code = NULL;
@@ -115,7 +116,7 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 			goto RESTORE_EXIT;
 		if (orig_regs)
 			free(orig_regs);
-		return -1;
+		return alloc;
 	}
 
 	/* Step to system call */
@@ -127,10 +128,10 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	waitpid(pid, NULL, 0);
 
 	/* Restore program state prior to syscall */
+	alloc = ptrace_get_syscall_ret(pid);
 RESTORE_EXIT:
 	ptrace_restore_syscall(pid, orig_regs, orig_code, shellcode_size);
-
-	return ptrace_get_syscall_ret(pid);
+	return alloc;
 }
 
 void

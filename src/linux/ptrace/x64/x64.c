@@ -34,7 +34,7 @@ long
 ptrace_get_syscall_ret(pid_t pid)
 {
 	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, ORIG_RAX * sizeof(long), NULL);
+	return ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long), NULL);
 }
 
 /* NOTE: If this function fails and `*orig_code` is not NULL, you must restore the state of the target process */
@@ -78,7 +78,6 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 		shellcode = (char *)shellcode32;
 		shellcode_size = sizeof(shellcode32);
 	}
-	regs.rsp = (regs.rsp - shellcode_size) & -16;
 
 	/* Backup original code to restore later */
 	*orig_code = malloc(shellcode_size);
@@ -93,7 +92,7 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
 		return 0;
 
-	shellcode_size = ptrace_write(pid, (long)regs.rsp, shellcode, shellcode_size);
+	shellcode_size = ptrace_write(pid, (long)regs.rip, shellcode, shellcode_size);
 	return shellcode_size;
 }
 
@@ -125,16 +124,15 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	}
 
 	/* Setup mmap arguments */
-	ptsys.args[0] = 0;    /* `void *addr` */
-	ptsys.args[1] = size; /* `size_t length` */
-	ptsys.args[2] = prot; /* `int prot` */
-	ptsys.args[3] = 0;    /* `int flags` */
-	ptsys.args[4] = -1L;  /* `int fd` */
-	ptsys.args[5] = 0;    /* `off_t offset` */
+	ptsys.args[0] = 0;                      /* `void *addr` */
+	ptsys.args[1] = size;                   /* `size_t length` */
+	ptsys.args[2] = prot;                   /* `int prot` */
+	ptsys.args[3] = MAP_PRIVATE | MAP_ANON; /* `int flags` */
+	ptsys.args[4] = -1;                     /* `int fd` */
+	ptsys.args[5] = 0;                      /* `off_t offset` */
 
 	alloc = ptrace_syscall(pid, bits, &ptsys);
-	/* NOTE: Testing if `alloc <= 0x100` is useful to avoid weird values, like 0x23 */
-	if (alloc == -1 && errno || (void *)alloc == MAP_FAILED || alloc <= 0x100)
+	if (alloc == -1 && errno || (void *)alloc == MAP_FAILED)
 		alloc = -1;
 
 	return alloc;

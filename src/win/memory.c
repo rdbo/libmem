@@ -21,8 +21,9 @@
  */
 
 #include <libmem/libmem.h>
-#include <windows.h>
 #include "osprot.h"
+#include <winutils/winutils.h>
+#include <windows.h>
 
 LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *process,

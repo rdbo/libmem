@@ -112,8 +112,7 @@ LM_DeepPointer(lm_address_t        base,
 {
 	lm_size_t i;
 
-	/* NOTE: NULL 'offsets' is permitted, as long as 'noffsets' is 0 */
-	if (base == LM_ADDRESS_BAD || (!offsets && noffsets == 0))
+	if (base == LM_ADDRESS_BAD || !offsets || noffsets == 0)
 		return LM_ADDRESS_BAD;
 
 	for (i = 0; i < noffsets; ++i) {

@@ -36,6 +36,9 @@ LM_EnumSegmentsEx(const lm_process_t *process,
 	MEMORY_BASIC_INFORMATION meminfo;
 	lm_segment_t segment;
 
+	if (!process || !callback)
+		return result;
+
 	hproc = open_process(process->pid, PROCESS_QUERY_INFORMATION);
 	if (!hproc)
 		return result;

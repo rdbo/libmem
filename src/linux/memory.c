@@ -190,7 +190,7 @@ LM_AllocMemoryEx(const lm_process_t *process,
 		return LM_ADDRESS_BAD;
 
 	if (size == 0)
-		size = getpagesize();
+		size = (lm_size_t)getpagesize();
 
 	if (ptrace_attach(process->pid))
 		return LM_ADDRESS_BAD;

@@ -128,3 +128,45 @@ LM_DeepPointer(lm_address_t        base,
 
 	return base;
 }
+
+/********************************/
+
+LM_API lm_address_t LM_CALL
+LM_DeepPointerEx(const lm_process_t *process,
+		 lm_address_t        base,
+		 const lm_address_t *offsets,
+		 lm_size_t           noffsets)
+{
+	lm_size_t i;
+	lm_address_t deref;
+	lm_size_t ptrsize;
+
+	if (!process || base == LM_ADDRESS_BAD || !offsets || noffsets == 0)
+		return LM_ADDRESS_BAD;
+
+	if (process->bits == 32)
+		ptrsize = sizeof(uint32_t); /* 4-byte pointer */
+	else
+		ptrsize = sizeof(uint64_t); /* 8-byte pointer */
+
+	for (i = 0; i < noffsets; ++i) {
+		base += offsets[i];
+
+		/* The last offset won't be dereferenced,
+		 * returning a pointer to the final value
+		 * given by the "pointer scan" offsets */
+		if (i < (noffsets - 1)) {
+			/* NOTE: address size changes for 32 and 64 bits! */
+
+			deref = 0;
+			if (LM_ReadMemoryEx(process, base, (lm_byte_t *)&deref, ptrsize) != ptrsize) {
+				base = LM_ADDRESS_BAD;
+				break;
+			}
+
+			base = deref;
+		}
+	}
+	
+	return base;
+}

@@ -116,6 +116,44 @@ LM_ProtMemory(lm_address_t address,
 
 /********************************/
 
+LM_API lm_bool_t LM_CALL
+LM_ProtMemoryEx(const lm_process_t *process,
+		lm_address_t        address,
+		lm_size_t           size,
+		lm_prot_t           prot,
+		lm_prot_t          *oldprot_out)
+{
+	long syscall_ret;
+	int osprot;
+	lm_segment_t segment;
+	
+	if (!process || address == LM_ADDRESS_BAD || !LM_CHECK_PROT(prot))
+		return LM_FALSE;
+
+	if (size == 0)
+		size = (lm_size_t)getpagesize();
+
+	if (oldprot_out) {
+		if (LM_FindSegmentEx(process, address, &segment))
+			*oldprot_out = segment.prot;
+		else
+			*oldprot_out = LM_PROT_NONE;
+	}
+
+	if (ptrace_attach(process->pid))
+		return LM_FALSE;
+
+	osprot = get_os_prot(prot);
+
+	syscall_ret = ptrace_mprotect(process->pid, process->bits, address, size, osprot);
+
+	ptrace_detach(process->pid);
+
+	return syscall_ret == 0 ? LM_TRUE : LM_FALSE;
+}
+
+/********************************/
+
 LM_API lm_address_t LM_CALL
 LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot)

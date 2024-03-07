@@ -60,13 +60,11 @@ void test_memory(lm_process_t *ptargetproc)
 	UNIT_TEST(LM_SetMemory);
 	UNIT_TEST(LM_DeepPointer);
 	UNIT_TEST_P(LM_AllocMemoryEx, &arg);
-	/*
 	UNIT_TEST_P(LM_ProtMemoryEx, &arg);
 	UNIT_TEST_P(LM_WriteMemoryEx, &arg);
 	UNIT_TEST_P(LM_SetMemoryEx, &arg);
 	UNIT_TEST_P(LM_ReadMemoryEx, &arg);
 	UNIT_TEST_P(LM_DeepPointerEx, &arg);
-	*/
 	UNIT_TEST_P(LM_FreeMemoryEx, &arg);
 }
 

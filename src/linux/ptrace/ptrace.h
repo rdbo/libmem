@@ -61,4 +61,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot);
 long
 ptrace_free(pid_t pid, size_t bits, long alloc, size_t size);
 
+long
+ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot);
+
 #endif

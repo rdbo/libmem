@@ -153,3 +153,20 @@ ptrace_free(pid_t pid, size_t bits, long alloc, size_t size)
 
 	return ptrace_syscall(pid, bits, &ptsys);
 }
+
+long
+ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
+{
+	ptrace_syscall_t ptsys;
+
+	if (bits == 32)
+		ptsys.syscall_num = 125; /* x86_32 mprotect syscall number */
+	else
+		ptsys.syscall_num = SYS_mprotect;
+
+	ptsys.args[0] = addr;
+	ptsys.args[1] = size;
+	ptsys.args[2] = prot;
+
+	return ptrace_syscall(pid, bits, &ptsys);
+}

@@ -29,13 +29,13 @@ get_os_prot(lm_prot_t prot)
 	DWORD osprot = 0;
 	
 	switch (prot) {
-	case LM_PROT_X:   osprot = PAGE_EXECUTE;
-	case LM_PROT_R:   osprot = PAGE_READONLY;
-	case LM_PROT_W:   osprot = PAGE_WRITECOPY;
-	case LM_PROT_XR:  osprot = PAGE_EXECUTE_READ;
-	case LM_PROT_XW:  osprot = PAGE_EXECUTE_WRITECOPY;
-	case LM_PROT_RW:  osprot = PAGE_READWRITE;
-	case LM_PROT_XRW: osprot = PAGE_EXECUTE_READWRITE;
+	case LM_PROT_X:   osprot = PAGE_EXECUTE; break;
+	case LM_PROT_R:   osprot = PAGE_READONLY; break;
+	case LM_PROT_W:   osprot = PAGE_WRITECOPY; break;
+	case LM_PROT_XR:  osprot = PAGE_EXECUTE_READ; break;
+	case LM_PROT_XW:  osprot = PAGE_EXECUTE_WRITECOPY; break;
+	case LM_PROT_RW:  osprot = PAGE_READWRITE; break;
+	case LM_PROT_XRW: osprot = PAGE_EXECUTE_READWRITE; break;
 	}
 
 	return osprot;
@@ -47,13 +47,13 @@ get_prot(DWORD osprot)
 	lm_prot_t prot = LM_PROT_NONE;
 
 	switch (osprot) {
-	case PAGE_EXECUTE:           prot = LM_PROT_X;
-	case PAGE_READONLY:          prot = LM_PROT_R;
-	case PAGE_WRITECOPY:         prot = LM_PROT_W;
-	case PAGE_EXECUTE_READ:      prot = LM_PROT_XR;
-	case PAGE_EXECUTE_WRITECOPY: prot = LM_PROT_XW;
-	case PAGE_READWRITE:         prot = LM_PROT_RW;
-	case PAGE_EXECUTE_READWRITE: prot = LM_PROT_XRW;
+	case PAGE_EXECUTE:           prot = LM_PROT_X; break;
+	case PAGE_READONLY:          prot = LM_PROT_R; break;
+	case PAGE_WRITECOPY:         prot = LM_PROT_W; break;
+	case PAGE_EXECUTE_READ:      prot = LM_PROT_XR; break;
+	case PAGE_EXECUTE_WRITECOPY: prot = LM_PROT_XW; break;
+	case PAGE_READWRITE:         prot = LM_PROT_RW; break;
+	case PAGE_EXECUTE_READWRITE: prot = LM_PROT_XRW; break;
 	}
 
 	return prot;

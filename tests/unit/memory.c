@@ -220,6 +220,7 @@ char *test_LM_ReadMemoryEx(struct memory_args *arg)
 	
 	return NULL;
 }
+*/
 
 char *test_LM_FreeMemoryEx(struct memory_args *arg)
 {
@@ -233,6 +234,7 @@ char *test_LM_FreeMemoryEx(struct memory_args *arg)
 	return NULL;
 }
 
+/*
 char *test_LM_DeepPointerEx(struct memory_args *arg)
 {
 	lm_byte_t writebuf[sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1) + sizeof(pointer_scan_layer2)];

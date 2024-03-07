@@ -137,3 +137,19 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 
 	return alloc;
 }
+
+long
+ptrace_free(pid_t pid, size_t bits, long alloc, size_t size)
+{
+	ptrace_syscall_t ptsys;
+
+	if (bits == 32)
+		ptsys.syscall_num = 91; /* x86_32 munmap syscall number */
+	else
+		ptsys.syscall_num = SYS_munmap;
+
+	ptsys.args[0] = alloc; /* `void *addr` */
+	ptsys.args[1] = size;  /* `size_t length` */
+
+	return ptrace_syscall(pid, bits, &ptsys);
+}

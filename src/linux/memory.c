@@ -180,3 +180,28 @@ LM_FreeMemory(lm_address_t alloc,
 
 	return munmap((void *)alloc, size) == 0 ? LM_TRUE : LM_FALSE;
 }
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_FreeMemoryEx(const lm_process_t *process,
+		lm_address_t        alloc,
+		lm_size_t           size)
+{
+	long syscall_ret;
+
+	if (!process || alloc == LM_ADDRESS_BAD)
+		return LM_FALSE;
+
+	if (size == 0)
+		size = getpagesize();
+
+	if (ptrace_attach(process->pid))
+		return LM_FALSE;
+
+	syscall_ret = ptrace_free(process->pid, process->bits, alloc, size);
+
+	ptrace_detach(process->pid);
+
+	return syscall_ret == 0 ? LM_TRUE : LM_FALSE;
+}

@@ -58,4 +58,7 @@ ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shell
 long
 ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot);
 
+long
+ptrace_free(pid_t pid, size_t bits, long alloc, size_t size);
+
 #endif

@@ -27,11 +27,13 @@
 	strlen((mod)->name) > 0 \
 )
 
-#define CHECK_PAGE(page) ( \
-	(page)->base != LM_ADDRESS_BAD && \
-	(page)->end != LM_ADDRESS_BAD && \
-	(page)->size > 0 && \
-	LM_VALID_PROT((page)->prot) \
+#define CHECK_PROT(prot) ((prot & LM_PROT_XRW) == prot)
+
+#define CHECK_SEGMENT(segment) ( \
+	(segment)->base != LM_ADDRESS_BAD && \
+	(segment)->end != LM_ADDRESS_BAD && \
+	(segment)->size > 0 && \
+	CHECK_PROT((segment)->prot) \
 )
 
 struct thread_args {

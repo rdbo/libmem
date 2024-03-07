@@ -100,15 +100,14 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	/* TODO: Add test for LM_UnloadModuleEx */
 }
 
-/*
-void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
+void test_segment(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
-	UNIT_TEST_P(LM_EnumPages, pcurproc);
-	UNIT_TEST_P(LM_EnumPagesEx, pcurproc);
-	UNIT_TEST_P(LM_GetPage, pcurproc);
-	UNIT_TEST_P(LM_GetPageEx, ptargetproc);
+	UNIT_TEST_P(LM_EnumSegments, pcurproc);
+	UNIT_TEST_P(LM_EnumSegmentsEx, pcurproc);
+	UNIT_TEST_P(LM_FindSegment, pcurproc);
+	UNIT_TEST_P(LM_FindSegmentEx, ptargetproc);
 }
-*/
+
 void test_symbol(lm_process_t *pcurproc)
 {
 	/* TODO: Retrieve module from 'module' tests and reuse here! */
@@ -170,14 +169,12 @@ main()
 
 	test_process(&current_process, &target_process);
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
+	test_segment(&current_process, &target_process);
 	test_memory(&target_process);
 	/*
 	test_hook(&target_process);
 	*/
 	test_module(&current_process, &target_process);
-	/*
-	test_page(&current_process, &target_process);
-	*/
 	test_symbol(&current_process);
 	/*
 	test_vmt();

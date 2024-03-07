@@ -135,6 +135,7 @@ typedef struct {
 	lm_char_t    name[LM_PATH_MAX];
 } lm_module_t;
 
+/* An allocated segment of memory */
 typedef struct {
 	lm_address_t base;
 	lm_address_t end;

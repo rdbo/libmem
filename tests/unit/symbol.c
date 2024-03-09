@@ -4,7 +4,7 @@
 
 extern int main();
 
-static const lm_address_t real_symbol_addr = (lm_address_t)main;
+static lm_address_t real_symbol_addr = (lm_address_t)main;
 static const lm_string_t real_symbol = "main";
 static lm_char_t *alloc_symbol;
 

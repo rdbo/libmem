@@ -18,7 +18,7 @@ jobs:
       - name: Configure and Build
         run: |
           mkdir build
-          cmake -S . -B build -DCMAKE_SYSTEM_PROCESSOR="i686" -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_BUILD_TYPE=Debug -DLIBMEM_BUILD_TESTS=ON -DLIBMEM_BUILD_STATIC=ON
+          cmake -S . -B build -DLIBMEM_ARCH="i686" -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_BUILD_TYPE=Debug -DLIBMEM_BUILD_TESTS=ON -DLIBMEM_BUILD_STATIC=ON
           cd build
           make -j 4
           cd ..

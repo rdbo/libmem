@@ -28,6 +28,11 @@ option(LIBMEM_BUILD_STATIC
 	OFF
 )
 
+option(LIBMEM_ARCH
+	"Force another architecture"
+	${CMAKE_SYSTEM_PROCESSOR}
+)
+
 message(STATUS
 	"[*] Build tests: ${LIBMEM_BUILD_TESTS}"
 )
@@ -70,9 +75,9 @@ set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/winutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
-	if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL x86_64)
+	if(${LIBMEM_ARCH} STREQUAL x86_64)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/linux/ptrace/x64/*.c")
-	elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL i686 OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL i386)
+	elseif(${LIBMEM_ARCH} STREQUAL i686 OR ${LIBMEM_ARCH} STREQUAL i386)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/linux/ptrace/x86/*.c")
 	endif()
 	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/linux/*.c" "${LIBMEM_DIR}/src/linux/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")

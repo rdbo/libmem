@@ -28,9 +28,10 @@ option(LIBMEM_BUILD_STATIC
 	OFF
 )
 
-option(LIBMEM_ARCH
-	"Force another architecture"
-	${CMAKE_SYSTEM_PROCESSOR}
+set(LIBMEM_ARCH ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "Force a specific architecture")
+
+message(STATUS
+	"[*] Architecture: ${LIBMEM_ARCH}"
 )
 
 message(STATUS

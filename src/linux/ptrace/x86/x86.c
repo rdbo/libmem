@@ -104,7 +104,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	long alloc;
 	ptrace_syscall_t ptsys;
 	
-	ptsys.syscall_num = SYS_mmap2;
+	ptsys.syscall_num = SYS_mmap;
 
 	/* Setup mmap arguments */
 	ptsys.args[0] = 0;                      /* `void *addr` */

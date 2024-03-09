@@ -4,7 +4,7 @@
 
 extern int main();
 
-static lm_address_t real_symbol_addr = (lm_address_t)main;
+static const void *real_symbol_addr = (void *)main;
 static const lm_string_t real_symbol = "main";
 static lm_char_t *alloc_symbol;
 
@@ -23,7 +23,7 @@ char *test_LM_EnumSymbols(lm_module_t *pmod)
 	lm_address_t symaddr = LM_ADDRESS_BAD;
 	
 	mu_assert("failed to enumerate symbols", LM_EnumSymbols(pmod, _LM_EnumSymbolsCallback, (lm_void_t *)&symaddr) == LM_TRUE);
-	mu_assert("incorrect symbol address", symaddr == real_symbol_addr);
+	mu_assert("incorrect symbol address", symaddr == (lm_address_t)real_symbol_addr);
 	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_EnumSymbols(LM_NULLPTR, _LM_EnumSymbolsCallback, LM_NULLPTR) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_EnumSymbols(pmod, LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 	
@@ -37,7 +37,7 @@ char *test_LM_FindSymbolAddress(lm_module_t *pmod)
 	symaddr = LM_FindSymbolAddress(pmod, real_symbol);
 
 	mu_assert("invalid symbol address", symaddr != LM_ADDRESS_BAD);
-	mu_assert("incorrect symbol address", symaddr == real_symbol_addr);
+	mu_assert("incorrect symbol address", symaddr == (lm_address_t)real_symbol_addr);
 	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_FindSymbolAddress(LM_NULLPTR, real_symbol) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_FindSymbolAddress(pmod, LM_NULLPTR) == LM_FALSE);
 	
@@ -75,7 +75,7 @@ char *test_LM_EnumSymbolsDemangled(lm_module_t *pmod)
 	lm_address_t symaddr = LM_ADDRESS_BAD;
 	
 	mu_assert("failed to enumerate symbols", LM_EnumSymbolsDemangled(pmod, _LM_EnumSymbolsCallback, (lm_void_t *)&symaddr) == LM_TRUE);
-	mu_assert("incorrect symbol address", symaddr == real_symbol_addr);
+	mu_assert("incorrect symbol address", symaddr == (lm_address_t)real_symbol_addr);
 	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_EnumSymbolsDemangled(LM_NULLPTR, _LM_EnumSymbolsCallback, LM_NULLPTR) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_EnumSymbolsDemangled(pmod, LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 	
@@ -89,7 +89,7 @@ char *test_LM_FindSymbolAddressDemangled(lm_module_t *pmod)
 	symaddr = LM_FindSymbolAddressDemangled(pmod, real_symbol);
 
 	mu_assert("invalid symbol address", symaddr != LM_ADDRESS_BAD);
-	mu_assert("incorrect symbol address", symaddr == real_symbol_addr);
+	mu_assert("incorrect symbol address", symaddr == (lm_address_t)real_symbol_addr);
 	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_FindSymbolAddressDemangled(LM_NULLPTR, real_symbol) == LM_ADDRESS_BAD);
 	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_FindSymbolAddressDemangled(pmod, LM_NULLPTR) == LM_ADDRESS_BAD);
 	

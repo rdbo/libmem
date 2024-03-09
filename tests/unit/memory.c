@@ -88,13 +88,13 @@ struct _ptrscan_layer2 {
 
 struct _ptrscan_layer1 {
 	char pad[0xA0];
-	lm_address_t next_layer;
-} static pointer_scan_layer1 = { { 0 }, (lm_address_t)&pointer_scan_layer2 };
+	void *next_layer;
+} static pointer_scan_layer1 = { { 0 }, (void *)&pointer_scan_layer2 };
 
 struct _ptrscan_layer0 {
 	char pad0[0xF0];
-	lm_address_t next_layer;
-} static pointer_scan_layer0 = { { 0 }, (lm_address_t)&pointer_scan_layer1 };
+	void *next_layer;
+} static pointer_scan_layer0 = { { 0 }, (void *)&pointer_scan_layer1 };
 
 static int *player_health_ptr = &pointer_scan_layer2.player_health;
 
@@ -241,15 +241,15 @@ char *test_LM_DeepPointerEx(struct memory_args *arg)
 	lm_byte_t writebuf[sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1) + sizeof(pointer_scan_layer2)];
 	lm_address_t layer1addr = *arg->palloc + sizeof(pointer_scan_layer0);
 	lm_address_t layer2addr = layer1addr + sizeof(pointer_scan_layer1);
-	lm_address_t *nextlayer0 = (lm_address_t *)&writebuf[offsetof(struct _ptrscan_layer0, next_layer)];
-	lm_address_t *nextlayer1 = (lm_address_t *)&writebuf[sizeof(pointer_scan_layer0) + offsetof(struct _ptrscan_layer1, next_layer)];
+	void **nextlayer0 = (void **)&writebuf[offsetof(struct _ptrscan_layer0, next_layer)];
+	void **nextlayer1 = (void **)&writebuf[sizeof(pointer_scan_layer0) + offsetof(struct _ptrscan_layer1, next_layer)];
 	lm_address_t expected_addr = *arg->palloc + sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1) + offsetof(struct _ptrscan_layer2, player_health);
 	
 	memcpy(writebuf, &pointer_scan_layer0, sizeof(pointer_scan_layer0));
 	memcpy(&writebuf[sizeof(pointer_scan_layer0)], &pointer_scan_layer1, sizeof(pointer_scan_layer1));
 	memcpy(&writebuf[sizeof(pointer_scan_layer0) + sizeof(pointer_scan_layer1)], &pointer_scan_layer2, sizeof(pointer_scan_layer2));
-	*nextlayer0 = layer1addr;
-	*nextlayer1 = layer2addr;
+	*nextlayer0 = (void *)layer1addr;
+	*nextlayer1 = (void *)layer2addr;
 
 	mu_assert("failed to write pointer scan mock to target process", LM_WriteMemoryEx(arg->ptargetproc, *arg->palloc, writebuf, sizeof(writebuf)) == sizeof(writebuf));
 

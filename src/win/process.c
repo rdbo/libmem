@@ -154,7 +154,7 @@ LM_GetProcess(lm_process_t *process_out)
 	if (!get_process_start_time(GetCurrentProcess(), &process_out->start_time))
 		return LM_FALSE;
 
-	process_out->bits = sizeof(void *); /* Assume process bits == size of pointer */
+	process_out->bits = sizeof(void *) * 8; /* Assume process bits == size of pointer */
 
 	return LM_TRUE;
 }
@@ -197,10 +197,11 @@ LM_GetProcessEx(lm_pid_t      pid,
 	if (!get_process_start_time(GetCurrentProcess(), &process_out->start_time))
 		goto CLEAN_EXIT;
 
+	process_out->bits = get_process_bits(hproc);
+
 	result = LM_TRUE;
 CLEAN_EXIT:
 	close_handle(hproc);
-	process_out->bits = sizeof(void *); /* Assume process bits == size of pointer */
 	return result;
 }
 

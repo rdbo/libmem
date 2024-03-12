@@ -110,7 +110,7 @@ LM_GetProcess(lm_process_t *process_out)
 		return LM_FALSE;
 	}
 
-	process_out->bits = sizeof(void *);
+	process_out->bits = sizeof(void *) * 8;
 
 	return LM_TRUE;
 }
@@ -138,7 +138,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 		return LM_FALSE;
 	}
 
-	process_out->bits = sizeof(void *);
+	process_out->bits = get_elf_bits(process.path);
 
 	return LM_TRUE;
 }

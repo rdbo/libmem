@@ -110,7 +110,7 @@ LM_GetProcess(lm_process_t *process_out)
 		goto CLOSE_EXIT;
 
 	process_out->start_time = get_process_start_time(procs);
-	process_out->bits = get_elf_bits(process_out->path);
+	process_out->bits = sizeof(void *) * 8;
 
 	result = LM_TRUE;
 

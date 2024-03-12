@@ -5,7 +5,8 @@
 #define CHECK_PROCESS(proc) ( \
 	(proc)->pid != LM_PID_BAD && \
 	strlen((proc)->path) > 0 && \
-	strlen((proc)->name) > 0 \
+	strlen((proc)->name) > 0 && \
+	((proc)->bits == 32 || (proc)->bits == 64) \
 )
 
 #define EQUAL_PROCESSES(p1, p2) ( \

@@ -138,7 +138,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 		return LM_FALSE;
 	}
 
-	process_out->bits = get_elf_bits(process.path);
+	process_out->bits = get_elf_bits(process_out->path);
 
 	return LM_TRUE;
 }

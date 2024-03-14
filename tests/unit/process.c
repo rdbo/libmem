@@ -78,6 +78,6 @@ char *test_LM_IsProcessAlive(lm_process_t *pcurproc)
 
 char *test_LM_GetSystemBits()
 {
-	mu_assert("wrong system bits", LM_GetSystemBits() == sizeof(uintmax_t) * 8);
+	mu_assert("wrong system bits", LM_GetSystemBits() == sizeof(void *) * 8);
 	return NULL;
 }

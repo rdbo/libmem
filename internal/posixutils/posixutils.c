@@ -30,7 +30,7 @@
 size_t
 get_system_bits()
 {
-	size_t bits = sizeof(void *); /* Assumes system bits == pointer size by default */
+	size_t bits = sizeof(void *) * 8; /* Assumes system bits == pointer size by default */
 	struct utsname utsbuf;
 	const char *machines64[] = { "x86_64", "amd64", "aarch64" };
 	size_t machines64_len = sizeof(machines64) / sizeof(machines64[0]);

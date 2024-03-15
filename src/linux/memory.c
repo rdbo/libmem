@@ -201,7 +201,7 @@ LM_AllocMemoryEx(const lm_process_t *process,
 	if (alloc == -1)
 		return LM_ADDRESS_BAD;
 
-	return (lm_address_t)(uintptr_t)alloc;
+	return (lm_address_t)(unsigned long)alloc;
 }
 
 /********************************/

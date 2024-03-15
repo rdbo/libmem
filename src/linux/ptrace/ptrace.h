@@ -37,7 +37,7 @@ size_t
 ptrace_read(pid_t pid, long src, char *dst, size_t size);
 
 size_t
-ptrace_write(pid_t pid, long dst, char *src, size_t size);
+ptrace_write(pid_t pid, long dst, const char *src, size_t size);
 
 long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys);

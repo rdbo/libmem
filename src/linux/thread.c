@@ -71,9 +71,6 @@ LM_EnumThreadsEx(const lm_process_t *process,
 LM_API lm_bool_t LM_CALL
 LM_GetThread(lm_thread_t *thread_out)
 {
-	char path[PATH_MAX];
-	DIR *dir;
-	
 	if (!thread_out)
 		return LM_FALSE;
 

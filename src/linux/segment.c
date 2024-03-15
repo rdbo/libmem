@@ -34,8 +34,8 @@ LM_EnumSegmentsEx(const lm_process_t *process,
 	lm_bool_t result = LM_FALSE;
 	char maps_path[PATH_MAX];
 	FILE *maps_file;
-	long base;
-	long end;
+	unsigned long base;
+	unsigned long end;
 	char flags[5];
 	lm_segment_t segment;
 	size_t i;
@@ -49,8 +49,8 @@ LM_EnumSegmentsEx(const lm_process_t *process,
 		return result;
 
 	while (fscanf(maps_file, "%lx-%lx %4s %*[^\n]", &base, &end, flags) == 3) {
-		segment.base = (lm_address_t)(unsigned long)base;
-		segment.end = (lm_address_t)(unsigned long)end;
+		segment.base = (lm_address_t)base;
+		segment.end = (lm_address_t)end;
 		segment.size = segment.end - segment.base;
 		segment.prot = LM_PROT_NONE;
 
@@ -78,7 +78,7 @@ LM_EnumSegmentsEx(const lm_process_t *process,
 	}
 
 	result = LM_TRUE;
-CLOSE_EXIT:
+
 	fclose(maps_file);
 	return result;
 }

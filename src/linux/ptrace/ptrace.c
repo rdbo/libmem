@@ -105,7 +105,6 @@ long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 {
 	long alloc = -1;
-	long pc;
 	void *orig_regs = NULL;
 	void *orig_code = NULL;
 	size_t shellcode_size;

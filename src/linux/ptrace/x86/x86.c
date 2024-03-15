@@ -45,7 +45,6 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	static const char shellcode[] = { 0xcd, 0x80 };
 	struct user_regs_struct regs;
 	size_t shellcode_size = sizeof(shellcode);
-	size_t size;
 
 	assert((bits == 64 || bits == 32) && ptsys != NULL && orig_regs != NULL && *orig_regs == NULL && orig_code != NULL && *orig_code == NULL);
 
@@ -87,7 +86,6 @@ void
 ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
 	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
-	struct user_regs_struct regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
@@ -115,7 +113,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	ptsys.args[5] = 0;                      /* `off_t offset` */
 
 	alloc = ptrace_syscall(pid, bits, &ptsys);
-	if (alloc == -1 && errno || (void *)alloc == MAP_FAILED)
+	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)
 		alloc = -1;
 
 	return alloc;

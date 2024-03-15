@@ -196,10 +196,10 @@ LM_AllocMemoryEx(const lm_process_t *process,
 		return LM_ADDRESS_BAD;
 
 	alloc = ptrace_alloc(process->pid, process->bits, size, get_os_prot(prot));
-	if (alloc == -1)
-		alloc = (long)LM_ADDRESS_BAD;
-
 	ptrace_detach(process->pid);
+
+	if (alloc == -1)
+		return LM_ADDRESS_BAD;
 
 	return (lm_address_t)alloc;
 }

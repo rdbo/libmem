@@ -69,7 +69,7 @@ LM_SetMemory(lm_address_t dest,
 		return i;
 	
 	for (; i < size; ++i)
-		*(lm_byte_t *)(dest + i) = byte;
+		*(lm_byte_t *)(uintptr_t)(dest + i) = byte;
 
 	return i;
 }
@@ -122,7 +122,7 @@ LM_DeepPointer(lm_address_t        base,
 		 * returning a pointer to the final value
 		 * given by the "pointer scan" offsets */
 		if (i < (noffsets - 1)) {
-			base = (lm_address_t)(uintptr_t)(*(void **)base);
+			base = (lm_address_t)(*(uintptr_t **)(uintptr_t)base);
 		}
 	}
 

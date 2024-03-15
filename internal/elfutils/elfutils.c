@@ -21,7 +21,6 @@ enum_elf##elf_type##_symbols(FILE *elf, uint64_t base_address, int (*callback)(c
 	char *strtab /* String table */; \
 	Elf##elf_type##_Sym sym; \
 	char *symbol_name; \
-	size_t count; \
 \
 	assert(elf != NULL && callback != NULL); \
 \

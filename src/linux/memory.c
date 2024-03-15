@@ -174,7 +174,7 @@ LM_AllocMemory(lm_size_t size,
 	if (alloc == MAP_FAILED)
 		return LM_ADDRESS_BAD;
 
-	return (lm_address_t)alloc;
+	return (lm_address_t)(uintptr_t)alloc;
 }
 
 /********************************/
@@ -201,7 +201,7 @@ LM_AllocMemoryEx(const lm_process_t *process,
 	if (alloc == -1)
 		return LM_ADDRESS_BAD;
 
-	return (lm_address_t)alloc;
+	return (lm_address_t)(uintptr_t)alloc;
 }
 
 /********************************/

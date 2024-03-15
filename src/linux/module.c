@@ -48,12 +48,12 @@ LM_EnumModulesEx(const lm_process_t *process,
 	lm_module_t module;
 
 	if (!process || !callback)
-		return LM_FALSE;
+		return result;
 
 	snprintf(path, sizeof(path), "%s/%d/map_files", PROCFS_PATH, process->pid);
 	map_files = opendir(path);
 	if (!map_files)
-		return LM_FALSE;
+		return result;
 
 	module.base = (unsigned long long)LM_ADDRESS_BAD;
 
@@ -113,10 +113,9 @@ LM_EnumModulesEx(const lm_process_t *process,
 	}
 
 	result = LM_TRUE;
-
 CLOSE_EXIT:
 	closedir(map_files);
-	return LM_TRUE;
+	return result;
 }
 
 /********************************/

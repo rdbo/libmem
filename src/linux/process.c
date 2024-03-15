@@ -50,8 +50,6 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 		return LM_FALSE;
 
 	while ((dirent = readdir(dir))) {
-		FILE *elf;
-
 		process.pid = atoi(dirent->d_name);
 
 		/* Since 'atoi' returns 0 on failure, we need to check if the PID is 0, or 

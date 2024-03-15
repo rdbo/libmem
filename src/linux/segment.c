@@ -49,8 +49,8 @@ LM_EnumSegmentsEx(const lm_process_t *process,
 		return result;
 
 	while (fscanf(maps_file, "%lx-%lx %4s %*[^\n]", &base, &end, flags) == 3) {
-		segment.base = (lm_address_t)base;
-		segment.end = (lm_address_t)end;
+		segment.base = (lm_address_t)(unsigned long)base;
+		segment.end = (lm_address_t)(unsigned long)end;
 		segment.size = segment.end - segment.base;
 		segment.prot = LM_PROT_NONE;
 

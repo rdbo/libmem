@@ -122,7 +122,7 @@ LM_DeepPointer(lm_address_t        base,
 		 * returning a pointer to the final value
 		 * given by the "pointer scan" offsets */
 		if (i < (noffsets - 1)) {
-			base = (lm_address_t)(*(uintptr_t **)(uintptr_t)base);
+			base = (lm_address_t)(uintptr_t)(*(void **)(uintptr_t)base);
 		}
 	}
 

@@ -257,7 +257,7 @@ char *test_LM_DeepPointerEx(struct memory_args *arg)
 	lm_size_t noffsets = deep_ptr_noffsets;
 	lm_address_t deep_pointer = LM_DeepPointerEx(arg->ptargetproc, *arg->palloc, offsets, noffsets);
 
-	mu_assert("deep pointer does not match expected address", deep_pointer == expected_addr);
+	mu_assert("deep pointer does not match expected address", deep_pointer == (void *)expected_addr);
 
 	int health = 0;
 	mu_assert("failed to read deep pointer value", LM_ReadMemoryEx(arg->ptargetproc, deep_pointer, (lm_byte_t *)&health, sizeof(health)) == sizeof(health));

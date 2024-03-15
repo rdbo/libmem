@@ -138,7 +138,7 @@ LM_DeepPointerEx(const lm_process_t *process,
 		 lm_size_t           noffsets)
 {
 	lm_size_t i;
-	lm_address_t deref;
+	lm_address_t deref = 0;
 	lm_size_t ptrsize;
 
 	if (!process || base == LM_ADDRESS_BAD || !offsets || noffsets == 0)

@@ -49,7 +49,7 @@ LM_ReadMemoryEx(const lm_process_t *process,
 	 *       prevents reading from a 64 bit process as a 32 bit process */
 	iodst.iov_base = (void *)dest;
 	iodst.iov_len  = size;
-	iosrc.iov_base = (void *)source;
+	iosrc.iov_base = (void *)(uintptr_t)source;
 	iosrc.iov_len  = size;
 	rdsize = process_vm_readv((pid_t)process->pid, &iodst, 1, &iosrc, 1, 0);
 
@@ -76,7 +76,7 @@ LM_WriteMemoryEx(const lm_process_t *process,
 
 	iosrc.iov_base = (void *)source;
 	iosrc.iov_len = size;
-	iodst.iov_base = (void *)dest;
+	iodst.iov_base = (void *)(uintptr_t)dest;
 	iodst.iov_len = size;
 	wrsize = process_vm_writev((pid_t)process->pid, &iosrc, 1, &iodst, 1, 0);
 
@@ -111,7 +111,7 @@ LM_ProtMemory(lm_address_t address,
 	}
 
 	osprot = get_os_prot(prot);
-	return mprotect((void *)address, size, osprot) != -1 ? LM_TRUE : LM_FALSE;
+	return mprotect((void *)(uintptr_t)address, size, osprot) != -1 ? LM_TRUE : LM_FALSE;
 }
 
 /********************************/
@@ -216,7 +216,7 @@ LM_FreeMemory(lm_address_t alloc,
 	if (size == 0)
 		size = (lm_size_t)getpagesize();
 
-	return munmap((void *)alloc, size) == 0 ? LM_TRUE : LM_FALSE;
+	return munmap((void *)(uintptr_t)alloc, size) == 0 ? LM_TRUE : LM_FALSE;
 }
 
 /********************************/

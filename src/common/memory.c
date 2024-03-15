@@ -33,7 +33,7 @@ LM_ReadMemory(lm_address_t source,
 		return i;
 	
 	for (; i < size; ++i)
-		dest[i] = *(lm_byte_t *)(source + i);
+		dest[i] = *(lm_byte_t *)(uintptr_t)(source + i);
 
 	return i;
 }
@@ -51,7 +51,7 @@ LM_WriteMemory(lm_address_t   dest,
 		return i;
 	
 	for (i = 0; i < size; ++i)
-		*(lm_byte_t *)(dest + i) = source[i];
+		*(lm_byte_t *)(uintptr_t)(dest + i) = source[i];
 
 	return i;
 }
@@ -93,7 +93,7 @@ LM_SetMemoryEx(const lm_process_t *process,
 	buf = (lm_byte_t *)malloc(size);
 	if (!buf)
 		return wrsize;
-	if (LM_SetMemory((lm_address_t)buf, byte, size) != size)
+	if (LM_SetMemory((lm_address_t)(uintptr_t)buf, byte, size) != size)
 		goto FREE_EXIT;
 
 	wrsize = LM_WriteMemoryEx(process, dest, buf, size);
@@ -122,7 +122,7 @@ LM_DeepPointer(lm_address_t        base,
 		 * returning a pointer to the final value
 		 * given by the "pointer scan" offsets */
 		if (i < (noffsets - 1)) {
-			base = (lm_address_t)(*(void **)base);
+			base = (lm_address_t)(uintptr_t)(*(void **)base);
 		}
 	}
 

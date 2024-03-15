@@ -82,7 +82,7 @@ char *test_LM_GetSystemBits()
 
 	bits = LM_GetSystemBits();
 
-	printf(" <BITS: %zd> ", bits);
+	printf(" <BITS: %zd> ", (size_t)bits);
 	fflush(stdout);
 
 	mu_assert("wrong system bits", bits == 32 || bits == 64);

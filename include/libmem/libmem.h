@@ -149,7 +149,7 @@ typedef struct {
 	lm_address_t address;
 } lm_symbol_t;
 
-/* Similar to capstone's cs_insn */
+/* Re-declaration of capstone's cs_insn */
 typedef struct {
 	lm_address_t address;
 	lm_size_t    size;
@@ -157,6 +157,27 @@ typedef struct {
 	lm_char_t    mnemonic[32];
 	lm_char_t    op_str[160];
 } lm_inst_t;
+
+/* Supported asm/disasm architectures */
+/*
+ *  NOTE: The architectures listed here are the ones
+ *        supported by both the assembler (keystone)
+ *        and the disassembler (capstone), but not
+ *        necessarily fully supported by libmem.
+ */
+enum {
+	LM_ARCH_ARM = 0,
+	LM_ARCH_ARM64,
+	LM_ARCH_MIPS,
+	LM_ARCH_X86,
+	LM_ARCH_PPC,
+	LM_ARCH_SPARC,
+	LM_ARCH_SYSZ,
+	LM_ARCH_EVM,
+
+	LM_ARCH_MAX,
+};
+typedef uint32_t lm_arch_t;
 
 /* Virtual method table (VMT) */
 typedef struct lm_vmtentry_t {
@@ -462,6 +483,72 @@ LM_SigScanEx(const lm_process_t *process,
 	     lm_string_t         signature, /* Example: "DE AD BE EF ?? ?? 13 37" */
 	     lm_address_t        address,
 	     lm_size_t           scansize);
+
+/* Assemble/Disassemble API */
+LM_API lm_arch_t LM_CALL
+LM_GetArchitecture();
+
+LM_API lm_bool_t LM_CALL
+LM_Assemble(lm_string_t code,
+	    lm_inst_t  *instruction_out);
+
+LM_API lm_size_t LM_CALL
+LM_AssembleEx(lm_string_t  code,
+              lm_arch_t    arch,
+	      lm_size_t    bits,
+	      lm_address_t runtime_address,
+	      lm_byte_t  **payload_out);
+
+LM_API lm_void_t LM_CALL
+LM_FreePayload(lm_byte_t *payload);
+
+LM_API lm_bool_t LM_CALL
+LM_Disassemble(lm_address_t machine_code,
+	       lm_inst_t   *instruction_out);
+
+LM_API lm_size_t LM_CALL
+LM_DisassembleEx(lm_address_t machine_code,
+                 lm_arch_t    arch,
+		 lm_size_t    bits,
+		 lm_size_t    max_size,
+		 lm_size_t    instruction_count,
+		 lm_address_t runtime_address,
+		 lm_inst_t  **instructions_out);
+
+LM_API lm_void_t LM_CALL
+LM_FreeInstructions(lm_inst_t *instructions);
+
+LM_API lm_size_t LM_CALL
+LM_CodeLength(lm_address_t machine_code,
+	      lm_size_t    min_length);
+
+LM_API lm_size_t LM_CALL
+LM_CodeLengthEx(lm_process_t *process,
+		lm_address_t  machine_code,
+		lm_size_t     min_length);
+
+/* Hook API */
+LM_API lm_size_t LM_CALL
+LM_HookCode(lm_address_t  from,
+	    lm_address_t  to,
+	    lm_address_t *trampoline_out);
+
+LM_API lm_size_t LM_CALL
+LM_HookCodeEx(const lm_process_t *process,
+	      lm_address_t        from,
+	      lm_address_t        to,
+	      lm_address_t       *trampoline_out);
+
+LM_API lm_bool_t LM_CALL
+LM_UnhookCode(lm_address_t from,
+	      lm_address_t trampoline,
+	      lm_size_t    size);
+
+LM_API lm_bool_t LM_CALL
+LM_UnhookCodeEx(const lm_process_t *process,
+		lm_address_t        from,
+		lm_address_t        trampoline,
+		lm_size_t           size);
 
 #ifdef __cplusplus
 }

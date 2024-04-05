@@ -24,13 +24,14 @@
 #include <capstone/capstone.h>
 #include <keystone/keystone.h>
 #include <memory.h>
+#include "arch/arch.h"
 
 /********************************/
 
 LM_API lm_arch_t LM_CALL
 LM_GetArchitecture()
 {
-	return LM_ARCH_X86;
+	return get_architecture();
 }
 
 /********************************/
@@ -45,7 +46,7 @@ LM_Assemble(lm_string_t code,
 	if (!code || !instruction_out)
 		return ret;
 
-	if (!LM_AssembleEx(code, LM_GetArchitecture(), sizeof(void *), 0, &payload))
+	if (!LM_AssembleEx(code, LM_GetArchitecture(), LM_GetBits(), 0, &payload))
 		return ret;
 
 	ret = LM_Disassemble((lm_address_t)payload, instruction_out);
@@ -122,7 +123,7 @@ LM_Disassemble(lm_address_t machine_code,
 	if (!machine_code || !instruction_out)
 		return LM_FALSE;
 
-	if (LM_DisassembleEx(machine_code, LM_GetArchitecture(), sizeof(void *), LM_INST_MAX, 1, 0, &insts) == 0)
+	if (LM_DisassembleEx(machine_code, LM_GetArchitecture(), LM_GetBits(), LM_INST_MAX, 1, 0, &insts) == 0)
 		return LM_FALSE;
 
 	*instruction_out = *insts;
@@ -172,7 +173,7 @@ LM_DisassembleEx(lm_address_t machine_code,
 	else
 		csmode = CS_MODE_32;
 
-	if (!cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
+	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
 		return inst_count;
 
 	inst_count = cs_disasm(cshandle, (uint8_t *)machine_code, max_size, runtime_address, instruction_count, &csinsts);
@@ -245,7 +246,7 @@ LM_CodeLengthEx(lm_process_t *process,
 		if (LM_ReadMemoryEx(process, machine_code, codebuf, sizeof(codebuf)) == 0)
 			return 0;
 
-		if (LM_Disassemble(codebuf, &inst) == LM_FALSE)
+		if (LM_Disassemble((lm_address_t)codebuf, &inst) == LM_FALSE)
 			return 0;
 
 		machine_code += inst.size;

@@ -154,7 +154,7 @@ LM_GetProcess(lm_process_t *process_out)
 	if (!get_process_start_time(GetCurrentProcess(), &process_out->start_time))
 		return LM_FALSE;
 
-	process_out->bits = sizeof(void *) * 8; /* Assume process bits == size of pointer */
+	process_out->bits = LM_GetBits(); /* Assume process bits == size of pointer */
 
 	return LM_TRUE;
 }

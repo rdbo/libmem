@@ -71,6 +71,14 @@ LM_FindProcess(lm_string_t   process_name,
 
 /********************************/
 
+LM_API lm_size_t LM_CALL
+LM_GetBits()
+{
+	return sizeof(void *) * 8;
+}
+
+/********************************/
+
 LM_API lm_bool_t LM_CALL
 LM_IsProcessAlive(const lm_process_t *process)
 {

@@ -32,9 +32,6 @@ char *test_LM_HookCode(struct hook_args *arg)
 {
 	lm_inst_t inst;
 
-	/* TODO: Don't rely on LM_ProtMemory for this test */
-	mu_assert("failed to change protection of target function", LM_ProtMemory((lm_address_t)target_function, 1024, LM_PROT_XRW, LM_NULLPTR) == LM_TRUE);
-
 	hook_address = (lm_address_t)target_function;
 	/*
 	 * NOTE: this resolves dummy functions for Windows.
@@ -44,7 +41,7 @@ char *test_LM_HookCode(struct hook_args *arg)
 	 * The following code will resolve that.
 	 */
 	LM_Disassemble((lm_address_t)target_function, &inst);
-	if (!LM_CSTRCMP(inst.mnemonic, "jmp")) {
+	if (!strcmp(inst.mnemonic, "jmp")) {
 		hook_address += *(lm_address_t *)&inst.bytes[1] + inst.size; /* Calculate real address from 'jmp' offset */
 	}
 	

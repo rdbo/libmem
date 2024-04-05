@@ -104,7 +104,7 @@ close_handle(HANDLE handle)
 size_t
 get_system_bits()
 {
-	size_t bits = sizeof(void *); /* Assume system bits == process bits by default */
+	size_t bits = sizeof(void *) * 8; /* Assume system bits == process bits by default */
 	SYSTEM_INFO sysinfo = { 0 };
 
 	GetNativeSystemInfo(&sysinfo);

@@ -68,7 +68,6 @@ void test_memory(lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_FreeMemoryEx, &arg);
 }
 
-/*
 void test_hook(lm_process_t *ptargetproc)
 {
 	struct hook_args arg;
@@ -76,9 +75,8 @@ void test_hook(lm_process_t *ptargetproc)
 	
 	UNIT_TEST_P(LM_HookCode, &arg);
 	UNIT_TEST_P(LM_UnhookCode, &arg);
-	/* TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx * /
+	/* TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx */
 }
-*/
 
 void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
@@ -169,9 +167,7 @@ main()
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
 	test_segment(&current_process, &target_process);
 	test_memory(&target_process);
-	/*
 	test_hook(&target_process);
-	*/
 	test_module(&current_process, &target_process);
 	test_symbol(&current_process);
 	test_scan(&target_process);

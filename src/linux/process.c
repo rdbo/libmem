@@ -108,7 +108,7 @@ LM_GetProcess(lm_process_t *process_out)
 		return LM_FALSE;
 	}
 
-	process_out->bits = sizeof(void *) * 8;
+	process_out->bits = LM_GetBits();
 
 	return LM_TRUE;
 }

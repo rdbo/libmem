@@ -133,7 +133,7 @@ get_elf_bits(const char *path)
 	size_t bits;
 	FILE *elf;
 	
-	bits = sizeof(void *); /* Assume target process bits == size of pointer by default */
+	bits = sizeof(void *) * 8; /* Assume target process bits == size of pointer by default */
 	elf = fopen(path, "r");
 	if (elf) {
 		size_t elf_bits = read_elf_bits(elf);

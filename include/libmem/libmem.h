@@ -248,6 +248,9 @@ LM_API lm_bool_t LM_CALL
 LM_IsProcessAlive(const lm_process_t *process);
 
 LM_API lm_size_t LM_CALL
+LM_GetBits();
+
+LM_API lm_size_t LM_CALL
 LM_GetSystemBits(lm_void_t);
 
 /* Thread API */

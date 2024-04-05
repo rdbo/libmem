@@ -425,6 +425,44 @@ LM_DeepPointerEx(const lm_process_t *process,
 		 const lm_address_t *offsets,
 		 lm_size_t           noffsets);
 
+/* Scan API */
+LM_API lm_address_t LM_CALL
+LM_DataScan(lm_bytearray_t data,
+	    lm_size_t      datasize,
+	    lm_address_t   address,
+	    lm_size_t      scansize);
+
+LM_API lm_address_t LM_CALL
+LM_DataScanEx(const lm_process_t *process,
+	      lm_bytearray_t      data,
+	      lm_size_t           datasize,
+	      lm_address_t        address,
+	      lm_size_t           scansize);
+
+LM_API lm_address_t LM_CALL
+LM_PatternScan(lm_bytearray_t pattern,
+	       lm_string_t    mask,
+	       lm_address_t   address,
+	       lm_size_t      scansize);
+
+LM_API lm_address_t LM_CALL
+LM_PatternScanEx(const lm_process_t *process,
+		 lm_bytearray_t      pattern,
+		 lm_string_t         mask, /* Example: "xx??x?x", where 'x' == exact pattern byte match, and '?' == any byte */
+		 lm_address_t        address,
+		 lm_size_t           scansize);
+
+LM_API lm_address_t LM_CALL
+LM_SigScan(lm_string_t  signature,
+	   lm_address_t address,
+	   lm_size_t    scansize);
+
+LM_API lm_address_t LM_CALL
+LM_SigScanEx(const lm_process_t *process,
+	     lm_string_t         signature, /* Example: "DE AD BE EF ?? ?? 13 37" */
+	     lm_address_t        address,
+	     lm_size_t           scansize);
+
 #ifdef __cplusplus
 }
 #endif

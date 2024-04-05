@@ -133,6 +133,7 @@ void test_vmt()
 	UNIT_TEST_P(LM_VmtReset, &vmt);
 	UNIT_TEST_P(LM_VmtFree, &vmt);
 }
+*/
 
 void test_scan(lm_process_t *ptargetproc)
 {
@@ -141,7 +142,7 @@ void test_scan(lm_process_t *ptargetproc)
 	arg.scanaddr = LM_AllocMemoryEx(ptargetproc, sizeof(scanbuf), LM_PROT_XRW);
 	assert(arg.scanaddr != LM_ADDRESS_BAD);
 
-	assert(LM_WriteMemoryEx(ptargetproc, arg.scanaddr, (lm_bytearr_t)scanbuf, sizeof(scanbuf)) == sizeof(scanbuf));
+	assert(LM_WriteMemoryEx(ptargetproc, arg.scanaddr, (lm_bytearray_t)scanbuf, sizeof(scanbuf)) == sizeof(scanbuf));
 	
 	UNIT_TEST(LM_DataScan);
 	UNIT_TEST_P(LM_DataScanEx, &arg);
@@ -152,7 +153,6 @@ void test_scan(lm_process_t *ptargetproc)
 
 	LM_FreeMemoryEx(ptargetproc, arg.scanaddr, sizeof(scanbuf));
 }
-*/
 
 LM_API_EXPORT int
 main()
@@ -174,9 +174,9 @@ main()
 	*/
 	test_module(&current_process, &target_process);
 	test_symbol(&current_process);
+	test_scan(&target_process);
 	/*
 	test_vmt();
-	test_scan(&target_process);
 	*/
 
 	return 0;

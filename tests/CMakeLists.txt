@@ -1,5 +1,5 @@
 # file(GLOB_RECURSE UNIT_SRC "${TESTS_DIR}/unit/*.c")
-set(UNIT_SRC "${TESTS_DIR}/unit/unit.c" "${TESTS_DIR}/unit/process.c" "${TESTS_DIR}/unit/thread.c" "${TESTS_DIR}/unit/module.c" "${TESTS_DIR}/unit/symbol.c" "${TESTS_DIR}/unit/segment.c" "${TESTS_DIR}/unit/memory.c")
+set(UNIT_SRC "${TESTS_DIR}/unit/unit.c" "${TESTS_DIR}/unit/process.c" "${TESTS_DIR}/unit/thread.c" "${TESTS_DIR}/unit/module.c" "${TESTS_DIR}/unit/symbol.c" "${TESTS_DIR}/unit/segment.c" "${TESTS_DIR}/unit/memory.c" "${TESTS_DIR}/unit/scan.c")
 set(TARGET_SRC "${TESTS_DIR}/target.c")
 set(LIBTEST_SRC "${TESTS_DIR}/libtest.c")
 set(LIBTEST_PATH "${PROJECT_BINARY_DIR}/tests/libtest${CMAKE_SHARED_LIBRARY_SUFFIX}")

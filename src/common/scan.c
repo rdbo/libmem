@@ -185,7 +185,7 @@ sig_to_pattern(lm_string_t signature, lm_byte_t **pattern_out, lm_char_t **mask_
 			return LM_FALSE;
 		}
 
-		if (alloc = realloc(mask, (bytecount + 1) * sizeof(lm_char_t))) {
+		if (alloc = realloc(mask, (bytecount + 2) * sizeof(lm_char_t))) {
 			mask = (lm_char_t *)alloc;
 		} else {
 			free(mask);
@@ -197,6 +197,7 @@ sig_to_pattern(lm_string_t signature, lm_byte_t **pattern_out, lm_char_t **mask_
 		if (pattern[bytecount] == 0 && ptr == endptr) {
 			endptr = strchr(&ptr[1], ' ');
 			mask[bytecount] = '?';
+			mask[bytecount + 1] = '\0';
 		} else {
 			mask[bytecount] = 'x';
 		}
@@ -224,6 +225,14 @@ LM_SigScan(lm_string_t  signature,
 	
 	if (!sig_to_pattern(signature, &pattern, &mask))
 		return match;
+
+	/* TODO: Delete */
+	printf("Parsed signature %s into:\n", signature);
+	for (size_t i = 0; i < strlen(mask); ++i) {
+		printf("%hhx", (unsigned char)pattern[i]);
+	}
+	printf("\n");
+	printf("%s\n", mask);
 
 	match = LM_PatternScan(pattern, mask, address, scansize);
 

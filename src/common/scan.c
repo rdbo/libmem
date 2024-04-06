@@ -200,6 +200,7 @@ sig_to_pattern(lm_string_t signature, lm_byte_t **pattern_out, lm_char_t **mask_
 			mask[bytecount + 1] = '\0';
 		} else {
 			mask[bytecount] = 'x';
+			mask[bytecount + 1] = '\0';
 		}
 	}
 

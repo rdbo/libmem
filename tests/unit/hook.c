@@ -1,4 +1,5 @@
 #include <libmem/libmem.h>
+#include <stdint.h>
 #include "minunit.h"
 #include "helpers.h"
 
@@ -44,7 +45,9 @@ char *test_LM_HookCode(struct hook_args *arg)
 	 */
 	LM_Disassemble((lm_address_t)target_function, &inst);
 	if (!strcmp(inst.mnemonic, "jmp")) {
-		hook_address += *(lm_address_t *)&inst.bytes[1] + inst.size; /* Calculate real address from 'jmp' offset */
+		hook_address += *(uint32_t *)&inst.bytes[1] + (uint32_t)inst.size; /* Calculate real address from 'jmp' offset */
+		printf("<RESOLVED JMP TO: %p> ", (void *)hook_address);
+		fflush(stdout);
 	}
 	
 	arg->hksize = LM_HookCode(hook_address, (lm_address_t)hk_target_function, &arg->trampoline);

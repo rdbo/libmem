@@ -227,14 +227,6 @@ LM_SigScan(lm_string_t  signature,
 	if (!sig_to_pattern(signature, &pattern, &mask))
 		return match;
 
-	/* TODO: Delete */
-	printf("Parsed signature %s into:\n", signature);
-	for (size_t i = 0; i < strlen(mask); ++i) {
-		printf("%hhx", (unsigned char)pattern[i]);
-	}
-	printf("\n");
-	printf("%s\n", mask);
-
 	match = LM_PatternScan(pattern, mask, address, scansize);
 
 	free(pattern);

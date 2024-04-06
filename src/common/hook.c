@@ -21,8 +21,8 @@
  */
 
 #include <libmem/libmem.h>
- #include "arch/arch.h"
- #include <alloca.h>
+#include "arch/arch.h"
+#include <malloc.h>
 
 LM_API lm_size_t LM_CALL
 LM_HookCode(lm_address_t  from,

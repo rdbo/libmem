@@ -139,6 +139,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN
 		psapi
 		ntdll
 	)
+	target_compile_definitions(libmem PUBLIC alloca=_alloca)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
 	set(LIBMEM_DEPS 
 		${LIBMEM_DEPS}

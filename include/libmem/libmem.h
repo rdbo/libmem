@@ -103,9 +103,9 @@ typedef uint64_t lm_time_t;
 enum {
 	LM_PROT_NONE = 0,
 
-	LM_PROT_X = (1 << 0),
-	LM_PROT_R = (1 << 1),
-	LM_PROT_W = (1 << 2),
+	LM_PROT_R = (1 << 0),
+	LM_PROT_W = (1 << 1),
+	LM_PROT_X = (1 << 2),
 
 	LM_PROT_XR = LM_PROT_X | LM_PROT_R,
 	LM_PROT_XW = LM_PROT_X | LM_PROT_W,

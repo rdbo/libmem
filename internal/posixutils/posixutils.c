@@ -78,11 +78,32 @@ get_name_from_path(char *path, char *namebuf, size_t namesize)
 int
 get_os_prot(lm_prot_t prot)
 {
-	return (int)(prot & LM_PROT_XRW);
+	int osprot = 0;
+	prot = (prot & LM_PROT_XRW);
+
+	if (prot & LM_PROT_X)
+		osprot |= PROT_EXEC;
+	if (prot & LM_PROT_R)
+		osprot |= PROT_READ;
+	if (prot & LM_PROT_W)
+		osprot |= PROT_WRITE;
+
+	return osprot;
 }
 
 lm_prot_t
 get_prot(int osprot)
 {
-	return (lm_prot_t)(osprot & (PROT_EXEC | PROT_READ | PROT_WRITE));
+	lm_prot_t prot = 0;
+
+	osprot = (osprot & (PROT_EXEC | PROT_READ | PROT_WRITE));
+
+	if (osprot & PROT_EXEC)
+		prot |= LM_PROT_X;
+	if (osprot & PROT_READ)
+		prot |= LM_PROT_R;
+	if (osprot & PROT_WRITE)
+		prot |= LM_PROT_W;
+
+	return prot;
 }

@@ -11,6 +11,7 @@ int target_function(char *mystr, int mynum)
 		return 0;
 
 	printf("<STRING: %s> <NUMBER: %d> ", mystr, mynum);
+	fflush(stdout);
 
 	return 1;
 }
@@ -22,8 +23,9 @@ int hk_target_function(char *mystr, int mynum)
 	mystr = "Hooked Target Function";
 	mynum = 1337;
 
-	orig_ret = ((int (*)(char *, int))target_function_trampoline)(mystr, mynum);
+	orig_ret = target_function_trampoline(mystr, mynum);
 	printf("<ORIG RET: %d> ", orig_ret);
+	fflush(stdout);
 
 	return mynum;
 }

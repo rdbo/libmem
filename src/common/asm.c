@@ -236,20 +236,20 @@ LM_CodeLengthEx(lm_process_t *process,
 		lm_size_t     min_length)
 {
 	lm_size_t length = 0;
-	lm_inst_t inst;
+	lm_inst_t *insts;
 	lm_byte_t codebuf[LM_INST_MAX];
 
 	if (!process || machine_code == LM_ADDRESS_BAD)
 		return 0;
 
-	for (; length < min_length; length += inst.size) {
+	for (; length < min_length; length += insts[0].size, LM_FreeInstructions(insts)) {
 		if (LM_ReadMemoryEx(process, machine_code, codebuf, sizeof(codebuf)) == 0)
 			return 0;
 
-		if (LM_Disassemble((lm_address_t)codebuf, &inst) == LM_FALSE)
+		if (LM_DisassembleEx((lm_address_t)codebuf, LM_GetArchitecture(), process->bits, LM_INST_MAX, 1, 0, &insts) == 0)
 			return 0;
 
-		machine_code += inst.size;
+		machine_code += insts[0].size;
 	}
 
 	return length;

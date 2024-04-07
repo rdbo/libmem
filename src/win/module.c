@@ -96,6 +96,52 @@ LM_LoadModule(lm_string_t  path,
 /********************************/
 
 LM_API lm_bool_t LM_CALL
+LM_LoadModuleEx(const lm_process_t *process,
+		lm_string_t         path,
+		lm_module_t        *module_out)
+{
+	lm_bool_t result = LM_FALSE;
+	WCHAR wpath[LM_PATH_MAX];
+	lm_address_t modpath_addr;
+	HANDLE hproc;
+	HANDLE hthread;
+
+	if (!process || !path)
+		return result;
+
+	if (!utf8towcs(path, wpath, LM_ARRLEN(wpath)))
+		return result;
+
+	modpath_addr = LM_AllocMemoryEx(process, sizeof(wpath), LM_PROT_RW);
+	if (modpath_addr == LM_ADDRESS_BAD)
+		return result;
+
+	if (!LM_WriteMemoryEx(process, modpath_addr, wpath, sizeof(wpath)))
+		goto FREE_EXIT;
+
+	hproc = open_process(process.pid, PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ);
+	if (!hproc)
+		goto FREE_EXIT;
+
+	hthread = (HANDLE)CreateRemoteThread(hproc, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, modpath_addr, 0, NULL);
+
+	close_handle(&hproc);
+
+	if (!hthread)
+		goto FREE_EXIT;
+
+	WaitForSingleObject(hthread, INFINITE);
+	CloseHandle(hthread);
+
+	result = LM_TRUE;
+FREE_EXIT:
+	LM_FreeMemoryEx(process, modpath_addr, sizeof(wpath));
+	return result;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
 LM_UnloadModule(const lm_module_t *module)
 {
 	HMODULE hmod;

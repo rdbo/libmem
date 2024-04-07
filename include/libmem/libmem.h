@@ -149,7 +149,6 @@ typedef struct {
 	lm_address_t address;
 } lm_symbol_t;
 
-/* Re-declaration of capstone's cs_insn */
 typedef struct {
 	lm_address_t address;
 	lm_size_t    size;

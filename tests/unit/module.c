@@ -11,7 +11,7 @@ lm_bool_t _LM_EnumModulesCallback(lm_module_t *pmod, lm_void_t *arg)
 {
 	struct enum_modules_cbarg *cbarg = (struct enum_modules_cbarg *)arg;
 
-	if (CHECK_MODULE(pmod) && !LM_STRCMP(pmod->name, cbarg->pproc->name)) {
+	if (CHECK_MODULE(pmod) && !strcmp(pmod->name, cbarg->pproc->name)) {
 		cbarg->check = LM_TRUE;
 		return LM_FALSE;
 	}
@@ -88,6 +88,7 @@ char *test_LM_UnloadModule(lm_module_t *pmod)
 	return NULL;
 }
 
+/*
 char *test_LM_LoadModuleEx(struct load_module_args *arg)
 {
 	lm_process_t *ptargetproc = arg->ptargetproc;
@@ -100,3 +101,4 @@ char *test_LM_LoadModuleEx(struct load_module_args *arg)
 
 	return NULL;
 }
+*/

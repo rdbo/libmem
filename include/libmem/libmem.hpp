@@ -20,14 +20,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
 #ifndef LIBMEM_HPP
 #define LIBMEM_HPP
 
-#ifndef LM_FORCE_LANG_CPP
-#define LM_FORCE_LANG_CPP
+#ifndef __cplusplus
+#	define __cplusplus 1
 #endif
 
 #include "libmem.h"
 
-#endif /* LIBMEM_HPP */
+#endif

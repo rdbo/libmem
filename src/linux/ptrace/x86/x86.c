@@ -1,0 +1,147 @@
+/*
+ *  ----------------------------------
+ * |         libmem - by rdbo         |
+ * |      Memory Hacking Library      |
+ *  ----------------------------------
+ */
+
+/*
+ * Copyright (C) 2023    Rdbo
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License version 3
+ * as published by the Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "../ptrace.h"
+#include <stdlib.h>
+#include <assert.h>
+#include <errno.h>
+#include <sys/ptrace.h>
+#include <sys/reg.h>
+#include <sys/user.h>
+#include <sys/syscall.h>
+#include <sys/mman.h>
+
+long
+ptrace_get_syscall_ret(pid_t pid)
+{
+	errno = 0;
+	return ptrace(PTRACE_PEEKUSER, pid, EAX * sizeof(long), NULL);
+}
+
+/* NOTE: If this function fails and `*orig_code` is not NULL, you must restore the state of the target process */
+/* NOTE: This function only works for 32 bit processes in x86 */
+size_t
+ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **orig_regs, void **orig_code)
+{
+	static const char shellcode[] = { 0xcd, 0x80 };
+	struct user_regs_struct regs;
+	size_t shellcode_size = sizeof(shellcode);
+
+	assert((bits == 64 || bits == 32) && ptsys != NULL && orig_regs != NULL && *orig_regs == NULL && orig_code != NULL && *orig_code == NULL);
+
+	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+		return 0;
+
+	*orig_regs = malloc(sizeof(regs));
+	if (*orig_regs == NULL)
+		return 0;
+	*(struct user_regs_struct *)(*orig_regs) = regs;
+
+	/* Setup registers */
+	regs.eax = ptsys->syscall_num;
+	regs.ebx = ptsys->args[0];
+	regs.ecx = ptsys->args[1];
+	regs.edx = ptsys->args[2];
+	regs.esi = ptsys->args[3];
+	regs.edi = ptsys->args[4];
+	regs.ebp = ptsys->args[5];
+
+	/* Backup original code to restore later */
+	*orig_code = malloc(shellcode_size);
+	if (*orig_code == NULL)
+		return 0;
+	if (ptrace_read(pid, regs.eip, *orig_code, shellcode_size) != shellcode_size) {
+		free(*orig_code);
+		*orig_code = NULL;
+		return 0;
+	}
+	
+	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+		return 0;
+
+	shellcode_size = ptrace_write(pid, (long)regs.eip, shellcode, shellcode_size);
+	return shellcode_size;
+}
+
+void
+ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
+{
+	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+
+	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
+
+	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
+	ptrace_write(pid, pregs->eip, orig_code, shellcode_size);
+
+	free(orig_regs);
+	free(orig_code);
+}
+
+long
+ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
+{
+	long alloc;
+	ptrace_syscall_t ptsys;
+	
+	ptsys.syscall_num = SYS_mmap2;
+
+	/* Setup mmap arguments */
+	ptsys.args[0] = 0;                      /* `void *addr` */
+	ptsys.args[1] = size;                   /* `size_t length` */
+	ptsys.args[2] = prot;                   /* `int prot` */
+	ptsys.args[3] = MAP_PRIVATE | MAP_ANON; /* `int flags` */
+	ptsys.args[4] = -1;                     /* `int fd` */
+	ptsys.args[5] = 0;                      /* `off_t offset` */
+
+	alloc = ptrace_syscall(pid, bits, &ptsys);
+	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)
+		alloc = -1;
+
+	return alloc;
+}
+
+long
+ptrace_free(pid_t pid, size_t bits, long alloc, size_t size)
+{
+	ptrace_syscall_t ptsys;
+
+	ptsys.syscall_num = SYS_munmap;
+
+	ptsys.args[0] = alloc; /* `void *addr` */
+	ptsys.args[1] = size;  /* `size_t length` */
+
+	return ptrace_syscall(pid, bits, &ptsys);
+}
+
+long
+ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
+{
+	ptrace_syscall_t ptsys;
+
+	ptsys.syscall_num = SYS_mprotect;
+
+	ptsys.args[0] = addr;
+	ptsys.args[1] = size;
+	ptsys.args[2] = prot;
+
+	return ptrace_syscall(pid, bits, &ptsys);
+}

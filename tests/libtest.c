@@ -1,9 +1,12 @@
 #include <libmem/libmem.h>
+#include <stdio.h>
 
 #define LOAD_STR " <LIBTEST LOADED> "
 #define UNLOAD_STR " <LIBTEST UNLOADED> "
 
-#if LM_OS == LM_OS_WIN
+#ifdef _WIN32
+#include <windows.h>
+
 BOOL APIENTRY
 DllMain(HMODULE hModule,
 	DWORD   dwReason,

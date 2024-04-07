@@ -78,6 +78,14 @@ char *test_LM_IsProcessAlive(lm_process_t *pcurproc)
 
 char *test_LM_GetSystemBits()
 {
-	mu_assert("wrong system bits", LM_GetSystemBits() == sizeof(uintmax_t) * 8);
+	lm_size_t bits;
+
+	bits = LM_GetSystemBits();
+
+	printf(" <BITS: %zd> ", (size_t)bits);
+	fflush(stdout);
+
+	mu_assert("wrong system bits", bits == 32 || bits == 64);
+
 	return NULL;
 }

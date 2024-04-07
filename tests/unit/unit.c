@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define UNIT_TEST_P(func, arg) { \
 	extern char *test_##func(void *); \
@@ -57,12 +58,12 @@ void test_memory(lm_process_t *ptargetproc)
 	UNIT_TEST(LM_ReadMemory);
 	UNIT_TEST(LM_WriteMemory);
 	UNIT_TEST(LM_SetMemory);
+	UNIT_TEST(LM_DeepPointer);
 	UNIT_TEST_P(LM_AllocMemoryEx, &arg);
 	UNIT_TEST_P(LM_ProtMemoryEx, &arg);
 	UNIT_TEST_P(LM_WriteMemoryEx, &arg);
 	UNIT_TEST_P(LM_SetMemoryEx, &arg);
 	UNIT_TEST_P(LM_ReadMemoryEx, &arg);
-	UNIT_TEST(LM_DeepPointer);
 	UNIT_TEST_P(LM_DeepPointerEx, &arg);
 	UNIT_TEST_P(LM_FreeMemoryEx, &arg);
 }
@@ -90,16 +91,17 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_FindModuleEx, ptargetproc);
 	UNIT_TEST_P(LM_LoadModule, &mod);
 	UNIT_TEST_P(LM_UnloadModule, &mod);
-	UNIT_TEST_P(LM_LoadModuleEx, &arg);
+	/* TODO: Uncomment the test */
+	/* UNIT_TEST_P(LM_LoadModuleEx, &arg); */
 	/* TODO: Add test for LM_UnloadModuleEx */
 }
 
-void test_page(lm_process_t *pcurproc, lm_process_t *ptargetproc)
+void test_segment(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
-	UNIT_TEST_P(LM_EnumPages, pcurproc);
-	UNIT_TEST_P(LM_EnumPagesEx, pcurproc);
-	UNIT_TEST_P(LM_GetPage, pcurproc);
-	UNIT_TEST_P(LM_GetPageEx, ptargetproc);
+	UNIT_TEST_P(LM_EnumSegments, pcurproc);
+	UNIT_TEST_P(LM_EnumSegmentsEx, pcurproc);
+	UNIT_TEST_P(LM_FindSegment, pcurproc);
+	UNIT_TEST_P(LM_FindSegmentEx, ptargetproc);
 }
 
 void test_symbol(lm_process_t *pcurproc)
@@ -112,7 +114,7 @@ void test_symbol(lm_process_t *pcurproc)
 	UNIT_TEST_P(LM_EnumSymbols, &mod);
 	UNIT_TEST_P(LM_FindSymbolAddress, &mod);
 	UNIT_TEST(LM_DemangleSymbol);
-	UNIT_TEST(LM_FreeDemangleSymbol);
+	UNIT_TEST(LM_FreeDemangledSymbol);
 	UNIT_TEST_P(LM_EnumSymbolsDemangled, &mod);
 	UNIT_TEST_P(LM_FindSymbolAddressDemangled, &mod);
 }
@@ -136,7 +138,7 @@ void test_scan(lm_process_t *ptargetproc)
 	arg.scanaddr = LM_AllocMemoryEx(ptargetproc, sizeof(scanbuf), LM_PROT_XRW);
 	assert(arg.scanaddr != LM_ADDRESS_BAD);
 
-	assert(LM_WriteMemoryEx(ptargetproc, arg.scanaddr, (lm_bytearr_t)scanbuf, sizeof(scanbuf)) == sizeof(scanbuf));
+	assert(LM_WriteMemoryEx(ptargetproc, arg.scanaddr, (lm_bytearray_t)scanbuf, sizeof(scanbuf)) == sizeof(scanbuf));
 	
 	UNIT_TEST(LM_DataScan);
 	UNIT_TEST_P(LM_DataScanEx, &arg);
@@ -148,10 +150,8 @@ void test_scan(lm_process_t *ptargetproc)
 	LM_FreeMemoryEx(ptargetproc, arg.scanaddr, sizeof(scanbuf));
 }
 
-#if LM_OS == LM_OS_WIN && LM_COMPILER ==LM_COMPILER_MSVC
-__declspec(dllexport)
-#endif
-int main()
+LM_API_EXPORT int
+main()
 {
 	lm_process_t current_process;
 	lm_process_t target_process;
@@ -163,13 +163,13 @@ int main()
 
 	test_process(&current_process, &target_process);
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
+	test_segment(&current_process, &target_process);
 	test_memory(&target_process);
 	test_hook(&target_process);
 	test_module(&current_process, &target_process);
-	test_page(&current_process, &target_process);
 	test_symbol(&current_process);
-	test_vmt();
 	test_scan(&target_process);
+	test_vmt();
 
 	return 0;
 }

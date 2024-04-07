@@ -3,7 +3,7 @@
 #include "helpers.h"
 
 const lm_byte_t scanbuf[20] = { 0x1, 0x43, 0xfa, 0x48, 0x15, 'A', 'B', 'C', 0x0, 'D', 'E', 'F', 0xfa, 0x44, 0xde, 0xad, 0xbe, 0xef, 0x0, 0x0 };
-const lm_size_t match_offset = 5;
+#define match_offset 5
 static const lm_byte_t *expected_match = &scanbuf[match_offset];
 static lm_byte_t datascan[] = { 'A', 'B', 'C', '\0', 'D', 'E', 'F' };
 static lm_byte_t scanpattern[] = { 'A', 'B', 'C', '\xFF', 'D', 'E', 'F' };

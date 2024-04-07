@@ -28,6 +28,12 @@ option(LIBMEM_BUILD_STATIC
 	OFF
 )
 
+set(LIBMEM_ARCH ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "Force a specific architecture")
+
+message(STATUS
+	"[*] Architecture: ${LIBMEM_ARCH}"
+)
+
 message(STATUS
 	"[*] Build tests: ${LIBMEM_BUILD_TESTS}"
 )
@@ -38,10 +44,6 @@ message(STATUS
 
 message(STATUS
 	"[*] Build static library: ${LIBMEM_BUILD_STATIC}"
-)
-
-message(STATUS
-	"[*] Build for 32 bits: ${LIBMEM_BUILD_32}"
 )
 
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
@@ -55,9 +57,6 @@ set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/s
 set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
 set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
 set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
-set(LIEF_DIR "${EXTERNAL_DEPENDENCIES_DIR}/LIEF")
-set(LIEF_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/lief-project-prefix/src/lief-project-build")
-set(LIEF_INC "${LIEF_DIR}/include" "${LIEF_IMPORT_DIR}/include")
 set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
 set(LLVM_INC "${LLVM_DIR}/include")
 set(INJECTOR_DIR "${EXTERNAL_DEPENDENCIES_DIR}/injector")
@@ -68,33 +67,27 @@ add_library(capstone STATIC IMPORTED)
 set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
 add_library(keystone STATIC IMPORTED)
 set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
-add_library(LIEF STATIC IMPORTED)
-set_target_properties(LIEF PROPERTIES IMPORTED_LOCATION ${LIEF_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}LIEF${CMAKE_STATIC_LIBRARY_SUFFIX})
 # End of external dependencies
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
-file(GLOB LIBMEM_SRC "${LIBMEM_DIR}/src/*.c" "${LIBMEM_DIR}/src/*.cpp")
+set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
+
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-	file(GLOB_RECURSE LIBMEM_INTERNAL_SRC "${LIBMEM_DIR}/src/internal/win/*.c")
-else()
-	file(GLOB_RECURSE LIBMEM_INTERNAL_SRC "${LIBMEM_DIR}/src/internal/unix/*.c")
-	if(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
-		file(GLOB_RECURSE LIBMEM_OS_SRC "${LIBMEM_DIR}/src/internal/linux/*.c")
-		set(LIBMEM_INTERNAL_SRC ${LIBMEM_INTERNAL_SRC} ${LIBMEM_OS_SRC})
-	elseif(${CMAKE_SYSTEM_NAME STREQUAL FreeBSD})
-		file(GLOB_RECURSE LIBMEM_OS_SRC "${LIBMEM_DIR}/src/internal/bsd/*.c")
-		set(LIBMEM_INTERNAL_SRC ${LIBMEM_INTERNAL_SRC} ${LIBMEM_OS_SRC})
+	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/winutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+	if(${LIBMEM_ARCH} STREQUAL x86_64)
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/linux/ptrace/x64/*.c")
+	elseif(${LIBMEM_ARCH} STREQUAL i686 OR ${LIBMEM_ARCH} STREQUAL i386)
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/linux/ptrace/x86/*.c")
 	endif()
+	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/linux/*.c" "${LIBMEM_DIR}/src/linux/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 endif()
-set(LIBMEM_SRC
-	${LIBMEM_SRC}
-	${LIBMEM_INTERNAL_SRC}
-)
 set(LIBMEM_DEPS
 	capstone
 	keystone
-	LIEF
 	llvm
 )
 
@@ -117,13 +110,12 @@ if (LIBMEM_BUILD_STATIC)
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
-target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src")
+target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}")
 
 include_directories(${PROJECT_SOURCE_DIR}
 	${LIBMEM_INC}
 	${CAPSTONE_INC}
 	${KEYSTONE_INC}
-	${LIEF_INC}
 	${LLVM_INC}
 	${INJECTOR_INC}
 )
@@ -138,7 +130,6 @@ target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem
 	capstone-engine
 	keystone-engine
-	lief-project
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
@@ -148,6 +139,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN
 		psapi
 		ntdll
 	)
+	target_compile_definitions(libmem PUBLIC alloca=_alloca)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
 	set(LIBMEM_DEPS 
 		${LIBMEM_DEPS}

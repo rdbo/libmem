@@ -1,4 +1,5 @@
 #include <libmem/libmem.h>
+#include <stdint.h>
 #include "minunit.h"
 #include "helpers.h"
 
@@ -11,6 +12,7 @@ int target_function(char *mystr, int mynum)
 		return 0;
 
 	printf("<STRING: %s> <NUMBER: %d> ", mystr, mynum);
+	fflush(stdout);
 
 	return 1;
 }
@@ -22,8 +24,9 @@ int hk_target_function(char *mystr, int mynum)
 	mystr = "Hooked Target Function";
 	mynum = 1337;
 
-	orig_ret = ((int (*)(char *, int))target_function_trampoline)(mystr, mynum);
+	orig_ret = target_function_trampoline(mystr, mynum);
 	printf("<ORIG RET: %d> ", orig_ret);
+	fflush(stdout);
 
 	return mynum;
 }
@@ -31,9 +34,6 @@ int hk_target_function(char *mystr, int mynum)
 char *test_LM_HookCode(struct hook_args *arg)
 {
 	lm_inst_t inst;
-
-	/* TODO: Don't rely on LM_ProtMemory for this test */
-	mu_assert("failed to change protection of target function", LM_ProtMemory((lm_address_t)target_function, 1024, LM_PROT_XRW, LM_NULLPTR) == LM_TRUE);
 
 	hook_address = (lm_address_t)target_function;
 	/*
@@ -44,8 +44,10 @@ char *test_LM_HookCode(struct hook_args *arg)
 	 * The following code will resolve that.
 	 */
 	LM_Disassemble((lm_address_t)target_function, &inst);
-	if (!LM_CSTRCMP(inst.mnemonic, "jmp")) {
-		hook_address += *(lm_address_t *)&inst.bytes[1] + inst.size; /* Calculate real address from 'jmp' offset */
+	if (!strcmp(inst.mnemonic, "jmp")) {
+		hook_address += *(uint32_t *)&inst.bytes[1] + (uint32_t)inst.size; /* Calculate real address from 'jmp' offset */
+		printf("<RESOLVED JMP TO: %p> ", (void *)hook_address);
+		fflush(stdout);
 	}
 	
 	arg->hksize = LM_HookCode(hook_address, (lm_address_t)hk_target_function, &arg->trampoline);

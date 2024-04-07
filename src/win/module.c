@@ -119,7 +119,7 @@ LM_LoadModuleEx(const lm_process_t *process,
 	if (!LM_WriteMemoryEx(process, modpath_addr, wpath, sizeof(wpath)))
 		goto FREE_EXIT;
 
-	hproc = open_process(process.pid, PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ);
+	hproc = open_process(process->pid, PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ);
 	if (!hproc)
 		goto FREE_EXIT;
 
@@ -161,6 +161,32 @@ LM_UnloadModule(const lm_module_t *module)
 	/* NOTE: This does not ensure that the module was actually unloaded */
 	CloseHandle(hmod);
 	CloseHandle(hmod);
+
+	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_UnloadModuleEx(const lm_process_t *process,
+		  const lm_module_t  *module)
+{
+	HANDLE hproc;
+	HANDLE hthread;
+
+	hproc = open_process(process->pid, PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ);
+	if (!hproc)
+		return LM_FALSE;
+
+	hthread = (HANDLE)CreateRemoteThread(hproc, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, module->base, 0, NULL);
+
+	close_handle(&hproc);
+
+	if (!hthread)
+		return LM_FALSE;
+
+	WaitForSingleObject(hthread, INFINITE);
+	CloseHandle(hthread);
 
 	return LM_TRUE;
 }

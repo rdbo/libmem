@@ -337,7 +337,7 @@ LM_EnumSymbolsDemangled(const lm_module_t  *module,
 						      lm_void_t   *arg),
 			lm_void_t          *arg);
 
-LM_API lm_address_t
+LM_API lm_address_t LM_CALL
 LM_FindSymbolAddressDemangled(const lm_module_t *module,
 			      lm_string_t        symbol_name);
 

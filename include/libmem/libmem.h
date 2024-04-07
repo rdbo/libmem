@@ -77,9 +77,9 @@ typedef enum {
 	LM_FALSE = 0,
 	LM_TRUE = 1
 }  lm_bool_t;
-typedef uint8_t  lm_byte_t;
-typedef uint64_t lm_address_t;
-typedef uint64_t lm_size_t;
+typedef uint8_t   lm_byte_t;
+typedef uintptr_t lm_address_t;
+typedef size_t    lm_size_t;
 
 /* String types */
 typedef char             lm_char_t; /* UTF-8 encoded character */

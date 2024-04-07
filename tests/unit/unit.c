@@ -119,7 +119,6 @@ void test_symbol(lm_process_t *pcurproc)
 	UNIT_TEST_P(LM_FindSymbolAddressDemangled, &mod);
 }
 
-/*
 void test_vmt()
 {
 	lm_vmt_t vmt;
@@ -131,7 +130,6 @@ void test_vmt()
 	UNIT_TEST_P(LM_VmtReset, &vmt);
 	UNIT_TEST_P(LM_VmtFree, &vmt);
 }
-*/
 
 void test_scan(lm_process_t *ptargetproc)
 {
@@ -171,9 +169,7 @@ main()
 	test_module(&current_process, &target_process);
 	test_symbol(&current_process);
 	test_scan(&target_process);
-	/*
 	test_vmt();
-	*/
 
 	return 0;
 }

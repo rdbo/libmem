@@ -180,16 +180,15 @@ enum {
 typedef uint32_t lm_arch_t;
 
 /* Virtual method table (VMT) */
-typedef struct lm_vmtentry_t {
-	lm_address_t          orig_func;
-	lm_size_t             index;
-	struct lm_vmtentry_t *next;
-} lm_vmtentry_t;
+typedef struct lm_vmt_entry_t {
+	lm_address_t           orig_func;
+	lm_size_t              index;
+	struct lm_vmt_entry_t *next;
+} lm_vmt_entry_t;
 
 typedef struct {
-	lm_prot_t      orig_prot;
-	lm_address_t  *vtable;
-	lm_vmtentry_t *entries;
+	lm_address_t   *vtable;
+	lm_vmt_entry_t *hkentries;
 } lm_vmt_t;
 
 /*
@@ -552,6 +551,30 @@ LM_UnhookCodeEx(const lm_process_t *process,
 		lm_address_t        from,
 		lm_address_t        trampoline,
 		lm_size_t           size);
+
+/* Virtual Method Table API */
+LM_API lm_bool_t LM_CALL
+LM_VmtNew(lm_address_t *vtable,
+	  lm_vmt_t     *vmt_out);
+
+LM_API lm_bool_t LM_CALL
+LM_VmtHook(lm_vmt_t    *vmt,
+	   lm_size_t    from_fn_index,
+	   lm_address_t to);
+
+LM_API lm_void_t LM_CALL
+LM_VmtUnhook(lm_vmt_t *vmt,
+	     lm_size_t fn_index);
+
+LM_API lm_address_t LM_CALL
+LM_VmtGetOriginal(const lm_vmt_t *vmt,
+		  lm_size_t       fn_index);
+
+LM_API lm_void_t LM_CALL
+LM_VmtReset(lm_vmt_t *vmt);
+
+LM_API lm_void_t LM_CALL
+LM_VmtFree(lm_vmt_t *vmt);
 
 #ifdef __cplusplus
 }

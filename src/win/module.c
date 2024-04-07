@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include <libmem/libmem.h>
+#include <winutils/winutils.h>
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>

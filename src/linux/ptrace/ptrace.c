@@ -101,6 +101,7 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 	return bytes_written;
 }
 
+/*
 #include <sys/user.h>
 #include <stdio.h>
 void
@@ -113,6 +114,7 @@ dump_registers(pid_t pid)
 
 	printf("rax: %lx\nrbx: %lx\nrcx: %lx\nrdx: %lx\nrsi: %lx\nrdi: %lx\nrbp: %lx\nrsp: %lx\nrip: %lx\n", regs.rax, regs.rbx, regs.rcx, regs.rdx, regs.rsi, regs.rdi, regs.rbp, regs.rsp, regs.rip);
 }
+*/
 
 long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
@@ -132,8 +134,10 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	}
 
 	/* Step to system call */
+	/*
 	printf("PRE-SYSCALL REGS:\n");
 	dump_registers(pid);
+	*/
 
 	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 	waitpid(pid, NULL, 0);
@@ -142,8 +146,10 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 	waitpid(pid, NULL, 0);
 
+	/*
 	printf("POST-SYSCALL REGS:\n");
 	dump_registers(pid);
+	*/
 
 	/* Restore program state prior to syscall */
 	alloc = ptrace_get_syscall_ret(pid);

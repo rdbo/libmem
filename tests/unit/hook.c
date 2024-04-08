@@ -86,6 +86,16 @@ char *test_LM_HookCodeEx(struct hook_args *arg)
 	wait_message_addr = LM_FindSymbolAddress(arg->ptargetmod, "wait_message");
 	mu_assert("failed to find wait_message function on target module", wait_message_addr != LM_ADDRESS_BAD);
 
+	/* Same fix as `test_LM_HookCode` */
+#	ifdef _WIN32
+	lm_address_t offset;
+
+	mu_assert("failed to get real function address", LM_ReadMemoryEx(arg->ptargetproc, wait_message_addr + 1, &offset, sizeof(offset)) == 0);
+	wait_message_addr += offset + 5;
+	printf("<RESOLVED JMP TO: %p> ", (void *)wait_message_addr);
+	fflush(stdout);
+#	endif
+
 	printf("<wait_message: %p> ", (void *)wait_message_addr);
 	fflush(stdout);
 

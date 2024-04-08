@@ -70,12 +70,18 @@ void test_memory(lm_process_t *ptargetproc)
 
 void test_hook(lm_process_t *ptargetproc)
 {
+	lm_module_t mod;
 	struct hook_args arg;
 	arg.ptargetproc = ptargetproc;
+	arg.ptargetmod = &mod;
+
+	/* TODO: Retrieve module from 'module' tests and reuse here! */
+	assert(LM_FindModuleEx(ptargetproc, ptargetproc->path, &mod) == LM_TRUE);
 	
 	UNIT_TEST_P(LM_HookCode, &arg);
 	UNIT_TEST_P(LM_UnhookCode, &arg);
-	/* TODO: Add tests for LM_HookCodeEx and LM_UnhookCodeEx */
+	UNIT_TEST_P(LM_HookCodeEx, &arg);
+	UNIT_TEST_P(LM_UnhookCodeEx, &arg);
 }
 
 void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
@@ -157,6 +163,7 @@ main()
 	lm_process_t target_process;
 	lm_thread_t  current_thread;
 	lm_thread_t  target_thread;
+	lm_module_t  target_module;
 	
 	printf("[*] Unit Tests\n");
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
@@ -165,9 +172,9 @@ main()
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
 	test_segment(&current_process, &target_process);
 	test_memory(&target_process);
-	test_hook(&target_process);
 	test_module(&current_process, &target_process);
 	test_symbol(&current_process);
+	test_hook(&target_process);
 	test_scan(&target_process);
 	test_vmt();
 

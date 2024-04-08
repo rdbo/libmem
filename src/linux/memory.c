@@ -96,12 +96,18 @@ LM_ProtMemory(lm_address_t address,
 {
 	int osprot;
 	lm_segment_t segment;
+	lm_size_t pagesize;
 	
 	if (address == LM_ADDRESS_BAD || !LM_CHECK_PROT(prot))
 		return LM_FALSE;
 
+	pagesize = getpagesize();
+
 	if (size == 0)
-		size = (lm_size_t)getpagesize();
+		size = pagesize;
+
+	/* Align address to page size */
+	address &= (lm_address_t)-pagesize;
 
 	if (oldprot_out) {
 		if (LM_FindSegment(address, &segment))
@@ -126,12 +132,18 @@ LM_ProtMemoryEx(const lm_process_t *process,
 	long syscall_ret;
 	int osprot;
 	lm_segment_t segment;
+	lm_size_t pagesize;
 	
 	if (!process || address == LM_ADDRESS_BAD || !LM_CHECK_PROT(prot))
 		return LM_FALSE;
 
+	pagesize = getpagesize();
+
 	if (size == 0)
-		size = (lm_size_t)getpagesize();
+		size = pagesize;
+
+	/* Align address to page size */
+	address &= (lm_address_t)-pagesize;
 
 	if (oldprot_out) {
 		if (LM_FindSegmentEx(process, address, &segment))

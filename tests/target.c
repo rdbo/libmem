@@ -9,7 +9,15 @@
 #	define do_sleep() sleep(1)
 #endif
 
-void wait_message()
+LM_API_EXPORT void
+hk_wait_message()
+{
+	printf("*");
+	fflush(stdout);
+}
+
+LM_API_EXPORT void
+wait_message()
 {
 	printf(".");
 	fflush(stdout);
@@ -18,6 +26,8 @@ void wait_message()
 int main()
 {
 	printf("[*] Target Process\n");
+	printf("wait_message address: %p\n", (void *)wait_message);
+	printf("hk_wait_message address: %p\n", (void *)hk_wait_message);
 	printf("Waiting...");
 	for (;;) {
 		wait_message();

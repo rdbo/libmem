@@ -54,6 +54,7 @@ struct memory_args {
 
 struct hook_args {
 	lm_process_t *ptargetproc;
+	lm_module_t  *ptargetmod;
 	lm_address_t trampoline;
 	lm_size_t hksize;
 };

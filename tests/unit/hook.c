@@ -3,6 +3,11 @@
 #include "minunit.h"
 #include "helpers.h"
 
+#ifdef _WIN32
+#	include <windows.h>
+#	define sleep Sleep
+#endif
+
 static int (*target_function_trampoline)(char *, int);
 static lm_address_t hook_address;
 
@@ -68,5 +73,41 @@ char *test_LM_UnhookCode(struct hook_args *arg)
 	mu_assert("function attempted to run with bad arguments (invalid trampoline)", LM_UnhookCode((lm_address_t)target_function, LM_ADDRESS_BAD, arg->hksize) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid size)", LM_UnhookCode((lm_address_t)target_function, arg->trampoline, 0) == LM_FALSE);
 
+	return NULL;
+}
+
+char *test_LM_HookCodeEx(struct hook_args *arg)
+{
+	lm_address_t wait_message_addr;
+	lm_address_t hk_wait_message_addr;
+	
+	wait_message_addr = LM_FindSymbolAddress(arg->ptargetmod, "wait_message");
+	mu_assert("failed to find wait_message function on target module", wait_message_addr != LM_ADDRESS_BAD);
+
+	printf("<wait_message: %p> ", (void *)wait_message_addr);
+	fflush(stdout);
+
+	hk_wait_message_addr = LM_FindSymbolAddress(arg->ptargetmod, "hk_wait_message");
+	mu_assert("failed to find hk_wait_message function on target module", hk_wait_message_addr != LM_ADDRESS_BAD);
+
+	printf("<hk_wait_message: %p> ", (void *)hk_wait_message_addr);
+	fflush(stdout);
+
+	arg->hksize = LM_HookCodeEx(arg->ptargetproc, wait_message_addr, hk_wait_message_addr, &arg->trampoline);
+	mu_assert("failed to hook target function", arg->hksize > 0);
+
+	printf("<WAITING FOR FUNCTION TO RUN> ");
+	fflush(stdout);
+	sleep(3);
+
+	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_HookCodeEx(LM_NULLPTR, wait_message_addr, hk_wait_message_addr, LM_NULLPTR) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid from)", LM_HookCodeEx(arg->ptargetproc, LM_ADDRESS_BAD, hk_wait_message_addr, LM_NULLPTR) == 0);
+	mu_assert("function attempted to run with bad arguments (invalid to)", LM_HookCodeEx(arg->ptargetproc, wait_message_addr, LM_ADDRESS_BAD, LM_NULLPTR) == 0);
+
+	return NULL;
+}
+
+char *test_LM_UnhookCodeEx(struct hook_args *arg)
+{
 	return NULL;
 }

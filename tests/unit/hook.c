@@ -88,10 +88,10 @@ char *test_LM_HookCodeEx(struct hook_args *arg)
 
 	/* Same fix as `test_LM_HookCode` */
 #	ifdef _WIN32
-	lm_address_t offset;
+	uint32_t offset;
 
 	mu_assert("failed to get real function address", LM_ReadMemoryEx(arg->ptargetproc, wait_message_addr + 1, &offset, sizeof(offset)) == 0);
-	wait_message_addr += offset + 5;
+	wait_message_addr += (lm_address_t)offset + 5;
 	printf("<RESOLVED JMP TO: %p> ", (void *)wait_message_addr);
 	fflush(stdout);
 #	endif

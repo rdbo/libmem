@@ -6,10 +6,13 @@
 #ifdef _WIN32
 #	include <windows.h>
 #	define sleep Sleep
+#else
+#	include <unistd.h>
 #endif
 
 static int (*target_function_trampoline)(char *, int);
 static lm_address_t hook_address;
+static lm_address_t wait_message_addr;
 
 int target_function(char *mystr, int mynum)
 {
@@ -78,7 +81,6 @@ char *test_LM_UnhookCode(struct hook_args *arg)
 
 char *test_LM_HookCodeEx(struct hook_args *arg)
 {
-	lm_address_t wait_message_addr;
 	lm_address_t hk_wait_message_addr;
 	
 	wait_message_addr = LM_FindSymbolAddress(arg->ptargetmod, "wait_message");
@@ -109,5 +111,11 @@ char *test_LM_HookCodeEx(struct hook_args *arg)
 
 char *test_LM_UnhookCodeEx(struct hook_args *arg)
 {
+	mu_assert("failed to unhook target function", LM_UnhookCodeEx(arg->ptargetproc, wait_message_addr, arg->trampoline, arg->hksize) == LM_TRUE);
+	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_UnhookCodeEx(LM_NULLPTR, wait_message_addr, arg->trampoline, arg->hksize) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid from)", LM_UnhookCodeEx(arg->ptargetproc, LM_ADDRESS_BAD, arg->trampoline, arg->hksize) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid trampoline)", LM_UnhookCodeEx(arg->ptargetproc, wait_message_addr, LM_ADDRESS_BAD, arg->hksize) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid size)", LM_UnhookCodeEx(arg->ptargetproc, wait_message_addr, arg->trampoline, 0) == LM_FALSE);
+
 	return NULL;
 }

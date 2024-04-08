@@ -231,9 +231,9 @@ LM_CodeLength(lm_address_t machine_code,
 /********************************/
 
 LM_API lm_size_t LM_CALL
-LM_CodeLengthEx(lm_process_t *process,
-		lm_address_t  machine_code,
-		lm_size_t     min_length)
+LM_CodeLengthEx(const lm_process_t *process,
+		lm_address_t        machine_code,
+		lm_size_t           min_length)
 {
 	lm_size_t length = 0;
 	lm_inst_t *insts;

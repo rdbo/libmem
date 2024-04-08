@@ -51,6 +51,7 @@ LM_HookCode(lm_address_t  from,
 		goto FREE_EXIT;
 
 	if (trampoline_out) {
+		lm_byte_t *no_ops;
 		/*
 		 * NOTE: The trampoline jump back code is the same as the hook code, but
 		 *       with a different jump address.
@@ -67,7 +68,9 @@ LM_HookCode(lm_address_t  from,
 		 * This is a hack that allows us to call 'LM_HookCode' on the trampoline instead of re-doing
 		 * the same functionality over here.
 		 */
-		if (LM_WriteMemory(tramp + aligned_size, payload, hooksize) == 0)
+		no_ops = (lm_byte_t *)alloca(hooksize);
+		generate_no_ops(no_ops, hooksize);
+		if (LM_WriteMemory(tramp + aligned_size, no_ops, hooksize) == 0)
 			goto TRAMP_EXIT;
 
 		if (LM_HookCode(tramp + aligned_size, from + aligned_size, LM_NULLPTR) == 0)
@@ -124,6 +127,7 @@ LM_HookCodeEx(const lm_process_t *process,
 
 	if (trampoline_out) {
 		lm_byte_t *from_buf;
+		lm_byte_t *no_ops;
 
 		from_buf = (lm_byte_t *)alloca(aligned_size);
 		if (!LM_ReadMemoryEx(process, from, from_buf, aligned_size))
@@ -145,7 +149,10 @@ LM_HookCodeEx(const lm_process_t *process,
 		 * This is a hack that allows us to call 'LM_HookCodeEx' on the trampoline instead of re-doing
 		 * the same functionality over here.
 		 */
-		if (LM_WriteMemoryEx(process, tramp + aligned_size, payload, hooksize) == 0)
+		no_ops = (lm_byte_t *)alloca(hooksize);
+		generate_no_ops(no_ops, hooksize);
+
+		if (LM_WriteMemoryEx(process, tramp + aligned_size, no_ops, hooksize) == 0)
 			goto TRAMP_EXIT;
 
 		if (LM_HookCodeEx(process, tramp + aligned_size, from + aligned_size, LM_NULLPTR) == 0)

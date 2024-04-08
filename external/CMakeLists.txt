@@ -80,19 +80,3 @@ add_library(keystone STATIC IMPORTED)
 set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 add_subdirectory("${LLVM_DIR}")
-
-if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/windows/*.c")
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
-	file(GLOB_RECURSE INJECTOR_SRC "${INJECTOR_DIR}/src/linux/*.c" "${INJECTOR_DIR}/src/linux/*.S")
-endif()
-
-if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-	add_library(injector
-		STATIC
-		${INJECTOR_SRC}
-	)
-	set_target_properties(injector PROPERTIES POSITION_INDEPENDENT_CODE True)
-	target_include_directories(injector PUBLIC "${INJECTOR_INC}")
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
-endif()

@@ -59,8 +59,6 @@ set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
 set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
 set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
 set(LLVM_INC "${LLVM_DIR}/include")
-set(INJECTOR_DIR "${EXTERNAL_DEPENDENCIES_DIR}/injector")
-set(INJECTOR_INC "${INJECTOR_DIR}/include")
 
 add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
 add_library(capstone STATIC IMPORTED)
@@ -117,7 +115,6 @@ include_directories(${PROJECT_SOURCE_DIR}
 	${CAPSTONE_INC}
 	${KEYSTONE_INC}
 	${LLVM_INC}
-	${INJECTOR_INC}
 )
 
 if (LIBMEM_BUILD_TESTS)
@@ -159,10 +156,6 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
 	)
 else()
 	message(FATAL_ERROR "[!] Unsupported platform")
-endif()
-
-if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
-	set(LIBMEM_DEPS ${LIBMEM_DEPS} injector)
 endif()
 
 target_link_libraries(libmem ${LIBMEM_DEPS})

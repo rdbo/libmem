@@ -6,10 +6,6 @@
 	path = external/keystone
 	url = https://github.com/keystone-engine/keystone
 	branch = master
-[submodule "injector"]
-	path = external/injector
-	url = https://github.com/rdbo/injector
-	branch = rdbo-flatpak-sandbox-fix
 [submodule "vcvars-bash"]
 	path = external/vcvars-bash
 	url = https://github.com/nathan818fr/vcvars-bash.git

@@ -30,6 +30,11 @@ typedef struct {
 	long args[6];
 } ptrace_syscall_t;
 
+typedef struct {
+	long address;
+	long args[6];
+} ptrace_libcall_t;
+
 int
 ptrace_attach(pid_t pid);
 
@@ -63,5 +68,8 @@ ptrace_free(pid_t pid, size_t bits, long alloc, size_t size);
 
 long
 ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot);
+
+size_t
+ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **orig_regs, void **orig_code);
 
 #endif

@@ -82,7 +82,7 @@ char *test_LM_UnhookCode(struct hook_args *arg)
 char *test_LM_HookCodeEx(struct hook_args *arg)
 {
 	lm_address_t hk_wait_message_addr;
-	
+
 	wait_message_addr = LM_FindSymbolAddress(arg->ptargetmod, "wait_message");
 	mu_assert("failed to find wait_message function on target module", wait_message_addr != LM_ADDRESS_BAD);
 

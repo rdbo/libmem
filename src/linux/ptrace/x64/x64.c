@@ -21,6 +21,7 @@
  */
 
 #include "../ptrace.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
@@ -29,6 +30,7 @@
 #include <sys/user.h>
 #include <sys/syscall.h>
 #include <sys/mman.h>
+#include <memory.h>
 
 long
 ptrace_get_syscall_ret(pid_t pid)
@@ -88,7 +90,8 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 		*orig_code = NULL;
 		return 0;
 	}
-	
+
+	/* TODO: Avoid memory leak (not freeing orig_code) */
 	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
 		return 0;
 
@@ -169,4 +172,59 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
 	ptsys.args[2] = prot;
 
 	return ptrace_syscall(pid, bits, &ptsys);
+}
+
+size_t
+ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **orig_regs, void **orig_code)
+{
+	uint8_t *shellcode;
+	size_t shellcode_size = 0;
+	struct user_regs_struct regs;
+
+	assert((bits == 32 || bits == 64) && ptlib && orig_regs && orig_code);
+
+	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+		return 0;
+
+	if (bits == 64) {
+		static const uint8_t shellcode64[] = {
+			/* movabs rax, 0x0000000000000000 */
+			0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			/* call rax */
+			0xFF, 0xD0,
+			/* int3 */
+			0xCC
+		};
+		shellcode_size = sizeof(shellcode64);
+		shellcode = (uint8_t *)alloca(shellcode_size);
+		memcpy(shellcode, shellcode64, shellcode_size);
+		*(uint64_t *)&shellcode[2] = (uint64_t)ptlib->address;
+	} else {
+		static const uint8_t shellcode32[] = {
+			/* mov eax, 0x00000000 */
+			0xB8, 0x00, 0x00, 0x00, 0x00,
+			/* call eax */
+			0xFF, 0xD0,
+			/* int3 */
+			0xCC
+		};
+		shellcode_size = sizeof(shellcode32);
+		shellcode = (uint8_t *)alloca(shellcode_size);
+		memcpy(shellcode, shellcode32, shellcode_size);
+		*(uint32_t *)&shellcode[2] = (uint64_t)ptlib->address;
+	}
+
+	*orig_code = malloc(shellcode_size);
+	if (*orig_code == NULL)
+		return 0;
+
+	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size) {
+		free(*orig_code);
+		*orig_code = NULL;
+		return 0;
+	}
+
+	/* TODO: Finish */
+
+	return shellcode_size;
 }

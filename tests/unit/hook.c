@@ -98,6 +98,8 @@ char *test_LM_HookCodeEx(struct hook_args *arg)
 	arg->hksize = LM_HookCodeEx(arg->ptargetproc, wait_message_addr, hk_wait_message_addr, &arg->trampoline);
 	mu_assert("failed to hook target function", arg->hksize > 0);
 
+	printf("<trampoline: %p> ", (void *)arg->trampoline);
+
 	printf("<WAITING FOR FUNCTION TO RUN> ");
 	fflush(stdout);
 	sleep(3);

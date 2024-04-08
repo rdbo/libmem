@@ -213,7 +213,8 @@ LM_UnhookCodeEx(const lm_process_t *process,
 		lm_address_t        trampoline,
 		lm_size_t           size)
 {
-	lm_prot_t old_prot;
+	lm_prot_t  old_prot;
+	lm_byte_t *trampoline_buf;
 	
 	if (!process || from == LM_ADDRESS_BAD || trampoline == LM_ADDRESS_BAD || size == 0)
 		return LM_FALSE;
@@ -221,7 +222,11 @@ LM_UnhookCodeEx(const lm_process_t *process,
 	if (!LM_ProtMemoryEx(process, from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;
 
-	LM_WriteMemoryEx(process, from, trampoline, size);
+	trampoline_buf = (lm_byte_t *)alloca(size);
+	if (!LM_ReadMemoryEx(process, trampoline, trampoline_buf, size))
+		return LM_FALSE;
+
+	LM_WriteMemoryEx(process, from, trampoline_buf, size);
 	LM_ProtMemoryEx(process, from, size, old_prot, LM_NULLPTR);
 
 	/* WARN: This should be fine because 'LM_FreeMemory' works with page sizes,

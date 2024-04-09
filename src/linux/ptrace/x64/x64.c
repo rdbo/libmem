@@ -195,10 +195,12 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
 		return 0;
 
+	*orig_regs = malloc(sizeof(regs));
+	if (*orig_regs == NULL)
+		return 0;
+
 	if (bits == 64) {
 		static const uint8_t shellcode64[] = {
-			/* movabs rax, 0x0000000000000000 */
-			0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			/* call rax */
 			0xFF, 0xD0,
 			/* int3 */
@@ -207,33 +209,67 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		shellcode_size = sizeof(shellcode64);
 		shellcode = (uint8_t *)alloca(shellcode_size);
 		memcpy(shellcode, shellcode64, shellcode_size);
-		*(uint64_t *)&shellcode[2] = (uint64_t)ptlib->address;
+
+		regs.rax = ptlib->address;
+		regs.rdi = ptlib->args[0];
+		regs.rsi = ptlib->args[1];
+		regs.rdx = ptlib->args[2];
+		regs.rcx = ptlib->args[3];
+		regs.r8 = ptlib->args[4];
+		regs.r9 = ptlib->args[5];
 	} else {
 		static const uint8_t shellcode32[] = {
-			/* mov eax, 0x00000000 */
-			0xB8, 0x00, 0x00, 0x00, 0x00,
-			/* call eax */
-			0xFF, 0xD0,
+			/* push eax */
+			0x50,
+			/* push ebx */
+			0x53,
+			/* push ecx */
+			0x51,
+			/* push edx */
+			0x52,
+			/* push esi */
+			0x56,
+			/* push edi */
+			0x57,
+			/* call <address> */
+			0xE8, 0x00, 0x00, 0x00, 0x00,
 			/* int3 */
 			0xCC
 		};
 		shellcode_size = sizeof(shellcode32);
 		shellcode = (uint8_t *)alloca(shellcode_size);
 		memcpy(shellcode, shellcode32, shellcode_size);
-		*(uint32_t *)&shellcode[2] = (uint64_t)ptlib->address;
+		*(uint32_t *)&shellcode[7] = (uint32_t)(ptlib->address - regs.rip - 5);
+
+		regs.rax = ptlib->args[0];
+		regs.rbx = ptlib->args[1];
+		regs.rcx = ptlib->args[2];
+		regs.rdx = ptlib->args[3];
+		regs.rsi = ptlib->args[4];
+		regs.rdi = ptlib->args[5];
 	}
 
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
-		return 0;
+		goto FREE_REGS_EXIT;
 
-	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size) {
-		free(*orig_code);
-		*orig_code = NULL;
-		return 0;
-	}
+	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size)
+		goto FREE_EXIT;
 
-	/* TODO: Finish */
+	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+		goto FREE_EXIT;
 
+	if (ptrace_write(pid, regs.rip, shellcode, shellcode_size) == 0)
+		goto CLEAN_EXIT;
+
+	goto EXIT;
+CLEAN_EXIT:
+	ptrace(PTRACE_SETREGS, pid, NULL, orig_regs);
+FREE_EXIT:
+	free(*orig_code);
+FREE_REGS_EXIT:
+	free(*orig_regs);
+	shellcode_size = 0;
+EXIT:
 	return shellcode_size;
 }

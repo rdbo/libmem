@@ -32,6 +32,8 @@
 #include <sys/mman.h>
 #include <memory.h>
 
+#define ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+
 long
 ptrace_get_syscall_ret(pid_t pid)
 {
@@ -236,6 +238,8 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 			/* int3 */
 			0xCC
 		};
+		size_t i;
+
 		shellcode_size = sizeof(shellcode32);
 		shellcode = (uint8_t *)alloca(shellcode_size);
 		memcpy(shellcode, shellcode32, shellcode_size);
@@ -247,6 +251,11 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		regs.rdx = ptlib->args[3];
 		regs.rsi = ptlib->args[4];
 		regs.rdi = ptlib->args[5];
+
+		/* Prevent unused args from being pushed */
+		for (i = ARRLEN(ptlib->args) - 1; i >= ptlib->num_args; --i) {
+			shellcode[i] = 0x90;
+		}
 	}
 
 	*orig_code = malloc(shellcode_size);

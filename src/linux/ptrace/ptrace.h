@@ -32,6 +32,7 @@ typedef struct {
 
 typedef struct {
 	long address;
+	size_t num_args;
 	long args[6];
 } ptrace_libcall_t;
 

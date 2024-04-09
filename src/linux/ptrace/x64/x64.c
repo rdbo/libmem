@@ -198,9 +198,11 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
+	**(struct user_regs_struct **)orig_regs = regs;
 
 	if (bits == 64) {
 		static const uint8_t shellcode64[] = {
+			0x57, 0x56,
 			/* call rax */
 			0xFF, 0xD0,
 			/* int3 */
@@ -217,6 +219,7 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		regs.rcx = ptlib->args[3];
 		regs.r8 = ptlib->args[4];
 		regs.r9 = ptlib->args[5];
+		regs.rsp &= -16UL;
 	} else {
 		/* TODO: Don't push, write directly on the aligned stack instead */
 		static const uint8_t shellcode32[] = {

@@ -88,7 +88,6 @@ char *test_LM_UnloadModule(lm_module_t *pmod)
 	return NULL;
 }
 
-/*
 char *test_LM_LoadModuleEx(struct load_module_args *arg)
 {
 	lm_process_t *ptargetproc = arg->ptargetproc;
@@ -101,4 +100,3 @@ char *test_LM_LoadModuleEx(struct load_module_args *arg)
 
 	return NULL;
 }
-*/

@@ -97,8 +97,7 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_FindModuleEx, ptargetproc);
 	UNIT_TEST_P(LM_LoadModule, &mod);
 	UNIT_TEST_P(LM_UnloadModule, &mod);
-	/* TODO: Uncomment the test */
-	/* UNIT_TEST_P(LM_LoadModuleEx, &arg); */
+	UNIT_TEST_P(LM_LoadModuleEx, &arg);
 	/* TODO: Add test for LM_UnloadModuleEx */
 }
 

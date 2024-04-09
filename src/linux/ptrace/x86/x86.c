@@ -68,17 +68,26 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	/* Backup original code to restore later */
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
-		return 0;
-	if (ptrace_read(pid, regs.eip, *orig_code, shellcode_size) != shellcode_size) {
-		free(*orig_code);
-		*orig_code = NULL;
-		return 0;
-	}
+		goto FREE_REGS_EXIT;
+
+	if (ptrace_read(pid, regs.eip, *orig_code, shellcode_size) != shellcode_size)
+		goto FREE_EXIT;
 	
 	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
-		return 0;
+		goto FREE_EXIT;
 
-	shellcode_size = ptrace_write(pid, (long)regs.eip, shellcode, shellcode_size);
+	if (ptrace_write(pid, (long)regs.eip, shellcode, shellcode_size) == 0)
+		goto CLEAN_EXIT;
+
+	goto EXIT;
+CLEAN_EXIT:
+	ptrace(PTRACE_SETREGS, pid, NULL, orig_regs);
+FREE_EXIT:
+	free(*orig_code);
+FREE_REGS_EXIT:
+	free(*orig_regs);
+	shellcode_size = 0;
+EXIT:
 	return shellcode_size;
 }
 

@@ -100,10 +100,10 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 CLEAN_EXIT:
 	ptrace(PTRACE_SETREGS, pid, NULL, orig_regs);
 FREE_EXIT:
-	shellcode_size = 0;
 	free(*orig_code);
 FREE_REGS_EXIT:
 	free(*orig_regs);
+	shellcode_size = 0;
 EXIT:
 	return shellcode_size;
 }

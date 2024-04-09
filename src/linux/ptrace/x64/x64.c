@@ -218,6 +218,7 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		regs.r8 = ptlib->args[4];
 		regs.r9 = ptlib->args[5];
 	} else {
+		/* TODO: Don't push, write directly on the aligned stack instead */
 		static const uint8_t shellcode32[] = {
 			/* push eax */
 			0x50,
@@ -249,6 +250,7 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		regs.rdx = ptlib->args[3];
 		regs.rsi = ptlib->args[4];
 		regs.rdi = ptlib->args[5];
+		regs.rsp &= -16UL;
 
 		/* Prevent unused args from being pushed */
 		for (i = ARRLEN(ptlib->args) - 1; i >= ptlib->num_args; --i) {

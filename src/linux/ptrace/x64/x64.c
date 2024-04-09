@@ -57,6 +57,7 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
+
 	*(struct user_regs_struct *)(*orig_regs) = regs;
 
 	/* Setup registers */
@@ -84,18 +85,26 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	/* Backup original code to restore later */
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
-		return 0;
-	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size) {
-		free(*orig_code);
-		*orig_code = NULL;
-		return 0;
-	}
+		goto FREE_REGS_EXIT;
 
-	/* TODO: Avoid memory leak (not freeing orig_code) */
+	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size)
+		goto FREE_EXIT;
+
 	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
-		return 0;
+		goto FREE_EXIT;
 
-	shellcode_size = ptrace_write(pid, (long)regs.rip, shellcode, shellcode_size);
+	if (ptrace_write(pid, (long)regs.rip, shellcode, shellcode_size) == 0)
+		goto CLEAN_EXIT;
+
+	goto EXIT;
+CLEAN_EXIT:
+	ptrace(PTRACE_SETREGS, pid, NULL, orig_regs);
+FREE_EXIT:
+	shellcode_size = 0;
+	free(*orig_code);
+FREE_REGS_EXIT:
+	free(*orig_regs);
+EXIT:
 	return shellcode_size;
 }
 

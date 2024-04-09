@@ -23,6 +23,7 @@
 #include <libmem/libmem.h>
 #include <posixutils/posixutils.h>
 #include "consts.h"
+#include "ptrace/ptrace.h"
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -134,6 +135,95 @@ LM_LoadModule(lm_string_t  path,
 		return LM_FindModule(path, module_out);
 
 	return LM_TRUE;
+}
+
+/********************************/
+
+lm_bool_t
+find_dlopen_module_callback(lm_module_t *module, lm_void_t *arg)
+{
+	static const char *name_matches[] = {
+		"libc.", "libc-", "libdl.", "libdl-"
+	};
+	size_t i;
+	size_t len;
+
+	for (i = 0; i < LM_ARRLEN(name_matches); ++i) {
+		len = strlen(name_matches[i]);
+		if (!strncmp(module->name, name_matches[i], len)) {
+			*(lm_module_t *)arg = *module;
+			return LM_FALSE;
+		}
+	}
+
+	return LM_TRUE;
+}
+
+lm_bool_t
+find_dlopen_symbol_callback(lm_symbol_t *symbol, lm_void_t *arg)
+{
+	static const char *symbol_matches[] = {
+		"__libc_dlopen_mode", "dlopen"
+	};
+	size_t i;
+
+	for (i = 0; i < LM_ARRLEN(symbol_matches); ++i) {
+		if (!strcmp(symbol->name, symbol_matches[i])) {
+			*(lm_address_t *)arg = symbol->address;
+			return LM_FALSE;
+		}
+	}
+
+	return LM_TRUE;
+}
+
+LM_API lm_bool_t LM_CALL
+LM_LoadModuleEx(const lm_process_t *process,
+		lm_string_t         path,
+		lm_module_t        *module_out)
+{
+	lm_bool_t ret = LM_FALSE;
+	lm_module_t dlopen_mod;
+	lm_address_t dlopen_addr = LM_ADDRESS_BAD;
+	size_t path_size;
+	lm_address_t path_addr;
+	ptrace_libcall_t ptlib;
+	long call_ret;
+
+	dlopen_mod.base = LM_ADDRESS_BAD;
+	
+	LM_EnumModulesEx(process, find_dlopen_module_callback, &dlopen_mod);
+	if (dlopen_mod.base == LM_ADDRESS_BAD)
+		return ret;
+
+	LM_EnumSymbols(&dlopen_mod, find_dlopen_symbol_callback, &dlopen_addr);
+	if (dlopen_addr == LM_ADDRESS_BAD)
+		return ret;
+
+	path_size = (strlen(path) + 1) * sizeof(char);
+	path_addr = LM_AllocMemoryEx(process, path_size, LM_PROT_RW);
+	if (path_addr == LM_ADDRESS_BAD)
+		return ret;
+
+	if (LM_WriteMemoryEx(process, path_addr, path, path_size) != path_size)
+		goto FREE_EXIT;
+
+	ptlib.args[0] = path_addr;
+	ptlib.args[1] = RTLD_LAZY;
+	ptlib.num_args = 2;
+	ptlib.address = dlopen_addr;
+
+	call_ret = ptrace_libcall(process->pid, process->bits, &ptlib);
+	if (call_ret == -1 || call_ret == 0)
+		goto FREE_EXIT;
+
+	if (module_out)
+		ret = LM_FindModuleEx(process, path, module_out);
+	else
+		ret = LM_TRUE;
+FREE_EXIT:
+	LM_FreeMemoryEx(process, path_addr, path_size);
+	return ret;
 }
 
 /********************************/

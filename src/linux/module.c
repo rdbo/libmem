@@ -213,14 +213,19 @@ LM_LoadModuleEx(const lm_process_t *process,
 	ptlib.num_args = 2;
 	ptlib.address = dlopen_addr;
 
+	if (ptrace_attach(process->pid))
+		goto FREE_EXIT;
+
 	call_ret = ptrace_libcall(process->pid, process->bits, &ptlib);
 	if (call_ret == -1 || call_ret == 0)
-		goto FREE_EXIT;
+		goto DETACH_EXIT;
 
 	if (module_out)
 		ret = LM_FindModuleEx(process, path, module_out);
 	else
 		ret = LM_TRUE;
+DETACH_EXIT:
+	ptrace_detach(process->pid);
 FREE_EXIT:
 	LM_FreeMemoryEx(process, path_addr, path_size);
 	return ret;

@@ -101,7 +101,6 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 	return bytes_written;
 }
 
-/*
 #include <sys/user.h>
 #include <stdio.h>
 void
@@ -112,9 +111,8 @@ dump_registers(pid_t pid)
 	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) < 0)
 		return;
 
-	printf("rax: %lx\nrbx: %lx\nrcx: %lx\nrdx: %lx\nrsi: %lx\nrdi: %lx\nrbp: %lx\nrsp: %lx\nrip: %lx\n", regs.rax, regs.rbx, regs.rcx, regs.rdx, regs.rsi, regs.rdi, regs.rbp, regs.rsp, regs.rip);
+	printf("\trax: %lx\n\trbx: %lx\n\trcx: %lx\n\trdx: %lx\n\trsi: %lx\n\trdi: %lx\n\trbp: %lx\n\trsp: %lx\n\trip: %lx\n", regs.rax, regs.rbx, regs.rcx, regs.rdx, regs.rsi, regs.rdi, regs.rbp, regs.rsp, regs.rip);
 }
-*/
 
 long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
@@ -172,6 +170,9 @@ ptrace_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib)
 	if ((shellcode_size = ptrace_setup_libcall(pid, bits, ptlib, &orig_regs, &orig_code)) == 0)
 		return ret;
 
+	printf("PRE-LIBCALL REGS:\n");
+	dump_registers(pid);
+
 	/* Continue until a breakpoint is triggered */
 	ptrace(PTRACE_CONT, pid, NULL, NULL);
 	waitpid(pid, NULL, 0);
@@ -179,7 +180,10 @@ ptrace_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib)
 	/* Get return value */
 	ret = ptrace_get_libcall_ret(pid);
 
+	printf("POST-LIBCALL REGS:\n");
+	dump_registers(pid);
+
 	/* Restore program state prior to syscall */
-	ptrace_restore_syscall(pid, orig_regs, orig_code, shellcode_size);
+	ptrace_restore_libcall(pid, orig_regs, orig_code, shellcode_size);
 	return ret;
 }

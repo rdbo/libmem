@@ -73,4 +73,13 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot);
 size_t
 ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **orig_regs, void **orig_code);
 
+long
+ptrace_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib);
+
+void
+ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size);
+
+long
+ptrace_get_libcall_ret(pid_t pid);
+
 #endif

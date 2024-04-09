@@ -41,7 +41,6 @@ ptrace_get_syscall_ret(pid_t pid)
 	return ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long), NULL);
 }
 
-/* NOTE: If this function fails and `*orig_code` is not NULL, you must restore the state of the target process */
 size_t
 ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **orig_regs, void **orig_code)
 {
@@ -114,7 +113,6 @@ void
 ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
 	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
-	struct user_regs_struct regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
@@ -281,4 +279,25 @@ FREE_REGS_EXIT:
 	shellcode_size = 0;
 EXIT:
 	return shellcode_size;
+}
+
+void
+ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
+{
+	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+
+	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
+
+	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
+	ptrace_write(pid, pregs->rip, orig_code, shellcode_size);
+
+	free(orig_regs);
+	free(orig_code);
+}
+
+long
+ptrace_get_libcall_ret(pid_t pid)
+{
+	errno = 0;
+	return ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long), NULL);
 }

@@ -119,19 +119,14 @@ dump_registers(pid_t pid)
 long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 {
-	long alloc = -1;
+	long ret = -1;
 	void *orig_regs = NULL;
 	void *orig_code = NULL;
 	size_t shellcode_size;
 
 	/* Write shellcode and setup regs */
-	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0) {
-		if (orig_code)
-			goto RESTORE_EXIT;
-		if (orig_regs)
-			free(orig_regs);
-		return alloc;
-	}
+	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0)
+		return ret ;
 
 	/* Step to system call */
 	/*
@@ -151,15 +146,40 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	dump_registers(pid);
 	*/
 
+	/* Get return value */
+	ret = ptrace_get_syscall_ret(pid);
+
 	/* Restore program state prior to syscall */
-	alloc = ptrace_get_syscall_ret(pid);
-RESTORE_EXIT:
 	ptrace_restore_syscall(pid, orig_regs, orig_code, shellcode_size);
-	return alloc;
+	return ret;
 }
 
 void
 ptrace_detach(pid_t pid)
 {
 	ptrace(PTRACE_DETACH, pid, NULL, NULL);
+}
+
+long
+ptrace_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib)
+{
+	long ret = -1;
+	void *orig_regs = NULL;
+	void *orig_code = NULL;
+	size_t shellcode_size;
+
+	/* Write shellcode and setup regs */
+	if ((shellcode_size = ptrace_setup_libcall(pid, bits, ptlib, &orig_regs, &orig_code)) == 0)
+		return ret;
+
+	/* Continue until a breakpoint is triggered */
+	ptrace(PTRACE_CONT, pid, NULL, NULL);
+	waitpid(pid, NULL, 0);
+
+	/* Get return value */
+	ret = ptrace_get_libcall_ret(pid);
+
+	/* Restore program state prior to syscall */
+	ptrace_restore_syscall(pid, orig_regs, orig_code, shellcode_size);
+	return ret;
 }

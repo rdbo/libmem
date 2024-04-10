@@ -143,7 +143,7 @@ lm_bool_t
 find_dlopen_module_callback(lm_module_t *module, lm_void_t *arg)
 {
 	static const char *name_matches[] = {
-		"libc.", "libc-", "libdl.", "libdl-"
+		"libc.", "libc-", "libdl.", "libdl-", "ld-musl-", "ld-musl."
 	};
 	size_t i;
 	size_t len;

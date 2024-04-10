@@ -45,31 +45,38 @@ LM_EnumSymbols(const lm_module_t  *module,
 	lm_symbol_t symbol;
 
 	printf("ENUM SYMBOLS CALLED\n");
+	fflush(stdout);
 
 	if (!module || !callback)
 		return result;
 
 	printf("ARGUMENTS CHECKED\n");
+	fflush(stdout);
 
 	if (!utf8towcs(module->path, wpath, LM_PATH_MAX))
 		return result;
 
 	printf("UTF8 CONVERTED TO WCS\n");
+	fflush(stdout);
 
 	/* Attempt to get the module handle without loading the library */
 	hmod = GetModuleHandleW(wpath);
 	printf("ATTEMPTED TO GET HMODULE: %p\n", (void *)hmod);
+	fflush(stdout);
 	if (!hmod) {
 		printf("HMODULE NOT FOUND, ATTEMPING TO LOAD LIBRARY\n");
+		fflush(stdout);
 		/* Load library purely for getting resources, and not executing */
 		hmod = LoadLibraryExW(wpath, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
 		printf("LIBRARY LOADED: %p\n", (void *)hmod);
+		fflush(stdout);
 		if (!hmod)
 			return result;
 
 		is_loaded = TRUE;
 	}
 	printf("STARTED SYMBOL ENUMERATION\n");
+	fflush(stdout);
 
 	/*
 	 * From: https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-moduleinfo

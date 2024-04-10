@@ -23,6 +23,7 @@
 #include <libmem/libmem.h>
 #include <windows.h>
 #include <winutils/winutils.h>
+#include <stdio.h>
 
 /* TODO: Verify that this function works with 64 bit process and 32 bit library */
 LM_API lm_bool_t LM_CALL

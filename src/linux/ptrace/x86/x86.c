@@ -231,5 +231,5 @@ long
 ptrace_get_libcall_ret(pid_t pid)
 {
 	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long), NULL);
+	return ptrace(PTRACE_PEEKUSER, pid, EAX * sizeof(long), NULL);
 }

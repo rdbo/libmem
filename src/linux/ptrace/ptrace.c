@@ -126,7 +126,7 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 
 	/* Write shellcode and setup regs */
 	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0)
-		return ret ;
+		return ret;
 
 	/* Step to system call */
 	/*

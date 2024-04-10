@@ -32,8 +32,8 @@ typedef struct {
 
 typedef struct {
 	long address;
-	size_t num_args;
 	long args[6];
+	unsigned char stack[256];
 } ptrace_libcall_t;
 
 int

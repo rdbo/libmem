@@ -186,9 +186,15 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
 size_t
 ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **orig_regs, void **orig_code)
 {
-	uint8_t *shellcode;
-	size_t shellcode_size = 0;
+	const uint8_t shellcode[] = {
+		/* call rax */
+		0xFF, 0xD0,
+		/* int3 */
+		0xCC
+	};
+	size_t shellcode_size = sizeof(shellcode);
 	struct user_regs_struct regs;
+	size_t i;
 
 	assert((bits == 32 || bits == 64) && ptlib && orig_regs && orig_code);
 
@@ -200,65 +206,21 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		return 0;
 	**(struct user_regs_struct **)orig_regs = regs;
 
-	if (bits == 64) {
-		static const uint8_t shellcode64[] = {
-			0x57, 0x56,
-			/* call rax */
-			0xFF, 0xD0,
-			/* int3 */
-			0xCC
-		};
-		shellcode_size = sizeof(shellcode64);
-		shellcode = (uint8_t *)alloca(shellcode_size);
-		memcpy(shellcode, shellcode64, shellcode_size);
+	/* Setup stack */
+	regs.rax = ptlib->address;
+	regs.rsp -= sizeof(ptlib->stack);
+	regs.rsp &= -16UL;
+	if (ptrace_write(pid, regs.rsp, ptlib->stack, sizeof(ptlib->stack)) != sizeof(ptlib->stack))
+		goto FREE_REGS_EXIT;
 
-		regs.rax = ptlib->address;
+	/* Setup register arguments for x86_64 */
+	if (bits == 64) {
 		regs.rdi = ptlib->args[0];
 		regs.rsi = ptlib->args[1];
 		regs.rdx = ptlib->args[2];
 		regs.rcx = ptlib->args[3];
 		regs.r8 = ptlib->args[4];
 		regs.r9 = ptlib->args[5];
-		regs.rsp &= -16UL;
-	} else {
-		/* TODO: Don't push, write directly on the aligned stack instead */
-		static const uint8_t shellcode32[] = {
-			/* push eax */
-			0x50,
-			/* push ebx */
-			0x53,
-			/* push ecx */
-			0x51,
-			/* push edx */
-			0x52,
-			/* push esi */
-			0x56,
-			/* push edi */
-			0x57,
-			/* call <address> */
-			0xE8, 0x00, 0x00, 0x00, 0x00,
-			/* int3 */
-			0xCC
-		};
-		size_t i;
-
-		shellcode_size = sizeof(shellcode32);
-		shellcode = (uint8_t *)alloca(shellcode_size);
-		memcpy(shellcode, shellcode32, shellcode_size);
-		*(uint32_t *)&shellcode[7] = (uint32_t)(ptlib->address - regs.rip - 5);
-
-		regs.rax = ptlib->args[0];
-		regs.rbx = ptlib->args[1];
-		regs.rcx = ptlib->args[2];
-		regs.rdx = ptlib->args[3];
-		regs.rsi = ptlib->args[4];
-		regs.rdi = ptlib->args[5];
-		regs.rsp &= -16UL;
-
-		/* Prevent unused args from being pushed */
-		for (i = ARRLEN(ptlib->args) - 1; i >= ptlib->num_args; --i) {
-			shellcode[i] = 0x90;
-		}
 	}
 
 	*orig_code = malloc(shellcode_size);

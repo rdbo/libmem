@@ -190,8 +190,10 @@ LM_LoadModuleEx(const lm_process_t *process,
 	ptrace_libcall_t ptlib;
 	long call_ret;
 
+	if (!process || !path)
+		return ret;
+
 	dlopen_mod.base = LM_ADDRESS_BAD;
-	
 	LM_EnumModulesEx(process, find_dlopen_module_callback, &dlopen_mod);
 	if (dlopen_mod.base == LM_ADDRESS_BAD)
 		return ret;
@@ -208,10 +210,17 @@ LM_LoadModuleEx(const lm_process_t *process,
 	if (LM_WriteMemoryEx(process, path_addr, path, path_size) != path_size)
 		goto FREE_EXIT;
 
+	/* Setup arguments both on the stack and on registers to prevent possible issues */
+	ptlib.address = dlopen_addr;
 	ptlib.args[0] = path_addr;
 	ptlib.args[1] = RTLD_LAZY;
-	ptlib.num_args = 2;
-	ptlib.address = dlopen_addr;
+	if (process->bits == 64) {
+		*(uint32_t *)&ptlib.stack[0] = (uint32_t)RTLD_LAZY;
+		*(uint64_t *)&ptlib.stack[4] = (uint64_t)path_addr;
+	} else {
+	*(uint32_t *)&ptlib.stack[0] = (uint32_t)RTLD_LAZY;
+		*(uint32_t *)&ptlib.stack[4] = (uint64_t)path_addr;
+	}
 
 	if (ptrace_attach(process->pid))
 		goto FREE_EXIT;

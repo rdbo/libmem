@@ -30,16 +30,17 @@ char *test_LM_EnumSymbols(lm_module_t *pmod)
 	return NULL;
 }
 
-char *test_LM_FindSymbolAddress(lm_module_t *pmod)
+char *test_LM_FindSymbolAddress(struct find_symbol_args *arg)
 {
 	lm_address_t symaddr = LM_ADDRESS_BAD;
 
-	symaddr = LM_FindSymbolAddress(pmod, real_symbol);
+	symaddr = LM_FindSymbolAddress(arg->curmod, real_symbol);
 
 	mu_assert("invalid symbol address", symaddr != LM_ADDRESS_BAD);
 	mu_assert("incorrect symbol address", symaddr == (lm_address_t)real_symbol_addr);
-	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_FindSymbolAddress(LM_NULLPTR, real_symbol) == LM_FALSE);
-	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_FindSymbolAddress(pmod, LM_NULLPTR) == LM_FALSE);
+	mu_assert("failed to find 'main' symbol in target process", LM_FindSymbolAddress(arg->targetmod, "main") != LM_ADDRESS_BAD);
+	mu_assert("function attempted to run with bad arguments (invalid pmod)", LM_FindSymbolAddress(LM_NULLPTR, real_symbol) == LM_ADDRESS_BAD);
+	mu_assert("function attempted to run with bad arguments (invalid callback)", LM_FindSymbolAddress(arg->curmod, LM_NULLPTR) == LM_ADDRESS_BAD);
 	
 	return NULL;
 }

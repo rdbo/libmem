@@ -24,6 +24,7 @@ wait_message()
 	fflush(stdout);
 }
 
+LM_API_EXPORT
 int main()
 {
 	printf("[*] Target Process\n");

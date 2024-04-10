@@ -109,15 +109,21 @@ void test_segment(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_FindSegmentEx, ptargetproc);
 }
 
-void test_symbol(lm_process_t *pcurproc)
+void test_symbol(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
 	/* TODO: Retrieve module from 'module' tests and reuse here! */
 	lm_module_t mod;
+	lm_module_t target_mod;
+	struct find_symbol_args arg;
 	
 	assert(LM_FindModule(pcurproc->name, &mod) == LM_TRUE);
+	assert(LM_FindModuleEx(ptargetproc, ptargetproc->name, &target_mod) == LM_TRUE);
+
+	arg.curmod = &mod;
+	arg.targetmod = &target_mod;
 	
 	UNIT_TEST_P(LM_EnumSymbols, &mod);
-	UNIT_TEST_P(LM_FindSymbolAddress, &mod);
+	UNIT_TEST_P(LM_FindSymbolAddress, &arg);
 	UNIT_TEST(LM_DemangleSymbol);
 	UNIT_TEST(LM_FreeDemangledSymbol);
 	UNIT_TEST_P(LM_EnumSymbolsDemangled, &mod);
@@ -172,7 +178,7 @@ main()
 	test_segment(&current_process, &target_process);
 	test_memory(&target_process);
 	test_module(&current_process, &target_process);
-	test_symbol(&current_process);
+	test_symbol(&current_process, &target_process);
 	test_hook(&target_process);
 	test_scan(&target_process);
 	test_vmt();

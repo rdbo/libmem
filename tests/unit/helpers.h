@@ -65,3 +65,8 @@ struct scan_args {
 	lm_process_t *ptargetproc;
 	lm_address_t scanaddr;
 };
+
+struct find_symbol_args {
+	lm_module_t *curmod;
+	lm_module_t *targetmod;
+};

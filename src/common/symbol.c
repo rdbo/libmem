@@ -49,7 +49,7 @@ LM_FindSymbolAddress(const lm_module_t *module,
 	find_symbol_t parg;
 
 	if (!module || !symbol_name)
-		return LM_FALSE;
+		return LM_ADDRESS_BAD;
 
 	parg.symbol_name = symbol_name;
 	parg.addr = LM_ADDRESS_BAD;

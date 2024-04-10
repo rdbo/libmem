@@ -16,9 +16,12 @@ enum_elf##elf_type##_symbols(FILE *elf, uint64_t base_address, int (*callback)(c
 	char *section_name; \
 	Elf##elf_type##_Shdr symtab_shdr; /* Symbol table section header */ \
 	Elf##elf_type##_Shdr strtab_shdr; /* String table section header */ \
+	Elf##elf_type##_Shdr dynsym_shdr; /* Dynamic symbol table section header */ \
+	Elf##elf_type##_Shdr dynstr_shdr; /* Dynamic string table section header */ \
 	Elf##elf_type##_Half i; \
 	Elf##elf_type##_Shdr shdr; \
-	char *strtab /* String table */; \
+	char *strtab; /* String table */ \
+	char *dynstr; /* Dynamic string table */\
 	Elf##elf_type##_Sym sym; \
 	char *symbol_name; \
 \
@@ -59,42 +62,82 @@ enum_elf##elf_type##_symbols(FILE *elf, uint64_t base_address, int (*callback)(c
 			/* There is only 1 section with 'SHT_SYMTAB' type, so no extra checking needed */ \
 			symtab_shdr = shdr; \
 			break; \
+		case SHT_DYNSYM: \
+			/* There is only 1 section with 'SHT_DYNSYM' type, so no extra checking needed */ \
+			dynsym_shdr = shdr; \
+			break; \
 		case SHT_STRTAB: \
 			section_name = &shstrtab[shdr.sh_name]; \
 			if (!strcmp(section_name, ".strtab")) \
 				strtab_shdr = shdr; \
+			else if (!strcmp(section_name, ".dynstr")) \
+				dynstr_shdr = shdr; \
 			break; \
 		}; \
 	} \
 \
-	if (symtab_shdr.sh_offset == 0 || strtab_shdr.sh_offset == 0) \
-		goto SHSTRTAB_EXIT; \
-\
-	/* Cache string table in memory for easier retrieval */ \
-	strtab = (char *)malloc(strtab_shdr.sh_size); \
-	if (!strtab) \
-		goto SHSTRTAB_EXIT; \
-	fseek(elf, strtab_shdr.sh_offset, SEEK_SET); \
-	if (fread(strtab, 1, strtab_shdr.sh_size, elf) != strtab_shdr.sh_size) \
-		goto STRTAB_EXIT; \
-\
-	/* Loop through symbol table */ \
-	fseek(elf, symtab_shdr.sh_offset, SEEK_SET); \
-	for (i = 0; i < (symtab_shdr.sh_size / symtab_shdr.sh_entsize); ++i) { \
-		if (fread(&sym, sizeof(sym), 1, elf) == 0) \
+	if (symtab_shdr.sh_offset != 0 && strtab_shdr.sh_offset != 0) { \
+		size_t symcount; \
+		/* Cache string table in memory for easier retrieval */ \
+		strtab = (char *)malloc(strtab_shdr.sh_size); \
+		if (!strtab) \
+			goto SHSTRTAB_EXIT; \
+		fseek(elf, strtab_shdr.sh_offset, SEEK_SET); \
+		if (fread(strtab, 1, strtab_shdr.sh_size, elf) != strtab_shdr.sh_size) \
 			goto STRTAB_EXIT; \
 \
-		if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE) \
-			continue; \
+		/* Loop through symbol table */ \
+		fseek(elf, symtab_shdr.sh_offset, SEEK_SET); \
+		symcount = symtab_shdr.sh_size / symtab_shdr.sh_entsize; \
+		for (i = 0; i < symcount; ++i) { \
+			if (fread(&sym, sizeof(sym), 1, elf) == 0) \
+				goto STRTAB_EXIT; \
 \
-		symbol_name = &strtab[sym.st_name]; \
-		if (!callback(symbol_name, base_address + (uint64_t)sym.st_value, arg)) \
-			break; \
+			if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE) \
+				continue; \
+\
+			symbol_name = &strtab[sym.st_name]; \
+			if (!callback(symbol_name, base_address + (uint64_t)sym.st_value, arg)) \
+				break; \
+		} \
+\
+STRTAB_EXIT: /* TODO: Don't return '0' (success) if the fread call fails */ \
+		free(strtab); \
+\
+		if (i < symcount) \
+			goto EXIT; \
 	} \
 \
+	if (dynsym_shdr.sh_offset != 0 && dynstr_shdr.sh_offset != 0) { \
+		size_t symcount; \
+		/* Cache string table in memory for easier retrieval */ \
+		dynstr = (char *)malloc(dynstr_shdr.sh_size); \
+		if (!dynstr) \
+			goto SHSTRTAB_EXIT; \
+		fseek(elf, dynstr_shdr.sh_offset, SEEK_SET); \
+		if (fread(dynstr, 1, dynstr_shdr.sh_size, elf) != dynstr_shdr.sh_size) \
+			goto SHSTRTAB_EXIT; \
+\
+		/* Loop through symbol table */ \
+		fseek(elf, dynsym_shdr.sh_offset, SEEK_SET); \
+		symcount = dynsym_shdr.sh_size / dynsym_shdr.sh_entsize; \
+		for (i = 0; i < symcount; ++i) { \
+			if (fread(&sym, sizeof(sym), 1, elf) == 0) \
+				goto DYNSTR_EXIT; \
+\
+			if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE) \
+				continue; \
+\
+			symbol_name = &dynstr[sym.st_name]; \
+			if (!callback(symbol_name, base_address + (uint64_t)sym.st_value, arg)) \
+				break; \
+		} \
+\
+DYNSTR_EXIT: /* TODO: Don't return '0' (success) if the fread call fails */ \
+		free(dynstr); \
+	} \
+EXIT: \
 	result = 0; \
-STRTAB_EXIT: \
-	free(strtab); \
 SHSTRTAB_EXIT: \
 	free(shstrtab); \
 	return result; \

@@ -93,7 +93,7 @@ enum_elf##elf_type##_symbols(FILE *elf, uint64_t base_address, int (*callback)(c
 			if (fread(&sym, sizeof(sym), 1, elf) == 0) \
 				goto STRTAB_EXIT; \
 \
-			if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE) \
+			if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE || sym.st_shndx == 0) \
 				continue; \
 \
 			symbol_name = &strtab[sym.st_name]; \
@@ -125,7 +125,7 @@ STRTAB_EXIT: /* TODO: Don't return '0' (success) if the fread call fails */ \
 			if (fread(&sym, sizeof(sym), 1, elf) == 0) \
 				goto DYNSTR_EXIT; \
 \
-			if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE) \
+			if (sym.st_name == 0 || ELFW_ST_TYPE(sym) == STT_FILE || sym.st_shndx == 0) \
 				continue; \
 \
 			symbol_name = &dynstr[sym.st_name]; \

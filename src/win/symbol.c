@@ -85,18 +85,36 @@ LM_EnumSymbols(const lm_module_t  *module,
 	 * "The load address of a module is the same as the HMODULE value."
 	 */
 	modbase = (lm_address_t)hmod;
+	printf("MODBASE: %p\n", (void *)modbase);
+	fflush(stdout);
 
 	pdoshdr = (PIMAGE_DOS_HEADER)modbase;
 	pnthdr = (PIMAGE_NT_HEADERS)(modbase + (lm_address_t)pdoshdr->e_lfanew);
+	printf("NTHDR: %p\n", (void *)pnthdr);
+	fflush(stdout);
+
 	pexportdir = (PIMAGE_EXPORT_DIRECTORY)(
 		modbase + pnthdr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress
 	);
+	printf("EXPORT DIR: %p\n", (void *)pexportdir);
+	fflush(stdout);
+
 	export_names = (DWORD *)(modbase + pexportdir->AddressOfNames);
+	printf("EXPORT_NAMES: %p\n", (void *)export_names);
+	fflush(stdout);
+
 	export_funcs = (DWORD *)(modbase + pexportdir->AddressOfFunctions);
+	printf("EXPORT_FUNCS: %p\n", export_funcs);
+	fflush(stdout);
 
 	for (i = 0; i < pexportdir->NumberOfNames && i < pexportdir->NumberOfFunctions; ++i) {
 		symbol.name = (lm_string_t)(modbase + export_names[i]);
+		printf("SYMBOL NAME: %s\n", symbol.name);
+		fflush(stdout);
+
 		symbol.address = (lm_address_t)(module->base + export_funcs[i]);
+		printf("SYMBOL ADDRESS: %p\n", symbol.address);
+		fflush(stdout);
 
 		if (callback(&symbol, arg) == LM_FALSE)
 			break;

@@ -129,10 +129,10 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	long alloc;
 	ptrace_syscall_t ptsys;
 	
-	if (bits == 32) {
-		ptsys.syscall_num = 90; /* x86_32 mmap syscall number */
-	} else {
+	if (bits == 64) {
 		ptsys.syscall_num = SYS_mmap;
+	} else {
+		ptsys.syscall_num = 192; /* x86_64 mmap syscall number */
 	}
 
 	/* Setup mmap arguments */

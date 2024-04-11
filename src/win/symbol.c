@@ -68,7 +68,7 @@ LM_EnumSymbols(const lm_module_t  *module,
 		printf("HMODULE NOT FOUND, ATTEMPING TO LOAD LIBRARY\n");
 		fflush(stdout);
 		/* Load library purely for getting resources, and not executing */
-		hmod = LoadLibraryExW(wpath, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+		hmod = LoadLibraryExW(wpath, NULL, DONT_RESOLVE_DLL_REFERENCES);
 		printf("LIBRARY LOADED: %p\n", (void *)hmod);
 		fflush(stdout);
 		if (!hmod)

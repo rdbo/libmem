@@ -259,9 +259,7 @@ function do_build() {
   copy_licenses 'libmem' './'
   copy_licenses 'capstone' 'external/capstone'
   copy_licenses 'keystone' 'external/keystone'
-  copy_licenses 'LIEF' 'external/LIEF'
   copy_licenses 'llvm' 'external/llvm'
-  copy_licenses 'injector' 'external/injector'
 
   # Add stdlib information (glibc version, musl version)
   printf '[+] Add stdlib information\n'

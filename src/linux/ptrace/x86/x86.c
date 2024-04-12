@@ -84,7 +84,7 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, orig_regs);
+	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:
@@ -203,7 +203,7 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, orig_regs);
+	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:

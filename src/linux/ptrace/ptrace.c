@@ -128,23 +128,30 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0)
 		return ret;
 
-	/* Step to system call */
+	/*
+	/* Step to system call * /
 	/*
 	printf("PRE-SYSCALL REGS:\n");
 	dump_registers(pid);
-	*/
+	* /
 
 	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 	waitpid(pid, NULL, 0);
 
-	/* Run system call */
+	/* Run system call * /
 	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 	waitpid(pid, NULL, 0);
 
 	/*
 	printf("POST-SYSCALL REGS:\n");
 	dump_registers(pid);
+	* /
 	*/
+
+	/* NOTE: It seems that 'PTRACE_SYSCALL' doesn't trigger with `int $0x80`,
+	 * so 'PTRACE_SINGLESTEP' is used instead */
+	ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
+	waitpid(pid, NULL, 0);
 
 	/* Get return value */
 	ret = ptrace_get_syscall_ret(pid);

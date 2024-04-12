@@ -186,8 +186,8 @@ function do_build() {
     *)
       local flags
       case "$_TARGET" in
-      i686-*) flags='-m32 -march=prescott' ;;
-      x86_64-*) flags='-march=westmere' ;;
+      i686-*) flags='-m32 -march=prescott'; variant_conf+=(-D LIBMEM_ARCH="i686") ;;
+      x86_64-*) flags='-march=westmere'; variant_conf+=(-D LIBMEM_ARCH="x86_64") ;;
       aarch64-*) flags='-march=armv8-a' ;;
       esac
       variant_conf+=(-G 'Unix Makefiles' -DCMAKE_C_FLAGS="$flags" -DCMAKE_CXX_FLAGS="$flags")

@@ -20,6 +20,12 @@
 
 #define UNIT_TEST(func) UNIT_TEST_P(func, NULL)
 
+void test_asm()
+{
+	UNIT_TEST(LM_Assemble);
+	UNIT_TEST(LM_AssembleEx);
+}
+
 void test_process(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 {
 	UNIT_TEST(LM_EnumProcesses);
@@ -43,11 +49,6 @@ void test_thread(lm_process_t *pcurproc, lm_process_t *ptargetproc, lm_thread_t 
 	UNIT_TEST_P(LM_GetThreadEx, &arg);
 	UNIT_TEST_P(LM_EnumThreadsEx, &arg);
 	UNIT_TEST_P(LM_GetThreadProcess, &arg);
-}
-
-void test_asm()
-{
-	UNIT_TEST(LM_Assemble);
 }
 
 void test_memory(lm_process_t *ptargetproc)

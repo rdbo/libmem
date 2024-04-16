@@ -89,3 +89,42 @@ char *test_LM_AssembleEx(void *arg)
 
 	return NULL;
 }
+
+char *test_LM_Disassemble(void *arg)
+{
+	char *code;
+	size_t size;
+	char *payload;
+	lm_inst_t inst;
+
+	/* TODO: Make macro for this */
+	if (LM_GetArchitecture() == LM_ARCH_X86) {
+		if (LM_GetBits() == 64) {
+			code = X86_64_INST;
+			size = X86_64_INST_SIZE;
+			payload = X86_64_INST_BYTES;
+		} else {
+			code = X86_32_INST;
+			size = X86_32_INST_SIZE;
+			payload = X86_32_INST_BYTES;
+		}
+	} else {
+		printf("<WARN: Architecture untested>");
+		fflush(stdout);
+		return NULL;
+	}
+
+	printf("<EXPECTED SIZE: %zd> ", size);
+	fflush(stdout);
+
+	mu_assert("failed to disassemble code", LM_Disassemble(payload, &inst) != 0);
+
+	printf("<SIZE: %zd> <MNEMONIC: %s> ", inst.size, inst.mnemonic);
+	fflush(stdout);
+
+	mu_assert("instruction size is incorrect", inst.size == size);
+	/* TODO: Don't rely on mnemonic being smaller than code, it may lead to buffer overflow */
+	mu_assert("instruction mnemonic does not match expected payload", strncmp(inst.mnemonic, code, strlen(inst.mnemonic)) == 0);
+
+	return NULL;
+}

@@ -45,6 +45,11 @@ void test_thread(lm_process_t *pcurproc, lm_process_t *ptargetproc, lm_thread_t 
 	UNIT_TEST_P(LM_GetThreadProcess, &arg);
 }
 
+void test_asm()
+{
+	UNIT_TEST(LM_Assemble);
+}
+
 void test_memory(lm_process_t *ptargetproc)
 {
 	lm_address_t alloc;
@@ -173,6 +178,7 @@ main()
 	printf("[*] Unit Tests\n");
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
 
+	test_asm();
 	test_process(&current_process, &target_process);
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);
 	test_segment(&current_process, &target_process);

@@ -119,7 +119,7 @@ char *test_LM_Disassemble(void *arg)
 
 	mu_assert("failed to disassemble code", LM_Disassemble(payload, &inst) != 0);
 
-	printf("<SIZE: %zd> <MNEMONIC: %s> ", inst.size, inst.mnemonic);
+	printf("<SIZE: %zd> <DISASM: %s %s> ", inst.size, inst.mnemonic, inst.op_str);
 	fflush(stdout);
 
 	mu_assert("instruction size is incorrect", inst.size == size);

@@ -102,8 +102,8 @@ char *test_LM_Assemble(void *arg)
 
 char *test_LM_AssembleEx(void *arg)
 {
-	TEST_LM_ASSEMBLE_EX(X86, 64);
 	TEST_LM_ASSEMBLE_EX(X86, 32);
+	TEST_LM_ASSEMBLE_EX(X86, 64);
 
 	return NULL;
 }

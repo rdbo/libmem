@@ -34,8 +34,8 @@
 	size = LM_AssembleEx(arch##_##bits##_ASM, LM_ARCH_##arch, bits, RTADDR, &payload); \
 	mu_assert("failed to assemble " #arch "_" #bits " code", size > 0); \
 	check_size = size == arch##_##bits##_ASM_SIZE; \
-	LM_FreePayload(payload); \
 	if (check_size) check_content = memcmp(payload, arch##_##bits##_ASM_BYTES, size) == 0; \
+	LM_FreePayload(payload); \
 	mu_assert("payload size of " #arch "_" #bits " is incorrect", check_size); \
 	\
 	printf("<%s_%s PAYLOAD: ", #arch, #bits); \

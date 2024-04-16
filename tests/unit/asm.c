@@ -12,6 +12,7 @@
 #define X86_32_ASM "push ebp; mov ebp, esp; mov eax, 1337; call 0xdeadbeef; mov esp, ebp; pop ebp; ret"
 #define X86_32_ASM_BYTES "\x55\x89\xE5\xB8\x39\x05\x00\x00\xE8\xC2\x2A\xA7\xDE\x89\xEC\x5D\xC3"
 #define X86_32_ASM_SIZE (sizeof(X86_32_ASM_BYTES) - 1)
+#define X86_32_ASM_INST_COUNT 7
 
 #define X86_64_INST "movabs rax, 1337"
 #define X86_64_INST_BYTES "\x48\xB8\x39\x05\x00\x00\x00\x00\x00\x00"
@@ -20,6 +21,7 @@
 #define X86_64_ASM "push rbp; mov rbp, rsp; mov eax, [rip + 1337]; call rax; mov rsp, rbp; pop rbp; ret"
 #define X86_64_ASM_BYTES "\x55\x48\x89\xE5\x8B\x05\x39\x05\x00\x00\xFF\xD0\x48\x89\xEC\x5D\xC3"
 #define X86_64_ASM_SIZE (sizeof(X86_64_ASM_BYTES) - 1)
+#define X86_64_ASM_INST_COUNT 7
 
 #define TEST_LM_ASSEMBLE_EX(arch, bits) \
 { \
@@ -42,6 +44,18 @@
 	fflush(stdout); \
 	\
 	mu_assert("payload content of " #arch "_" #bits " does not match expected bytes", check_content); \
+}
+
+#define TEST_LM_DISASSEMBLE_EX(arch, bits) \
+{ \
+	lm_byte_t *payload = arch##_##bits##_ASM_BYTES; \
+	lm_inst_t *insts; \
+	lm_size_t inst_count; \
+\
+	inst_count = LM_DisassembleEx(payload, LM_ARCH_##arch, bits, arch##_##bits##_ASM_SIZE, 0, RTADDR, &insts); \
+	mu_assert("failed to disassemble " #arch "_" #bits " payload", inst_count > 0); \
+	LM_FreeInstructions(insts); \
+	mu_assert("instruction count does not match expected value", inst_count == arch##_##bits##_ASM_INST_COUNT); \
 }
 
 char *test_LM_Assemble(void *arg)
@@ -125,6 +139,14 @@ char *test_LM_Disassemble(void *arg)
 	mu_assert("instruction size is incorrect", inst.size == size);
 	/* TODO: Don't rely on mnemonic being smaller than code, it may lead to buffer overflow */
 	mu_assert("instruction mnemonic does not match expected payload", strncmp(inst.mnemonic, code, strlen(inst.mnemonic)) == 0);
+
+	return NULL;
+}
+
+char *test_LM_DisassembleEx(void *arg)
+{
+	TEST_LM_DISASSEMBLE_EX(X86, 64);
+	TEST_LM_DISASSEMBLE_EX(X86, 32);
 
 	return NULL;
 }

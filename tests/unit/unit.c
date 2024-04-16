@@ -25,6 +25,7 @@ void test_asm()
 	UNIT_TEST(LM_Assemble);
 	UNIT_TEST(LM_AssembleEx);
 	UNIT_TEST(LM_Disassemble);
+	UNIT_TEST(LM_DisassembleEx);
 }
 
 void test_process(lm_process_t *pcurproc, lm_process_t *ptargetproc)

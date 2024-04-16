@@ -54,6 +54,10 @@
 \
 	inst_count = LM_DisassembleEx(payload, LM_ARCH_##arch, bits, arch##_##bits##_ASM_SIZE, 0, RTADDR, &insts); \
 	mu_assert("failed to disassemble " #arch "_" #bits " payload", inst_count > 0); \
+\
+	printf("<%s_%s INST COUNT: %zd> <%s_%s EXPECTED INST COUNT: %d> ", #arch, #bits, inst_count, #arch, #bits, arch##_##bits##_ASM_INST_COUNT); \
+	fflush(stdout); \
+\
 	LM_FreeInstructions(insts); \
 	mu_assert("instruction count does not match expected value", inst_count == arch##_##bits##_ASM_INST_COUNT); \
 }

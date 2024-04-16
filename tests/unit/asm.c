@@ -149,8 +149,8 @@ char *test_LM_Disassemble(void *arg)
 
 char *test_LM_DisassembleEx(void *arg)
 {
-	TEST_LM_DISASSEMBLE_EX(X86, 64);
 	TEST_LM_DISASSEMBLE_EX(X86, 32);
+	TEST_LM_DISASSEMBLE_EX(X86, 64);
 
 	return NULL;
 }

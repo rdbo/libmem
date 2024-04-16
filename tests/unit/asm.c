@@ -5,7 +5,7 @@
 
 #define RTADDR 0x69420
 
-#define X86_32_INST "mov eax, 0x1337"
+#define X86_32_INST "mov eax, 1337"
 #define X86_32_INST_BYTES "\xB8\x39\x05\x00\x00"
 #define X86_32_INST_SIZE (sizeof(X86_32_INST_BYTES) - 1) /* -1 is necessary to remove the NULL terminator */
 

@@ -35,12 +35,12 @@
 	mu_assert("failed to assemble " #arch "_" #bits " code", size > 0); \
 	check_size = size == arch##_##bits##_ASM_SIZE; \
 	if (check_size) check_content = memcmp(payload, arch##_##bits##_ASM_BYTES, size) == 0; \
+	printf("<%s_%s PAYLOAD: { ", #arch, #bits); \
+	for (i = 0; i < size; ++i) printf("%hhx ", payload[i]); \
+	printf("}>"); \
 	LM_FreePayload(payload); \
 	mu_assert("payload size of " #arch "_" #bits " is incorrect", check_size); \
 	\
-	printf("<%s_%s PAYLOAD: ", #arch, #bits); \
-	for (i = 0; i < size; ++i) printf("%hhx ", payload[i]); \
-	printf("> "); \
 	fflush(stdout); \
 	\
 	mu_assert("payload content of " #arch "_" #bits " does not match expected bytes", check_content); \

@@ -21,7 +21,7 @@ generate_hook_payload(lm_address_t from, lm_address_t to, lm_size_t bits, lm_byt
 		 */
 		snprintf(code, sizeof(code), "jmp [rip]; nop; nop; nop; nop; nop; nop; nop; nop");
 	} else {
-		snprintf(code, sizeof(code), "jmp %lx", (unsigned long)to);
+		snprintf(code, sizeof(code), "jmp 0x%x", (unsigned int)to);
 	}
 	
 	size = LM_AssembleEx(code, get_architecture(), bits, from, payload_out);

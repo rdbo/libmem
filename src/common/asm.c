@@ -57,7 +57,7 @@ LM_Assemble(lm_string_t code,
 }
 
 /********************************/
-
+#include <stdio.h>
 LM_API lm_size_t LM_CALL
 LM_AssembleEx(lm_string_t  code,
               lm_arch_t    arch,
@@ -85,22 +85,39 @@ LM_AssembleEx(lm_string_t  code,
 	if (!code || arch >= LM_ARCH_MAX || (bits != 32 && bits != 64) || !payload_out)
 		return size;
 
+	printf("code: %s\n", code);
+	printf("bits: %zd\n", bits);
+	fflush(stdout);
+
 	ksarch = arch_cvt_table[arch];
+	printf("ksarch: %d\n", ksarch);
+	fflush(stdout);
 
 	if (bits == 64)
 		ksmode = KS_MODE_64;
 	else
 		ksmode = KS_MODE_32;
 
+	printf("ksmode: %d\n", ksmode);
+	fflush(stdout);
+
 	if (ks_open(ksarch, ksmode, &ks) != KS_ERR_OK)
 		return size;
+
+	printf("opened\n");
+	fflush(stdout);
 
 	if (ks_asm(ks, code, runtime_address, payload_out, &asmsize, &count))
 		goto CLOSE_EXIT;
 
+	printf("assembled\n");
+	fflush(stdout);
+
 	size = (lm_size_t)asmsize;
 CLOSE_EXIT:
 	ks_close(ks);
+	printf("closed\n");
+	fflush(stdout);
 	return size;
 }
 

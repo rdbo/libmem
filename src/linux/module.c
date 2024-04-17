@@ -250,10 +250,13 @@ LM_UnloadModule(const lm_module_t *module)
 	size_t modpath_len;
 	size_t len;
 
+	printf("module: %p\n", (void *)module);
 	if (!module)
 		return LM_FALSE;
 
 	handle = dlopen(NULL, 0); /* Get process first handle */
+	printf("handle: %p\n", handle);
+	fflush(stdout);
 	if (!handle)
 		return LM_FALSE;
 

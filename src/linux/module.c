@@ -215,10 +215,10 @@ LM_LoadModuleEx(const lm_process_t *process,
 	ptlib.args[0] = path_addr;
 	ptlib.args[1] = RTLD_LAZY;
 	if (process->bits == 64) {
-		*(uint32_t *)&ptlib.stack[0] = (uint32_t)RTLD_LAZY;
+		*(int32_t *)&ptlib.stack[0] = (int32_t)RTLD_LAZY;
 		*(uint64_t *)&ptlib.stack[4] = (uint64_t)path_addr;
 	} else {
-	*(uint32_t *)&ptlib.stack[0] = (uint32_t)RTLD_LAZY;
+		*(int32_t *)&ptlib.stack[0] = (int32_t)RTLD_LAZY;
 		*(uint32_t *)&ptlib.stack[4] = (uint64_t)path_addr;
 	}
 

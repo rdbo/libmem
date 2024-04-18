@@ -247,8 +247,6 @@ LM_UnloadModule(const lm_module_t *module)
 {
 	void *handle;
 	struct link_map *link_map;
-	size_t modpath_len;
-	size_t len;
 
 	if (!module)
 		return LM_FALSE;
@@ -256,8 +254,6 @@ LM_UnloadModule(const lm_module_t *module)
 	handle = dlopen(NULL, RTLD_LAZY); /* Get process first handle */
 	if (!handle)
 		return LM_FALSE;
-
-	modpath_len = strlen(module->path);
 
 	/*
 	 * NOTE: A handle is just 'struct link_map *' internally,
@@ -267,13 +263,9 @@ LM_UnloadModule(const lm_module_t *module)
 	 */
 
 	for (link_map = (struct link_map *)handle; link_map; link_map = link_map->l_next) {
-		len = strlen(link_map->l_name);
-		if (len > modpath_len)
-			continue;
-
 		/* NOTE: There can be multiple instances of a module loaded in the link_map chain,
 		 *       so we can't break the loop until all of them are gone */
-		if (!strcmp(&module->path[modpath_len - len], link_map->l_name)) {
+		if (link_map->l_addr == module->base) {
 			handle = (void *)link_map;
 
 			/*
@@ -281,6 +273,7 @@ LM_UnloadModule(const lm_module_t *module)
 			 * NOTE: dlclose on musl is a no-op as of now
 			 */
 			dlclose(handle);
+			break;
 
 			/*
 			 * NOTE: Although not deeply tested, it seems that the link_map chain
@@ -337,7 +330,6 @@ LM_UnloadModuleEx(const lm_process_t *process,
 	ptrace_libcall_t ptlib;
 	long link_map_iter;
 	struct link_map link_map;
-	char path[LM_PATH_MAX];
 	void *handle = NULL;
 	long call_ret;
 
@@ -377,11 +369,7 @@ LM_UnloadModuleEx(const lm_process_t *process,
 		if (ptrace_read(process->pid, link_map_iter, &link_map, sizeof(link_map)) != sizeof(link_map))
 			goto DETACH_EXIT;
 
-		if (ptrace_read(process->pid, (long)link_map.l_name, path, sizeof(path)) == 0)
-			goto DETACH_EXIT;
-		path[sizeof(path) - 1] = '\0';
-
-		if (!strcmp(path, module->path)) {
+		if (link_map.l_addr == module->base) {
 			handle = (void *)link_map_iter;
 			break;
 		}

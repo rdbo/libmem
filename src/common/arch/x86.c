@@ -1,5 +1,6 @@
 #include "arch.h"
 #include <stdio.h>
+#include <memory.h>
 
 lm_arch_t
 get_architecture()
@@ -40,4 +41,5 @@ lm_size_t
 generate_no_ops(lm_byte_t *buf, lm_size_t size)
 {
 	memset(buf, 0x90, size);
+	return size;
 }

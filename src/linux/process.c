@@ -144,7 +144,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 /********************************/
 
 LM_API lm_size_t LM_CALL
-LM_GetSystemBits(lm_void_t)
+LM_GetSystemBits()
 {
 	return (lm_size_t)get_system_bits();
 }

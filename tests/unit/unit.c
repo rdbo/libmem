@@ -104,7 +104,7 @@ void test_module(lm_process_t *pcurproc, lm_process_t *ptargetproc)
 	UNIT_TEST_P(LM_FindModule, pcurproc);
 	UNIT_TEST_P(LM_FindModuleEx, ptargetproc);
 	UNIT_TEST_P(LM_LoadModule, &mod);
-	/* UNIT_TEST_P(LM_UnloadModule, &mod); */ /* NOTE: temporarily disabled due to issue in Ubuntu's dlopen */
+	UNIT_TEST_P(LM_UnloadModule, &mod);
 	UNIT_TEST_P(LM_LoadModuleEx, &arg);
 	/* TODO: Add test for LM_UnloadModuleEx */
 }

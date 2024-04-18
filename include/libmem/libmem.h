@@ -328,24 +328,88 @@ LM_API lm_size_t LM_CALL
 LM_GetSystemBits();
 
 /* Thread API */
+
+/**
+ * The function `LM_EnumThreads` enumerates threads in the current process and calls a callback function
+ * for each thread found.
+ * 
+ * @param callback The `callback` parameter in the `LM_EnumThreads` function is a function pointer
+ * that that will receive the current thread in the enumeration and an extra argument. This function
+ * should return `LM_TRUE` to continue the enumeration, or `LM_FALSE` to stop it.
+ * @param arg The `arg` parameter is a pointer to a user-defined data structure that will be passed to
+ * the callback function `callback` during thread enumeration. This allows you to provide additional
+ * context or information to the callback function if needed.
+ * 
+ * @return The function `LM_EnumThreads` returns a boolean value of type `lm_bool_t`, containing `LM_TRUE`
+ * if it succeeds, or `LM_FALSE` if it fails.
+ */
 LM_API lm_bool_t LM_CALL
 LM_EnumThreads(lm_bool_t (LM_CALL *callback)(lm_thread_t *thread,
 					     lm_void_t   *arg),
 	       lm_void_t          *arg);
 
+/**
+ * The function `LM_EnumThreadsEx` enumerates threads of a given process and invokes a callback
+ * function for each thread.
+ * 
+ * @param process The `process` parameter in the `LM_EnumThreadsEx` function is a pointer to a
+ * structure of type `lm_process_t`, which contains information about the process you want to
+ * enumerate the threads from.
+ * @param callback The `callback` parameter in the `LM_EnumThreads` function is a function pointer
+ * that that will receive the current thread in the enumeration and an extra argument. This function
+ * should return `LM_TRUE` to continue the enumeration, or `LM_FALSE` to stop it.
+ * @param arg The `arg` parameter in the `LM_EnumThreadsEx` function is a pointer to user-defined data
+ * that can be passed to the callback function. It allows you to provide additional information or
+ * context to the callback function when iterating over threads in a process.
+ * 
+ * @return The function `LM_EnumThreadsEx` returns a boolean value, either `LM_TRUE` or `LM_FALSE`,
+ * depending on the success of the operation.
+ */
 LM_API lm_bool_t LM_CALL
 LM_EnumThreadsEx(const lm_process_t *process,
 		 lm_bool_t (LM_CALL *callback)(lm_thread_t *thread,
 					       lm_void_t   *arg),
 		 lm_void_t          *arg);
 
+/**
+ * The function `LM_GetThread` retrieves information about the thread it's running from.
+ * 
+ * @param thread_out The `thread_out` parameter is a pointer to a `lm_thread_t` structure. This
+ * function will populate this structure with information about the current thread, specifically
+ * the thread ID (`tid`) and the process ID (`owner_pid`).
+ * 
+ * @return The LM_GetThread function returns `LM_TRUE` if the thread information was successfully
+ * retrieved and stored in the provided `lm_thread_t` structure. Otherwise, the function returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_GetThread(lm_thread_t *thread_out);
 
+/**
+ * The function `LM_GetThreadEx` retrieves information about a thread in a process.
+ * 
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the thread will be retrieved from.
+ * @param thread_out The `thread_out` parameter is a pointer to a `lm_thread_t` variable where the
+ * function will store the thread information retrieved from the process.
+ * 
+ * @return The function `LM_GetThreadEx` returns `LM_TRUE` if the thread was retrieved successfully, or
+ * `LM_FALSE` if it fails.
+ */
 LM_API lm_bool_t LM_CALL
 LM_GetThreadEx(const lm_process_t *process,
 	       lm_thread_t        *thread_out);
 
+/**
+ * The function `LM_GetThreadProcess` retrieves the process that owns a given thread.
+ * 
+ * @param thread The `thread` parameter is a pointer to a structure of type `lm_thread_t`, which
+ * contains information about a thread in a system.
+ * @param process_out The `process_out` parameter is a pointer to a `lm_process_t` structure where the
+ * function `LM_GetThreadProcess` will store the process information related to the given thread.
+ * 
+ * @return The function `LM_GetThreadProcess` returns a boolean value (`LM_TRUE` or `LM_FALSE`)
+ * indicating whether the operation was successful.
+ */
 LM_API lm_bool_t LM_CALL
 LM_GetThreadProcess(const lm_thread_t *thread,
 		    lm_process_t      *process_out);

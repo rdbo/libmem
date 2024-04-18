@@ -253,7 +253,7 @@ LM_UnloadModule(const lm_module_t *module)
 	if (!module)
 		return LM_FALSE;
 
-	handle = dlopen(NULL, RTLD_NOLOAD); /* Get process first handle */
+	handle = dlopen(NULL, RTLD_LAZY); /* Get process first handle */
 	if (!handle)
 		return LM_FALSE;
 

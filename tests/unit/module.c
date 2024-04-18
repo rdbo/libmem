@@ -100,3 +100,13 @@ char *test_LM_LoadModuleEx(struct load_module_args *arg)
 
 	return NULL;
 }
+
+char *test_LM_UnloadModuleEx(struct load_module_args *arg)
+{
+	lm_process_t *ptargetproc = arg->ptargetproc;
+	lm_module_t *pmod = arg->pmod;
+
+	mu_assert("failed to unload external module", LM_UnloadModuleEx(ptargetproc, pmod) == LM_TRUE);
+	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_UnloadModuleEx(LM_NULLPTR, pmod) == LM_FALSE);
+	mu_assert("function attempted to run with bad arguments (invalid mod)", LM_UnloadModuleEx(ptargetproc, LM_NULLPTR) == LM_FALSE);
+}

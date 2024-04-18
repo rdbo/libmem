@@ -140,7 +140,7 @@ LM_LoadModule(lm_string_t  path,
 /********************************/
 
 lm_bool_t
-find_dlopen_module_callback(lm_module_t *module, lm_void_t *arg)
+find_dlfcn_module_callback(lm_module_t *module, lm_void_t *arg)
 {
 	static const char *name_matches[] = {
 		"libc.", "libc-", "libdl.", "libdl-", "ld-musl-", "ld-musl."
@@ -194,7 +194,7 @@ LM_LoadModuleEx(const lm_process_t *process,
 		return ret;
 
 	dlopen_mod.base = LM_ADDRESS_BAD;
-	LM_EnumModulesEx(process, find_dlopen_module_callback, &dlopen_mod);
+	LM_EnumModulesEx(process, find_dlfcn_module_callback, &dlopen_mod);
 	if (dlopen_mod.base == LM_ADDRESS_BAD)
 		return ret;
 
@@ -216,9 +216,9 @@ LM_LoadModuleEx(const lm_process_t *process,
 	ptlib.args[1] = RTLD_LAZY;
 	if (process->bits == 64) {
 		*(uint64_t *)&ptlib.stack[0] = (uint64_t)path_addr;
-		*(int32_t *)&ptlib.stack[4] = (int32_t)RTLD_LAZY;
+		*(int32_t *)&ptlib.stack[8] = (int32_t)RTLD_LAZY;
 	} else {
-		*(uint32_t *)&ptlib.stack[0] = (uint64_t)path_addr;
+		*(uint32_t *)&ptlib.stack[0] = (uint32_t)path_addr;
 		*(int32_t *)&ptlib.stack[4] = (int32_t)RTLD_LAZY;
 	}
 
@@ -291,4 +291,124 @@ LM_UnloadModule(const lm_module_t *module)
 	}
 
 	return LM_TRUE;
+}
+
+/********************************/
+
+typedef struct {
+	lm_address_t dlopen_addr;
+	lm_address_t dlclose_addr;
+} find_dlfcn_t;
+
+lm_bool_t
+find_dlfcn_symbols_callback(lm_symbol_t *symbol, lm_void_t *arg)
+{
+	static const char *dlopen_matches[] = {
+		"__libc_dlopen_mode", "dlopen"
+	};
+	static const char *dlclose_matches[] = {
+		"__libc_dlclose", "dlclose"
+	};
+	find_dlfcn_t *parg = (find_dlfcn_t *)arg;
+	size_t i;
+
+	for (i = 0; i < LM_ARRLEN(dlopen_matches); ++i) {
+		if (!strcmp(symbol->name, dlopen_matches[i])) {
+			parg->dlopen_addr = symbol->address;
+		}
+	}
+
+	for (i = 0; i < LM_ARRLEN(dlclose_matches); ++i) {
+		if (!strcmp(symbol->name, dlclose_matches[i])) {
+			parg->dlclose_addr = symbol->address;
+		}
+	}
+
+	return (parg->dlopen_addr == LM_ADDRESS_BAD || parg->dlclose_addr == LM_ADDRESS_BAD) ? LM_TRUE : LM_FALSE;
+}
+
+LM_API lm_bool_t LM_CALL
+LM_UnloadModuleEx(const lm_process_t *process,
+		  const lm_module_t  *module)
+{
+	lm_bool_t ret = LM_FALSE;
+	lm_module_t dlfcn_mod;
+	find_dlfcn_t dlfcn = { LM_ADDRESS_BAD, LM_ADDRESS_BAD };
+	ptrace_libcall_t ptlib;
+	long link_map_iter;
+	struct link_map link_map;
+	char path[LM_PATH_MAX];
+	void *handle = NULL;
+	long call_ret;
+
+	if (!process || !module)
+		return ret;
+
+	dlfcn_mod.base = LM_ADDRESS_BAD;
+	LM_EnumModulesEx(process, find_dlfcn_module_callback, &dlfcn_mod);
+	if (dlfcn_mod.base == LM_ADDRESS_BAD)
+		return ret;
+
+	LM_EnumSymbols(&dlfcn_mod, find_dlfcn_symbols_callback, &dlfcn);
+	if (dlfcn.dlopen_addr == LM_ADDRESS_BAD || dlfcn.dlclose_addr == LM_ADDRESS_BAD)
+		return ret;
+
+	/* Setup arguments both on the stack and on registers to prevent possible issues */
+	ptlib.address = dlfcn.dlopen_addr;
+	ptlib.args[0] = (long)NULL;
+	ptlib.args[1] = RTLD_LAZY;
+	if (process->bits == 64) {
+		*(uint64_t *)&ptlib.stack[0] = (uint64_t)NULL;
+		*(int32_t *)&ptlib.stack[8] = (int32_t)RTLD_LAZY;
+	} else {
+		*(uint32_t *)&ptlib.stack[0] = (uint32_t)NULL;
+		*(int32_t *)&ptlib.stack[4] = (int32_t)RTLD_LAZY;
+	}
+
+	if (ptrace_attach(process->pid))
+		goto EXIT;
+
+	link_map_iter = ptrace_libcall(process->pid, process->bits, &ptlib);
+	if (link_map_iter == -1 || link_map_iter == 0)
+		goto DETACH_EXIT;
+
+	/* Search for the correct handle, just like in LM_UnloadModule */
+	for (; link_map_iter; link_map_iter = (long)link_map.l_next) {
+		if (ptrace_read(process->pid, link_map_iter, &link_map, sizeof(link_map)) != sizeof(link_map))
+			goto DETACH_EXIT;
+
+		if (ptrace_read(process->pid, (long)link_map.l_name, path, sizeof(path)) == 0)
+			goto DETACH_EXIT;
+		path[sizeof(path) - 1] = '\0';
+
+		if (!strcmp(path, module->path)) {
+			handle = (void *)link_map_iter;
+			break;
+		}
+	}
+
+	if (!handle) {
+		/* If no handle was found, it means that the module is already unloaded */
+		ret = LM_TRUE;
+		goto DETACH_EXIT;
+	}
+
+	/* Call dlclose with the handle we found */
+	ptlib.address = dlfcn.dlclose_addr;
+	ptlib.args[0] = (long)handle;
+	if (process->bits == 64) {
+		*(uint64_t *)&ptlib.stack[0] = (uint64_t)handle;
+	} else {
+		*(uint32_t *)&ptlib.stack[0] = (uint32_t)handle;
+	}
+
+	call_ret = ptrace_libcall(process->pid, process->bits, &ptlib);
+	if (call_ret != 0)
+		goto DETACH_EXIT;
+
+	ret = LM_TRUE;
+DETACH_EXIT:
+	ptrace_detach(process->pid);
+EXIT:
+	return ret;
 }

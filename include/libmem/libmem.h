@@ -429,7 +429,7 @@ LM_GetThreadProcess(const lm_thread_t *thread,
  * additional information or context to the callback function when it is invoked during the enumeration
  * of modules.
  * 
- * @return The function `LM_EnumModules` is returns `LM_TRUE` is the enumeration succeeds, or `LM_FALSE`
+ * @return The function `LM_EnumModules` returns `LM_TRUE` is the enumeration succeeds, or `LM_FALSE`
  * if it fails.
  */
 LM_API lm_bool_t LM_CALL
@@ -554,30 +554,111 @@ LM_UnloadModuleEx(const lm_process_t *process,
 		  const lm_module_t  *module);
 
 /* Symbol API */
+
+/**
+ * The function `LM_EnumSymbols` enumerates symbols in a module and calls a callback function for each
+ * symbol found.
+ * 
+ * @param module The `module` parameter is a pointer to a structure of type `lm_module_t`, which
+ * represents the module where the symbols will be enumerated from.
+ * @param callback The `callback` parameter in the `LM_EnumSymbols` function is a function pointer
+ * that that will receive the current symbol in the enumeration and an extra argument. This function
+ * should return `LM_TRUE` to continue the enumeration, or `LM_FALSE` to stop it.
+ * @param arg The `arg` parameter in the `LM_EnumSymbols` function is a pointer to a user-defined data
+ * structure or variable that will be passed to the callback function `callback` for each symbol that
+ * is enumerated. This allows the user to provide additional context or data that may be needed during
+ * the symbol
+ * 
+ * @return The function `LM_EnumSymbols` returns `LM_TRUE` if the enumeration succeeds. Otherwise,
+ * it returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_EnumSymbols(const lm_module_t  *module,
 	       lm_bool_t (LM_CALL *callback)(lm_symbol_t *symbol,
 					     lm_void_t   *arg),
 	       lm_void_t          *arg);
 
+/**
+ * The function `LM_FindSymbolAddress` searches for the address of a symbol within a given module.
+ * 
+ * @param module The `module` parameter is a pointer to a structure of type `lm_module_t`, which
+ * represents the module where the symbol will be looked up from.
+ * @param symbol_name The `symbol_name` parameter is a string representing the name of the symbol
+ * (function, variable, etc) whose address you want to find within the specified module.
+ * 
+ * @return The function `LM_FindSymbolAddress` is returning the address of a symbol with the given name
+ * within the specified module. If the symbol is found, the address of the symbol is returned. If the
+ * symbol is not found or if an error happens, `LM_ADDRESS_BAD` is returned.
+ */
 LM_API lm_address_t LM_CALL
 LM_FindSymbolAddress(const lm_module_t *module,
 		     lm_string_t        symbol_name);
 
+/**
+ * The LM_DemangleSymbol function takes a symbol name, demangles it, and returns the demangled symbol.
+ * 
+ * @param symbol_name The `symbol_name` parameter is a string representing the name of a symbol that
+ * you want to demangle.
+ * @param demangled_buf The `demangled_buf` parameter is a pointer to a buffer where the demangled
+ * symbol name will be stored. If this is `NULL`, the symbol will be dynamically allocated and `maxsize`
+ * is ignored.
+ * @param maxsize The `maxsize` parameter in the `LM_DemangleSymbol` function represents the maximum
+ * size of the buffer `demangled_buf` where the demangled symbol will be stored.
+ * 
+ * @return The function `LM_DemangleSymbol` returns a pointer to the demangled symbol string, or `NULL` if it
+ * fails. If the symbol was dynamically allocated, you need to free it with `LM_FreeDemangledSymbol`.
+ */
 LM_API lm_char_t * LM_CALL
 LM_DemangleSymbol(lm_string_t symbol_name,
 		  lm_char_t  *demangled_buf,
 		  lm_size_t   maxsize);
 
+/**
+ * The function `LM_FreeDemangledSymbol` frees the memory allocated for a demangled symbol name allocated
+ * with `LM_DemangleSymbol`.
+ * 
+ * @param symbol_name The `symbol_name` parameter is a pointer to the string representing the name of a symbol
+ * that has been demangled with `LM_DemangleSymbol` and is also dynamically allocated.
+ */
 LM_API lm_void_t LM_CALL
 LM_FreeDemangledSymbol(lm_char_t *symbol_name);
 
+/**
+ * The function `LM_EnumSymbolsDemangled` enumerates symbols in a module with demangled names and calls
+ * a provided callback function for each symbol found.
+ *
+ * @param module The `module` parameter is a pointer to a structure of type `lm_module_t`, which
+ * represents the module where the symbols will be enumerated from.
+ * @param callback The `callback` parameter in the `LM_EnumSymbols` function is a function pointer
+ * that that will receive the current demangled symbol in the enumeration and an extra argument. This function
+ * should return `LM_TRUE` to continue the enumeration, or `LM_FALSE` to stop it.
+ * @param arg The `arg` parameter in the `LM_EnumSymbols` function is a pointer to a user-defined data
+ * structure or variable that will be passed to the callback function `callback` for each symbol that
+ * is enumerated. This allows the user to provide additional context or data that may be needed during
+ * the symbol
+ * 
+ * @return The function `LM_EnumSymbols` returns `LM_TRUE` if the enumeration succeeds. Otherwise,
+ * it returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_EnumSymbolsDemangled(const lm_module_t  *module,
 			lm_bool_t (LM_CALL *callback)(lm_symbol_t *symbol,
 						      lm_void_t   *arg),
 			lm_void_t          *arg);
 
+/**
+ * The function `LM_FindSymbolAddressDemangled` searches for the address of a demangled symbol within
+ * a module.
+ *
+ * @param module The `module` parameter is a pointer to a structure of type `lm_module_t`, which
+ * represents the module where the symbol will be looked up from.
+ * @param symbol_name The `symbol_name` parameter is a string representing the name of the symbol
+ * (function, variable, etc) whose address you want to find within the specified module.
+ * 
+ * @return The function `LM_FindSymbolAddressDemangled` is returning the address of a symbol with the given
+ * name within the specified module. If the symbol is found, the address of the symbol is returned. If the
+ * symbol is not found or if an error happens, `LM_ADDRESS_BAD` is returned.
+ */
 LM_API lm_address_t LM_CALL
 LM_FindSymbolAddressDemangled(const lm_module_t *module,
 			      lm_string_t        symbol_name);

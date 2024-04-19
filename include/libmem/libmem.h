@@ -313,7 +313,7 @@ LM_IsProcessAlive(const lm_process_t *process);
 
 /**
  * The function `LM_GetBits` returns the size of a pointer in bits, which corresponds to the current
- * process' bits (32 bits or 64 bits).
+ * process's bits (32 bits or 64 bits).
  * 
  * @return The function `LM_GetBits` returns the size of a pointer in bits.
  */
@@ -695,45 +695,179 @@ LM_FindSegmentEx(const lm_process_t *process,
  *       with LM_FindSegments(Ex) in case of a multi-segment memory protection.
  */
 
+/**
+ * The function `LM_ReadMemory` reads memory from a source address and copies it to a destination
+ * address.
+ * 
+ * @param source The `source` parameter is of type `lm_address_t`, which represents the memory address
+ * from which data will be read.
+ * @param dest The `dest` parameter in the `LM_ReadMemory` function is a pointer to a memory location
+ * where the data read from the source address will be stored.
+ * @param size The `size` parameter in the `LM_ReadMemory` function represents the number of bytes to
+ * read from the memory starting at the `source` address and write into the `dest` buffer. It specifies
+ * the size of the memory block to be read.
+ * 
+ * @return The function `LM_ReadMemory` returns the number of bytes read from memory.
+ */
 LM_API lm_size_t LM_CALL
 LM_ReadMemory(lm_address_t source,
 	      lm_byte_t   *dest,
 	      lm_size_t    size);
 
+/**
+ * The function `LM_ReadMemoryEx` reads memory from a process and returns the number of bytes read.
+ * 
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the memory will be read from.
+ * @param source The `source` parameter in the `LM_ReadMemoryEx` function represents the starting
+ * address in the target process from which you want to read memory. It is of type `lm_address_t`,
+ * which is a memory address in the target process's address space.
+ * @param dest The `dest` parameter in the `LM_ReadMemoryEx` function is a pointer to the destination
+ * buffer where the memory read operation will store the data read from the specified source address.
+ * @param size The `size` parameter in the `LM_ReadMemoryEx` function represents the number of bytes to
+ * read from the memory location specified by the `source` address. It indicates the amount of data
+ * that should be read from the source address and copied into the destination buffer pointed to by the
+ * `dest`
+ * 
+ * @return The function `LM_ReadMemoryEx` returns the number of bytes successfully read from the
+ * specified memory address in the target process. If an error occurs during the read operation, it
+ * returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *process,
 		lm_address_t        source,
 		lm_byte_t          *dest,
 		lm_size_t           size);
 
+/**
+ * The LM_WriteMemory function writes data from a source array to a destination address in memory.
+ * 
+ * @param dest The `dest` parameter in the `LM_WriteMemory` function represents the destination memory
+ * address where the data from the `source` array will be written to.
+ * @param source The `source` parameter in the `LM_WriteMemory` function is used to provide the
+ * data that needs to be written to the memory starting at the destination address `dest`.
+ * @param size The `size` parameter in the `LM_WriteMemory` function represents the number of bytes to
+ * be written from the `source` array to the memory starting at the `dest` address. It specifies the
+ * size of the data to be copied from the source array to the destination memory location.
+ * 
+ * @return The function `LM_WriteMemory` returns the number of bytes written to the destination memory
+ * address.
+ */
 LM_API lm_size_t LM_CALL
 LM_WriteMemory(lm_address_t   dest,
 	       lm_bytearray_t source,
 	       lm_size_t      size);
 
+/**
+ * The function `LM_WriteMemoryEx` writes data from a source bytearray to a destination address in a
+ * specified process.
+ * 
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the memory will be written to.
+ * @param dest The `dest` parameter in the `LM_WriteMemoryEx` function represents the destination
+ * address in the target process where the data from the `source` array will be written to.
+ * @param source The `source` parameter in the `LM_WriteMemoryEx` is used to provide
+ * the data that needs to be written to the memory of the target process.
+ * @param size The `size` parameter in the `LM_WriteMemoryEx` function represents the number of bytes
+ * to be written from the `source` bytearray to the memory address specified by `dest`. It indicates
+ * the size of the data to be written in bytes.
+ * 
+ * @return The function `LM_WriteMemoryEx` returns the number of bytes that were successfully written
+ * to the destination address in the process's memory. If an error occurs during the write operation,
+ * it returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_WriteMemoryEx(const lm_process_t *process,
 		 lm_address_t        dest,
 		 lm_bytearray_t      source,
 		 lm_size_t           size);
 
+/**
+ * The function `LM_SetMemory` sets a specified memory region to a given byte value.
+ * 
+ * @param dest The `dest` parameter is the destination memory address where the `byte` value will be
+ * written to, starting from this address.
+ * @param byte The `byte` parameter in the `LM_SetMemory` function represents the value of the byte
+ * that will be written to the memory locations starting from the `dest` address.
+ * @param size The `size` parameter in the `LM_SetMemory` function represents the number of bytes to
+ * set in the memory starting from the `dest` address. It specifies the size of the memory block that
+ * will be filled with the specified `byte` value.
+ * 
+ * @return The function `LM_SetMemory` returns the number of bytes that were successfully set to the
+ * specified value `byte` in the memory region starting at address `dest`.
+ */
 LM_API lm_size_t LM_CALL
 LM_SetMemory(lm_address_t dest,
 	     lm_byte_t    byte,
 	     lm_size_t    size);
 
+/**
+ * The function `LM_SetMemoryEx` sets a specified memory region to a given byte value in a target process.
+ * 
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the memory will be set to.
+ * @param dest The `dest` parameter is the destination memory address where the `byte` value will be
+ * written to, starting from this address.
+ * @param byte The `byte` parameter in the `LM_SetMemoryEx` function represents the value of the byte
+ * that will be written to the memory locations starting from the `dest` address.
+ * @param size The `size` parameter in the `LM_SetMemoryEx` function represents the number of bytes to
+ * set in the memory starting from the `dest` address. It specifies the size of the memory block that
+ * will be filled with the specified `byte` value.
+ * 
+ * @return The function `LM_SetMemoryEx` returns a value of type `lm_size_t`, which represents the size
+ * of the memory that was successfully written. If there are any errors or invalid parameters, it
+ * returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_SetMemoryEx(const lm_process_t *process,
 	       lm_address_t        dest,
 	       lm_byte_t           byte,
 	       lm_size_t           size);
 
+/**
+ * The function `LM_ProtMemory` sets memory protection flags for a specified memory address range.
+ * 
+ * @param address The `address` parameter represents the memory address to be protected or modified.
+ * @param size The `size` parameter in the `LM_ProtMemory` function represents the size of memory to be
+ * protected or modified. If the `size` parameter is set to 0, the function will default to using the
+ * system's page size for the operation.
+ * @param prot The `prot` parameter in the `LM_ProtMemory` function represents the new protection
+ * flags that you want to apply to the memory region starting at the specified address. It is of
+ * type `lm_prot_t`, which is a bit mask of `LM_PROT_X` (execute), `LM_PROT_R` (read), `LM_PROT_W` (write).
+ * @param oldprot_out The `oldprot_out` parameter in the `LM_ProtMemory` function is a pointer to a
+ * `lm_prot_t` type variable. This parameter is used to store the old protection flags of a memory
+ * segment before they are updated with the new protection settings specified by the `prot` parameter.
+ * 
+ * @return The function `LM_ProtMemory` returns a boolean value, either `LM_TRUE` or `LM_FALSE`, based
+ * on the success of the memory protection operation.
+ */
 LM_API lm_bool_t LM_CALL
 LM_ProtMemory(lm_address_t address,
 	      lm_size_t    size,
 	      lm_prot_t    prot,
 	      lm_prot_t   *oldprot_out);
 
+/**
+ * The function `LM_ProtMemoryEx` is used to modify memory protection flags for a specified address
+ * range in a given process.
+ *
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the memory flags will be modified from.
+ * @param address The `address` parameter represents the memory address to be protected or modified.
+ * @param size The `size` parameter in the `LM_ProtMemoryEx` function represents the size of memory to be
+ * protected or modified. If the `size` parameter is set to 0, the function will default to using the
+ * system's page size for the operation.
+ * @param prot The `prot` parameter in the `LM_ProtMemoryEx` function represents the new protection
+ * flags that you want to apply to the memory region starting at the specified address. It is of
+ * type `lm_prot_t`, which is a bit mask of `LM_PROT_X` (execute), `LM_PROT_R` (read), `LM_PROT_W` (write).
+ * @param oldprot_out The `oldprot_out` parameter in the `LM_ProtMemoryEx` function is a pointer to a
+ * `lm_prot_t` type variable. This parameter is used to store the old protection flags of a memory
+ * segment before they are updated with the new protection settings specified by the `prot` parameter.
+ *
+ * @return The function `LM_ProtMemoryEx` returns a boolean value indicating whether the memory
+ * protection operation was successful or not. It returns `LM_TRUE` if the operation was successful and
+ * `LM_FALSE` if it was not.
+ */
 LM_API lm_bool_t LM_CALL
 LM_ProtMemoryEx(const lm_process_t *process,
 		lm_address_t        address,
@@ -741,29 +875,120 @@ LM_ProtMemoryEx(const lm_process_t *process,
 		lm_prot_t           prot,
 		lm_prot_t          *oldprot_out);
 
+/**
+ * The function `LM_AllocMemory` allocates memory with a specified size and protection flags, returning
+ * the allocated memory address.
+ * 
+ * @param size The `size` parameter in the `LM_AllocMemory` function represents the size of memory to
+ * be allocated. If the `size` is 0, the function will allocate a full page of memory. If a specific
+ * size is provided, that amount of memory will be allocated, aligned to the next page size.
+ * @param prot The `prot` parameter in the `LM_AllocMemory` function specifies the memory protection
+ * flags for the allocated memory region. It is of type `lm_prot_t`, which is an enum that represents
+ * different memory protection flags such as read (`LM_PROT_R`), write (`LM_PROT_W`), execute (`LM_PROT_X`)
+ * permissions.
+ * 
+ * @return The function `LM_AllocMemory` returns the memory address of the allocated memory with the specified
+ * allocation options, or `LM_ADDRESS_BAD` if it fails.
+ */
 LM_API lm_address_t LM_CALL
 LM_AllocMemory(lm_size_t size,
 	       lm_prot_t prot);
 
+/**
+ * The function `LM_AllocMemoryEx` allocates memory in a specified process with the given size and
+ * memory protection flags.
+ * 
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the memory will be allocated to.
+ * @param size The `size` parameter in the `LM_AllocMemory` function represents the size of memory to
+ * be allocated. If the `size` is 0, the function will allocate a full page of memory. If a specific
+ * size is provided, that amount of memory will be allocated, aligned to the next page size.
+ * @param prot The `prot` parameter in the `LM_AllocMemory` function specifies the memory protection
+ * flags for the allocated memory region. It is of type `lm_prot_t`, which is an enum that represents
+ * different memory protection flags such as read (`LM_PROT_R`), write (`LM_PROT_W`), execute (`LM_PROT_X`)
+ * permissions.
+ * 
+ * @return The function `LM_AllocMemoryEx` returns a memory address of type `lm_address_t` if the
+ * memory allocation is successful. If there are any issues, it returns `LM_ADDRESS_BAD`.
+ */
 LM_API lm_address_t LM_CALL
 LM_AllocMemoryEx(const lm_process_t *process,
 		 lm_size_t           size,
 		 lm_prot_t           prot);
 
+/**
+ * The function `LM_FreeMemory` deallocates memory that was previously allocated with `LM_AllocMemory`.
+ * 
+ * @param alloc The `alloc` parameter is the address of the memory block that was previously allocated.
+ * @param size The `size` parameter represents the size of the memory block that was previously
+ * allocated. If the size is 0, the function will use the system's page size for unmapping the memory.
+ * 
+ * @return The function `LM_FreeMemory` returns `LM_TRUE` if the memory deallocation operation is
+ * successful, and `LM_FALSE` if the operation fails.
+ */
 LM_API lm_bool_t LM_CALL
 LM_FreeMemory(lm_address_t alloc,
 	      lm_size_t    size);
 
+/**
+ * The function `LM_FreeMemoryEx` deallocates memory that was previously allocated with `LM_AllocMemoryEx`
+ * on a given process.
+ * 
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the memory will be allocated to.
+ * @param alloc The `alloc` parameter in the `LM_FreeMemoryEx` function represents the address of the
+ * memory block that was previously allocated and needs to be freed.
+ * @param size The `size` parameter in the `LM_FreeMemoryEx` function represents the size of the memory
+ * block that was previously allocated and now needs to be freed. If the `size` parameter is set to 0,
+ * the function will use the system's page size as the default size for freeing the memory.
+ * 
+ * @return The function `LM_FreeMemoryEx` returns a boolean value (`LM_TRUE` or `LM_FALSE`) indicating
+ * whether the memory deallocation operation was successful or not.
+ */
 LM_API lm_bool_t LM_CALL
 LM_FreeMemoryEx(const lm_process_t *process,
 		lm_address_t        alloc,
 		lm_size_t           size);
 
+/**
+ * The function `LM_DeepPointer` calculates a deep pointer address by applying a series of offsets to a
+ * base address and dereferencing intermediate pointers.
+ * 
+ * @param base The `base` parameter in the `LM_DeepPointer` function represents the starting address
+ * from which to calculate the deep pointer.
+ * @param offsets The `offsets` parameter is a pointer to an array of lm_address_t values. These values
+ * are used as offsets to navigate through memory addresses in the `LM_DeepPointer` function.
+ * @param noffsets The `noffsets` parameter in the `LM_DeepPointer` function represents the number of
+ * offsets in the `offsets` array. It indicates how many elements are in the array that contains the
+ * offsets used to calculate the final memory address.
+ * 
+ * @return The function `LM_DeepPointer` returns a deep pointer calculated based on the provided base
+ * address, offsets, and number of offsets. The function iterates through the offsets, adjusting the
+ * base address and dereferencing accordingly.
+ */
 LM_API lm_address_t LM_CALL
 LM_DeepPointer(lm_address_t        base,
 	       const lm_address_t *offsets,
 	       size_t              noffsets);
 
+/**
+ * The function `LM_DeepPointerEx` calculates a deep pointer address by applying a series of offsets to a
+ * base address and dereferencing intermediate pointers in a given process's memory space.
+ *
+ * @param process The `process` parameter is a pointer to a structure representing a process in the
+ * system. It's the process that the deep pointer will be calculated from.
+ * @param base The `base` parameter in the `LM_DeepPointerEx` function represents the starting address
+ * from which to calculate the deep pointer.
+ * @param offsets The `offsets` parameter is a pointer to an array of lm_address_t values. These values
+ * are used as offsets to navigate through memory addresses in the `LM_DeepPointerEx` function.
+ * @param noffsets The `noffsets` parameter in the `LM_DeepPointerEx` function represents the number of
+ * offsets in the `offsets` array. It indicates how many elements are in the array that contains the
+ * offsets used to calculate the final memory address.
+ * 
+ * @return The function `LM_DeepPointerEx` returns a deep pointer calculated based on the provided base
+ * address, offsets, and number of offsets. The function iterates through the offsets, adjusting the
+ * base address and dereferencing accordingly.
+ */
 LM_API lm_address_t LM_CALL
 LM_DeepPointerEx(const lm_process_t *process,
 		 lm_address_t        base,

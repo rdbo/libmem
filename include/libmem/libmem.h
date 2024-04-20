@@ -1207,13 +1207,53 @@ LM_SigScanEx(const lm_process_t *process,
 	     lm_size_t           scansize);
 
 /* Assemble/Disassemble API */
+
+/**
+ * The function `LM_GetArchitecture` returns the current architecture.
+ *
+ * @return The function `LM_GetArchitecture` is returning the architecture
+ * (`lm_arch_t`) of the system. It can be one of:
+ * - `LM_ARCH_X86` for 32-bit x86.
+ * - `LM_ARCH_AMD64` for 64-bit x86.
+ * - Others (check the enum for `lm_arch_t`)
+ */
 LM_API lm_arch_t LM_CALL
 LM_GetArchitecture();
 
+/**
+ * The function `LM_Assemble` assembles a single instruction into machine code
+ *
+ * @param code The `code` parameter is a string of the instruction to be assembled.
+ * Example: `"mov eax, ebx"`.
+ * @param instruction_out The `instruction_out` parameter is a pointer to a `lm_inst_t` which
+ * will be populated with the assembled instruction.
+ *
+ * @return The function `LM_Assemble` returns `LM_TRUE` if it succeeds in assembling the instruction, and
+ * populates the `instruction_out` parameter with a `lm_inst_t` that contains the assembled instruction.
+ * If the instruction could not be assembled successfully, then the function returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_Assemble(lm_string_t code,
-	    lm_inst_t  *instruction_out);
+	     lm_inst_t  *instruction_out);
 
+/**
+ * The function `LM_AssembleEx` assembles one or more instructions into machine code
+ * (must be deallocated with `LM_FreePayload`).
+ *
+ * @param code The `code` parameter is a string of the instructions to be assembled.
+ * Example: `"mov eax, ebx ; jmp eax"`.
+ * @param arch The `arch` parameter specifies the architecture to be assembled (`LM_ARCH_*` values).
+ * @param bits The `bits` parameter specifies the bits of the architecture to be assembled.
+ * It can be `32` or `64`.
+ * @param runtime_address The `runtime_address` parameter is the runtime address to resolve
+ * the functions (for example, relative jumps will be resolved using this address).
+ * @param payload_out The `payload_out` parameter is a pointer to a variable of type
+ * `lm_byte_t *` that will receive the assembled instructions (deallocate after use with
+ * `LM_FreePayload`).
+ *
+ * @return On success, it returns the size of the assembled instructions, in bytes.
+ * On failure, it returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_AssembleEx(lm_string_t  code,
               lm_arch_t    arch,
@@ -1221,51 +1261,158 @@ LM_AssembleEx(lm_string_t  code,
 	      lm_address_t runtime_address,
 	      lm_byte_t  **payload_out);
 
+/**
+ * The function `LM_FreePayload` frees memory allocated by `LM_AssembleEx`.
+ *
+ * @param payload The `payload` parameter is a pointer to a buffer that was allocated by
+ * `LM_AssembleEx` and needs to be freed.
+ */
 LM_API lm_void_t LM_CALL
 LM_FreePayload(lm_byte_t *payload);
 
+/**
+ * The function `LM_Disassemble` disassembles one instruction into an `lm_inst_t` struct.
+ *
+ * @param machine_code The `machine_code` parameter is the address of the instruction to be
+ * disassembled.
+ * @param instruction_out The `instruction_out` parameter is a pointer to an `lm_inst_t` that
+ * will receive the disassembled instruction.
+ *
+ * @return `LM_TRUE` on success, `LM_FALSE` on failure.
+ */
 LM_API lm_bool_t LM_CALL
 LM_Disassemble(lm_address_t machine_code,
-	       lm_inst_t   *instruction_out);
+		lm_inst_t   *instruction_out);
 
+/**
+ * The function `LM_DisassembleEx` disassembles one or more instructions into an array of
+ * `lm_inst_t` structs.
+ *
+ * @param machine_code The `machine_code` parameter is the address of the instructions to be
+ * disassembled.
+ * @param arch The `arch` parameter is the architecture to be disassembled (see `lm_arch_t`
+ * for available architectures).
+ * @param bits The `bits` parameter is the bitness of the architecture to be disassembled (32 or 64).
+ * @param max_size The `max_size` parameter is the maximum number of bytes to disassemble (0 for as
+ * many as possible, limited by `instruction_count`).
+ * @param instruction_count The `instruction_count` parameter is the amount of instructions
+ * to disassemble (0 for as many as possible, limited by `max_size`).
+ * @param runtime_address The `runtime_address` parameter is the runtime address to resolve
+ * the functions (for example, relative jumps will be resolved using this address).
+ * @param instructions_out The `instructions_out` parameter is a pointer to a variable of type
+ * `lm_inst_t *` that will receive the disassembled instructions (deallocate after use with
+ * `LM_FreeInstructions`).
+ *
+ * @return On success, it returns the count of the instructions disassembled. On failure, it
+ * returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_DisassembleEx(lm_address_t machine_code,
-                 lm_arch_t    arch,
+		 lm_arch_t    arch,
 		 lm_size_t    bits,
 		 lm_size_t    max_size,
 		 lm_size_t    instruction_count,
 		 lm_address_t runtime_address,
 		 lm_inst_t  **instructions_out);
 
+/**
+ * The function `LM_FreeInstructions` deallocates the memory allocated by
+ * `LM_DisassembleEx` for the disassembled instructions.
+ *
+ * @param instructions The `instructions` parameter is a pointer to the disassembled
+ * instructions returned by `LM_DisassembleEx`.
+ */
 LM_API lm_void_t LM_CALL
 LM_FreeInstructions(lm_inst_t *instructions);
 
+/**
+ * The function `LM_CodeLength` calculates the size aligned to the instruction length, based on a minimum size.
+ *
+ * @param machine_code The `machine_code` parameter is the address of the instructions.
+ * @param min_length The `min_length` parameter is the minimum size to be aligned to instruction length.
+ *
+ * @return On success, it returns the aligned size to the next instruction's length. On failure, it returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_CodeLength(lm_address_t machine_code,
 	      lm_size_t    min_length);
 
+/**
+ * The function `LM_CodeLengthEx` calculates the size aligned to the instruction length, based on a minimum size, in a remote process.
+ *
+ * @param process The `process` parameter is a pointer to a valid process to get the aligned length from.
+ * @param machine_code The `machine_code` parameter is the address of the instructions in the remote process.
+ * @param min_length The `min_length` parameter is the minimum size to be aligned to instruction length.
+ *
+ * @return On success, it returns the aligned size to the next instruction's length. On failure, it returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_CodeLengthEx(const lm_process_t *process,
-		lm_address_t        machine_code,
-		lm_size_t           min_length);
+		 lm_address_t        machine_code,
+		 lm_size_t           min_length);
 
 /* Hook API */
+
+/**
+ * The function `LM_HookCode` places a hook/detour onto the address `from`, redirecting it to the address `to`.
+ * Optionally, it generates a trampoline in `trampoline_out` to call the original function.
+ *
+ * @param from The `from` parameter is the address where the hook will be placed.
+ * @param to The `to` parameter is the address where the hook will jump to.
+ * @param trampoline_out Optional pointer to an `lm_address_t` variable that will receive a trampoline/gateway to call the original function.
+ *
+ * @return On success, it returns the amount of bytes occupied by the hook (aligned to the nearest instruction). On failure, it returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_HookCode(lm_address_t  from,
 	    lm_address_t  to,
 	    lm_address_t *trampoline_out);
 
+/**
+ * The function `LM_HookCodeEx` places a hook/detour onto the address `from` in a remote process, redirecting it to the address `to`.
+ * Optionally, it generates a trampoline in `trampoline_out` to call the original function in the remote process.
+ *
+ * @param process The `process` parameter is a pointer to a valid process to place the hook in.
+ * @param from The `from` parameter is the address where the hook will be placed in the remote process.
+ * @param to The `to` parameter is the address where the hook will jump to in the remote process.
+ * @param trampoline_out Optional pointer to an `lm_address_t` variable that will receive a trampoline/gateway to call the
+ * original function in the remote process.
+ *
+ * @return On success, it returns the amount of bytes occupied by the hook (aligned to the nearest instruction) in the remote process.
+ * On failure, it returns `0`.
+ */
 LM_API lm_size_t LM_CALL
 LM_HookCodeEx(const lm_process_t *process,
 	      lm_address_t        from,
 	      lm_address_t        to,
 	      lm_address_t       *trampoline_out);
 
+/**
+ * The function `LM_UnhookCode` removes a hook/detour placed on the address `from`, restoring it to its original state.
+ * The function also frees the trampoline allocated by `LM_HookCode`.
+ *
+ * @param from The `from` parameter is the address where the hook was placed.
+ * @param trampoline The `trampoline` parameter is the address of the trampoline generated by `LM_HookCode`.
+ * @param size The `size` parameter is the amount of bytes occupied by the hook (aligned to the nearest instruction).
+ *
+ * @return On success, it returns `LM_TRUE`. On failure, it returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_UnhookCode(lm_address_t from,
 	      lm_address_t trampoline,
 	      lm_size_t    size);
 
+/**
+ * The function `LM_UnhookCodeEx` removes a hook/detour placed on the address `from` in a remote process, restoring it to its original state.
+ * The function also frees the trampoline allocated by `LM_HookCodeEx`.
+ *
+ * @param process The `process` parameter is a pointer to a valid process where the hook was placed.
+ * @param from The `from` parameter is the address where the hook was placed.
+ * @param trampoline The `trampoline` parameter is the address of the trampoline generated by `LM_HookCodeEx`.
+ * @param size The `size` parameter is the amount of bytes occupied by the hook (aligned to the nearest instruction) in the remote process.
+ *
+ * @return On success, it returns `LM_TRUE`. On failure, it returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_UnhookCodeEx(const lm_process_t *process,
 		lm_address_t        from,

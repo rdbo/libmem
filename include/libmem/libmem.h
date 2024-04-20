@@ -1420,26 +1420,71 @@ LM_UnhookCodeEx(const lm_process_t *process,
 		lm_size_t           size);
 
 /* Virtual Method Table API */
+
+/**
+ * The function `LM_VmtNew` creates a new VMT manager from the VMT at `vtable` into `vmt_out`.
+ *
+ * @param vtable The `vtable` parameter is a pointer to the VMT array to manage.
+ * @param vmt_out The `vmt_out` parameter is a pointer to an uninitialized `lm_vmt_t` structure that will receive the VMT manager.
+ *
+ * @return On success, it returns `LM_TRUE`. On failure, it returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_VmtNew(lm_address_t *vtable,
 	  lm_vmt_t     *vmt_out);
 
+/**
+ * The function `LM_VmtHook` hooks the VMT function at index `from_fn_index` in the VMT managed by `vmt`,
+ * changing it to `to`.
+ *
+ * @param vmt The `vmt` parameter is a pointer to a valid VMT manager.
+ * @param from_fn_index The `from_fn_index` parameter is the index of the VMT function to hook.
+ * @param to The `to` parameter is the pointer to the function that will replace the original VMT function.
+ *
+ * @return On success, it returns `LM_TRUE`. On failure, it returns `LM_FALSE`.
+ */
 LM_API lm_bool_t LM_CALL
 LM_VmtHook(lm_vmt_t    *vmt,
 	   lm_size_t    from_fn_index,
 	   lm_address_t to);
 
+/**
+ * The function `LM_VmtUnhook` unhooks the VMT function at index `fn_index` in the VMT managed by `vmt`,
+ * restoring the original function.
+ *
+ * @param vmt The `vmt` parameter is a pointer to a valid VMT manager.
+ * @param fn_index The `fn_index` parameter is the index of the VMT function to unhook.
+ */
 LM_API lm_void_t LM_CALL
 LM_VmtUnhook(lm_vmt_t *vmt,
 	     lm_size_t fn_index);
 
+/**
+ * The function `LM_VmtGetOriginal` returns the original VMT function at index `fn_index` in the VMT managed by `vmt`.
+ * If the function has not been hooked before, it returns the function pointer at that index in the VMT array.
+ *
+ * @param vmt The `vmt` parameter is a pointer to a valid VMT manager.
+ * @param fn_index The `fn_index` parameter is the index of the VMT function to query.
+ *
+ * @return The function returns the original VMT function at index `fn_index` in the VMT managed by `vmt`.
+ */
 LM_API lm_address_t LM_CALL
 LM_VmtGetOriginal(const lm_vmt_t *vmt,
 		  lm_size_t       fn_index);
 
+/**
+ * The function `LM_VmtReset` resets all the VMT functions back to their original addresses.
+ *
+ * @param vmt The `vmt` parameter is a pointer to a valid VMT manager.
+ */
 LM_API lm_void_t LM_CALL
 LM_VmtReset(lm_vmt_t *vmt);
 
+/**
+ * The function `LM_VmtFree` frees the VMT manager, restoring everything.
+ *
+ * @param vmt The `vmt` parameter is a pointer to a valid VMT manager.
+ */
 LM_API lm_void_t LM_CALL
 LM_VmtFree(lm_vmt_t *vmt);
 

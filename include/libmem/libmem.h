@@ -412,19 +412,17 @@ LM_GetThreadProcess(const lm_thread_t *thread,
 /* Module API */
 
 /**
- * The function `LM_EnumModules` enumerates modules in the current process and calls a callback function
+ * Enumerates modules in the current process and calls a callback function
  * for each module found.
  * 
- * @param callback The `callback` parameter in the `LM_EnumModules` function is a function pointer
- * that that will receive the current module in the enumeration and an extra argument. This function
- * should return `LM_TRUE` to continue the enumeration, or `LM_FALSE` to stop it.
- * @param arg The `arg` parameter in the `LM_EnumModules` function is a pointer to a user-defined data
- * structure that can be passed to the callback function `callback`. This allows you to provide
- * additional information or context to the callback function when it is invoked during the enumeration
- * of modules.
+ * @param callback The callback function that will receive the current module in
+ * the enumeration and an extra argument. This function should return `LM_TRUE`
+ * to continue the enumeration, or `LM_FALSE` to stop it.
+ * @param arg An extra argument that is passed to the callback function. This allows
+ * you to provide additional information or context to the callback function when
+ * it is invoked during the enumeration of modules.
  * 
- * @return The function `LM_EnumModules` returns `LM_TRUE` is the enumeration succeeds, or `LM_FALSE`
- * if it fails.
+ * @return Returns `LM_TRUE` if the enumeration succeeds, or `LM_FALSE` if it fails.
  */
 LM_API lm_bool_t LM_CALL
 LM_EnumModules(lm_bool_t (LM_CALL *callback)(lm_module_t *module,
@@ -432,21 +430,18 @@ LM_EnumModules(lm_bool_t (LM_CALL *callback)(lm_module_t *module,
 	       lm_void_t          *arg);
 
 /**
- * The function `LM_EnumModulesEx` enumerates modules in a specified process and calls a callback function
+ * Enumerates modules in a specified process and calls a callback function
  * for each module found.
  * 
- * @param process The `process` parameter in the `LM_EnumModulesEx` function is a pointer to a
- * structure `lm_process_t` which is used to identify the process for which the modules are being
- * enumerated.
- * @param callback The `callback` parameter in the `LM_EnumModulesEx` function is a function pointer
- * that that will receive the current module in the enumeration and an extra argument. This function
- * should return `LM_TRUE` to continue the enumeration, or `LM_FALSE` to stop it.
- * @param arg The `arg` parameter in the `LM_EnumModulesEx` function is a pointer to a user-defined
- * data structure or variable that you can pass to the callback function. This parameter allows you to
- * provide additional context or data to the callback function when iterating over modules in a
- * process.
+ * @param process The process that the modules will be enumerated from.
+ * @param callback The callback function that will receive the current module in
+ * the enumeration and an extra argument. This function should return `LM_TRUE`
+ * to continue the enumeration, or `LM_FALSE` to stop it.
+ * @param arg An extra argument that is passed to the callback function. This allows
+ * you to provide additional information or context to the callback function when
+ * it is invoked during the enumeration of modules.
  * 
- * @return The function returns `LM_TRUE` if the enumeration succeeds or `LM_FALSE` if it fails.
+ * @return Returns `LM_TRUE` if the enumeration succeeds, or `LM_FALSE` if it fails.
  */
 LM_API lm_bool_t LM_CALL
 LM_EnumModulesEx(const lm_process_t *process,
@@ -455,36 +450,33 @@ LM_EnumModulesEx(const lm_process_t *process,
 		 lm_void_t          *arg);
 
 /**
- * The function `LM_FindModule` searches for a module by name and populates the `module_out` parameter with
- * the found module information.
+ * Finds a module by name and populates the `module_out` parameter with the found module information.
  * 
- * @param name The `name` parameter is a string representing the name of the module that you are trying
- * to find (e.g `game.dll`). It can also be a relative path, such as `/game/hello` for a module at `/usr/share/game/hello`.
- * @param module_out The `module_out` parameter is a pointer to a `lm_module_t` structure. This function
- * populates this structure with information about the found module, containing information such as base,
- * end, size, path and name.
+ * @param name The name of the module to find (e.g `game.dll`). It can also be a
+ * relative path, such as `/game/hello` for a module at `/usr/share/game/hello`.
+ * @param module_out A pointer to a `lm_module_t` structure. This function populates
+ * this structure with information about the found module, containing information
+ * such as base, end, size, path and name.
  * 
- * @return The function `LM_FindModule` returns `LM_TRUE` if the module is found successfully,
- * otherwise it returns `LM_FALSE`.
+ * @return Returns `LM_TRUE` if the module is found successfully, otherwise it
+ * returns `LM_FALSE`.
  */
 LM_API lm_bool_t LM_CALL
 LM_FindModule(lm_string_t  name,
 	      lm_module_t *module_out);
 
 /**
- * The function `LM_FindModuleEx` searches for a module by name and populates the `module_out` parameter with
- * the found module information.
+ * Finds a module by name in a specified process and populates the `module_out` parameter with the found module information.
  * 
- * @param process The `process` parameter is a pointer to a structure representing a process in the
- * system. It's the process that the module will be retrieved from.
- * @param name The `name` parameter is a string representing the name of the module that you are trying
- * to find (e.g `game.dll`). It can also be a relative path, such as `/game/hello` for a module at `/usr/share/game/hello`.
- * @param module_out The `module_out` parameter is a pointer to a `lm_module_t` structure. This function
- * populates this structure with information about the found module, containing information such as base,
- * end, size, path and name.
+ * @param process The process that the module will be searched in.
+ * @param name The name of the module to find (e.g `game.dll`). It can also be a
+ * relative path, such as `/game/hello` for a module at `/usr/share/game/hello`.
+ * @param module_out A pointer to a `lm_module_t` structure. This function populates
+ * this structure with information about the found module, containing information
+ * such as base, end, size, path and name.
  * 
- * @return The function `LM_FindModuleEx` returns `LM_TRUE` if the module is found successfully,
- * otherwise it returns `LM_FALSE`.
+ * @return Returns `LM_TRUE` if the module is found successfully, otherwise it
+ * returns `LM_FALSE`.
  */
 LM_API lm_bool_t LM_CALL
 LM_FindModuleEx(const lm_process_t *process,
@@ -492,30 +484,27 @@ LM_FindModuleEx(const lm_process_t *process,
 		lm_module_t        *module_out);
 
 /**
- * The LM_LoadModule function loads a module from a specified path into the current process.
+ * Loads a module from a specified path into the current process.
  * 
- * @param path The `path` parameter is a string that represents the file path of the module to be
- * loaded.
- * @param module_out The `module_out` parameter is a pointer to a `lm_module_t` type, which is used to
- * store information about the loaded module (optional).
+ * @param path The path of the module to be loaded.
+ * @param module_out A pointer to a `lm_module_t` type, which is used to store information
+ * about the loaded module (optional).
  * 
- * @return The function returns `LM_TRUE` is the module was loaded successfully, or `LM_FALSE` if it fails.
+ * @return Returns `LM_TRUE` is the module was loaded successfully, or `LM_FALSE` if it fails.
  */
 LM_API lm_bool_t LM_CALL
 LM_LoadModule(lm_string_t  path,
 	      lm_module_t *module_out);
 
 /**
- * The LM_LoadModule function loads a module from a specified path into the specified process.
- *
- * @param process The `process` parameter is a pointer to a structure representing a process in the
- * system. It's the process that the module will be loaded into.
- * @param path The `path` parameter is a string that represents the file path of the module to be
- * loaded.
- * @param module_out The `module_out` parameter is a pointer to a `lm_module_t` type, which is used to
- * store information about the loaded module (optional).
+ * Loads a module from a specified path into a specified process.
  * 
- * @return The function returns `LM_TRUE` is the module was loaded successfully, or `LM_FALSE` if it fails.
+ * @param process The process that the module will be loaded into.
+ * @param path The path of the module to be loaded.
+ * @param module_out A pointer to a `lm_module_t` type, which is used to store information
+ * about the loaded module (optional).
+ * 
+ * @return Returns `LM_TRUE` is the module was loaded successfully, or `LM_FALSE` if it fails.
  */
 LM_API lm_bool_t LM_CALL
 LM_LoadModuleEx(const lm_process_t *process,
@@ -523,25 +512,22 @@ LM_LoadModuleEx(const lm_process_t *process,
 		lm_module_t        *module_out);
 
 /**
- * The function `LM_UnloadModule` unloads a module from the current process.
+ * Unloads a module from the current process.
  * 
- * @param module The `module` parameter represents the module that you want to unload from the process.
+ * @param module The module that you want to unload from the process.
  * 
- * @return The function `LM_UnloadModule` returns `LM_TRUE` if the module was successfully unloaded, and
- * `LM_FALSE` if there was an error.
+ * @return Returns `LM_TRUE` if the module was successfully unloaded, and `LM_FALSE` if it fails.
  */
 LM_API lm_bool_t LM_CALL
 LM_UnloadModule(const lm_module_t *module);
 
 /**
- * The function `LM_UnloadModuleEx` unloads a module from the current process.
+ * Unloads a module from a specified process.
  * 
- * @param process The `process` parameter is a pointer to a structure representing a process in the
- * system. It's the process that the module will be unloaded from.
- * @param module The `module` parameter represents the module that you want to unload from the process.
+ * @param process The process that the module will be unloaded from.
+ * @param module The module that you want to unload from the process.
  * 
- * @return The function `LM_UnloadModuleEx` returns `LM_TRUE` if the module was successfully unloaded, and
- * `LM_FALSE` if there was an error.
+ * @return Returns `LM_TRUE` if the module was successfully unloaded, and `LM_FALSE` if it fails.
  */
 LM_API lm_bool_t LM_CALL
 LM_UnloadModuleEx(const lm_process_t *process,

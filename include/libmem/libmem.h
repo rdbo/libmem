@@ -1125,10 +1125,9 @@ LM_SigScanEx(const lm_process_t *process,
 /* Assemble/Disassemble API */
 
 /**
- * The function `LM_GetArchitecture` returns the current architecture.
+ * The function returns the current architecture.
  *
- * @return The function `LM_GetArchitecture` is returning the architecture
- * (`lm_arch_t`) of the system. It can be one of:
+ * @return The function returns the architecture of the system. It can be one of:
  * - `LM_ARCH_X86` for 32-bit x86.
  * - `LM_ARCH_AMD64` for 64-bit x86.
  * - Others (check the enum for `lm_arch_t`)
@@ -1137,15 +1136,14 @@ LM_API lm_arch_t LM_CALL
 LM_GetArchitecture();
 
 /**
- * The function `LM_Assemble` assembles a single instruction into machine code
+ * The function assembles a single instruction into machine code.
  *
- * @param code The `code` parameter is a string of the instruction to be assembled.
+ * @param code The instruction to be assembled.
  * Example: `"mov eax, ebx"`.
- * @param instruction_out The `instruction_out` parameter is a pointer to a `lm_inst_t` which
- * will be populated with the assembled instruction.
+ * @param instruction_out The assembled instruction is populated into this parameter.
  *
- * @return The function `LM_Assemble` returns `LM_TRUE` if it succeeds in assembling the instruction, and
- * populates the `instruction_out` parameter with a `lm_inst_t` that contains the assembled instruction.
+ * @return The function returns `LM_TRUE` if it succeeds in assembling the instruction, and
+ * populates the `instruction_out` parameter with the assembled instruction.
  * If the instruction could not be assembled successfully, then the function returns `LM_FALSE`.
  */
 LM_API lm_bool_t LM_CALL
@@ -1153,19 +1151,17 @@ LM_Assemble(lm_string_t code,
 	     lm_inst_t  *instruction_out);
 
 /**
- * The function `LM_AssembleEx` assembles one or more instructions into machine code
- * (must be deallocated with `LM_FreePayload`).
+ * The function assembles instructions into machine code.
  *
- * @param code The `code` parameter is a string of the instructions to be assembled.
+ * @param code The instructions to be assembled.
  * Example: `"mov eax, ebx ; jmp eax"`.
- * @param arch The `arch` parameter specifies the architecture to be assembled (`LM_ARCH_*` values).
- * @param bits The `bits` parameter specifies the bits of the architecture to be assembled.
+ * @param arch The architecture to be assembled.
+ * @param bits The bitness of the architecture to be assembled.
  * It can be `32` or `64`.
- * @param runtime_address The `runtime_address` parameter is the runtime address to resolve
- * the functions (for example, relative jumps will be resolved using this address).
- * @param payload_out The `payload_out` parameter is a pointer to a variable of type
- * `lm_byte_t *` that will receive the assembled instructions (deallocate after use with
- * `LM_FreePayload`).
+ * @param runtime_address The runtime address to resolve
+ * the addressing (for example, relative jumps will be resolved using this address).
+ * @param payload_out A pointer to the buffer that will receive the assembled instructions.
+ * The buffer should be freed with `LM_FreePayload` after use.
  *
  * @return On success, it returns the size of the assembled instructions, in bytes.
  * On failure, it returns `0`.
@@ -1178,21 +1174,18 @@ LM_AssembleEx(lm_string_t  code,
 	      lm_byte_t  **payload_out);
 
 /**
- * The function `LM_FreePayload` frees memory allocated by `LM_AssembleEx`.
+ * The function deallocates memory allocated by `LM_AssembleEx`.
  *
- * @param payload The `payload` parameter is a pointer to a buffer that was allocated by
- * `LM_AssembleEx` and needs to be freed.
+ * @param payload The memory to be freed that was allocated by `LM_AssembleEx`.
  */
 LM_API lm_void_t LM_CALL
 LM_FreePayload(lm_byte_t *payload);
 
 /**
- * The function `LM_Disassemble` disassembles one instruction into an `lm_inst_t` struct.
+ * The function disassembles one instruction into an `lm_inst_t` struct.
  *
- * @param machine_code The `machine_code` parameter is the address of the instruction to be
- * disassembled.
- * @param instruction_out The `instruction_out` parameter is a pointer to an `lm_inst_t` that
- * will receive the disassembled instruction.
+ * @param machine_code The address of the instruction to be disassembled.
+ * @param instruction_out The disassembled instruction is populated into this parameter.
  *
  * @return `LM_TRUE` on success, `LM_FALSE` on failure.
  */
@@ -1201,23 +1194,21 @@ LM_Disassemble(lm_address_t machine_code,
 		lm_inst_t   *instruction_out);
 
 /**
- * The function `LM_DisassembleEx` disassembles one or more instructions into an array of
+ * The function disassembles instructions into an array of
  * `lm_inst_t` structs.
  *
- * @param machine_code The `machine_code` parameter is the address of the instructions to be
- * disassembled.
- * @param arch The `arch` parameter is the architecture to be disassembled (see `lm_arch_t`
- * for available architectures).
- * @param bits The `bits` parameter is the bitness of the architecture to be disassembled (32 or 64).
- * @param max_size The `max_size` parameter is the maximum number of bytes to disassemble (0 for as
+ * @param machine_code The address of the instructions to be disassembled.
+ * @param arch The architecture to be disassembled.
+ * @param bits The bitness of the architecture to be disassembled.
+ * It can be `32` or `64`.
+ * @param max_size The maximum number of bytes to disassemble (0 for as
  * many as possible, limited by `instruction_count`).
- * @param instruction_count The `instruction_count` parameter is the amount of instructions
+ * @param instruction_count The amount of instructions
  * to disassemble (0 for as many as possible, limited by `max_size`).
- * @param runtime_address The `runtime_address` parameter is the runtime address to resolve
- * the functions (for example, relative jumps will be resolved using this address).
- * @param instructions_out The `instructions_out` parameter is a pointer to a variable of type
- * `lm_inst_t *` that will receive the disassembled instructions (deallocate after use with
- * `LM_FreeInstructions`).
+ * @param runtime_address The runtime address to resolve
+ * the addressing (for example, relative jumps will be resolved using this address).
+ * @param instructions_out A pointer to the buffer that will receive the disassembled instructions.
+ * The buffer should be freed with `LM_FreeInstructions` after use.
  *
  * @return On success, it returns the count of the instructions disassembled. On failure, it
  * returns `0`.
@@ -1232,20 +1223,18 @@ LM_DisassembleEx(lm_address_t machine_code,
 		 lm_inst_t  **instructions_out);
 
 /**
- * The function `LM_FreeInstructions` deallocates the memory allocated by
- * `LM_DisassembleEx` for the disassembled instructions.
+ * The function deallocates the memory allocated by `LM_DisassembleEx` for the disassembled instructions.
  *
- * @param instructions The `instructions` parameter is a pointer to the disassembled
- * instructions returned by `LM_DisassembleEx`.
+ * @param instructions The disassembled instructions allocated by `LM_DisassembleEx`.
  */
 LM_API lm_void_t LM_CALL
 LM_FreeInstructions(lm_inst_t *instructions);
 
 /**
- * The function `LM_CodeLength` calculates the size aligned to the instruction length, based on a minimum size.
+ * The function calculates the size aligned to the instruction length, based on a minimum size.
  *
- * @param machine_code The `machine_code` parameter is the address of the instructions.
- * @param min_length The `min_length` parameter is the minimum size to be aligned to instruction length.
+ * @param machine_code The address of the instructions.
+ * @param min_length The minimum size to be aligned to instruction length.
  *
  * @return On success, it returns the aligned size to the next instruction's length. On failure, it returns `0`.
  */
@@ -1254,11 +1243,11 @@ LM_CodeLength(lm_address_t machine_code,
 	      lm_size_t    min_length);
 
 /**
- * The function `LM_CodeLengthEx` calculates the size aligned to the instruction length, based on a minimum size, in a remote process.
+ * The function calculates the size aligned to the instruction length, based on a minimum size, in a remote process.
  *
- * @param process The `process` parameter is a pointer to a valid process to get the aligned length from.
- * @param machine_code The `machine_code` parameter is the address of the instructions in the remote process.
- * @param min_length The `min_length` parameter is the minimum size to be aligned to instruction length.
+ * @param process The remote process to get the aligned length from.
+ * @param machine_code The address of the instructions in the remote process.
+ * @param min_length The minimum size to be aligned to instruction length.
  *
  * @return On success, it returns the aligned size to the next instruction's length. On failure, it returns `0`.
  */

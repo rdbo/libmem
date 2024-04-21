@@ -8,13 +8,13 @@ LM_VmtHook(lm_vmt_t    *vmt,
 ```
 
 # Description
-The function `LM_VmtHook` hooks the VMT function at index `from_fn_index` in the VMT managed by `vmt`,
+The function hooks the VMT function at index `from_fn_index` in the VMT managed by `vmt`,
 changing it to `to`.
 
 # Parameters
- - `vmt`: The `vmt` parameter is a pointer to a valid VMT manager.
- - `from_fn_index`: The `from_fn_index` parameter is the index of the VMT function to hook.
- - `to`: The `to` parameter is the pointer to the function that will replace the original VMT function.
+ - `vmt`: The VMT manager.
+ - `from_fn_index`: The index of the VMT function to hook.
+ - `to`: The function that will replace the original VMT function.
 
 # Return Value
 On success, it returns `LM_TRUE`. On failure, it returns `LM_FALSE`.

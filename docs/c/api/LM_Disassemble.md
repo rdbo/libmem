@@ -7,13 +7,11 @@ LM_Disassemble(lm_address_t machine_code,
 ```
 
 # Description
-The function `LM_Disassemble` disassembles one instruction into an `lm_inst_t` struct.
+The function disassembles one instruction into an `lm_inst_t` struct.
 
 # Parameters
- - `machine_code`: The `machine_code` parameter is the address of the instruction to be
-disassembled.
- - `instruction_out`: The `instruction_out` parameter is a pointer to an `lm_inst_t` that
-will receive the disassembled instruction.
+ - `machine_code`: The address of the instruction to be disassembled.
+ - `instruction_out`: The disassembled instruction is populated into this parameter.
 
 # Return Value
 `LM_TRUE` on success, `LM_FALSE` on failure.

@@ -11,11 +11,9 @@ The function `LM_FindSegment` searches for a memory segment that a given address
 `segment_out` parameter with the result.
 
 # Parameters
- - `address`: The `address` parameter is of type `lm_address_t`, which is used to specify a memory
-address to search for.
- - `segment_out`: The `segment_out` parameter is a pointer to a `lm_segment_t` structure. This
-function `LM_FindSegment` takes an address and populates the `segment_out` structure with
-information about the segment that contains that address.
+ - `address`: The address to search for.
+ - `segment_out`: A pointer to an `lm_segment_t` structure to populate with information about the
+segment that contains the specified address.
 
 # Return Value
-The function returns `LM_TRUE` if the enumeration was successful or `LM_FALSE` if it failed.
+The function returns `LM_TRUE` if the specified address is found within a segment, or `LM_FALSE` otherwise.

@@ -7,15 +7,14 @@ LM_Assemble(lm_string_t code,
 ```
 
 # Description
-The function `LM_Assemble` assembles a single instruction into machine code
+The function assembles a single instruction into machine code.
 
 # Parameters
- - `code`: The `code` parameter is a string of the instruction to be assembled.
+ - `code`: The instruction to be assembled.
 Example: `"mov eax, ebx"`.
- - `instruction_out`: The `instruction_out` parameter is a pointer to a `lm_inst_t` which
-will be populated with the assembled instruction.
+ - `instruction_out`: The assembled instruction is populated into this parameter.
 
 # Return Value
-The function `LM_Assemble` returns `LM_TRUE` if it succeeds in assembling the instruction, and
-populates the `instruction_out` parameter with a `lm_inst_t` that contains the assembled instruction.
+The function returns `LM_TRUE` if it succeeds in assembling the instruction, and
+populates the `instruction_out` parameter with the assembled instruction.
 If the instruction could not be assembled successfully, then the function returns `LM_FALSE`.

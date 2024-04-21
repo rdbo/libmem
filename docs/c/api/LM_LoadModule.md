@@ -7,13 +7,12 @@ LM_LoadModule(lm_string_t  path,
 ```
 
 # Description
-The LM_LoadModule function loads a module from a specified path into the current process.
+Loads a module from a specified path into the current process.
 
 # Parameters
- - `path`: The `path` parameter is a string that represents the file path of the module to be
-loaded.
- - `module_out`: The `module_out` parameter is a pointer to a `lm_module_t` type, which is used to
-store information about the loaded module (optional).
+ - `path`: The path of the module to be loaded.
+ - `module_out`: A pointer to a `lm_module_t` type, which is used to store information
+about the loaded module (optional).
 
 # Return Value
-The function returns `LM_TRUE` is the module was loaded successfully, or `LM_FALSE` if it fails.
+Returns `LM_TRUE` is the module was loaded successfully, or `LM_FALSE` if it fails.

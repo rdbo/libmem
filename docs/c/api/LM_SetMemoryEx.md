@@ -9,20 +9,19 @@ LM_SetMemoryEx(const lm_process_t *process,
 ```
 
 # Description
-The function `LM_SetMemoryEx` sets a specified memory region to a given byte value in a target process.
+Sets a specified memory region to a given byte value in a target
+process.
 
 # Parameters
- - `process`: The `process` parameter is a pointer to a structure representing a process in the
-system. It's the process that the memory will be set to.
- - `dest`: The `dest` parameter is the destination memory address where the `byte` value will be
-written to, starting from this address.
- - `byte`: The `byte` parameter in the `LM_SetMemoryEx` function represents the value of the byte
-that will be written to the memory locations starting from the `dest` address.
- - `size`: The `size` parameter in the `LM_SetMemoryEx` function represents the number of bytes to
-set in the memory starting from the `dest` address. It specifies the size of the memory block that
-will be filled with the specified `byte` value.
+ - `process`: A pointer to the process that the memory will be set.
+ - `dest`: The destination address in the target process where the
+`byte` value will be written to.
+ - `byte`: The value of the byte that will be written to the memory
+locations starting from the `dest` address.
+ - `size`: The number of bytes to set in the memory starting from
+the `dest` address.
 
 # Return Value
-The function `LM_SetMemoryEx` returns a value of type `lm_size_t`, which represents the size
-of the memory that was successfully written. If there are any errors or invalid parameters, it
-returns `0`.
+The number of bytes that were successfully set to the
+specified value `byte` in the memory region starting at address
+`dest` in the target process. If there are any errors, it returns 0.

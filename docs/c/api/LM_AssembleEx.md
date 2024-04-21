@@ -10,20 +10,18 @@ LM_AssembleEx(lm_string_t  code,
 ```
 
 # Description
-The function `LM_AssembleEx` assembles one or more instructions into machine code
-(must be deallocated with `LM_FreePayload`).
+The function assembles instructions into machine code.
 
 # Parameters
- - `code`: The `code` parameter is a string of the instructions to be assembled.
+ - `code`: The instructions to be assembled.
 Example: `"mov eax, ebx ; jmp eax"`.
- - `arch`: The `arch` parameter specifies the architecture to be assembled (`LM_ARCH_` values).
- - `bits`: The `bits` parameter specifies the bits of the architecture to be assembled.
+ - `arch`: The architecture to be assembled.
+ - `bits`: The bitness of the architecture to be assembled.
 It can be `32` or `64`.
- - `runtime_address`: The `runtime_address` parameter is the runtime address to resolve
-the functions (for example, relative jumps will be resolved using this address).
- - `payload_out`: The `payload_out` parameter is a pointer to a variable of type
-`lm_byte_t` that will receive the assembled instructions (deallocate after use with
-`LM_FreePayload`).
+ - `runtime_address`: The runtime address to resolve
+the addressing (for example, relative jumps will be resolved using this address).
+ - `payload_out`: A pointer to the buffer that will receive the assembled instructions.
+The buffer should be freed with `LM_FreePayload` after use.
 
 # Return Value
 On success, it returns the size of the assembled instructions, in bytes.

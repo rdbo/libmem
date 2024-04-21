@@ -7,11 +7,11 @@ LM_VmtNew(lm_address_t *vtable,
 ```
 
 # Description
-The function `LM_VmtNew` creates a new VMT manager from the VMT at `vtable` into `vmt_out`.
+The function creates a new VMT manager from the VMT at `vtable`.
 
 # Parameters
- - `vtable`: The `vtable` parameter is a pointer to the VMT array to manage.
- - `vmt_out`: The `vmt_out` parameter is a pointer to an uninitialized `lm_vmt_t` structure that will receive the VMT manager.
+ - `vtable`: The virtual method table to manage.
+ - `vmt_out`: A pointer to the VMT manager that will be populated by this function.
 
 # Return Value
 On success, it returns `LM_TRUE`. On failure, it returns `LM_FALSE`.

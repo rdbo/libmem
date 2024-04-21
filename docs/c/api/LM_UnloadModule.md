@@ -6,11 +6,10 @@ LM_UnloadModule(const lm_module_t *module);
 ```
 
 # Description
-The function `LM_UnloadModule` unloads a module from the current process.
+Unloads a module from the current process.
 
 # Parameters
- - `module`: The `module` parameter represents the module that you want to unload from the process.
+ - `module`: The module that you want to unload from the process.
 
 # Return Value
-The function `LM_UnloadModule` returns `LM_TRUE` if the module was successfully unloaded, and
-`LM_FALSE` if there was an error.
+Returns `LM_TRUE` if the module was successfully unloaded, and `LM_FALSE` if it fails.

@@ -7,12 +7,12 @@ LM_VmtGetOriginal(const lm_vmt_t *vmt,
 ```
 
 # Description
-The function `LM_VmtGetOriginal` returns the original VMT function at index `fn_index` in the VMT managed by `vmt`.
+The function returns the original VMT function at index `fn_index` in the VMT managed by `vmt`.
 If the function has not been hooked before, it returns the function pointer at that index in the VMT array.
 
 # Parameters
- - `vmt`: The `vmt` parameter is a pointer to a valid VMT manager.
- - `fn_index`: The `fn_index` parameter is the index of the VMT function to query.
+ - `vmt`: The VMT manager.
+ - `fn_index`: The index of the VMT function to query.
 
 # Return Value
-The function returns the original VMT function at index `fn_index` in the VMT managed by `vmt`.
+The original VMT function at index `fn_index` in the VMT managed by `vmt`.

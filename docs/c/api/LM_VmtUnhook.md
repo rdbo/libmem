@@ -7,12 +7,12 @@ LM_VmtUnhook(lm_vmt_t *vmt,
 ```
 
 # Description
-The function `LM_VmtUnhook` unhooks the VMT function at index `fn_index` in the VMT managed by `vmt`,
+The function unhooks the VMT function at index `fn_index` in the VMT managed by `vmt`,
 restoring the original function.
 
 # Parameters
- - `vmt`: The `vmt` parameter is a pointer to a valid VMT manager.
- - `fn_index`: The `fn_index` parameter is the index of the VMT function to unhook
+ - `vmt`: The VMT manager.
+ - `fn_index`: The index of the VMT function to unhook
 
 # Return Value
 The function does not return a value

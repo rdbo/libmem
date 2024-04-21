@@ -13,7 +13,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y install cmake make gcc-multilib g++-multilib python3
+          sudo apt-get update && sudo apt-get -y install cmake make gcc g++ python3
 
       - name: Configure and Build
         run: |

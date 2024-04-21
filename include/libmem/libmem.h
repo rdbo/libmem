@@ -651,7 +651,7 @@ LM_FindSymbolAddressDemangled(const lm_module_t *module,
  * @param callback A function pointer that will receive each segment in the enumeration and an extra argument.
  * The callback function should return `LM_TRUE` to continue the enumeration or `LM_FALSE` to stop it.
  * @param arg A pointer to user-defined data that can be passed to the callback function.
- * It allows you to provide additional information or context to the callback function when iterating over segments in a process.
+ * It allows you to provide additional information or context to the callback function when iterating over segments.
  *
  * @return The function returns `LM_TRUE` if the enumeration was successful, or `LM_FALSE` otherwise.
  */
@@ -668,7 +668,7 @@ LM_EnumSegments(lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
  * @param callback A function pointer that will receive each segment in the enumeration and an extra argument.
  * The callback function should return `LM_TRUE` to continue the enumeration or `LM_FALSE` to stop it.
  * @param arg A pointer to user-defined data that can be passed to the callback function.
- * It allows you to provide additional information or context to the callback function when iterating over segments in a process.
+ * It allows you to provide additional information or context to the callback function when iterating over segments.
  *
  * @return The function returns `LM_TRUE` if the enumeration was successful, or `LM_FALSE` otherwise.
  */
@@ -682,13 +682,11 @@ LM_EnumSegmentsEx(const lm_process_t *process,
  * The function `LM_FindSegment` searches for a memory segment that a given address is within and populates the
  * `segment_out` parameter with the result.
  * 
- * @param address The `address` parameter is of type `lm_address_t`, which is used to specify a memory
- * address to search for.
- * @param segment_out The `segment_out` parameter is a pointer to a `lm_segment_t` structure. This
- * function `LM_FindSegment` takes an address and populates the `segment_out` structure with
- * information about the segment that contains that address.
+ * @param address The address to search for.
+ * @param segment_out A pointer to an `lm_segment_t` structure to populate with information about the
+ * segment that contains the specified address.
  * 
- * @return The function returns `LM_TRUE` if the enumeration was successful or `LM_FALSE` if it failed.
+ * @return The function returns `LM_TRUE` if the specified address is found within a segment, or `LM_FALSE` otherwise.
  */
 LM_API lm_bool_t LM_CALL
 LM_FindSegment(lm_address_t  address,
@@ -698,13 +696,13 @@ LM_FindSegment(lm_address_t  address,
  * The function `LM_FindSegment` searches for a memory segment that a given address is within and populates the
  * `segment_out` parameter with the result.
  * 
- * @param address The `address` parameter is of type `lm_address_t`, which is used to specify a memory
- * address to search for.
- * @param segment_out The `segment_out` parameter is a pointer to a `lm_segment_t` structure. This
- * function `LM_FindSegment` takes an address and populates the `segment_out` structure with
- * information about the segment that contains that address.
+ * @param process A pointer to a structure containing information about the process whose memory
+ * segments will be searched.
+ * @param address The address to search for.
+ * @param segment_out A pointer to an `lm_segment_t` structure to populate with information about the
+ * segment that contains the specified address.
  * 
- * @return The function returns `LM_TRUE` if the enumeration was successful or `LM_FALSE` if it failed.
+ * @return The function returns `LM_TRUE` if the specified address is found within a segment, or `LM_FALSE` otherwise.
  */
 LM_API lm_bool_t LM_CALL
 LM_FindSegmentEx(const lm_process_t *process,

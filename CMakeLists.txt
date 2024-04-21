@@ -89,20 +89,6 @@ set(LIBMEM_DEPS
 	llvm
 )
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND ${LIBMEM_DEEP_TESTS})
-	if(NOT MSVC)
-		add_compile_options(-Wall
-			-Wextra
-			-Wpedantic
-			-g
-			-ggdb
-			-O0
-			-fprofile-arcs
-			-ftest-coverage
-		)
-	endif()
-endif()
-
 if (LIBMEM_BUILD_STATIC)
 	add_library(libmem STATIC ${LIBMEM_SRC})
 else()

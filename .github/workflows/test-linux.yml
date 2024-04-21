@@ -1,35 +1,31 @@
-name: Test / Linux / x86
+name: Linux x86_64 Test
 
 on: [workflow_dispatch]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository Job
-      uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-    - name: Install Dependencies Job
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcovr
-        sudo chmod +x tools/unit_test.sh
-        git submodule update --init --recursive
-  
-    - name: Configure and Build Job
-      run: |
-        cmake -S . -B build -DLIBMEM_BUILD_TESTS=ON -DLIBMEM_DEEP_TESTS=ON
-        cmake --build build
-        
-    - name: Run Unit Tests Job
-      run: |
-        sudo tools/unit_test.sh
-        
-    - name: Archive Artifacts Job
-      uses: actions/upload-artifact@v2
-      with:
-        name: libmem-artifacts
-        path: |
-          build/
-  
+      - name: Install Dependencies
+        run: |
+          sudo apt-get -y install cmake make gcc-multilib g++-multilib python3
+
+      - name: Configure and Build
+        run: |
+          mkdir build
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DLIBMEM_BUILD_TESTS=ON -DLIBMEM_BUILD_STATIC=ON
+          cd build
+          make -j 4
+          cd ..
+
+      - name: Run Unit Tests
+        run: |
+          echo "Starting target..."
+          ./build/tests/target &
+          echo "Starting unit tests..."
+          sudo ./build/tests/unit  

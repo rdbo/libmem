@@ -975,22 +975,21 @@ LM_DeepPointer(lm_address_t        base,
 /* Scan API */
 
 /**
- * The function `LM_DataScan` scans a specified memory address range for a specific data pattern and
- * returns the address where the pattern is found.
- * 
- * @param data The `data` parameter is a byte array containing the data to be scanned for in memory.
- * @param datasize The `datasize` parameter in the `LM_DataScan` function represents the size of the
- * data array that you are searching for within the memory range specified by `address` and `scansize`.
- * It indicates the number of bytes that need to match consecutively in order to consider it a match.
- * @param address The `address` parameter in the `LM_DataScan` function represents the starting memory
- * address where the scanning operation will begin. The function will scan a range of memory starting
- * from this address to find the data.
- * @param scansize The `scansize` parameter in the `LM_DataScan` function represents the size of the
- * memory region to scan starting from the specified `address`. It determines the range within which
- * the function will search for a match with the provided `data` array.
- * 
- * @return The function `LM_DataScan` returns an `lm_address_t` value, which represents the memory
- * address where a match for the provided data was found. If no match is found, it returns the value
+ * The function scans a specified memory address range for a specific data
+ * pattern and returns the address where the data is found.
+ *
+ * @param data The data to be scanned for in memory.
+ * @param datasize The size of the data array. It indicates the number of
+ * bytes that need to match consecutively in order to consider it a match.
+ * @param address The starting memory address where the scanning operation
+ * will begin. The function will scan a range of memory starting from this
+ * address to find the data.
+ * @param scansize The size of the memory region to scan starting from the
+ * specified `address`. It determines the range within which the function will
+ * search for a match with the provided `data` array.
+ *
+ * @return The function returns the memory address where a match for the
+ * provided data was found. If no match is found, it returns
  * `LM_ADDRESS_BAD`.
  */
 LM_API lm_address_t LM_CALL
@@ -1000,24 +999,23 @@ LM_DataScan(lm_bytearray_t data,
 	    lm_size_t      scansize);
 
 /**
- * The function `LM_DataScanEx` scans a specified memory address range for a specific data pattern in a
- * given process and returns the address where the pattern is found.
- * 
- * @param process The `process` parameter is a pointer to a structure representing a process in the
- * system. It's the process whose memory will be scanned.
- * @param data The `data` parameter is a byte array containing the data to be scanned for in memory.
- * @param datasize The `datasize` parameter in the `LM_DataScanEx` function represents the size of the
- * data array that you are searching for within the memory range specified by `address` and `scansize`.
- * It indicates the number of bytes that need to match consecutively in order to consider it a match.
- * @param address The `address` parameter in the `LM_DataScanEx` function represents the starting memory
- * address where the scanning operation will begin. The function will scan a range of memory starting
- * from this address to find the data.
- * @param scansize The `scansize` parameter in the `LM_DataScanEx` function represents the size of the
- * memory region to scan starting from the specified `address`. It determines the range within which
- * the function will search for a match with the provided `data` array.
- * 
- * @return The function `LM_DataScanEx` returns an `lm_address_t` value, which represents the memory
- * address where a match for the provided data was found. If no match is found, it returns the value
+ * The function scans a specified memory address range for a specific data
+ * pattern in a given process and returns the address where the data is
+ * found.
+ *
+ * @param process The process whose memory will be scanned.
+ * @param data The data to be scanned for in memory.
+ * @param datasize The size of the data array. It indicates the number of
+ * bytes that need to match consecutively in order to consider it a match.
+ * @param address The starting memory address where the scanning operation
+ * will begin. The function will scan a range of memory starting from this
+ * address to find the data.
+ * @param scansize The size of the memory region to scan starting from the
+ * specified `address`. It determines the range within which the function will
+ * search for a match with the provided `data` array.
+ *
+ * @return The function returns the memory address where a match for the
+ * provided data was found. If no match is found, it returns
  * `LM_ADDRESS_BAD`.
  */
 LM_API lm_address_t LM_CALL
@@ -1028,25 +1026,27 @@ LM_DataScanEx(const lm_process_t *process,
 	      lm_size_t           scansize);
 
 /**
- * The function `LM_PatternScan` function searches for a specific pattern in memory based on a given mask.
- * 
- * @param pattern The `pattern` parameter is an array of bytes that represents the pattern you are
- * searching for in memory.
- * @param mask The `mask` parameter in the `LM_PatternScan` function is a string that represents the
- * pattern mask used for scanning memory. It is used to specify which bytes in the pattern should be
- * matched against the memory content. The mask can contain characters such as '?' which act as
- * wildcards, allowing any byte to be matched. You can also use 'x' to have an exact match.
- * @param address The `address` parameter in the `LM_PatternScan` function represents the starting
- * address in memory where the pattern scanning will begin. The function will scan the memory starting
- * from this address to find the pattern match.
- * @param scansize The `scansize` parameter in the `LM_PatternScan` function represents the size of the
- * memory region to scan starting from the specified `address`. It determines the range within which
- * the function will search for the specified pattern based on the provided `pattern` and `mask`.
- * 
- * @return The function `LM_PatternScan` returns an `lm_address_t` value, which represents the memory
- * address where a match for the given pattern and mask is found within the specified scan size
- * starting from the provided address. If no match is found or if an error occurs, the
- * function returns `LM_ADDRESS_BAD`.
+ * The function searches for a specific pattern in memory based on a given
+ * mask.
+ *
+ * @param pattern The pattern to be searched for in memory.
+ * @param mask The pattern mask used for scanning memory. It is used to
+ * specify which bytes in the pattern should be matched against the memory
+ * content. The mask can contain characters such as '?' which act as
+ * wildcards, allowing any byte to be matched. You can also use 'x' to have
+ * an exact match.
+ * @param address The starting memory address where the scanning operation
+ * will begin. The function will scan the memory starting from this address
+ * to find the pattern match.
+ * @param scansize The size of the memory region to scan starting from the
+ * specified `address`. It determines the range within which the function
+ * will search for the specified pattern based on the provided `pattern` and
+ * `mask`.
+ *
+ * @return The function returns the memory address where a match for the
+ * given pattern and mask is found within the specified scan size starting
+ * from the provided address. If no match is found or if an error occurs,
+ * the function returns `LM_ADDRESS_BAD`.
  */
 LM_API lm_address_t LM_CALL
 LM_PatternScan(lm_bytearray_t pattern,

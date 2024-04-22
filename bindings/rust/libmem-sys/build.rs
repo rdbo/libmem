@@ -114,4 +114,5 @@ fn main() {
     for dep in deps {
         println!("cargo:rustc-link-lib={}", dep);
     }
+    println!("cargo:rustc-link-lib=libmem");
 }

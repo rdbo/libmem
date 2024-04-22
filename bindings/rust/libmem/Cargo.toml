@@ -1,9 +1,8 @@
 [package]
 name = "libmem"
-version = "5.0.0-pre0"
+version = "5.0.0-pre3"
 authors = ["rdbo"]
 edition = "2021"
-# rust-version: "1.64.0"
 description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)"
 documentation = "https://github.com/rdbo/libmem/blob/master/docs/README.md"
 readme = "README.md"
@@ -19,15 +18,8 @@ categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "o
 [lib]
 name = "libmem"
 
-[features]
-default = ["fetch"]
-static = []
-fetch = ["static", "dep:reqwest", "dep:flate2", "dep:tar"] # Currently, this feature will not do dynamic linking
-
 [[bin]]
 name = "tests"
 
-[build-dependencies]
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"], optional = true }
-flate2 = { version = "1", optional = true }
-tar = { version = "0.4", optional = true }
+[dependencies]
+libmem-sys = { version = "5.0.0-pre3", path = "../libmem-sys" }

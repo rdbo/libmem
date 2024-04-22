@@ -1,8 +1,28 @@
 [package]
 name = "libmem-sys"
-version = "0.1.0"
+version = "5.0.0-pre3"
+authors = ["rdbo"]
 edition = "2021"
+description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)"
+documentation = "https://github.com/rdbo/libmem/blob/master/docs/README.md"
+readme = "README.md"
+homepage = "https://github.com/rdbo/libmem"
+repository = "https://github.com/rdbo/libmem"
+license = "AGPL-3.0"
+# license-file = "LICENSE"
+keywords = ["gamehacking", "memory", "hooking", "assembler", "disassembler"]
+categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "os::unix-apis"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["fetch"]
+static = []
+fetch = ["static", "dep:reqwest", "dep:flate2", "dep:tar"] # Currently, this feature will not do dynamic linking
+
+[build-dependencies]
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"], optional = true }
+flate2 = { version = "1", optional = true }
+tar = { version = "0.4", optional = true }
 
 [dependencies]

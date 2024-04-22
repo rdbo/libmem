@@ -42,6 +42,9 @@ pub const LM_PATH_MAX: usize = 4096;
 pub const LM_INST_MAX: usize = 16;
 pub const LM_FALSE: lm_bool_t = 0;
 pub const LM_TRUE: lm_bool_t = 1;
+pub const LM_PID_BAD: lm_pid_t = lm_pid_t::MAX;
+pub const LM_TID_BAD: lm_tid_t = lm_tid_t::MAX;
+pub const LM_ADDRESS_BAD: lm_address_t = lm_address_t::MAX;
 
 pub const LM_PROT_NONE: lm_prot_t = 0;
 pub const LM_PROT_R: lm_prot_t = 1;

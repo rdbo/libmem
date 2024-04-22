@@ -21,11 +21,7 @@
  */
 
 use libmem_sys::{self, lm_pid_t, lm_process_t, lm_time_t, LM_TRUE};
-use std::{
-    ffi::{CStr, CString},
-    fmt,
-    mem::MaybeUninit,
-};
+use std::{ffi::CStr, fmt, mem::MaybeUninit};
 
 pub type Pid = lm_pid_t;
 pub type Time = lm_time_t;

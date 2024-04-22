@@ -1,5 +1,5 @@
 use crate::{Pid, Time};
-use libmem_sys::{lm_process_t, LM_TRUE};
+use libmem_sys::{lm_bool_t, lm_process_t, lm_void_t, LM_TRUE};
 use std::{ffi::CStr, fmt, mem::MaybeUninit};
 
 #[derive(Debug, Clone)]
@@ -39,6 +39,32 @@ impl fmt::Display for Process {
     }
 }
 
+unsafe extern "C" fn enum_processes_callback(
+    process: *mut lm_process_t,
+    arg: *mut lm_void_t,
+) -> lm_bool_t {
+    let processes = arg as *mut Vec<Process>;
+    unsafe { (*processes).push((*process).into()) };
+    LM_TRUE
+}
+
+/// Enumerates processes on the system
+pub fn enum_processes() -> Option<Vec<Process>> {
+    let mut processes = Vec::new();
+    unsafe {
+        if libmem_sys::LM_EnumProcesses(
+            enum_processes_callback,
+            &mut processes as *mut Vec<Process> as *mut lm_void_t,
+        ) == LM_TRUE
+        {
+            Some(processes)
+        } else {
+            None
+        }
+    }
+}
+
+/// Gets the current process's information
 pub fn get_process() -> Option<Process> {
     let mut process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
     unsafe {

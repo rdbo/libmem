@@ -1,6 +1,9 @@
-use libmem::{find_module, get_process};
+use libmem::{enum_processes, find_module, get_process};
 
 pub fn main() {
+    let processes = enum_processes().unwrap();
+    println!("{:?}", processes);
+
     let process = get_process().unwrap();
     println!("{}", process);
 

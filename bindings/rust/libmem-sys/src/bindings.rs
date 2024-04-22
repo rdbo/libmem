@@ -538,9 +538,10 @@ fn bindgen_test_layout_lm_vmt_t() {
 extern "C" {
     #[doc = " Enumerates processes on a system and calls a callback function for each process found.\n\n @param callback The callback function that will receive the current\n process in the enumeration and an extra argument. This function\n should return `LM_TRUE` to continue the enumeration, or `LM_FALSE`\n to stop it.\n @param arg The user-defined data structure that will be passed to the\n callback function along with the `lm_process_t` structure.\n\n @return `LM_TRUE` on success, or `LM_FALSE` on failure."]
     pub fn LM_EnumProcesses(
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(process: *mut lm_process_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(
+            process: *mut lm_process_t,
+            arg: *mut lm_void_t,
+        ) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }

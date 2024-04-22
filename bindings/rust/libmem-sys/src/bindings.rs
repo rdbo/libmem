@@ -37,9 +37,9 @@ pub type lm_time_t = u64;
 pub type lm_prot_t = u32;
 pub type lm_arch_t = u32;
 
-pub const LM_NULL: u32 = 0;
-pub const LM_PATH_MAX: u32 = 4096;
-pub const LM_INST_MAX: u32 = 16;
+pub const LM_NULL: usize = 0;
+pub const LM_PATH_MAX: usize = 4096;
+pub const LM_INST_MAX: usize = 16;
 pub const LM_FALSE: lm_bool_t = 0;
 pub const LM_TRUE: lm_bool_t = 1;
 

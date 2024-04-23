@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 use libmem_sys::{lm_bool_t, lm_process_t, lm_thread_t, lm_void_t, LM_TRUE};
 
 use crate::{Pid, Process, Tid};
@@ -69,19 +71,48 @@ pub fn enum_threads_ex(process: &Process) -> Option<Vec<Thread>> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_enum_threads() {
-        let threads = enum_threads().expect("Failed to enumerate threads in the current process");
-        assert!(threads.len() > 0);
+/// Gets the current thread it's running from
+pub fn get_thread() -> Option<Thread> {
+    let mut raw_thread: MaybeUninit<lm_thread_t> = MaybeUninit::uninit();
+    unsafe {
+        if libmem_sys::LM_GetThread(raw_thread.as_mut_ptr() as *mut lm_thread_t) == LM_TRUE {
+            Some(raw_thread.assume_init().into())
+        } else {
+            None
+        }
     }
+}
 
-    #[test]
-    fn test_enum_threads_ex() {
-        let threads = enum_threads().expect("Failed to enumerate threads in the current process");
-        assert!(threads.len() > 0);
+/// Gets a thread from a specified remote process
+pub fn get_thread_ex(process: &Process) -> Option<Thread> {
+    let mut raw_thread: MaybeUninit<lm_thread_t> = MaybeUninit::uninit();
+    let raw_process: lm_process_t = process.to_owned().into();
+    unsafe {
+        if libmem_sys::LM_GetThreadEx(
+            &raw_process as *const lm_process_t,
+            raw_thread.as_mut_ptr() as *mut lm_thread_t,
+        ) == LM_TRUE
+        {
+            Some(raw_thread.assume_init().into())
+        } else {
+            None
+        }
+    }
+}
+
+/// Gets the process that owns a specified thread
+pub fn get_thread_process(thread: &Thread) -> Option<Process> {
+    let mut raw_process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
+    let raw_thread: lm_thread_t = thread.to_owned().into();
+    unsafe {
+        if libmem_sys::LM_GetThreadProcess(
+            &raw_thread as *const lm_thread_t,
+            raw_process.as_mut_ptr() as *mut lm_process_t,
+        ) == LM_TRUE
+        {
+            Some(raw_process.assume_init().into())
+        } else {
+            None
+        }
     }
 }

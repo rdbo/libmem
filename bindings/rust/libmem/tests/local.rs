@@ -1,10 +1,10 @@
 mod common;
 
-use common::check_process;
+use common::{check_process, check_thread};
 use libmem::*;
 
 #[test]
-fn test_local_process() {
+fn test_get_process() {
     let process = get_process().expect("Failed to get current process");
     eprintln!("Current process: {}", process);
     assert!(check_process(&process));
@@ -19,4 +19,16 @@ fn test_get_bits() {
 fn test_get_system_bits() {
     let bits = get_system_bits();
     assert!(bits == 32 || bits == 64);
+}
+
+#[test]
+fn test_enum_threads() {
+    let threads = enum_threads().expect("Failed to enumerate threads in the current process");
+    assert!(threads.len() > 0);
+}
+
+#[test]
+fn test_get_thread() {
+    let thread = get_thread().expect("Failed to get current thread");
+    assert!(check_thread(&thread));
 }

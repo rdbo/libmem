@@ -70,11 +70,11 @@ impl fmt::Display for Process {
 }
 
 unsafe extern "C" fn enum_processes_callback(
-    process: *mut lm_process_t,
+    raw_process: *mut lm_process_t,
     arg: *mut lm_void_t,
 ) -> lm_bool_t {
     let processes = arg as *mut Vec<Process>;
-    unsafe { (*processes).push((*process).into()) };
+    unsafe { (*processes).push((*raw_process).into()) };
     LM_TRUE
 }
 
@@ -96,10 +96,10 @@ pub fn enum_processes() -> Option<Vec<Process>> {
 
 /// Retrieves information about the current process
 pub fn get_process() -> Option<Process> {
-    let mut process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
+    let mut raw_process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
     unsafe {
-        if libmem_sys::LM_GetProcess(process.as_mut_ptr()) == LM_TRUE {
-            Some(process.assume_init().into())
+        if libmem_sys::LM_GetProcess(raw_process.as_mut_ptr()) == LM_TRUE {
+            Some(raw_process.assume_init().into())
         } else {
             None
         }
@@ -108,10 +108,10 @@ pub fn get_process() -> Option<Process> {
 
 /// Retrieves information about a specific process identified by its process ID
 pub fn get_process_ex(pid: Pid) -> Option<Process> {
-    let mut process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
+    let mut raw_process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
     unsafe {
-        if libmem_sys::LM_GetProcessEx(pid, process.as_mut_ptr()) == LM_TRUE {
-            Some(process.assume_init().into())
+        if libmem_sys::LM_GetProcessEx(pid, raw_process.as_mut_ptr()) == LM_TRUE {
+            Some(raw_process.assume_init().into())
         } else {
             None
         }
@@ -120,11 +120,11 @@ pub fn get_process_ex(pid: Pid) -> Option<Process> {
 
 /// Searches for a process by its name
 pub fn find_process(name: &str) -> Option<Process> {
-    let mut process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
+    let mut raw_process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();
     let process_name = CString::new(name).ok()?;
     unsafe {
-        if libmem_sys::LM_FindProcess(process_name.as_ptr(), process.as_mut_ptr()) == LM_TRUE {
-            Some(process.assume_init().into())
+        if libmem_sys::LM_FindProcess(process_name.as_ptr(), raw_process.as_mut_ptr()) == LM_TRUE {
+            Some(raw_process.assume_init().into())
         } else {
             None
         }

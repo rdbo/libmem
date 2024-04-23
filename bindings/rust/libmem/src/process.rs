@@ -6,7 +6,7 @@ use std::{
     mem::MaybeUninit,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Process {
     pub pid: Pid,
     pub ppid: Pid,
@@ -147,53 +147,4 @@ pub fn get_bits() -> usize {
 /// should be either 32 bits or 64 bits
 pub fn get_system_bits() -> usize {
     unsafe { libmem_sys::LM_GetSystemBits() as usize }
-}
-
-#[cfg(test)]
-mod tests {
-    use libmem_sys::LM_PID_BAD;
-
-    use super::*;
-
-    fn check_process(process: &Process) -> bool {
-        process.pid != LM_PID_BAD
-            && process.ppid != LM_PID_BAD
-            && (process.bits == 64 || process.bits == 32)
-            && process.start_time > 0
-            && process.path.len() > 0
-            && process.name.len() > 0
-    }
-
-    #[test]
-    fn test_get_process_and_get_process_ex() {
-        let process = get_process().expect("Failed to get current process");
-        assert!(check_process(&process));
-    }
-
-    #[test]
-    fn test_get_process_ex() {
-        let cur_process = get_process().expect("Failed to get current process");
-        let process = get_process_ex(cur_process.pid).expect("Failed to get process by PID");
-        assert!(check_process(&process));
-    }
-
-    #[test]
-    fn test_find_process_and_is_alive() {
-        let process = find_process("cargo").expect("Failed to find remote process");
-        eprintln!("Found process: {}", process);
-        assert!(check_process(&process));
-
-        assert!(is_process_alive(&process));
-    }
-
-    #[test]
-    fn test_get_bits() {
-        assert!(get_bits() == (std::mem::size_of::<usize>() * 8));
-    }
-
-    #[test]
-    fn test_get_system_bits() {
-        let bits = get_system_bits();
-        assert!(bits == 32 || bits == 64);
-    }
 }

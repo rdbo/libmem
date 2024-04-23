@@ -6,6 +6,7 @@ use std::{
     mem::MaybeUninit,
 };
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Module {
     pub base: Address,
     pub end: Address,

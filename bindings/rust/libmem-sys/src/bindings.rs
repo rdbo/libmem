@@ -575,9 +575,7 @@ extern "C" {
 extern "C" {
     #[doc = " Enumerates threads in the current process and calls a callback\n function for each thread found.\n\n @param callback The callback function that will receive the current\n thread in the enumeration and an extra argument. This function\n should return `LM_TRUE` to continue the enumeration, or `LM_FALSE`\n to stop it.\n @param arg The user-defined data structure that will be passed to\n the callback function `callback` during thread enumeration. This\n allows you to pass additional information or context to the\n callback function if needed.\n\n @return The function `LM_EnumThreads` returns a boolean value of\n type `lm_bool_t`, containing `LM_TRUE` if it succeeds, or\n `LM_FALSE` if it fails."]
     pub fn LM_EnumThreads(
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(thread: *mut lm_thread_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(thread: *mut lm_thread_t, arg: *mut lm_void_t) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }
@@ -585,9 +583,7 @@ extern "C" {
     #[doc = " Enumerates threads of a given process and invokes a callback\n function for each thread.\n\n @param process The process you want to enumerate the threads from.\n @param callback The callback function that will receive the current\n thread in the enumeration and an extra argument. This function\n should return `LM_TRUE` to continue the enumeration, or `LM_FALSE`\n to stop it.\n @param arg The user-defined data that can be passed to the callback\n function. It allows you to provide additional information or\n context to the callback function when iterating over threads in a\n process.\n\n @return The function `LM_EnumThreadsEx` returns a boolean value,\n either `LM_TRUE` or `LM_FALSE`, depending on the success of the\n operation."]
     pub fn LM_EnumThreadsEx(
         process: *const lm_process_t,
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(thread: *mut lm_thread_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(thread: *mut lm_thread_t, arg: *mut lm_void_t) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }

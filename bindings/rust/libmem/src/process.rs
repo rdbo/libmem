@@ -35,19 +35,17 @@ impl From<lm_process_t> for Process {
 
 impl Into<lm_process_t> for Process {
     fn into(self) -> lm_process_t {
-        let path_c = CString::new(self.path).unwrap();
-        let name_c = CString::new(self.name).unwrap();
         let mut path: [lm_char_t; LM_PATH_MAX] = [0; LM_PATH_MAX];
         let mut name: [lm_char_t; LM_PATH_MAX] = [0; LM_PATH_MAX];
-        let pathlen = path.len().min(LM_PATH_MAX - 1);
-        let namelen = name.len().min(LM_PATH_MAX - 1);
+        let pathlen = self.path.len().min(LM_PATH_MAX - 1);
+        let namelen = self.name.len().min(LM_PATH_MAX - 1);
 
         for i in 0..pathlen {
-            path[i] = path_c.as_bytes()[i] as lm_char_t;
+            path[i] = self.path.as_bytes()[i] as lm_char_t;
         }
 
         for i in 0..namelen {
-            name[i] = name_c.as_bytes()[i] as lm_char_t;
+            name[i] = self.name.as_bytes()[i] as lm_char_t;
         }
 
         lm_process_t {
@@ -133,9 +131,22 @@ pub fn find_process(name: &str) -> Option<Process> {
     }
 }
 
+/// Checks if a process is still alive
 pub fn is_process_alive(process: &Process) -> bool {
     let raw_process: lm_process_t = process.to_owned().into();
     unsafe { libmem_sys::LM_IsProcessAlive(&raw_process as *const lm_process_t) == LM_TRUE }
+}
+
+/// Gets the current process's bitness, which
+/// corresponds to the size of a pointer in bits
+pub fn get_bits() -> usize {
+    unsafe { libmem_sys::LM_GetBits() as usize }
+}
+
+/// Gets the system's architecture bitness, which
+/// should be either 32 bits or 64 bits
+pub fn get_system_bits() -> usize {
+    unsafe { libmem_sys::LM_GetSystemBits() as usize }
 }
 
 #[cfg(test)]
@@ -154,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_process() {
+    fn test_get_process_and_get_process_ex() {
         let process = get_process().expect("Failed to get current process");
         assert!(check_process(&process));
     }
@@ -167,12 +178,22 @@ mod tests {
     }
 
     #[test]
-    fn test_find_process() {
+    fn test_find_process_and_is_alive() {
         let process = find_process("cargo").expect("Failed to find remote process");
-        eprintln!("find_process(): {}", process);
+        eprintln!("Found process: {}", process);
         assert!(check_process(&process));
+
+        assert!(is_process_alive(&process));
     }
 
     #[test]
-    fn test_is_process_alive() {}
+    fn test_get_bits() {
+        assert!(get_bits() == (std::mem::size_of::<usize>() * 8));
+    }
+
+    #[test]
+    fn test_get_system_bits() {
+        let bits = get_system_bits();
+        assert!(bits == 32 || bits == 64);
+    }
 }

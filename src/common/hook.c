@@ -60,7 +60,7 @@ LM_HookCode(lm_address_t  from,
 		if (tramp == LM_ADDRESS_BAD)
 			goto PROT_EXIT;
 
-		if (LM_WriteMemory(tramp, from, aligned_size) == 0)
+		if (LM_WriteMemory(tramp, (lm_bytearray_t)from, aligned_size) == 0)
 			goto TRAMP_EXIT;
 
 		/*
@@ -193,7 +193,7 @@ LM_UnhookCode(lm_address_t from,
 	if (!LM_ProtMemory(from, size, LM_PROT_XRW, &old_prot))
 		return LM_FALSE;
 
-	LM_WriteMemory(from, trampoline, size);
+	LM_WriteMemory(from, (lm_bytearray_t)trampoline, size);
 	LM_ProtMemory(from, size, old_prot, LM_NULLPTR);
 
 	/* WARN: This should be fine because 'LM_FreeMemory' works with page sizes,

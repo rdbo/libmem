@@ -971,6 +971,12 @@ LM_DeepPointer(lm_address_t        base,
  *
  * @return The function returns a deep pointer calculated based on the provided
  * base address, offsets, and number of offsets.
+ */
+LM_API lm_address_t LM_CALL
+LM_DeepPointerEx(const lm_process_t *process,
+		 lm_address_t        base,
+		 const lm_address_t *offsets,
+		 lm_size_t           noffsets);
 
 /* Scan API */
 

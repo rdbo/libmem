@@ -654,9 +654,7 @@ extern "C" {
     #[doc = " Enumerates symbols in a module and calls a callback function for each symbol found.\n\n @param module The module where the symbols will be enumerated from.\n @param callback A function pointer that will receive each symbol in the enumeration and an extra argument.\n The callback function should return `LM_TRUE` to continue the enumeration or `LM_FALSE` to stop it.\n @param arg A pointer to user-defined data that can be passed to the callback function.\n It allows you to provide additional information or context.\n\n @return Returns `LM_TRUE` if the enumeration succeeds, `LM_FALSE` otherwise."]
     pub fn LM_EnumSymbols(
         module: *const lm_module_t,
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(symbol: *mut lm_symbol_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(symbol: *mut lm_symbol_t, arg: *mut lm_void_t) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }
@@ -683,9 +681,7 @@ extern "C" {
     #[doc = " Enumerates symbols in a module with demangled names and calls a provided callback function for each\n symbol found.\n\n @param module The module where the symbols will be enumerated from.\n @param callback A function pointer that will receive each demangled symbol in the enumeration and\n an extra argument. The callback function should return `LM_TRUE` to continue the enumeration or\n `LM_FALSE` to stop it.\n @param arg A pointer to user-defined data that can be passed to the callback function.\n It allows you to provide additional information or context.\n\n @return Returns `LM_TRUE` if the enumeration succeeds, `LM_FALSE` otherwise."]
     pub fn LM_EnumSymbolsDemangled(
         module: *const lm_module_t,
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(symbol: *mut lm_symbol_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(symbol: *mut lm_symbol_t, arg: *mut lm_void_t) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }

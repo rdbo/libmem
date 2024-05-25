@@ -22,6 +22,7 @@
 
 pub mod module;
 pub mod process;
+pub mod symbol;
 pub mod thread;
 
 use libmem_sys::{lm_address_t, lm_pid_t, lm_tid_t, lm_time_t};
@@ -33,4 +34,5 @@ pub type Address = lm_address_t;
 
 pub use module::*;
 pub use process::*;
+pub use symbol::*;
 pub use thread::*;

@@ -695,9 +695,10 @@ extern "C" {
 extern "C" {
     #[doc = " Enumerates the memory segments of the current process and invokes a callback function for each segment.\n\n @param callback A function pointer that will receive each segment in the enumeration and an extra argument.\n The callback function should return `LM_TRUE` to continue the enumeration or `LM_FALSE` to stop it.\n @param arg A pointer to user-defined data that can be passed to the callback function.\n It allows you to provide additional information or context to the callback function when iterating over segments.\n\n @return The function returns `LM_TRUE` if the enumeration was successful, or `LM_FALSE` otherwise."]
     pub fn LM_EnumSegments(
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(segment: *mut lm_segment_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(
+            segment: *mut lm_segment_t,
+            arg: *mut lm_void_t,
+        ) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }

@@ -380,6 +380,7 @@ checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 name = "libmem"
 version = "5.0.0-pre3"
 dependencies = [
+ "bitflags 2.5.0",
  "libmem-sys",
 ]
 

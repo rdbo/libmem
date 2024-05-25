@@ -22,4 +22,5 @@ name = "libmem"
 name = "tests"
 
 [dependencies]
+bitflags = "2.5.0"
 libmem-sys = { version = "5.0.0-pre3", path = "../libmem-sys" }

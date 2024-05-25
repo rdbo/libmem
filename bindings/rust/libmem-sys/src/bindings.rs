@@ -605,9 +605,7 @@ extern "C" {
 extern "C" {
     #[doc = " Enumerates modules in the current process and calls a callback function\n for each module found.\n\n @param callback The callback function that will receive the current module in\n the enumeration and an extra argument. This function should return `LM_TRUE`\n to continue the enumeration, or `LM_FALSE` to stop it.\n @param arg An extra argument that is passed to the callback function. This allows\n you to provide additional information or context to the callback function when\n it is invoked during the enumeration of modules.\n\n @return Returns `LM_TRUE` if the enumeration succeeds, or `LM_FALSE` if it fails."]
     pub fn LM_EnumModules(
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(module: *mut lm_module_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(module: *mut lm_module_t, arg: *mut lm_void_t) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }
@@ -615,9 +613,7 @@ extern "C" {
     #[doc = " Enumerates modules in a specified process and calls a callback function\n for each module found.\n\n @param process The process that the modules will be enumerated from.\n @param callback The callback function that will receive the current module in\n the enumeration and an extra argument. This function should return `LM_TRUE`\n to continue the enumeration, or `LM_FALSE` to stop it.\n @param arg An extra argument that is passed to the callback function. This allows\n you to provide additional information or context to the callback function when\n it is invoked during the enumeration of modules.\n\n @return Returns `LM_TRUE` if the enumeration succeeds, or `LM_FALSE` if it fails."]
     pub fn LM_EnumModulesEx(
         process: *const lm_process_t,
-        callback: ::std::option::Option<
-            unsafe extern "C" fn(module: *mut lm_module_t, arg: *mut lm_void_t) -> lm_bool_t,
-        >,
+        callback: unsafe extern "C" fn(module: *mut lm_module_t, arg: *mut lm_void_t) -> lm_bool_t,
         arg: *mut lm_void_t,
     ) -> lm_bool_t;
 }

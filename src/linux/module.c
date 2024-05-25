@@ -353,7 +353,7 @@ LM_UnloadModuleEx(const lm_process_t *process,
 		*(uint64_t *)&ptlib.stack[0] = (uint64_t)NULL;
 		*(int32_t *)&ptlib.stack[8] = (int32_t)RTLD_LAZY;
 	} else {
-		*(uint32_t *)&ptlib.stack[0] = (uint32_t)NULL;
+		*(uint32_t *)&ptlib.stack[0] = (uint32_t)LM_NULL;
 		*(int32_t *)&ptlib.stack[4] = (int32_t)RTLD_LAZY;
 	}
 
@@ -366,7 +366,7 @@ LM_UnloadModuleEx(const lm_process_t *process,
 
 	/* Search for the correct handle, just like in LM_UnloadModule */
 	for (; link_map_iter; link_map_iter = (long)link_map.l_next) {
-		if (ptrace_read(process->pid, link_map_iter, &link_map, sizeof(link_map)) != sizeof(link_map))
+		if (ptrace_read(process->pid, link_map_iter, (char *)&link_map, sizeof(link_map)) != sizeof(link_map))
 			goto DETACH_EXIT;
 
 		if (link_map.l_addr == module->base) {
@@ -387,7 +387,7 @@ LM_UnloadModuleEx(const lm_process_t *process,
 	if (process->bits == 64) {
 		*(uint64_t *)&ptlib.stack[0] = (uint64_t)handle;
 	} else {
-		*(uint32_t *)&ptlib.stack[0] = (uint32_t)handle;
+		*(uint32_t *)&ptlib.stack[0] = (uint32_t)(uint64_t)handle;
 	}
 
 	call_ret = ptrace_libcall(process->pid, process->bits, &ptlib);

@@ -1,5 +1,7 @@
 use crate::{Address, Process};
-use libmem_sys::{lm_bool_t, lm_module_t, lm_process_t, lm_void_t, LM_TRUE};
+use libmem_sys::{
+    lm_bool_t, lm_char_t, lm_module_t, lm_process_t, lm_void_t, LM_PATH_MAX, LM_TRUE,
+};
 use std::{
     ffi::{CStr, CString},
     fmt,
@@ -26,6 +28,31 @@ impl From<lm_module_t> for Module {
             size: raw_module.size,
             path: unsafe { CStr::from_ptr(path_ptr).to_str().unwrap().to_owned() },
             name: unsafe { CStr::from_ptr(name_ptr).to_str().unwrap().to_owned() },
+        }
+    }
+}
+
+impl Into<lm_module_t> for Module {
+    fn into(self) -> lm_module_t {
+        let mut path: [lm_char_t; LM_PATH_MAX] = [0; LM_PATH_MAX];
+        let mut name: [lm_char_t; LM_PATH_MAX] = [0; LM_PATH_MAX];
+        let pathlen = self.path.len().min(LM_PATH_MAX - 1);
+        let namelen = self.name.len().min(LM_PATH_MAX - 1);
+
+        for i in 0..pathlen {
+            path[i] = self.path.as_bytes()[i] as lm_char_t;
+        }
+
+        for i in 0..namelen {
+            name[i] = self.name.as_bytes()[i] as lm_char_t;
+        }
+
+        lm_module_t {
+            base: self.base,
+            end: self.end,
+            size: self.size,
+            path,
+            name,
         }
     }
 }
@@ -113,4 +140,54 @@ pub fn find_module_ex(process: &Process, name: &str) -> Option<Module> {
             None
         }
     }
+}
+
+/// Loads a module into the current process
+pub fn load_module(path: &str) -> Option<Module> {
+    let raw_path = CString::new(path).ok()?;
+    let mut raw_module: MaybeUninit<lm_module_t> = MaybeUninit::uninit();
+
+    let result = unsafe { libmem_sys::LM_LoadModule(raw_path.as_ptr(), raw_module.as_mut_ptr()) };
+    (result == LM_TRUE).then_some(unsafe { raw_module.assume_init() }.into())
+}
+
+/// Loads a module into a remote process
+pub fn load_module_ex(process: &Process, path: &str) -> Option<Module> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let raw_path = CString::new(path).ok()?;
+    let mut raw_module: MaybeUninit<lm_module_t> = MaybeUninit::uninit();
+
+    let result = unsafe {
+        libmem_sys::LM_LoadModuleEx(
+            &raw_process as *const lm_process_t,
+            raw_path.as_ptr(),
+            raw_module.as_mut_ptr(),
+        )
+    };
+
+    (result == LM_TRUE).then_some(unsafe { raw_module.assume_init() }.into())
+}
+
+/// Unloads a module from the current process
+pub fn unload_module(module: &Module) -> Option<()> {
+    let raw_module: lm_module_t = module.to_owned().into();
+
+    let result = unsafe { libmem_sys::LM_UnloadModule(&raw_module as *const lm_module_t) };
+
+    (result == LM_TRUE).then_some(())
+}
+
+/// Unloads a module from a remote process
+pub fn unload_module_ex(process: &Process, module: &Module) -> Option<()> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let raw_module: lm_module_t = module.to_owned().into();
+
+    let result = unsafe {
+        libmem_sys::LM_UnloadModuleEx(
+            &raw_process as *const lm_process_t,
+            &raw_module as *const lm_module_t,
+        )
+    };
+
+    (result == LM_TRUE).then_some(())
 }

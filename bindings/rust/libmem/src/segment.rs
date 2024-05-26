@@ -1,5 +1,5 @@
 use libmem_sys::{lm_bool_t, lm_segment_t, lm_void_t, LM_TRUE};
-use std::fmt;
+use std::{fmt, mem::MaybeUninit};
 
 use crate::{Address, Prot};
 
@@ -52,4 +52,12 @@ pub fn enum_segments() -> Option<Vec<Segment>> {
     };
 
     (result == LM_TRUE).then_some(segments)
+}
+
+/// Finds the segment where a specific memory address is located in
+pub fn find_segment(address: Address) -> Option<Segment> {
+    let mut segment: MaybeUninit<lm_segment_t> = MaybeUninit::uninit();
+    let result = unsafe { libmem_sys::LM_FindSegment(address, segment.as_mut_ptr()) };
+
+    (result == LM_TRUE).then_some(unsafe { segment.assume_init() }.into())
 }

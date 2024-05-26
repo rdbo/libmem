@@ -650,7 +650,7 @@ LM_EnumSegments(lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
  */
 LM_API lm_bool_t LM_CALL
 LM_EnumSegmentsEx(const lm_process_t *process,
-                  lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
+		  lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
 						lm_void_t    *arg),
 		  lm_void_t          *arg);
 

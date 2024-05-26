@@ -1,7 +1,7 @@
 use libmem::{
     enum_modules, enum_modules_ex, enum_processes, enum_segments, find_module, find_module_ex,
     find_process, find_segment, get_bits, get_process, get_process_ex, get_system_bits,
-    is_process_alive, load_module,
+    is_process_alive, load_module, load_module_ex, unload_module, unload_module_ex,
 };
 
 pub fn main() {
@@ -65,4 +65,11 @@ pub fn main() {
     println!("[*] Library Path: {}", libpath);
     let loaded_module = load_module(&libpath).unwrap();
     println!("[*] Module Loaded: {}", loaded_module);
+    unload_module(&loaded_module).unwrap();
+    println!("[*] Unloaded Module");
+
+    let target_loaded_module = load_module_ex(&target_process, &libpath).unwrap();
+    println!("[*] Module Loaded in Target: {}", target_loaded_module);
+    unload_module_ex(&target_process, &target_loaded_module).unwrap();
+    println!("[*] Unloaded Module from Target Process");
 }

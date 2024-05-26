@@ -131,8 +131,14 @@ LM_LoadModule(lm_string_t  path,
 	if (!dlopen(path, RTLD_LAZY))
 		return LM_FALSE;
 
-	if (module_out)
-		return LM_FindModule(path, module_out);
+	if (module_out) {
+		lm_char_t *name;
+
+		/* NOTE: We search by name instead of path because the path can be misleading,
+		 *       having for example `../` and similar */
+		name = strrchr(path, '/');
+		return LM_FindModule(name, module_out);
+	}
 
 	return LM_TRUE;
 }
@@ -229,10 +235,16 @@ LM_LoadModuleEx(const lm_process_t *process,
 	if (call_ret == -1 || call_ret == 0)
 		goto DETACH_EXIT;
 
-	if (module_out)
-		ret = LM_FindModuleEx(process, path, module_out);
-	else
+	if (module_out) {
+		lm_char_t *name;
+
+		/* NOTE: We search by name instead of path because the path can be misleading,
+		 *       having for example `../` and similar */
+		name = strrchr(path, '/');
+		ret = LM_FindModuleEx(process, name, module_out);
+	} else {
 		ret = LM_TRUE;
+	}
 DETACH_EXIT:
 	ptrace_detach(process->pid);
 FREE_EXIT:

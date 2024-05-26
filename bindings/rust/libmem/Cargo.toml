@@ -1,6 +1,6 @@
 [package]
 name = "libmem"
-version = "5.0.0-pre3"
+version = "5.0.0-pre4"
 authors = ["rdbo"]
 edition = "2021"
 description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)"
@@ -23,4 +23,4 @@ name = "tests"
 
 [dependencies]
 bitflags = "2.5.0"
-libmem-sys = { version = "5.0.0-pre3", path = "../libmem-sys" }
+libmem-sys = { version = "5.0.0-pre4", path = "../libmem-sys" }

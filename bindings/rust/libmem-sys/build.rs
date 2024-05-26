@@ -1,8 +1,8 @@
 use std::env;
 
-#[cfg(feature = "fetch")]
 /// Downloads and adds the libmem path as a search path for linking
 // NOTE: This always fetches a static library
+#[cfg(feature = "fetch")]
 fn download_and_resolve_libmem() {
     use flate2::read::GzDecoder;
     use reqwest::StatusCode;
@@ -94,7 +94,7 @@ fn download_and_resolve_libmem() {
 
 fn main() {
     if let Ok(path) = env::var("LIBMEM_DIR") {
-        println!("cargo:rustc-link-search={}", path);
+        println!("cargo:rustc-link-search=native={}", path);
     } else {
         #[cfg(feature = "fetch")]
         download_and_resolve_libmem();
@@ -114,5 +114,10 @@ fn main() {
     for dep in deps {
         println!("cargo:rustc-link-lib={}", dep);
     }
-    println!("cargo:rustc-link-lib=libmem");
+
+    if cfg!(feature = "static") {
+        println!("cargo:rustc-link-lib=libmem");
+    } else {
+        println!("cargo:rustc-link-lib=dylib=libmem")
+    }
 }

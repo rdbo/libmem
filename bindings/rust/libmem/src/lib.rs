@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+pub mod memory;
 pub mod module;
 pub mod process;
 pub mod segment;
@@ -88,6 +89,7 @@ impl fmt::Display for Prot {
     }
 }
 
+pub use memory::*;
 pub use module::*;
 pub use process::*;
 pub use segment::*;

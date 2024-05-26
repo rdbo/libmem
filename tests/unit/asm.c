@@ -52,7 +52,7 @@
 	lm_inst_t *insts; \
 	lm_size_t inst_count; \
 \
-	inst_count = LM_DisassembleEx(payload, LM_ARCH_##arch, bits, arch##_##bits##_ASM_SIZE, 0, RTADDR, &insts); \
+	inst_count = LM_DisassembleEx((lm_address_t)payload, LM_ARCH_##arch, bits, arch##_##bits##_ASM_SIZE, 0, RTADDR, &insts); \
 	mu_assert("failed to disassemble " #arch "_" #bits " payload", inst_count > 0); \
 \
 	printf("<%s_%s INST COUNT: %zd> <%s_%s EXPECTED INST COUNT: %d> ", #arch, #bits, inst_count, #arch, #bits, arch##_##bits##_ASM_INST_COUNT); \
@@ -135,7 +135,7 @@ char *test_LM_Disassemble(void *arg)
 	printf("<EXPECTED SIZE: %zd> ", size);
 	fflush(stdout);
 
-	mu_assert("failed to disassemble code", LM_Disassemble(payload, &inst) != 0);
+	mu_assert("failed to disassemble code", LM_Disassemble((lm_address_t)payload, &inst) != 0);
 
 	printf("<SIZE: %zd> <DISASM: %s %s> ", inst.size, inst.mnemonic, inst.op_str);
 	fflush(stdout);

@@ -25,6 +25,8 @@ pub mod process;
 pub mod segment;
 pub mod symbol;
 pub mod thread;
+use std::fmt;
+
 use bitflags::bitflags;
 
 use libmem_sys::{lm_address_t, lm_pid_t, lm_tid_t, lm_time_t};
@@ -35,7 +37,10 @@ pub type Time = lm_time_t;
 pub type Address = lm_address_t;
 
 bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct Prot: u32 {
+        const None = 0;
         /// Execute
         const X = (1 << 0);
         /// Read
@@ -56,6 +61,30 @@ bitflags! {
 impl From<u32> for Prot {
     fn from(value: u32) -> Self {
         Self::from_bits(value & Self::XRW.bits()).unwrap()
+    }
+}
+
+impl fmt::Display for Prot {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut flag_str = String::new();
+
+        if *self & Prot::X == Prot::X {
+            flag_str.push('X');
+        }
+
+        if *self & Prot::R == Prot::R {
+            flag_str.push('R');
+        }
+
+        if *self & Prot::W == Prot::W {
+            flag_str.push('W');
+        }
+
+        if flag_str.len() == 0 {
+            flag_str.push_str("None");
+        }
+
+        write!(f, "Prot::{}", flag_str)
     }
 }
 

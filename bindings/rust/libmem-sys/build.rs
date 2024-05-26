@@ -93,6 +93,7 @@ fn download_and_resolve_libmem() {
 }
 
 fn main() {
+    // TODO: Fix library not being looked up dynamically without "LIBMEM_DIR" set
     if let Ok(path) = env::var("LIBMEM_DIR") {
         println!("cargo:rustc-link-search=native={}", path);
     } else {

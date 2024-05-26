@@ -1,4 +1,4 @@
-use libmem::{enum_processes, find_module, get_process};
+use libmem::{enum_processes, enum_segments, find_module, get_process};
 
 pub fn main() {
     let processes = enum_processes().unwrap();
@@ -9,4 +9,9 @@ pub fn main() {
 
     let module = find_module(&process.name).unwrap();
     println!("{}", module);
+
+    let segments = enum_segments().unwrap();
+    for segment in segments {
+        println!("{}", segment);
+    }
 }

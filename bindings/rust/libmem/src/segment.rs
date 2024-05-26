@@ -1,7 +1,9 @@
 use libmem_sys::{lm_bool_t, lm_segment_t, lm_void_t, LM_TRUE};
+use std::fmt;
 
 use crate::{Address, Prot};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Segment {
     pub base: Address,
     pub end: Address,
@@ -17,6 +19,16 @@ impl From<lm_segment_t> for Segment {
             size: value.size,
             prot: value.prot.into(),
         }
+    }
+}
+
+impl fmt::Display for Segment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Segment {{ base: {:#x}, end: {:#x}, size: {:#x}, prot: {} }}",
+            self.base, self.end, self.size, self.prot
+        )
     }
 }
 

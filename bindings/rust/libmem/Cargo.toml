@@ -15,12 +15,11 @@ categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "o
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-name = "libmem"
-
-[[bin]]
-name = "tests"
+[features]
+default = ["fetch"]
+static = ["libmem-sys/static"]
+fetch = ["libmem-sys/fetch"]
 
 [dependencies]
 bitflags = "2.5.0"
-libmem-sys = { version = "5.0.0-pre4", path = "../libmem-sys" }
+libmem-sys = { version = "5.0.0-pre4", path = "../libmem-sys", default-features = false }

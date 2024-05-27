@@ -23,6 +23,7 @@
 pub mod memory;
 pub mod module;
 pub mod process;
+pub mod scan;
 pub mod segment;
 pub mod symbol;
 pub mod thread;
@@ -92,6 +93,7 @@ impl fmt::Display for Prot {
 pub use memory::*;
 pub use module::*;
 pub use process::*;
+pub use scan::*;
 pub use segment::*;
 pub use symbol::*;
 pub use thread::*;

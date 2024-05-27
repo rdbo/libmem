@@ -1,11 +1,11 @@
 use libmem::{
-    alloc_memory, deep_pointer, demangle_symbol, enum_modules, enum_modules_ex, enum_processes,
-    enum_segments, enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module,
-    find_module_ex, find_process, find_segment, find_segment_ex, find_symbol_address,
+    alloc_memory, data_scan, deep_pointer, demangle_symbol, enum_modules, enum_modules_ex,
+    enum_processes, enum_segments, enum_segments_ex, enum_symbols, enum_symbols_demangled,
+    find_module, find_module_ex, find_process, find_segment, find_segment_ex, find_symbol_address,
     find_symbol_address_demangled, free_memory, get_bits, get_process, get_process_ex,
     get_system_bits, get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module,
-    load_module_ex, prot_memory, read_memory, set_memory, unload_module, unload_module_ex,
-    write_memory, Address, Prot,
+    load_module_ex, pattern_scan, prot_memory, read_memory, set_memory, sig_scan, unload_module,
+    unload_module_ex, write_memory, Address, Prot,
 };
 
 pub fn main() {
@@ -198,6 +198,30 @@ pub fn main() {
         "[*] Player Health (after modifying value): {}",
         player.health
     );
+
+    // TODO: Add external memory tests
+
+    println!("================================");
+
+    let buffer: Vec<i32> = vec![0, 3, 4, 1, 2, 6, 10, 20, 30, 0, 0, 5, 2, 6];
+    let buffer_addr = buffer.as_ptr() as Address;
+    let buffer_size = buffer.len() * std::mem::size_of::<i32>();
+    let expected = &buffer[6] as *const i32;
+    println!("[*] Buffer Address: {:?}", buffer_addr);
+    println!("[*] Expected Address: {:?}", expected);
+
+    let data = [10, 20, 30];
+    let scan = unsafe { data_scan(&data, buffer_addr, buffer_size).unwrap() };
+    println!("[*] Data Scan Result: {:?}", scan);
+
+    let pattern = [10, 0, 30, 0, 0, 5, 2];
+    let mask = "x?x??xx";
+    let scan = unsafe { pattern_scan(&pattern, &mask, buffer_addr, buffer_size).unwrap() };
+    println!("[*] Pattern Scan Result: {:#x}", scan);
+
+    let signature = "10 ?? 30 ?? ?? 05 02";
+    let scan = unsafe { sig_scan(signature, buffer_addr, buffer_size).unwrap() };
+    println!("[*] Signature Scan Result: {:#x}", scan);
 
     println!("================================");
 }

@@ -158,3 +158,36 @@ pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) {
     // The return of `LM_FreeMemory` will be ignored
     unsafe { libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size) };
 }
+
+/// Resolves a deep pointer based on its base address and recursing offsets
+/// Example:
+/// ```
+/// let pointer_scan_result = deep_pointer(program.base + 0xdeadbeef, vec![0xFA, 0xA0, 0xF0]);
+/// ```
+pub unsafe fn deep_pointer<T>(base: Address, offsets: Vec<Address>) -> *mut T {
+    // This function cannot fail
+    libmem_sys::LM_DeepPointer(base, offsets.as_ptr(), offsets.len()) as *mut T
+}
+
+/// Resolves a deep pointer of a remote process based on its base address and recursing offsets
+/// Example:
+/// ```
+/// let pointer_scan_result = deep_pointer_ex(
+///     &process,
+///     program.base + 0xdeadbeef,
+///     vec![0xFA, 0xA0, 0xF0]
+/// ).unwrap();
+/// ```
+pub fn deep_pointer_ex(process: &Process, base: Address, offsets: Vec<Address>) -> Option<Address> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let result = unsafe {
+        libmem_sys::LM_DeepPointerEx(
+            &raw_process as *const lm_process_t,
+            base,
+            offsets.as_ptr(),
+            offsets.len(),
+        )
+    };
+
+    (result != LM_ADDRESS_BAD).then_some(result)
+}

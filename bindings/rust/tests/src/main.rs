@@ -1,7 +1,7 @@
 use libmem::{
-    alloc_memory, demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
-    enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module, find_module_ex,
-    find_process, find_segment, find_segment_ex, find_symbol_address,
+    alloc_memory, deep_pointer, demangle_symbol, enum_modules, enum_modules_ex, enum_processes,
+    enum_segments, enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module,
+    find_module_ex, find_process, find_segment, find_segment_ex, find_symbol_address,
     find_symbol_address_demangled, free_memory, get_bits, get_process, get_process_ex,
     get_system_bits, get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module,
     load_module_ex, prot_memory, read_memory, set_memory, unload_module, unload_module_ex,
@@ -162,6 +162,42 @@ pub fn main() {
     free_memory(alloc, 0);
     println!("[*] Freed memory");
     println!("[*] Memory Segment: {:?}", find_segment(alloc));
+
+    #[repr(C)]
+    struct Player {
+        pad: [u8; 0xF0],
+        health: i32,
+    }
+
+    #[repr(C)]
+    struct PointerLayer {
+        player_ptr: *const Player,
+    }
+
+    let player = Player {
+        pad: [0; 0xF0],
+        health: 42,
+    };
+
+    let pointer_base = PointerLayer {
+        player_ptr: &player as *const Player,
+    };
+    println!("[*] Player Health: {}", player.health);
+
+    let pointer_base_addr = &pointer_base as *const PointerLayer as Address;
+    let player_health_ptr = &(player.health) as *const i32;
+    let health_ptr = unsafe { deep_pointer::<i32>(pointer_base_addr, vec![0xF0]) };
+    println!(
+        "[*] Health Pointer: {:?} (expected: {:?})",
+        health_ptr, player_health_ptr
+    );
+    unsafe {
+        *health_ptr = 1337;
+    }
+    println!(
+        "[*] Player Health (after modifying value): {}",
+        player.health
+    );
 
     println!("================================");
 }

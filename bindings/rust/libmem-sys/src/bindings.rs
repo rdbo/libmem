@@ -817,6 +817,15 @@ extern "C" {
     ) -> lm_address_t;
 }
 extern "C" {
+    #[doc = " The function calculates a deep pointer address by applying a series of\noffsets to a base address and dereferencing intermediate pointers in a given\nprocess's memory space.\n *\n@param process A pointer to the process that the deep pointer will be calculated from.\n@param base The starting address from which to calculate the deep pointer.\n@param offsets An array of offsets used to navigate through the memory addresses.\n@param noffsets The number of offsets in the `offsets` array.\n *\n@return The function returns a deep pointer calculated based on the provided\nbase address, offsets, and number of offsets.\n"]
+    pub fn LM_DeepPointerEx(
+        process: *const lm_process_t,
+        base: lm_address_t,
+        offsets: *const lm_address_t,
+        noffsets: usize,
+    ) -> lm_address_t;
+}
+extern "C" {
     #[doc = " The function scans a specified memory address range for a specific data\n pattern and returns the address where the data is found.\n\n @param data The data to be scanned for in memory.\n @param datasize The size of the data array. It indicates the number of\n bytes that need to match consecutively in order to consider it a match.\n @param address The starting memory address where the scanning operation\n will begin. The function will scan a range of memory starting from this\n address to find the data.\n @param scansize The size of the memory region to scan starting from the\n specified `address`. It determines the range within which the function will\n search for a match with the provided `data` array.\n\n @return The function returns the memory address where a match for the\n provided data was found. If no match is found, it returns\n `LM_ADDRESS_BAD`."]
     pub fn LM_DataScan(
         data: lm_bytearray_t,

@@ -1,10 +1,11 @@
 use libmem::{
-    demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
+    alloc_memory, demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
     enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module, find_module_ex,
     find_process, find_segment, find_segment_ex, find_symbol_address,
-    find_symbol_address_demangled, get_bits, get_process, get_process_ex, get_system_bits,
-    get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex,
-    read_memory, set_memory, unload_module, unload_module_ex, write_memory, Address,
+    find_symbol_address_demangled, free_memory, get_bits, get_process, get_process_ex,
+    get_system_bits, get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module,
+    load_module_ex, prot_memory, read_memory, set_memory, unload_module, unload_module_ex,
+    write_memory, Address, Prot,
 };
 
 pub fn main() {
@@ -149,6 +150,18 @@ pub fn main() {
     println!("[*] Wrote new memory on number: {}", number);
     unsafe { set_memory(number_addr, 0, std::mem::size_of_val(&number)) };
     println!("[*] Zeroed number memory: {}", number);
+
+    let alloc = alloc_memory(0, Prot::XRW).unwrap();
+    println!("[*] Allocated Memory: {:#x}", alloc);
+    println!("[*] Allocated Segment: {}", find_segment(alloc).unwrap());
+
+    let old_prot = prot_memory(alloc, 0, Prot::R).unwrap();
+    println!("[*] Previous Protection: {}", old_prot);
+    println!("[*] Memory Segment: {}", find_segment(alloc).unwrap());
+
+    free_memory(alloc, 0);
+    println!("[*] Freed memory");
+    println!("[*] Memory Segment: {:?}", find_segment(alloc));
 
     println!("================================");
 }

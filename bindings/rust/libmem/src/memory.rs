@@ -1,6 +1,6 @@
-use libmem_sys::lm_process_t;
+use libmem_sys::{lm_process_t, LM_ADDRESS_BAD, LM_TRUE};
 
-use crate::{Address, Process};
+use crate::{Address, Process, Prot};
 use std::mem::{self, MaybeUninit};
 
 /// Reads a type <T> for a memory address
@@ -75,7 +75,7 @@ pub fn write_memory_ex<T>(process: &Process, dest: Address, value: &T) -> usize 
     }
 }
 
-/// Set a memory region to a specific byte
+/// Sets a memory region to a specific byte
 /// Example (sets all bytes from `dest` to `dest + size` to the `42`)
 /// ```
 /// set_memory(0xdeadbeef, 42, 1024);
@@ -88,7 +88,7 @@ pub unsafe fn set_memory(dest: Address, byte: u8, size: usize) {
     }
 }
 
-/// Set a memory region to a specific byte
+/// Sets a memory region to a specific byte
 /// Example (sets all bytes from `dest` to `dest + size` to the `42`)
 /// ```
 /// set_memory_ex(0xdeadbeef, 42, 1024);
@@ -96,4 +96,65 @@ pub unsafe fn set_memory(dest: Address, byte: u8, size: usize) {
 pub unsafe fn set_memory_ex(process: &Process, dest: Address, byte: u8, size: usize) -> usize {
     let raw_process: lm_process_t = process.to_owned().into();
     unsafe { libmem_sys::LM_SetMemoryEx(&raw_process as *const lm_process_t, dest, byte, size) }
+}
+
+/// Changes the protection flags of a page-aligned memory region
+/// Returns the previous protection of the first page on success
+pub fn prot_memory(address: Address, size: usize, prot: Prot) -> Option<Prot> {
+    let mut oldprot: MaybeUninit<u32> = MaybeUninit::uninit();
+    let result =
+        unsafe { libmem_sys::LM_ProtMemory(address, size, prot.bits(), oldprot.as_mut_ptr()) };
+
+    (result == LM_TRUE).then_some(unsafe { oldprot.assume_init() }.into())
+}
+
+/// Changes the protection flags of a page-aligned memory region in a remote process.
+/// Returns the previous protection of the first page on success
+pub fn prot_memory_ex(
+    process: &Process,
+    address: Address,
+    size: usize,
+    prot: Prot,
+) -> Option<Prot> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let mut oldprot: MaybeUninit<u32> = MaybeUninit::uninit();
+    let result = unsafe {
+        libmem_sys::LM_ProtMemoryEx(
+            &raw_process as *const lm_process_t,
+            address,
+            size,
+            prot.bits(),
+            oldprot.as_mut_ptr(),
+        )
+    };
+
+    (result == LM_TRUE).then_some(unsafe { oldprot.assume_init() }.into())
+}
+
+/// Allocates page-aligned memory in the current process
+pub fn alloc_memory(size: usize, prot: Prot) -> Option<Address> {
+    let alloc = unsafe { libmem_sys::LM_AllocMemory(size, prot.bits()) };
+    (alloc != LM_ADDRESS_BAD).then_some(alloc)
+}
+
+/// Allocates page-aligned memory in a remote process
+pub fn alloc_memory_ex(process: &Process, size: usize, prot: Prot) -> Option<Address> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let alloc = unsafe {
+        libmem_sys::LM_AllocMemoryEx(&raw_process as *const lm_process_t, size, prot.bits())
+    };
+    (alloc != LM_ADDRESS_BAD).then_some(alloc)
+}
+
+/// Frees memory previously allocated with `alloc_memory`
+pub fn free_memory(alloc: Address, size: usize) {
+    // The return of `LM_FreeMemory` will be ignored
+    unsafe { libmem_sys::LM_FreeMemory(alloc, size) };
+}
+
+/// Frees memory previously allocated with `alloc_memory_ex`
+pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) {
+    let raw_process: lm_process_t = process.to_owned().into();
+    // The return of `LM_FreeMemory` will be ignored
+    unsafe { libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size) };
 }

@@ -92,13 +92,12 @@ struct _ptrscan_layer1 {
 } static pointer_scan_layer1 = { { 0 }, (void *)&pointer_scan_layer2 };
 
 struct _ptrscan_layer0 {
-	char pad0[0xF0];
 	void *next_layer;
-} static pointer_scan_layer0 = { { 0 }, (void *)&pointer_scan_layer1 };
+} static pointer_scan_layer0 = { (void *)&pointer_scan_layer1 };
 
 static int *player_health_ptr = &pointer_scan_layer2.player_health;
 
-static lm_address_t deep_ptr_offsets[] = { 0xF0, 0xA0, 0x10 };
+static lm_address_t deep_ptr_offsets[] = { 0xA0, 0x10 };
 
 static lm_size_t deep_ptr_noffsets = sizeof(deep_ptr_offsets) / sizeof(deep_ptr_offsets[0]);
 

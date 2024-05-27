@@ -43,11 +43,11 @@ bitflags! {
     pub struct Prot: u32 {
         const None = 0;
         /// Execute
-        const X = (1 << 0);
+        const R = (1 << 0);
         /// Read
-        const R = (1 << 1);
+        const W = (1 << 1);
         /// Write
-        const W = (1 << 2);
+        const X = (1 << 2);
         /// Execute and Read
         const XR = (Self::X.bits() | Self::R.bits());
         /// Execute and Write

@@ -1,9 +1,10 @@
 use libmem::{
-    demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments, enum_symbols,
-    enum_symbols_demangled, find_module, find_module_ex, find_process, find_segment,
-    find_symbol_address, find_symbol_address_demangled, get_bits, get_process, get_process_ex,
-    get_system_bits, get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module,
-    load_module_ex, unload_module, unload_module_ex,
+    demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
+    enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module, find_module_ex,
+    find_process, find_segment, find_segment_ex, find_symbol_address,
+    find_symbol_address_demangled, get_bits, get_process, get_process_ex, get_system_bits,
+    get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex,
+    unload_module, unload_module_ex,
 };
 
 pub fn main() {
@@ -112,6 +113,31 @@ pub fn main() {
 
     let main_symbol_demangle = find_symbol_address_demangled(&module, "main").unwrap();
     println!("[*] 'main': {}", main_symbol_demangle);
+
+    println!("================================");
+
+    let segments = enum_segments().unwrap();
+    println!("[*] Segment Enumeration: ");
+    println!(" - {}", segments.first().unwrap());
+    println!("...");
+    println!(" - {}", segments.last().unwrap());
+    println!();
+
+    let segments = enum_segments_ex(&target_process).unwrap();
+    println!("[*] Target Segment Enumeration: ");
+    println!(" - {}", segments.first().unwrap());
+    println!("...");
+    println!(" - {}", segments.last().unwrap());
+    println!();
+
+    let segment = find_segment(module.base).unwrap();
+    println!("[*] Segment at module '{}' base: {}", module.name, segment);
+
+    let segment = find_segment_ex(&target_process, target_module.base).unwrap();
+    println!(
+        "[*] Segment at target module '{}' base: {}",
+        target_module.name, segment,
+    );
 
     println!("================================");
 }

@@ -1,4 +1,7 @@
-use std::ffi::{CStr, CString};
+use std::{
+    ffi::{CStr, CString},
+    fmt,
+};
 
 use libmem_sys::{lm_bool_t, lm_module_t, lm_symbol_t, lm_void_t, LM_ADDRESS_BAD, LM_TRUE};
 
@@ -15,6 +18,16 @@ impl From<lm_symbol_t> for Symbol {
             name: unsafe { CStr::from_ptr(raw_symbol.name).to_str().unwrap().to_owned() },
             address: raw_symbol.address,
         }
+    }
+}
+
+impl fmt::Display for Symbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Symbol {{ name: {}, address: {:#x} }}",
+            self.name, self.address
+        )
     }
 }
 

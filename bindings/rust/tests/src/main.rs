@@ -1,8 +1,9 @@
 use libmem::{
-    enum_modules, enum_modules_ex, enum_processes, enum_segments, find_module, find_module_ex,
-    find_process, find_segment, get_bits, get_process, get_process_ex, get_system_bits, get_thread,
-    get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex,
-    unload_module, unload_module_ex,
+    demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments, enum_symbols,
+    enum_symbols_demangled, find_module, find_module_ex, find_process, find_segment,
+    find_symbol_address, find_symbol_address_demangled, get_bits, get_process, get_process_ex,
+    get_system_bits, get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module,
+    load_module_ex, unload_module, unload_module_ex,
 };
 
 pub fn main() {
@@ -84,6 +85,33 @@ pub fn main() {
     println!("[*] Module Loaded in Target: {}", target_loaded_module);
     unload_module_ex(&target_process, &target_loaded_module).unwrap();
     println!("[*] Unloaded Module from Target Process");
+
+    println!("================================");
+
+    let symbols = enum_symbols(&target_module).unwrap();
+    println!("[*] Symbol Enumeration: ");
+    println!(" - {}", symbols.first().unwrap());
+    println!("...");
+    println!(" - {}", symbols.last().unwrap());
+
+    let main_symbol = find_symbol_address(&target_module, "main").unwrap();
+    println!("[*] Target 'main': {}", main_symbol);
+
+    let mangled_symbol = "_ZN4llvm11ms_demangle14ArenaAllocator5allocINS0_29LiteralOperatorIdentifierNodeEJEEEPT_DpOT0_";
+    println!(
+        "[*] Demangled symbol '{}': {}",
+        mangled_symbol,
+        demangle_symbol(&mangled_symbol).unwrap()
+    );
+
+    let symbols = enum_symbols_demangled(&target_module).unwrap();
+    println!("[*] Demangled Symbol Enumeration: ");
+    println!(" - {}", symbols.first().unwrap());
+    println!("...");
+    println!(" - {}", symbols.last().unwrap());
+
+    let main_symbol_demangle = find_symbol_address_demangled(&module, "main").unwrap();
+    println!("[*] 'main': {}", main_symbol_demangle);
 
     println!("================================");
 }

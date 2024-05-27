@@ -18,8 +18,8 @@ fn download_and_resolve_libmem() {
     // Get download URL
     let version = env::var("CARGO_PKG_VERSION").unwrap();
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let os_name = env::var("CARGO_CFG_TARGET_OS");
-    let arch = env::var("CARGO_CFG_TARGET_ARCH");
+    let os_name = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     let target_env = if target_os == "linux" && cfg!(feature = "static") {
         // Always use musl for static linking on Linux
         "musl".to_owned()

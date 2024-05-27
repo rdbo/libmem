@@ -4,7 +4,7 @@ use libmem::{
     find_process, find_segment, find_segment_ex, find_symbol_address,
     find_symbol_address_demangled, get_bits, get_process, get_process_ex, get_system_bits,
     get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex,
-    unload_module, unload_module_ex,
+    read_memory, set_memory, unload_module, unload_module_ex, write_memory, Address,
 };
 
 pub fn main() {
@@ -138,6 +138,17 @@ pub fn main() {
         "[*] Segment at target module '{}' base: {}",
         target_module.name, segment,
     );
+
+    println!("================================");
+
+    let number: i32 = 10;
+    let number_addr = &number as *const i32 as Address;
+    let read_number = unsafe { read_memory::<i32>(number_addr) };
+    println!("[*] Read memory from number: {}", read_number);
+    unsafe { write_memory::<i32>(number_addr, &1337) };
+    println!("[*] Wrote new memory on number: {}", number);
+    unsafe { set_memory(number_addr, 0, std::mem::size_of_val(&number)) };
+    println!("[*] Zeroed number memory: {}", number);
 
     println!("================================");
 }

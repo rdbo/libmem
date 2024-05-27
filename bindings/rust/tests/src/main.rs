@@ -186,7 +186,7 @@ pub fn main() {
 
     let pointer_base_addr = &pointer_base as *const PointerLayer as Address;
     let player_health_ptr = &(player.health) as *const i32;
-    let health_ptr = unsafe { deep_pointer::<i32>(pointer_base_addr, vec![0xF0]) };
+    let health_ptr = unsafe { deep_pointer::<i32>(pointer_base_addr, &vec![0xF0]) };
     println!(
         "[*] Health Pointer: {:?} (expected: {:?})",
         health_ptr, player_health_ptr

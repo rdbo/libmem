@@ -1,11 +1,12 @@
 use libmem::{
-    alloc_memory, data_scan, deep_pointer, demangle_symbol, enum_modules, enum_modules_ex,
-    enum_processes, enum_segments, enum_segments_ex, enum_symbols, enum_symbols_demangled,
-    find_module, find_module_ex, find_process, find_segment, find_segment_ex, find_symbol_address,
-    find_symbol_address_demangled, free_memory, get_bits, get_process, get_process_ex,
-    get_system_bits, get_thread, get_thread_ex, get_thread_process, is_process_alive, load_module,
-    load_module_ex, pattern_scan, prot_memory, read_memory, set_memory, sig_scan, unload_module,
-    unload_module_ex, write_memory, Address, Prot,
+    alloc_memory, alloc_memory_ex, data_scan, deep_pointer, deep_pointer_ex, demangle_symbol,
+    enum_modules, enum_modules_ex, enum_processes, enum_segments, enum_segments_ex, enum_symbols,
+    enum_symbols_demangled, find_module, find_module_ex, find_process, find_segment,
+    find_segment_ex, find_symbol_address, find_symbol_address_demangled, free_memory,
+    free_memory_ex, get_bits, get_process, get_process_ex, get_system_bits, get_thread,
+    get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex, pattern_scan,
+    prot_memory, prot_memory_ex, read_memory, read_memory_ex, set_memory, set_memory_ex, sig_scan,
+    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Prot,
 };
 
 pub fn main() {
@@ -199,7 +200,53 @@ pub fn main() {
         player.health
     );
 
-    // TODO: Add external memory tests
+    let target_alloc = alloc_memory_ex(&target_process, 1024, Prot::XRW).unwrap();
+    println!("[*] Target Allocated Memory: {:#x}", target_alloc);
+    println!(
+        "[*] Target Memory Segment: {}",
+        find_segment_ex(&target_process, target_alloc).unwrap()
+    );
+
+    write_memory_ex(&target_process, target_alloc, &1337).unwrap();
+    println!("[*] Wrote number to the target process memory");
+
+    set_memory_ex(&target_process, target_alloc + 4, 0xFF, 4).unwrap();
+    println!("[*] Set bytes on the target process memory");
+
+    let (written_number, set_number) =
+        read_memory_ex::<(i32, i32)>(&target_process, target_alloc).unwrap();
+    println!(
+        "[*] Read numbers from target alloc: {}, {}",
+        written_number, set_number
+    );
+
+    prot_memory_ex(&target_process, target_alloc, 0, Prot::RW).unwrap();
+    println!(
+        "[*] Changed Protection of Target Alloc: {}",
+        find_segment_ex(&target_process, target_alloc).unwrap()
+    );
+
+    let target_player_ptr = target_alloc + std::mem::size_of::<PointerLayer>();
+    let target_pointer_base = PointerLayer {
+        player_ptr: target_player_ptr as *const Player,
+    };
+    let player = Player {
+        pad: [0; 0xF0],
+        health: 42,
+    };
+    write_memory_ex(&target_process, target_alloc, &target_pointer_base);
+    write_memory_ex(&target_process, target_player_ptr, &player);
+    let target_health_ptr = deep_pointer_ex(&target_process, target_alloc, &vec![0xF0]).unwrap();
+    println!("[*] Target Player Health Ptr: {:#x}", target_health_ptr);
+    let target_health = read_memory_ex::<i32>(&target_process, target_health_ptr).unwrap();
+    println!("[*] Target Player Health: {}", target_health);
+
+    free_memory_ex(&target_process, target_alloc, 0);
+    println!("[*] Freed Allocated Target Memory");
+    println!(
+        "[*] Target Memory Segment: {:?}",
+        find_segment_ex(&target_process, target_alloc)
+    );
 
     println!("================================");
 

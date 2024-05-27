@@ -62,17 +62,19 @@ pub unsafe fn write_memory<T>(dest: Address, value: &T) {
 /// let value_to_write: u32 = 1337;
 /// write_memory_ex(&process, 0xdeadbeef, &value_to_write);
 /// ```
-pub fn write_memory_ex<T>(process: &Process, dest: Address, value: &T) -> usize {
+pub fn write_memory_ex<T>(process: &Process, dest: Address, value: &T) -> Option<()> {
     let raw_process: lm_process_t = process.to_owned().into();
     let size = mem::size_of::<T>();
-    unsafe {
+    let result = unsafe {
         libmem_sys::LM_WriteMemoryEx(
             &raw_process as *const lm_process_t,
             dest,
             value as *const T as *const u8,
             size,
         )
-    }
+    };
+
+    (result == size).then_some(())
 }
 
 /// Sets a memory region to a specific byte
@@ -93,9 +95,13 @@ pub unsafe fn set_memory(dest: Address, byte: u8, size: usize) {
 /// ```
 /// set_memory_ex(0xdeadbeef, 42, 1024);
 /// ```
-pub unsafe fn set_memory_ex(process: &Process, dest: Address, byte: u8, size: usize) -> usize {
+pub fn set_memory_ex(process: &Process, dest: Address, byte: u8, size: usize) -> Option<()> {
     let raw_process: lm_process_t = process.to_owned().into();
-    unsafe { libmem_sys::LM_SetMemoryEx(&raw_process as *const lm_process_t, dest, byte, size) }
+    let result = unsafe {
+        libmem_sys::LM_SetMemoryEx(&raw_process as *const lm_process_t, dest, byte, size)
+    };
+
+    (result == size).then_some(())
 }
 
 /// Changes the protection flags of a page-aligned memory region
@@ -155,7 +161,7 @@ pub fn free_memory(alloc: Address, size: usize) {
 /// Frees memory previously allocated with `alloc_memory_ex`
 pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) {
     let raw_process: lm_process_t = process.to_owned().into();
-    // The return of `LM_FreeMemory` will be ignored
+    // The return of `LM_FreeMemoryEx` will be ignored
     unsafe { libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size) };
 }
 

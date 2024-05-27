@@ -37,7 +37,7 @@ LM_DataScan(lm_bytearray_t data,
 	if (!data || datasize == 0 || address == LM_ADDRESS_BAD || scansize < datasize)
 		return match;
 
-	for (ptr = (lm_byte_t *)address; ptr != (lm_byte_t *)(address + scansize); ptr = &ptr[1]) {
+	for (ptr = (lm_byte_t *)address; ptr != (lm_byte_t *)(address + scansize - datasize); ptr = &ptr[1]) {
 		for (i = 0; i < datasize; ++i) {
 			if (ptr[i] != data[i])
 				break;
@@ -107,7 +107,7 @@ LM_PatternScan(lm_bytearray_t pattern,
 	if (masklen == 0 || scansize < masklen)
 		return match;
 
-	for (ptr = (lm_byte_t *)address; ptr != (lm_byte_t *)(address + scansize); ptr = &ptr[1]) {
+	for (ptr = (lm_byte_t *)address; ptr != (lm_byte_t *)(address + scansize - masklen); ptr = &ptr[1]) {
 		for (i = 0; i < masklen; ++i) {
 			if (mask[i] != '?' && pattern[i] != ptr[i])
 				break;

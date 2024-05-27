@@ -203,18 +203,19 @@ pub fn main() {
 
     println!("================================");
 
-    let buffer: Vec<i32> = vec![0, 3, 4, 1, 2, 6, 10, 20, 30, 0, 0, 5, 2, 6];
+    let buffer: Vec<u8> = vec![0, 3, 4, 1, 2, 6, 0x10, 0x20, 0x30, 0, 0, 5, 2, 6];
     let buffer_addr = buffer.as_ptr() as Address;
-    let buffer_size = buffer.len() * std::mem::size_of::<i32>();
-    let expected = &buffer[6] as *const i32;
-    println!("[*] Buffer Address: {:?}", buffer_addr);
+    let buffer_size = buffer.len() * std::mem::size_of::<u8>();
+    let expected = &buffer[6] as *const u8;
+    println!("[*] Buffer Address: {:#x}", buffer_addr);
     println!("[*] Expected Address: {:?}", expected);
 
-    let data = [10, 20, 30];
+    let data: [u8; 3] = [0x10, 0x20, 0x30];
     let scan = unsafe { data_scan(&data, buffer_addr, buffer_size).unwrap() };
     println!("[*] Data Scan Result: {:?}", scan);
+    println!("[*] Data Scan Deref: {:?}", unsafe { *scan });
 
-    let pattern = [10, 0, 30, 0, 0, 5, 2];
+    let pattern: [u8; 7] = [0x10, 0, 0x30, 0, 0, 5, 2];
     let mask = "x?x??xx";
     let scan = unsafe { pattern_scan(&pattern, &mask, buffer_addr, buffer_size).unwrap() };
     println!("[*] Pattern Scan Result: {:#x}", scan);

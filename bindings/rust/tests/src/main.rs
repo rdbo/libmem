@@ -1,7 +1,8 @@
 use libmem::{
     enum_modules, enum_modules_ex, enum_processes, enum_segments, find_module, find_module_ex,
-    find_process, find_segment, get_bits, get_process, get_process_ex, get_system_bits,
-    is_process_alive, load_module, load_module_ex, unload_module, unload_module_ex,
+    find_process, find_segment, get_bits, get_process, get_process_ex, get_system_bits, get_thread,
+    get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex,
+    unload_module, unload_module_ex,
 };
 
 pub fn main() {
@@ -33,6 +34,17 @@ pub fn main() {
 
     println!("[*] Process Bits: {}", get_bits());
     println!("[*] System Bits: {}", get_system_bits());
+
+    println!("================================");
+
+    let thread = get_thread().unwrap();
+    println!("[*] Current Thread: {}", thread);
+
+    let target_thread = get_thread_ex(&target_process).unwrap();
+    println!("[*] Target Thread: {}", target_thread);
+
+    let thread_process = get_thread_process(&target_thread).unwrap();
+    println!("[*] Target Thread Process: {}", thread_process);
 
     println!("================================");
 
@@ -72,4 +84,6 @@ pub fn main() {
     println!("[*] Module Loaded in Target: {}", target_loaded_module);
     unload_module_ex(&target_process, &target_loaded_module).unwrap();
     println!("[*] Unloaded Module from Target Process");
+
+    println!("================================");
 }

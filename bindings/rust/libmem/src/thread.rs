@@ -1,8 +1,6 @@
-use std::mem::MaybeUninit;
-
-use libmem_sys::{lm_bool_t, lm_process_t, lm_thread_t, lm_void_t, LM_TRUE};
-
 use crate::{Pid, Process, Tid};
+use libmem_sys::{lm_bool_t, lm_process_t, lm_thread_t, lm_void_t, LM_TRUE};
+use std::{fmt, mem::MaybeUninit};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Thread {
@@ -25,6 +23,16 @@ impl Into<lm_thread_t> for Thread {
             tid: self.tid,
             owner_pid: self.owner_pid,
         }
+    }
+}
+
+impl fmt::Display for Thread {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Thread {{ tid: {}, owner_pid: {} }}",
+            self.tid, self.owner_pid
+        )
     }
 }
 

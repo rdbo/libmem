@@ -1,3 +1,5 @@
+use std::{thread::sleep, time::Duration};
+
 use libmem::{
     alloc_memory, alloc_memory_ex, assemble, assemble_ex, code_length, data_scan, data_scan_ex,
     deep_pointer, deep_pointer_ex, demangle_symbol, disassemble, disassemble_ex, enum_modules,
@@ -5,13 +7,25 @@ use libmem::{
     enum_symbols_demangled, find_module, find_module_ex, find_process, find_segment,
     find_segment_ex, find_symbol_address, find_symbol_address_demangled, free_memory,
     free_memory_ex, get_bits, get_process, get_process_ex, get_system_bits, get_thread,
-    get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex, pattern_scan,
-    pattern_scan_ex, prot_memory, prot_memory_ex, read_memory, read_memory_ex, set_memory,
-    set_memory_ex, sig_scan, sig_scan_ex, unload_module, unload_module_ex, write_memory,
-    write_memory_ex, Address, Arch, Bits, Prot,
+    get_thread_ex, get_thread_process, hook_code, hook_code_ex, is_process_alive, load_module,
+    load_module_ex, pattern_scan, pattern_scan_ex, prot_memory, prot_memory_ex, read_memory,
+    read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex, unhook_code, unhook_code_ex,
+    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Bits, Prot,
 };
 
-pub fn main() {
+fn some_function(num: i32, c: char) {
+    let double = num * 2;
+    println!("number: {}", num);
+    println!("double number: {}", double);
+    println!("char: {}", c);
+}
+
+fn hk_some_function(num: i32, c: char) {
+    println!("hooked!");
+    println!("hooked params: {} {}", num, c);
+}
+
+fn main() {
     let processes = enum_processes().unwrap();
     println!("[*] Process Enumeration: ");
     println!(" - {}", processes.first().unwrap());
@@ -338,6 +352,30 @@ pub fn main() {
     println!("[*] Aligned Code Length: {}", code_len);
 
     // TODO: Test `code_length_ex`
+
+    println!("================================");
+
+    let trampoline =
+        unsafe { hook_code(some_function as Address, hk_some_function as Address).unwrap() };
+    some_function(10, 'A');
+    println!();
+    unsafe { trampoline.callable::<fn(i32, char)>()(20, 'B') };
+    println!();
+
+    unsafe { unhook_code(some_function as Address, trampoline).unwrap() };
+    some_function(10, 'A');
+
+    let wait_message_addr = find_symbol_address(&target_module, "wait_message").unwrap();
+    println!("[*] Target wait_message: {:#x}", wait_message_addr);
+
+    let hk_wait_message_addr = find_symbol_address(&target_module, "hk_wait_message").unwrap();
+    println!("[*] Target hk_wait_message: {:#x}", hk_wait_message_addr);
+
+    let target_tramp =
+        hook_code_ex(&target_process, wait_message_addr, hk_wait_message_addr).unwrap();
+    sleep(Duration::from_secs(3));
+
+    unhook_code_ex(&target_process, wait_message_addr, target_tramp).unwrap();
 
     println!("================================");
 }

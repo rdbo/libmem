@@ -21,6 +21,7 @@
  */
 
 pub mod asm;
+pub mod hook;
 pub mod memory;
 pub mod module;
 pub mod process;
@@ -171,6 +172,7 @@ impl fmt::Display for Bits {
 }
 
 pub use asm::*;
+pub use hook::*;
 pub use memory::*;
 pub use module::*;
 pub use process::*;

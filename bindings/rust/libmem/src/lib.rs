@@ -94,6 +94,7 @@ impl fmt::Display for Prot {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Arch {
     ARM,
     ARM64,

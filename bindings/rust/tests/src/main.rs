@@ -1,13 +1,14 @@
 use libmem::{
-    alloc_memory, alloc_memory_ex, assemble, assemble_ex, data_scan, data_scan_ex, deep_pointer,
-    deep_pointer_ex, demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
-    enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module, find_module_ex,
-    find_process, find_segment, find_segment_ex, find_symbol_address,
-    find_symbol_address_demangled, free_memory, free_memory_ex, get_bits, get_process,
-    get_process_ex, get_system_bits, get_thread, get_thread_ex, get_thread_process,
-    is_process_alive, load_module, load_module_ex, pattern_scan, pattern_scan_ex, prot_memory,
-    prot_memory_ex, read_memory, read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex,
-    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Bits, Prot,
+    alloc_memory, alloc_memory_ex, assemble, assemble_ex, code_length, data_scan, data_scan_ex,
+    deep_pointer, deep_pointer_ex, demangle_symbol, disassemble, disassemble_ex, enum_modules,
+    enum_modules_ex, enum_processes, enum_segments, enum_segments_ex, enum_symbols,
+    enum_symbols_demangled, find_module, find_module_ex, find_process, find_segment,
+    find_segment_ex, find_symbol_address, find_symbol_address_demangled, free_memory,
+    free_memory_ex, get_bits, get_process, get_process_ex, get_system_bits, get_thread,
+    get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex, pattern_scan,
+    pattern_scan_ex, prot_memory, prot_memory_ex, read_memory, read_memory_ex, set_memory,
+    set_memory_ex, sig_scan, sig_scan_ex, unload_module, unload_module_ex, write_memory,
+    write_memory_ex, Address, Arch, Bits, Prot,
 };
 
 pub fn main() {
@@ -316,6 +317,25 @@ pub fn main() {
         0xdeadbeef,
     )
     .unwrap();
-
     println!("[*] Assembled Payload: {:?}", payload);
+
+    let disas = disassemble(inst.bytes.as_ptr() as Address).unwrap();
+    println!("[*] Disassembled Instruction: {}", disas);
+
+    let payload_disas = disassemble_ex(
+        payload.as_ptr() as Address,
+        Arch::X86,
+        Bits::Bits64,
+        payload.len(),
+        0,
+        0xdeadbeef,
+    );
+    println!("[*] Disassembled Payload: {:?}", payload_disas);
+
+    let code_len = code_length(payload.as_ptr() as Address, 3).unwrap();
+    println!("[*] Aligned Code Length: {}", code_len);
+
+    // TODO: Test `code_length_ex`
+
+    println!("================================");
 }

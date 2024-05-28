@@ -5,9 +5,9 @@ use std::{
     slice,
 };
 
-use libmem_sys::{lm_byte_t, lm_inst_t, LM_TRUE};
+use libmem_sys::{lm_byte_t, lm_inst_t, lm_process_t, LM_TRUE};
 
-use crate::{Address, Arch, Bits};
+use crate::{Address, Arch, Bits, Process};
 
 /// An assembled/disassembled instruction
 #[derive(Debug, Clone, PartialEq)]
@@ -101,4 +101,77 @@ pub fn assemble_ex(
     } else {
         None
     }
+}
+
+/// Disassembles a single instruction in the specified address in the current architecture
+pub fn disassemble(machine_code: Address) -> Option<Inst> {
+    let mut raw_inst: MaybeUninit<lm_inst_t> = MaybeUninit::uninit();
+    let result = unsafe { libmem_sys::LM_Disassemble(machine_code, raw_inst.as_mut_ptr()) };
+
+    (result == LM_TRUE).then_some(unsafe { raw_inst.assume_init() }.into())
+}
+
+/// Disassembles one or more instructions with customizable parameters
+/// NOTE: Either `max_size` or `instruction_count` has to be non-zero
+pub fn disassemble_ex(
+    machine_code: Address,
+    arch: Arch,
+    bits: Bits,
+    max_size: usize,
+    instruction_count: usize,
+    runtime_address: Address,
+) -> Option<Vec<Inst>> {
+    let mut raw_instructions_out: *mut lm_inst_t = std::ptr::null_mut();
+    let count = unsafe {
+        libmem_sys::LM_DisassembleEx(
+            machine_code,
+            arch.into(),
+            bits.into(),
+            max_size,
+            instruction_count,
+            runtime_address,
+            &mut raw_instructions_out as *mut *mut lm_inst_t,
+        )
+    };
+
+    if count > 0 {
+        let mut instructions = vec![];
+
+        let instruction_slice = unsafe { slice::from_raw_parts(raw_instructions_out, count) };
+
+        for inst in instruction_slice {
+            instructions.push(inst.to_owned().into());
+        }
+
+        unsafe { libmem_sys::LM_FreeInstructions(raw_instructions_out) };
+
+        Some(instructions)
+    } else {
+        None
+    }
+}
+
+/// Calculates the size aligned to the instruction length
+pub fn code_length(machine_code: Address, min_length: usize) -> Option<usize> {
+    let result = unsafe { libmem_sys::LM_CodeLength(machine_code, min_length) };
+
+    (result > 0).then_some(result)
+}
+
+/// Calculates the size aligned to the instruction length in a remote process
+pub fn code_length_ex(
+    process: &Process,
+    machine_code: Address,
+    min_length: usize,
+) -> Option<usize> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let result = unsafe {
+        libmem_sys::LM_CodeLengthEx(
+            &raw_process as *const lm_process_t,
+            machine_code,
+            min_length,
+        )
+    };
+
+    (result > 0).then_some(result)
 }

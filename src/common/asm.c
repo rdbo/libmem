@@ -67,7 +67,7 @@ LM_AssembleEx(lm_string_t  code,
 {
 	ks_engine *ks;
 	ks_arch ksarch;
-	ks_mode ksmode;
+	ks_mode ksmode = 0;
 	lm_size_t size = 0;
 	size_t asmsize;
 	size_t count;
@@ -87,10 +87,32 @@ LM_AssembleEx(lm_string_t  code,
 
 	ksarch = arch_cvt_table[arch];
 
-	if (bits == 64)
-		ksmode = KS_MODE_64;
-	else
-		ksmode = KS_MODE_32;
+	switch (ksarch) {
+	case KS_ARCH_X86:
+		if (bits == 64)
+			ksmode = KS_MODE_64;
+		else
+			ksmode = KS_MODE_32;
+		break;
+	case KS_ARCH_ARM:
+		ksmode = KS_MODE_ARM;
+		break;
+	case KS_ARCH_ARM64:
+		ksmode = KS_MODE_LITTLE_ENDIAN;
+		break;
+	case KS_ARCH_MIPS:
+		if (bits == 64)
+			ksmode = KS_MODE_MIPS64;
+		else
+			ksmode = KS_MODE_MIPS32;
+		break;
+	case KS_ARCH_SPARC:
+		if (bits == 64)
+			ksmode = KS_MODE_SPARC64;
+		else
+			ksmode = KS_MODE_SPARC32;
+		break;
+	}
 
 	if (ks_open(ksarch, ksmode, &ks) != KS_ERR_OK)
 		return size;
@@ -168,10 +190,21 @@ LM_DisassembleEx(lm_address_t machine_code,
 
 	csarch = arch_cvt_table[arch];
 
-	if (bits == 64)
-		csmode = CS_MODE_64;
-	else
-		csmode = CS_MODE_32;
+	switch (csarch) {
+	case CS_ARCH_X86:
+	case CS_ARCH_MIPS:
+		if (bits == 64)
+			csmode = CS_MODE_64;
+		else
+			csmode = CS_MODE_32;
+		break;
+	case CS_ARCH_ARM:
+	case CS_ARCH_ARM64:
+		csmode = CS_MODE_ARM;
+		break;
+	case CS_ARCH_SPARC:
+		break;
+	}
 
 	if (cs_open(csarch, csmode, &cshandle) != CS_ERR_OK)
 		return inst_count;

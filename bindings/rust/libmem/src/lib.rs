@@ -29,6 +29,7 @@ pub mod scan;
 pub mod segment;
 pub mod symbol;
 pub mod thread;
+pub mod vmt;
 use std::fmt;
 
 use bitflags::bitflags;
@@ -180,3 +181,4 @@ pub use scan::*;
 pub use segment::*;
 pub use symbol::*;
 pub use thread::*;
+pub use vmt::*;

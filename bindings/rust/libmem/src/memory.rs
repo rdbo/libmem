@@ -106,7 +106,7 @@ pub fn set_memory_ex(process: &Process, dest: Address, byte: u8, size: usize) ->
 
 /// Changes the protection flags of a page-aligned memory region
 /// Returns the previous protection of the first page on success
-pub fn prot_memory(address: Address, size: usize, prot: Prot) -> Option<Prot> {
+pub unsafe fn prot_memory(address: Address, size: usize, prot: Prot) -> Option<Prot> {
     let mut oldprot: MaybeUninit<u32> = MaybeUninit::uninit();
     let result =
         unsafe { libmem_sys::LM_ProtMemory(address, size, prot.bits(), oldprot.as_mut_ptr()) };
@@ -153,7 +153,7 @@ pub fn alloc_memory_ex(process: &Process, size: usize, prot: Prot) -> Option<Add
 }
 
 /// Frees memory previously allocated with `alloc_memory`
-pub fn free_memory(alloc: Address, size: usize) {
+pub unsafe fn free_memory(alloc: Address, size: usize) {
     // The return of `LM_FreeMemory` will be ignored
     unsafe { libmem_sys::LM_FreeMemory(alloc, size) };
 }

@@ -104,7 +104,7 @@ pub fn assemble_ex(
 }
 
 /// Disassembles a single instruction in the specified address in the current architecture
-pub fn disassemble(machine_code: Address) -> Option<Inst> {
+pub unsafe fn disassemble(machine_code: Address) -> Option<Inst> {
     let mut raw_inst: MaybeUninit<lm_inst_t> = MaybeUninit::uninit();
     let result = unsafe { libmem_sys::LM_Disassemble(machine_code, raw_inst.as_mut_ptr()) };
 
@@ -113,7 +113,7 @@ pub fn disassemble(machine_code: Address) -> Option<Inst> {
 
 /// Disassembles one or more instructions with customizable parameters
 /// NOTE: Either `max_size` or `instruction_count` has to be non-zero
-pub fn disassemble_ex(
+pub unsafe fn disassemble_ex(
     machine_code: Address,
     arch: Arch,
     bits: Bits,
@@ -152,7 +152,7 @@ pub fn disassemble_ex(
 }
 
 /// Calculates the size aligned to the instruction length
-pub fn code_length(machine_code: Address, min_length: usize) -> Option<usize> {
+pub unsafe fn code_length(machine_code: Address, min_length: usize) -> Option<usize> {
     let result = unsafe { libmem_sys::LM_CodeLength(machine_code, min_length) };
 
     (result > 0).then_some(result)

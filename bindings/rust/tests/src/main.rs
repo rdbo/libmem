@@ -158,11 +158,11 @@ pub fn main() {
     println!("[*] Allocated Memory: {:#x}", alloc);
     println!("[*] Allocated Segment: {}", find_segment(alloc).unwrap());
 
-    let old_prot = prot_memory(alloc, 0, Prot::R).unwrap();
+    let old_prot = unsafe { prot_memory(alloc, 0, Prot::R) }.unwrap();
     println!("[*] Previous Protection: {}", old_prot);
     println!("[*] Memory Segment: {}", find_segment(alloc).unwrap());
 
-    free_memory(alloc, 0);
+    unsafe { free_memory(alloc, 0) };
     println!("[*] Freed memory");
     println!("[*] Memory Segment: {:?}", find_segment(alloc));
 
@@ -319,20 +319,22 @@ pub fn main() {
     .unwrap();
     println!("[*] Assembled Payload: {:?}", payload);
 
-    let disas = disassemble(inst.bytes.as_ptr() as Address).unwrap();
+    let disas = unsafe { disassemble(inst.bytes.as_ptr() as Address) }.unwrap();
     println!("[*] Disassembled Instruction: {}", disas);
 
-    let payload_disas = disassemble_ex(
-        payload.as_ptr() as Address,
-        Arch::X86,
-        Bits::Bits64,
-        payload.len(),
-        0,
-        0xdeadbeef,
-    );
+    let payload_disas = unsafe {
+        disassemble_ex(
+            payload.as_ptr() as Address,
+            Arch::X86,
+            Bits::Bits64,
+            payload.len(),
+            0,
+            0xdeadbeef,
+        )
+    };
     println!("[*] Disassembled Payload: {:?}", payload_disas);
 
-    let code_len = code_length(payload.as_ptr() as Address, 3).unwrap();
+    let code_len = unsafe { code_length(payload.as_ptr() as Address, 3) }.unwrap();
     println!("[*] Aligned Code Length: {}", code_len);
 
     // TODO: Test `code_length_ex`

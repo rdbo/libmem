@@ -17,15 +17,16 @@ fn download_and_resolve_libmem() {
 
     // Get download URL
     let version = env::var("CARGO_PKG_VERSION").unwrap();
-    let os_name = env::consts::OS;
-    let arch = env::consts::ARCH;
-    let target_env = if cfg!(target_os = "linux") && cfg!(feature = "static") {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let os_name = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    let target_env = if target_os == "linux" && cfg!(feature = "static") {
         // Always use musl for static linking on Linux
         "musl".to_owned()
     } else {
         env::var("CARGO_CFG_TARGET_ENV").unwrap()
     };
-    let build_type = if cfg!(target_os = "windows") {
+    let build_type = if target_os == "windows" {
         "static-mt"
     } else {
         "static"
@@ -82,7 +83,7 @@ fn download_and_resolve_libmem() {
     }
 
     // Properly add library path for linking
-    let search_path = if cfg!(target_os = "windows") {
+    let search_path = if target_os == "windows" {
         archive_dir.join("lib").join("release")
     } else {
         archive_dir.join("lib")
@@ -102,11 +103,12 @@ fn main() {
     }
 
     // Resolve link dependencies
-    let deps = if cfg!(target_os = "windows") {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let deps = if target_os == "windows" {
         vec!["user32", "psapi", "ntdll"]
-    } else if cfg!(target_os = "linux") {
+    } else if target_os == "linux" {
         vec!["dl", "m", "stdc++"]
-    } else if cfg!(target_os = "freebsd") {
+    } else if target_os == "freebsd" {
         vec!["dl", "kvm", "procstat", "elf", "m", "stdc++"]
     } else {
         vec![]

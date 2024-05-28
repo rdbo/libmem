@@ -10,7 +10,7 @@ use libmem::{
     get_thread_ex, get_thread_process, hook_code, hook_code_ex, is_process_alive, load_module,
     load_module_ex, pattern_scan, pattern_scan_ex, prot_memory, prot_memory_ex, read_memory,
     read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex, unhook_code, unhook_code_ex,
-    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Bits, Prot,
+    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Bits, Prot, Vmt,
 };
 
 fn some_function(num: i32, c: char) {
@@ -378,4 +378,22 @@ fn main() {
     unhook_code_ex(&target_process, wait_message_addr, target_tramp).unwrap();
 
     println!("================================");
+
+    struct Dummy {
+        vtable: [fn(i32, char); 1],
+    }
+    let dummy_object = Dummy {
+        vtable: [some_function],
+    };
+
+    let mut vmt = Vmt::new(dummy_object.vtable.as_ptr() as Address);
+    unsafe { vmt.get_original::<fn(i32, char)>(0)(1, '2') };
+    println!();
+
+    unsafe { vmt.hook(0, hk_some_function as Address) };
+    dummy_object.vtable[0](69, 'W');
+    println!();
+
+    unsafe { vmt.unhook(0) };
+    dummy_object.vtable[0](42, '0');
 }

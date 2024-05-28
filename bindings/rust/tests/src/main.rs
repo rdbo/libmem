@@ -1,11 +1,12 @@
 use libmem::{
-    alloc_memory, alloc_memory_ex, data_scan, deep_pointer, deep_pointer_ex, demangle_symbol,
-    enum_modules, enum_modules_ex, enum_processes, enum_segments, enum_segments_ex, enum_symbols,
-    enum_symbols_demangled, find_module, find_module_ex, find_process, find_segment,
-    find_segment_ex, find_symbol_address, find_symbol_address_demangled, free_memory,
-    free_memory_ex, get_bits, get_process, get_process_ex, get_system_bits, get_thread,
-    get_thread_ex, get_thread_process, is_process_alive, load_module, load_module_ex, pattern_scan,
-    prot_memory, prot_memory_ex, read_memory, read_memory_ex, set_memory, set_memory_ex, sig_scan,
+    alloc_memory, alloc_memory_ex, data_scan, data_scan_ex, deep_pointer, deep_pointer_ex,
+    demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
+    enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module, find_module_ex,
+    find_process, find_segment, find_segment_ex, find_symbol_address,
+    find_symbol_address_demangled, free_memory, free_memory_ex, get_bits, get_process,
+    get_process_ex, get_system_bits, get_thread, get_thread_ex, get_thread_process,
+    is_process_alive, load_module, load_module_ex, pattern_scan, pattern_scan_ex, prot_memory,
+    prot_memory_ex, read_memory, read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex,
     unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Prot,
 };
 
@@ -250,7 +251,7 @@ pub fn main() {
 
     println!("================================");
 
-    let buffer: Vec<u8> = vec![0, 3, 4, 1, 2, 6, 0x10, 0x20, 0x30, 0, 0, 5, 2, 6];
+    let buffer: [u8; 14] = [0, 3, 4, 1, 2, 6, 0x10, 0x20, 0x30, 0, 0, 5, 2, 6];
     let buffer_addr = buffer.as_ptr() as Address;
     let buffer_size = buffer.len() * std::mem::size_of::<u8>();
     let expected = &buffer[6] as *const u8;
@@ -270,6 +271,38 @@ pub fn main() {
     let signature = "10 ?? 30 ?? ?? 05 02";
     let scan = unsafe { sig_scan(signature, buffer_addr, buffer_size).unwrap() };
     println!("[*] Signature Scan Result: {:#x}", scan);
+
+    println!();
+
+    let target_buffer_addr = alloc_memory_ex(&target_process, 0, Prot::XRW).unwrap();
+    println!("[*] Target Buffer Address: {:#x}", target_buffer_addr);
+
+    write_memory_ex(&target_process, target_buffer_addr, &buffer).unwrap();
+    println!(
+        "[*] Wrote buffer to target: {:?}",
+        read_memory_ex::<[u8; 14]>(&target_process, target_buffer_addr).unwrap()
+    );
+
+    let expected = target_buffer_addr + 6;
+    println!("[*] Expected Scan Result: {:#x}", expected);
+
+    let scan = data_scan_ex(&target_process, &data, target_buffer_addr, buffer_size).unwrap();
+    println!("[*] Target Data Scan Result: {:#x}", scan);
+
+    let scan = pattern_scan_ex(
+        &target_process,
+        &pattern,
+        &mask,
+        target_buffer_addr,
+        buffer_size,
+    )
+    .unwrap();
+    println!("[*] Target Pattern Scan Result: {:#x}", scan);
+
+    let scan = sig_scan_ex(&target_process, signature, target_buffer_addr, buffer_size).unwrap();
+    println!("[*] Target Signature Scan Result: {:#x}", scan);
+
+    free_memory_ex(&target_process, target_buffer_addr, 0);
 
     println!("================================");
 }

@@ -62,8 +62,7 @@ pub const LM_ARCH_X86: lm_arch_t = 3;
 pub const LM_ARCH_PPC: lm_arch_t = 4;
 pub const LM_ARCH_SPARC: lm_arch_t = 5;
 pub const LM_ARCH_SYSZ: lm_arch_t = 6;
-pub const LM_ARCH_EVM: lm_arch_t = 7;
-pub const LM_ARCH_MAX: lm_arch_t = 8;
+pub const LM_ARCH_MAX: lm_arch_t = 7;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

@@ -36,7 +36,7 @@ use bitflags::bitflags;
 
 use libmem_sys::{
     lm_address_t, lm_arch_t, lm_pid_t, lm_tid_t, lm_time_t, LM_ARCH_ARM, LM_ARCH_ARM64,
-    LM_ARCH_EVM, LM_ARCH_MIPS, LM_ARCH_PPC, LM_ARCH_SPARC, LM_ARCH_SYSZ, LM_ARCH_X86,
+    LM_ARCH_MIPS, LM_ARCH_PPC, LM_ARCH_SPARC, LM_ARCH_SYSZ, LM_ARCH_X86,
 };
 
 pub type Pid = lm_pid_t;
@@ -105,7 +105,6 @@ pub enum Arch {
     PPC,
     SPARC,
     SYSZ,
-    EVM,
 }
 
 impl TryFrom<lm_arch_t> for Arch {
@@ -119,7 +118,6 @@ impl TryFrom<lm_arch_t> for Arch {
             LM_ARCH_PPC => Ok(Self::PPC),
             LM_ARCH_SPARC => Ok(Self::SPARC),
             LM_ARCH_SYSZ => Ok(Self::SYSZ),
-            LM_ARCH_EVM => Ok(Self::EVM),
             _ => Err(()),
         }
     }
@@ -135,7 +133,6 @@ impl Into<lm_arch_t> for Arch {
             Self::PPC => LM_ARCH_PPC,
             Self::SPARC => LM_ARCH_SPARC,
             Self::SYSZ => LM_ARCH_SYSZ,
-            Self::EVM => LM_ARCH_EVM,
         }
     }
 }

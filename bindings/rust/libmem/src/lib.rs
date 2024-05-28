@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+pub mod asm;
 pub mod memory;
 pub mod module;
 pub mod process;
@@ -31,7 +32,10 @@ use std::fmt;
 
 use bitflags::bitflags;
 
-use libmem_sys::{lm_address_t, lm_pid_t, lm_tid_t, lm_time_t};
+use libmem_sys::{
+    lm_address_t, lm_arch_t, lm_pid_t, lm_tid_t, lm_time_t, LM_ARCH_ARM, LM_ARCH_ARM64,
+    LM_ARCH_EVM, LM_ARCH_MIPS, LM_ARCH_PPC, LM_ARCH_SPARC, LM_ARCH_SYSZ, LM_ARCH_X86,
+};
 
 pub type Pid = lm_pid_t;
 pub type Tid = lm_tid_t;
@@ -90,6 +94,82 @@ impl fmt::Display for Prot {
     }
 }
 
+pub enum Arch {
+    ARM,
+    ARM64,
+    MIPS,
+    X86,
+    PPC,
+    SPARC,
+    SYSZ,
+    EVM,
+}
+
+impl TryFrom<lm_arch_t> for Arch {
+    type Error = ();
+    fn try_from(value: lm_arch_t) -> Result<Self, Self::Error> {
+        match value {
+            LM_ARCH_ARM => Ok(Self::ARM),
+            LM_ARCH_ARM64 => Ok(Self::ARM64),
+            LM_ARCH_MIPS => Ok(Self::MIPS),
+            LM_ARCH_X86 => Ok(Self::X86),
+            LM_ARCH_PPC => Ok(Self::PPC),
+            LM_ARCH_SPARC => Ok(Self::SPARC),
+            LM_ARCH_SYSZ => Ok(Self::SYSZ),
+            LM_ARCH_EVM => Ok(Self::EVM),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Into<lm_arch_t> for Arch {
+    fn into(self) -> lm_arch_t {
+        match self {
+            Self::ARM => LM_ARCH_ARM,
+            Self::ARM64 => LM_ARCH_ARM64,
+            Self::MIPS => LM_ARCH_MIPS,
+            Self::X86 => LM_ARCH_X86,
+            Self::PPC => LM_ARCH_PPC,
+            Self::SPARC => LM_ARCH_SPARC,
+            Self::SYSZ => LM_ARCH_SYSZ,
+            Self::EVM => LM_ARCH_EVM,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Bits {
+    Bits32,
+    Bits64,
+}
+
+impl Into<usize> for Bits {
+    fn into(self) -> usize {
+        match self {
+            Self::Bits32 => 32,
+            Self::Bits64 => 64,
+        }
+    }
+}
+
+impl TryFrom<usize> for Bits {
+    type Error = ();
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            32 => Ok(Self::Bits32),
+            64 => Ok(Self::Bits64),
+            _ => Err(()),
+        }
+    }
+}
+
+impl fmt::Display for Bits {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} bits", Into::<usize>::into(*self))
+    }
+}
+
+pub use asm::*;
 pub use memory::*;
 pub use module::*;
 pub use process::*;

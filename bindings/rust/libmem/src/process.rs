@@ -1,4 +1,4 @@
-use crate::{Pid, Time};
+use crate::{Bits, Pid, Time};
 use libmem_sys::{lm_bool_t, lm_char_t, lm_process_t, lm_void_t, LM_PATH_MAX, LM_TRUE};
 use std::{
     ffi::{CStr, CString},
@@ -10,7 +10,7 @@ use std::{
 pub struct Process {
     pub pid: Pid,
     pub ppid: Pid,
-    pub bits: usize,
+    pub bits: Bits,
     pub start_time: Time,
     pub path: String,
     pub name: String,
@@ -24,7 +24,7 @@ impl From<lm_process_t> for Process {
         Self {
             pid: raw_process.pid,
             ppid: raw_process.ppid,
-            bits: raw_process.bits,
+            bits: raw_process.bits.try_into().unwrap(),
             start_time: raw_process.start_time,
             // NOTE: libmem strings are always UTF-8, you can unwrap right away
             path: unsafe { CStr::from_ptr(path_ptr).to_str().unwrap().to_owned() },
@@ -51,7 +51,7 @@ impl Into<lm_process_t> for Process {
         lm_process_t {
             pid: self.pid,
             ppid: self.ppid,
-            bits: self.bits,
+            bits: self.bits.into(),
             start_time: self.start_time,
             path,
             name,
@@ -139,12 +139,12 @@ pub fn is_process_alive(process: &Process) -> bool {
 
 /// Gets the current process's bitness, which
 /// corresponds to the size of a pointer in bits
-pub fn get_bits() -> usize {
-    unsafe { libmem_sys::LM_GetBits() as usize }
+pub fn get_bits() -> Bits {
+    unsafe { libmem_sys::LM_GetBits().try_into().unwrap() }
 }
 
 /// Gets the system's architecture bitness, which
 /// should be either 32 bits or 64 bits
-pub fn get_system_bits() -> usize {
-    unsafe { libmem_sys::LM_GetSystemBits() as usize }
+pub fn get_system_bits() -> Bits {
+    unsafe { libmem_sys::LM_GetSystemBits().try_into().unwrap() }
 }

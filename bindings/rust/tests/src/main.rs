@@ -1,13 +1,13 @@
 use libmem::{
-    alloc_memory, alloc_memory_ex, data_scan, data_scan_ex, deep_pointer, deep_pointer_ex,
-    demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
+    alloc_memory, alloc_memory_ex, assemble, assemble_ex, data_scan, data_scan_ex, deep_pointer,
+    deep_pointer_ex, demangle_symbol, enum_modules, enum_modules_ex, enum_processes, enum_segments,
     enum_segments_ex, enum_symbols, enum_symbols_demangled, find_module, find_module_ex,
     find_process, find_segment, find_segment_ex, find_symbol_address,
     find_symbol_address_demangled, free_memory, free_memory_ex, get_bits, get_process,
     get_process_ex, get_system_bits, get_thread, get_thread_ex, get_thread_process,
     is_process_alive, load_module, load_module_ex, pattern_scan, pattern_scan_ex, prot_memory,
     prot_memory_ex, read_memory, read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex,
-    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Prot,
+    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Bits, Prot,
 };
 
 pub fn main() {
@@ -305,4 +305,17 @@ pub fn main() {
     free_memory_ex(&target_process, target_buffer_addr, 0);
 
     println!("================================");
+
+    let inst = assemble("mov eax, ebx").unwrap();
+    println!("[*] Assembled Instruction: {}", inst);
+
+    let payload = assemble_ex(
+        "push rbp; mov rbp, rsp; mov rsp, rbp; pop rbp; ret",
+        Arch::X86,
+        Bits::Bits64,
+        0xdeadbeef,
+    )
+    .unwrap();
+
+    println!("[*] Assembled Payload: {:?}", payload);
 }

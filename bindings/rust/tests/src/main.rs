@@ -10,7 +10,7 @@ use libmem::{
     get_thread_ex, get_thread_process, hook_code, hook_code_ex, is_process_alive, load_module,
     load_module_ex, pattern_scan, pattern_scan_ex, prot_memory, prot_memory_ex, read_memory,
     read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex, unhook_code, unhook_code_ex,
-    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Bits, Prot, Vmt,
+    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Prot, Vmt,
 };
 
 fn some_function(num: i32, c: char) {
@@ -326,27 +326,47 @@ fn main() {
 
     let payload = assemble_ex(
         "push rbp; mov rbp, rsp; mov rsp, rbp; pop rbp; ret",
-        Arch::X86,
-        Bits::Bits64,
+        Arch::X64,
         0xdeadbeef,
     )
     .unwrap();
-    println!("[*] Assembled Payload: {:?}", payload);
+    println!("[*] Assembled x86 Payload: {:?}", payload);
 
     let disas = unsafe { disassemble(inst.bytes.as_ptr() as Address) }.unwrap();
-    println!("[*] Disassembled Instruction: {}", disas);
+    println!("[*] Disassembled x86 Instruction: {}", disas);
 
     let payload_disas = unsafe {
         disassemble_ex(
             payload.as_ptr() as Address,
-            Arch::X86,
-            Bits::Bits64,
+            Arch::X64,
             payload.len(),
             0,
             0xdeadbeef,
         )
+        .unwrap()
     };
-    println!("[*] Disassembled Payload: {:?}", payload_disas);
+    println!("[*] Disassembled x86 Payload:");
+    for inst in payload_disas {
+        println!(" - {}", inst);
+    }
+
+    let arm_payload = assemble_ex("bx r0; nop; bx r1", Arch::ARMV7, 0).unwrap();
+    println!("[*] Assembled ARM Payload: {:?}", arm_payload);
+
+    let arm_payload_disas = unsafe {
+        disassemble_ex(
+            arm_payload.as_ptr() as Address,
+            Arch::ARMV7,
+            arm_payload.len(),
+            0,
+            0,
+        )
+        .unwrap()
+    };
+    println!("[*] Disassembled ARM Payload:");
+    for inst in arm_payload_disas {
+        println!(" - {}", inst);
+    }
 
     let code_len = unsafe { code_length(payload.as_ptr() as Address, 3) }.unwrap();
     println!("[*] Aligned Code Length: {}", code_len);

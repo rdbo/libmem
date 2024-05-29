@@ -1,4 +1,4 @@
-use crate::{Bits, Pid, Time};
+use crate::{Arch, Bits, Pid, Time};
 use libmem_sys::{lm_bool_t, lm_char_t, lm_process_t, lm_void_t, LM_PATH_MAX, LM_TRUE};
 use std::{
     ffi::{CStr, CString},
@@ -10,6 +10,7 @@ use std::{
 pub struct Process {
     pub pid: Pid,
     pub ppid: Pid,
+    pub arch: Arch,
     pub bits: Bits,
     pub start_time: Time,
     pub path: String,
@@ -24,6 +25,7 @@ impl From<lm_process_t> for Process {
         Self {
             pid: raw_process.pid,
             ppid: raw_process.ppid,
+            arch: raw_process.arch.try_into().unwrap(),
             bits: raw_process.bits.try_into().unwrap(),
             start_time: raw_process.start_time,
             // NOTE: libmem strings are always UTF-8, you can unwrap right away
@@ -51,6 +53,7 @@ impl Into<lm_process_t> for Process {
         lm_process_t {
             pid: self.pid,
             ppid: self.ppid,
+            arch: self.arch.into(),
             bits: self.bits.into(),
             start_time: self.start_time,
             path,
@@ -63,8 +66,8 @@ impl fmt::Display for Process {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Process {{ pid: {}, ppid: {}, bits: {}, start_time: {}, path: {}, name: {} }}",
-            self.pid, self.ppid, self.bits, self.start_time, self.path, self.name
+            "Process {{ pid: {}, ppid: {}, arch: {:?}, bits: {}, start_time: {}, path: {}, name: {} }}",
+            self.pid, self.ppid, self.arch, self.bits, self.start_time, self.path, self.name
         )
     }
 }

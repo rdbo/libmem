@@ -114,9 +114,55 @@ enum {
 };
 typedef uint32_t lm_prot_t;
 
+/* Supported asm/disasm architectures */
+/*
+ *  NOTE: The architectures listed here are the ones
+ *        supported by both the assembler (keystone)
+ *        and the disassembler (capstone), but not
+ *        necessarily fully supported by libmem.
+ */
+enum {
+	/* ARM */
+	LM_ARCH_ARMV7 = 0, /* ARMv7 */
+	LM_ARCH_ARMV8,     /* ARMv8 */
+	LM_ARCH_THUMBV7,   /* ARMv7, thumb mode */
+	LM_ARCH_THUMBV8,   /* ARMv8, thumb mode */
+
+	LM_ARCH_ARMV7EB,   /* ARMv7, big endian */
+	LM_ARCH_THUMBV7EB, /* ARMv7, big endian, thumb mode */
+	LM_ARCH_ARMV8EB,   /* ARMv8, big endian */
+	LM_ARCH_THUMBV8EB, /* ARMv8, big endian, thumb mode */
+
+	LM_ARCH_AARCH64,   /* ARM64/AArch64 */
+	/* MIPS */
+	LM_ARCH_MIPS,     /* Mips32 */
+	LM_ARCH_MIPS64,   /* Mips64 */
+	LM_ARCH_MIPSEL,   /* Mips32, little endian */
+	LM_ARCH_MIPSEL64, /* Mips64, little endian */
+	/* X86 */
+	LM_ARCH_X86_16, /* x86_16 */
+	LM_ARCH_X86,    /* x86_32 */
+	LM_ARCH_X64,    /* x86_64 */
+	/* PowerPC */
+	LM_ARCH_PPC32,   /* PowerPC 32 */
+	LM_ARCH_PPC64,   /* PowerPC 64 */
+	LM_ARCH_PPC64LE, /* PowerPC 64, little endian */
+
+	/* SPARC */
+	LM_ARCH_SPARC,   /* Sparc */
+	LM_ARCH_SPARC64, /* Sparc64 */
+	LM_ARCH_SPARCEL, /* Sparc, little endian */
+	/* SystemZ */
+	LM_ARCH_SYSZ, /* S390X */
+
+	LM_ARCH_MAX,
+};
+typedef uint32_t lm_arch_t;
+
 typedef struct {
 	lm_pid_t  pid;
 	lm_pid_t  ppid;
+	lm_arch_t arch;
 	lm_size_t bits;
 	lm_time_t start_time; /* Process start timestamp, in milliseconds since last boot */
 	lm_char_t path[LM_PATH_MAX];
@@ -156,26 +202,6 @@ typedef struct {
 	lm_char_t    mnemonic[32];
 	lm_char_t    op_str[160];
 } lm_inst_t;
-
-/* Supported asm/disasm architectures */
-/*
- *  NOTE: The architectures listed here are the ones
- *        supported by both the assembler (keystone)
- *        and the disassembler (capstone), but not
- *        necessarily fully supported by libmem.
- */
-enum {
-	LM_ARCH_ARM = 0,
-	LM_ARCH_ARM64,
-	LM_ARCH_MIPS,
-	LM_ARCH_X86,
-	LM_ARCH_PPC,
-	LM_ARCH_SPARC,
-	LM_ARCH_SYSZ,
-
-	LM_ARCH_MAX,
-};
-typedef uint32_t lm_arch_t;
 
 /* Virtual method table (VMT) */
 typedef struct lm_vmt_entry_t {
@@ -1161,8 +1187,6 @@ LM_Assemble(lm_string_t code,
  * @param code The instructions to be assembled.
  * Example: `"mov eax, ebx ; jmp eax"`.
  * @param arch The architecture to be assembled.
- * @param bits The bitness of the architecture to be assembled.
- * It can be `32` or `64`.
  * @param runtime_address The runtime address to resolve
  * the addressing (for example, relative jumps will be resolved using this address).
  * @param payload_out A pointer to the buffer that will receive the assembled instructions.
@@ -1174,7 +1198,6 @@ LM_Assemble(lm_string_t code,
 LM_API lm_size_t LM_CALL
 LM_AssembleEx(lm_string_t  code,
               lm_arch_t    arch,
-	      lm_size_t    bits,
 	      lm_address_t runtime_address,
 	      lm_byte_t  **payload_out);
 
@@ -1204,8 +1227,6 @@ LM_Disassemble(lm_address_t machine_code,
  *
  * @param machine_code The address of the instructions to be disassembled.
  * @param arch The architecture to be disassembled.
- * @param bits The bitness of the architecture to be disassembled.
- * It can be `32` or `64`.
  * @param max_size The maximum number of bytes to disassemble (0 for as
  * many as possible, limited by `instruction_count`).
  * @param instruction_count The amount of instructions
@@ -1221,7 +1242,6 @@ LM_Disassemble(lm_address_t machine_code,
 LM_API lm_size_t LM_CALL
 LM_DisassembleEx(lm_address_t machine_code,
 		 lm_arch_t    arch,
-		 lm_size_t    bits,
 		 lm_size_t    max_size,
 		 lm_size_t    instruction_count,
 		 lm_address_t runtime_address,

@@ -181,6 +181,18 @@ main()
 	printf("[*] Unit Tests\n");
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");
 
+	/*
+	lm_byte_t *payload;
+	lm_size_t size = LM_AssembleEx("bx r0", LM_ARCH_ARMV7, 0xdeadbeef, &payload);
+	printf("payload (size: %zu): \"", size);
+	for (size_t i = 0; i < size; ++i) {
+		printf("\\x%hhx", payload[i]);
+	}
+	printf("\"\n");
+
+	exit(0);
+	*/
+
 	test_asm();
 	test_process(&current_process, &target_process);
 	test_thread(&current_process, &target_process, &current_thread, &target_thread);

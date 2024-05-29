@@ -25,6 +25,7 @@
 
 #include <libmem/libmem.h>
 #include <winutils/winutils.h>
+#include <arch/arch.h>
 #include <assert.h>
 
 typedef struct {
@@ -63,6 +64,7 @@ enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 		goto CLOSE_CONTINUE;
 
 	process.bits = get_process_bits(hproc);
+	process.arch = get_architecture_from_bits(process.bits);
 
 	if (!parg->callback(&process, parg->arg))
 		return FALSE;
@@ -155,6 +157,7 @@ LM_GetProcess(lm_process_t *process_out)
 		return LM_FALSE;
 
 	process_out->bits = LM_GetBits(); /* Assume process bits == size of pointer */
+	process_out->arch = get_architecture_from_bits(process_out->bits);
 
 	return LM_TRUE;
 }
@@ -198,6 +201,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 		goto CLEAN_EXIT;
 
 	process_out->bits = get_process_bits(hproc);
+	process_out->arch = get_architecture_from_bits(process_out->bits);
 
 	result = LM_TRUE;
 CLEAN_EXIT:

@@ -1,11 +1,12 @@
 #include "arch.h"
+#include <libmem/libmem.h>
 #include <stdio.h>
 #include <memory.h>
 
 lm_arch_t
 get_architecture()
 {
-	return LM_ARCH_X86;
+	return LM_GetBits() == 64 ? LM_ARCH_X64 : LM_ARCH_X86;
 }
 
 lm_size_t
@@ -24,8 +25,11 @@ generate_hook_payload(lm_address_t from, lm_address_t to, lm_size_t bits, lm_byt
 	} else {
 		snprintf(code, sizeof(code), "jmp 0x%x", (unsigned int)to);
 	}
-	
-	size = LM_AssembleEx(code, get_architecture(), bits, from, payload_out);
+
+	if (bits == 64)
+		size = LM_AssembleEx(code, LM_ARCH_X64, from, payload_out);
+	else
+		size = LM_AssembleEx(code, LM_ARCH_X86, from, payload_out);
 
 	if (size > 0 && bits == 64) {
 		/* Patch the jump address into the payload */

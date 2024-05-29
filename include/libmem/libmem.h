@@ -114,49 +114,6 @@ enum {
 };
 typedef uint32_t lm_prot_t;
 
-typedef struct {
-	lm_pid_t  pid;
-	lm_pid_t  ppid;
-	lm_size_t bits;
-	lm_time_t start_time; /* Process start timestamp, in milliseconds since last boot */
-	lm_char_t path[LM_PATH_MAX];
-	lm_char_t name[LM_PATH_MAX];
-} lm_process_t;
-
-typedef struct {
-	lm_tid_t tid;
-	lm_pid_t owner_pid;
-} lm_thread_t;
-
-typedef struct {
-	lm_address_t base;
-	lm_address_t end;
-	lm_size_t    size;
-	lm_char_t    path[LM_PATH_MAX];
-	lm_char_t    name[LM_PATH_MAX];
-} lm_module_t;
-
-/* An allocated segment of memory */
-typedef struct {
-	lm_address_t base;
-	lm_address_t end;
-	lm_size_t    size;
-	lm_prot_t    prot;
-} lm_segment_t;
-
-typedef struct {
-	lm_string_t  name;
-	lm_address_t address;
-} lm_symbol_t;
-
-typedef struct {
-	lm_address_t address;
-	lm_size_t    size;
-	lm_byte_t    bytes[LM_INST_MAX];
-	lm_char_t    mnemonic[32];
-	lm_char_t    op_str[160];
-} lm_inst_t;
-
 /* Supported asm/disasm architectures */
 /*
  *  NOTE: The architectures listed here are the ones
@@ -201,6 +158,50 @@ enum {
 	LM_ARCH_MAX,
 };
 typedef uint32_t lm_arch_t;
+
+typedef struct {
+	lm_pid_t  pid;
+	lm_pid_t  ppid;
+	lm_arch_t arch;
+	lm_size_t bits;
+	lm_time_t start_time; /* Process start timestamp, in milliseconds since last boot */
+	lm_char_t path[LM_PATH_MAX];
+	lm_char_t name[LM_PATH_MAX];
+} lm_process_t;
+
+typedef struct {
+	lm_tid_t tid;
+	lm_pid_t owner_pid;
+} lm_thread_t;
+
+typedef struct {
+	lm_address_t base;
+	lm_address_t end;
+	lm_size_t    size;
+	lm_char_t    path[LM_PATH_MAX];
+	lm_char_t    name[LM_PATH_MAX];
+} lm_module_t;
+
+/* An allocated segment of memory */
+typedef struct {
+	lm_address_t base;
+	lm_address_t end;
+	lm_size_t    size;
+	lm_prot_t    prot;
+} lm_segment_t;
+
+typedef struct {
+	lm_string_t  name;
+	lm_address_t address;
+} lm_symbol_t;
+
+typedef struct {
+	lm_address_t address;
+	lm_size_t    size;
+	lm_byte_t    bytes[LM_INST_MAX];
+	lm_char_t    mnemonic[32];
+	lm_char_t    op_str[160];
+} lm_inst_t;
 
 /* Virtual method table (VMT) */
 typedef struct lm_vmt_entry_t {

@@ -70,6 +70,7 @@ set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DI
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
+set(COMMON_DIR "${LIBMEM_DIR}/src/common")
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/winutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
@@ -94,7 +95,7 @@ if (LIBMEM_BUILD_STATIC)
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
-target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}")
+target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
 include_directories(${PROJECT_SOURCE_DIR}
 	${LIBMEM_INC}

@@ -190,7 +190,7 @@ endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 		cmake_path(SET CMAKE_INSTALL_PREFIX "$ENV{ProgramFiles}")
-	else(${})
+	else()
 		execute_process(COMMAND cygpath -u "$PROGRAMFILES"
 				OUTPUT_VARIABLE CMAKE_INSTALL_PREFIX)
 	endif()

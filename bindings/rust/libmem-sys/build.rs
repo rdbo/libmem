@@ -119,8 +119,8 @@ fn main() {
     }
 
     if cfg!(feature = "static") {
-        println!("cargo:rustc-link-lib=libmem");
+        println!("cargo:rustc-link-lib=mem");
     } else {
-        println!("cargo:rustc-link-lib=dylib=libmem")
+        println!("cargo:rustc-link-lib=dylib=mem")
     }
 }

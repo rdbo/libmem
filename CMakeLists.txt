@@ -91,11 +91,11 @@ set(LIBMEM_DEPS
 )
 
 if (LIBMEM_BUILD_STATIC)
-	add_library(libmem STATIC ${LIBMEM_SRC})
+	add_library(mem STATIC ${LIBMEM_SRC})
 else()
-	add_library(libmem SHARED ${LIBMEM_SRC})
+	add_library(mem SHARED ${LIBMEM_SRC})
 endif()
-target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
+target_include_directories(mem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
 include_directories(${PROJECT_SOURCE_DIR}
 	${LIBMEM_INC}
@@ -109,9 +109,9 @@ if (LIBMEM_BUILD_TESTS)
 	add_subdirectory(${TESTS_DIR})
 endif()
 
-set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
-target_compile_definitions(libmem PUBLIC LM_EXPORT)
-add_dependencies(libmem
+set_target_properties(mem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
+target_compile_definitions(mem PUBLIC LM_EXPORT)
+add_dependencies(mem
 	capstone-engine
 	keystone-engine
 )
@@ -123,7 +123,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN
 		psapi
 		ntdll
 	)
-	target_compile_definitions(libmem PUBLIC alloca=_alloca)
+	target_compile_definitions(mem PUBLIC alloca=_alloca)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
 	set(LIBMEM_DEPS 
 		${LIBMEM_DEPS}
@@ -145,13 +145,13 @@ else()
 	message(FATAL_ERROR "[!] Unsupported platform")
 endif()
 
-target_link_libraries(libmem ${LIBMEM_DEPS})
+target_link_libraries(mem ${LIBMEM_DEPS})
 if(LIBMEM_BUILD_STATIC)
 	# Create a bundled static library containing all dependencies (to mimic the shared library behavior)
-	set_target_properties(libmem PROPERTIES OUTPUT_NAME "libmem_partial")
+	set_target_properties(mem PROPERTIES OUTPUT_NAME "libmem_partial")
 	set(libmem_bundle_files "$<TARGET_FILE:libmem>")
 
-	get_target_property(libmem_link_libraries libmem LINK_LIBRARIES)
+	get_target_property(libmem_link_libraries mem LINK_LIBRARIES)
 	foreach(libmem_link_library IN LISTS libmem_link_libraries)
 		if(TARGET "${libmem_link_library}")
 			list(APPEND libmem_bundle_files "$<TARGET_FILE:${libmem_link_library}>")
@@ -159,27 +159,27 @@ if(LIBMEM_BUILD_STATIC)
 	endforeach()
 
 	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-		file(WRITE "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "CREATE liblibmem.a\n" )
+		file(WRITE "${CMAKE_BINARY_DIR}/libmem.ar.in" "CREATE libmem.a\n" )
 		foreach(libmem_bundle_file IN LISTS libmem_bundle_files)
-			file(APPEND "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "ADDLIB ${libmem_bundle_file}\n")
+			file(APPEND "${CMAKE_BINARY_DIR}/libmem.ar.in" "ADDLIB ${libmem_bundle_file}\n")
 		endforeach()
-		file(APPEND "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "SAVE\nEND\n")
-		file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/liblibmem.ar" INPUT "${CMAKE_BINARY_DIR}/liblibmem.ar.in")
+		file(APPEND "${CMAKE_BINARY_DIR}/libmem.ar.in" "SAVE\nEND\n")
+		file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/libmem.ar" INPUT "${CMAKE_BINARY_DIR}/libmem.ar.in")
 
 		add_custom_command(
-			TARGET libmem POST_BUILD
+			TARGET mem POST_BUILD
 			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-			COMMAND "${CMAKE_AR}" -M < "${CMAKE_BINARY_DIR}/liblibmem.ar"
-			COMMENT "Bundling liblibmem.a"
+			COMMAND "${CMAKE_AR}" -M < "${CMAKE_BINARY_DIR}/libmem.ar"
+			COMMENT "Bundling libmem.a"
 			VERBATIM
 		)
 	elseif(MSVC)
 		find_program(LIB_EXECUTABLE lib)
 		add_custom_command(
-			TARGET libmem POST_BUILD
+			TARGET mem POST_BUILD
 			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-			COMMAND "${LIB_EXECUTABLE}" /NOLOGO /OUT:libmem.lib ${libmem_bundle_files}
-			COMMENT "Bundling libmem.lib"
+			COMMAND "${LIB_EXECUTABLE}" /NOLOGO /OUT:mem.lib ${libmem_bundle_files}
+			COMMENT "Bundling mem.lib"
 			VERBATIM
 		)
 	else()
@@ -200,10 +200,10 @@ else()
 	set(CMAKE_INSTALL_PREFIX "/usr")
 endif()
 
-install(TARGETS libmem
+install(TARGETS mem
 	LIBRARY DESTINATION lib)
 
-install(TARGETS libmem
+install(TARGETS mem
 	RUNTIME DESTINATION lib)
 
 install(DIRECTORY ${LIBMEM_INC}/libmem DESTINATION include)

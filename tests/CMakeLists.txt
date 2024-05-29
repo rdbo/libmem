@@ -17,7 +17,7 @@ target_include_directories(unit
     PUBLIC
     ${LIBMEM_INC}
 )
-target_link_libraries(unit libmem)
+target_link_libraries(unit mem)
 target_compile_definitions(unit PUBLIC LIBTEST_PATH="${LIBTEST_PATH}" TARGET_NAME="target${CMAKE_EXECUTABLE_SUFFIX}")
 
 add_executable(target ${TARGET_SRC})
@@ -25,4 +25,4 @@ target_include_directories(target
     PUBLIC
     ${LIBMEM_INC}
 )
-target_link_libraries(target libmem)
+target_link_libraries(target mem)

@@ -22,6 +22,7 @@
 #include <libmem/libmem.h>
 #include <posixutils/posixutils.h>
 #include <elfutils/elfutils.h>
+#include <arch/arch.h>
 #include <assert.h>
 #include <unistd.h>
 #include <sys/user.h>
@@ -66,6 +67,8 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 		process.start_time = get_process_start_time(&procs[i]);
 
 		process.bits = get_elf_bits(process.path);
+
+		process.arch = get_architecture_from_bits(process.bits);
 
 		if (callback(&process, arg) == LM_FALSE)
 			break;
@@ -112,6 +115,8 @@ LM_GetProcess(lm_process_t *process_out)
 	process_out->start_time = get_process_start_time(procs);
 	process_out->bits = LM_GetBits();
 
+	process_out->arch = get_architecture_from_bits(process_out->bits);
+
 	result = LM_TRUE;
 
 	procstat_freeprocs(ps, procs);
@@ -154,6 +159,8 @@ LM_GetProcessEx(lm_pid_t      pid,
 
 	process_out->start_time = get_process_start_time(procs);
 	process_out->bits = get_elf_bits(process_out->path);
+
+	process_out->arch = get_architecture_from_bits(process_out->bits);
 
 	result = LM_TRUE;
 

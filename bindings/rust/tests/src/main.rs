@@ -330,10 +330,10 @@ fn main() {
         0xdeadbeef,
     )
     .unwrap();
-    println!("[*] Assembled Payload: {:?}", payload);
+    println!("[*] Assembled x86 Payload: {:?}", payload);
 
     let disas = unsafe { disassemble(inst.bytes.as_ptr() as Address) }.unwrap();
-    println!("[*] Disassembled Instruction: {}", disas);
+    println!("[*] Disassembled x86 Instruction: {}", disas);
 
     let payload_disas = unsafe {
         disassemble_ex(
@@ -343,8 +343,30 @@ fn main() {
             0,
             0xdeadbeef,
         )
+        .unwrap()
     };
-    println!("[*] Disassembled Payload: {:?}", payload_disas);
+    println!("[*] Disassembled x86 Payload:");
+    for inst in payload_disas {
+        println!(" - {}", inst);
+    }
+
+    let arm_payload = assemble_ex("bx r0; nop; bx r1", Arch::ARMV7, 0).unwrap();
+    println!("[*] Assembled ARM Payload: {:?}", arm_payload);
+
+    let arm_payload_disas = unsafe {
+        disassemble_ex(
+            arm_payload.as_ptr() as Address,
+            Arch::ARMV7,
+            arm_payload.len(),
+            0,
+            0,
+        )
+        .unwrap()
+    };
+    println!("[*] Disassembled ARM Payload:");
+    for inst in arm_payload_disas {
+        println!(" - {}", inst);
+    }
 
     let code_len = unsafe { code_length(payload.as_ptr() as Address, 3) }.unwrap();
     println!("[*] Aligned Code Length: {}", code_len);

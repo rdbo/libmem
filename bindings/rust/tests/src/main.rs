@@ -10,7 +10,7 @@ use libmem::{
     get_thread_ex, get_thread_process, hook_code, hook_code_ex, is_process_alive, load_module,
     load_module_ex, pattern_scan, pattern_scan_ex, prot_memory, prot_memory_ex, read_memory,
     read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex, unhook_code, unhook_code_ex,
-    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Bits, Prot, Vmt,
+    unload_module, unload_module_ex, write_memory, write_memory_ex, Address, Arch, Prot, Vmt,
 };
 
 fn some_function(num: i32, c: char) {
@@ -326,8 +326,7 @@ fn main() {
 
     let payload = assemble_ex(
         "push rbp; mov rbp, rsp; mov rsp, rbp; pop rbp; ret",
-        Arch::X86,
-        Bits::Bits64,
+        Arch::X64,
         0xdeadbeef,
     )
     .unwrap();
@@ -339,8 +338,7 @@ fn main() {
     let payload_disas = unsafe {
         disassemble_ex(
             payload.as_ptr() as Address,
-            Arch::X86,
-            Bits::Bits64,
+            Arch::X64,
             payload.len(),
             0,
             0xdeadbeef,

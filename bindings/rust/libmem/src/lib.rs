@@ -34,10 +34,7 @@ use std::fmt;
 
 use bitflags::bitflags;
 
-use libmem_sys::{
-    lm_address_t, lm_arch_t, lm_pid_t, lm_tid_t, lm_time_t, LM_ARCH_ARM, LM_ARCH_ARM64,
-    LM_ARCH_MIPS, LM_ARCH_PPC, LM_ARCH_SPARC, LM_ARCH_SYSZ, LM_ARCH_X86,
-};
+use libmem_sys::*;
 
 pub type Pid = lm_pid_t;
 pub type Tid = lm_tid_t;
@@ -98,12 +95,28 @@ impl fmt::Display for Prot {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Arch {
-    ARM,
-    ARM64,
+    ARMV7,
+    ARMV8,
+    THUMBV7,
+    THUMBV8,
+    ARMV7EB,
+    THUMBV7EB,
+    ARMV8EB,
+    THUMBV8EB,
+    AARCH64,
     MIPS,
+    MIPS64,
+    MIPSEL,
+    MIPSEL64,
+    X86_16,
     X86,
-    PPC,
+    X64,
+    PPC32,
+    PPC64,
+    PPC64LE,
     SPARC,
+    SPARC64,
+    SPARCEL,
     SYSZ,
 }
 
@@ -111,12 +124,28 @@ impl TryFrom<lm_arch_t> for Arch {
     type Error = ();
     fn try_from(value: lm_arch_t) -> Result<Self, Self::Error> {
         match value {
-            LM_ARCH_ARM => Ok(Self::ARM),
-            LM_ARCH_ARM64 => Ok(Self::ARM64),
+            LM_ARCH_ARMV7 => Ok(Self::ARMV7),
+            LM_ARCH_ARMV8 => Ok(Self::ARMV8),
+            LM_ARCH_THUMBV7 => Ok(Self::THUMBV7),
+            LM_ARCH_THUMBV8 => Ok(Self::THUMBV8),
+            LM_ARCH_ARMV7EB => Ok(Self::ARMV7EB),
+            LM_ARCH_THUMBV7EB => Ok(Self::THUMBV7EB),
+            LM_ARCH_ARMV8EB => Ok(Self::ARMV8EB),
+            LM_ARCH_THUMBV8EB => Ok(Self::THUMBV8EB),
+            LM_ARCH_AARCH64 => Ok(Self::AARCH64),
             LM_ARCH_MIPS => Ok(Self::MIPS),
+            LM_ARCH_MIPS64 => Ok(Self::MIPS64),
+            LM_ARCH_MIPSEL => Ok(Self::MIPSEL),
+            LM_ARCH_MIPSEL64 => Ok(Self::MIPSEL64),
+            LM_ARCH_X86_16 => Ok(Self::X86_16),
             LM_ARCH_X86 => Ok(Self::X86),
-            LM_ARCH_PPC => Ok(Self::PPC),
+            LM_ARCH_X64 => Ok(Self::X64),
+            LM_ARCH_PPC32 => Ok(Self::PPC32),
+            LM_ARCH_PPC64 => Ok(Self::PPC64),
+            LM_ARCH_PPC64LE => Ok(Self::PPC64LE),
             LM_ARCH_SPARC => Ok(Self::SPARC),
+            LM_ARCH_SPARC64 => Ok(Self::SPARC64),
+            LM_ARCH_SPARCEL => Ok(Self::SPARCEL),
             LM_ARCH_SYSZ => Ok(Self::SYSZ),
             _ => Err(()),
         }
@@ -126,12 +155,28 @@ impl TryFrom<lm_arch_t> for Arch {
 impl Into<lm_arch_t> for Arch {
     fn into(self) -> lm_arch_t {
         match self {
-            Self::ARM => LM_ARCH_ARM,
-            Self::ARM64 => LM_ARCH_ARM64,
+            Self::ARMV7 => LM_ARCH_ARMV7,
+            Self::ARMV8 => LM_ARCH_ARMV8,
+            Self::THUMBV7 => LM_ARCH_THUMBV7,
+            Self::THUMBV8 => LM_ARCH_THUMBV8,
+            Self::ARMV7EB => LM_ARCH_ARMV7EB,
+            Self::THUMBV7EB => LM_ARCH_THUMBV7EB,
+            Self::ARMV8EB => LM_ARCH_ARMV8EB,
+            Self::THUMBV8EB => LM_ARCH_THUMBV8EB,
+            Self::AARCH64 => LM_ARCH_AARCH64,
             Self::MIPS => LM_ARCH_MIPS,
+            Self::MIPS64 => LM_ARCH_MIPS64,
+            Self::MIPSEL => LM_ARCH_MIPSEL,
+            Self::MIPSEL64 => LM_ARCH_MIPSEL64,
+            Self::X86_16 => LM_ARCH_X86_16,
             Self::X86 => LM_ARCH_X86,
-            Self::PPC => LM_ARCH_PPC,
+            Self::X64 => LM_ARCH_X64,
+            Self::PPC32 => LM_ARCH_PPC32,
+            Self::PPC64 => LM_ARCH_PPC64,
+            Self::PPC64LE => LM_ARCH_PPC64LE,
             Self::SPARC => LM_ARCH_SPARC,
+            Self::SPARC64 => LM_ARCH_SPARC64,
+            Self::SPARCEL => LM_ARCH_SPARCEL,
             Self::SYSZ => LM_ARCH_SYSZ,
         }
     }

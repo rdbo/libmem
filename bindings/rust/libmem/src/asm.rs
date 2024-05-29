@@ -7,7 +7,7 @@ use std::{
 
 use libmem_sys::{lm_byte_t, lm_inst_t, lm_process_t, LM_TRUE};
 
-use crate::{Address, Arch, Bits, Process};
+use crate::{Address, Arch, Process};
 
 /// An assembled/disassembled instruction
 #[derive(Debug, Clone, PartialEq)]
@@ -70,19 +70,13 @@ pub fn assemble(code: &str) -> Option<Inst> {
 
 /// Assembles one or more instructions with customizable parameters (arch, bits, runtime address)
 /// into machine code
-pub fn assemble_ex(
-    code: &str,
-    arch: Arch,
-    bits: Bits,
-    runtime_address: Address,
-) -> Option<Vec<u8>> {
+pub fn assemble_ex(code: &str, arch: Arch, runtime_address: Address) -> Option<Vec<u8>> {
     let c_code = CString::new(code).ok()?;
     let mut raw_payload: *mut lm_byte_t = std::ptr::null_mut();
     let payload_size = unsafe {
         libmem_sys::LM_AssembleEx(
             c_code.as_ptr(),
             arch.into(),
-            bits.into(),
             runtime_address,
             &mut raw_payload as *mut *mut lm_byte_t,
         )
@@ -116,7 +110,6 @@ pub unsafe fn disassemble(machine_code: Address) -> Option<Inst> {
 pub unsafe fn disassemble_ex(
     machine_code: Address,
     arch: Arch,
-    bits: Bits,
     max_size: usize,
     instruction_count: usize,
     runtime_address: Address,
@@ -126,7 +119,6 @@ pub unsafe fn disassemble_ex(
         libmem_sys::LM_DisassembleEx(
             machine_code,
             arch.into(),
-            bits.into(),
             max_size,
             instruction_count,
             runtime_address,

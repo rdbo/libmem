@@ -1187,8 +1187,6 @@ LM_Assemble(lm_string_t code,
  * @param code The instructions to be assembled.
  * Example: `"mov eax, ebx ; jmp eax"`.
  * @param arch The architecture to be assembled.
- * @param bits The bitness of the architecture to be assembled.
- * It can be `32` or `64`.
  * @param runtime_address The runtime address to resolve
  * the addressing (for example, relative jumps will be resolved using this address).
  * @param payload_out A pointer to the buffer that will receive the assembled instructions.
@@ -1229,8 +1227,6 @@ LM_Disassemble(lm_address_t machine_code,
  *
  * @param machine_code The address of the instructions to be disassembled.
  * @param arch The architecture to be disassembled.
- * @param bits The bitness of the architecture to be disassembled.
- * It can be `32` or `64`.
  * @param max_size The maximum number of bytes to disassemble (0 for as
  * many as possible, limited by `instruction_count`).
  * @param instruction_count The amount of instructions

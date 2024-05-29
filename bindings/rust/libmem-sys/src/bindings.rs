@@ -55,20 +55,37 @@ pub const LM_PROT_XW: lm_prot_t = 6;
 pub const LM_PROT_RW: lm_prot_t = 3;
 pub const LM_PROT_XRW: lm_prot_t = 7;
 
-pub const LM_ARCH_ARM: lm_arch_t = 0;
-pub const LM_ARCH_ARM64: lm_arch_t = 1;
-pub const LM_ARCH_MIPS: lm_arch_t = 2;
-pub const LM_ARCH_X86: lm_arch_t = 3;
-pub const LM_ARCH_PPC: lm_arch_t = 4;
-pub const LM_ARCH_SPARC: lm_arch_t = 5;
-pub const LM_ARCH_SYSZ: lm_arch_t = 6;
-pub const LM_ARCH_MAX: lm_arch_t = 7;
+pub const LM_ARCH_ARMV7: lm_arch_t = 0;
+pub const LM_ARCH_ARMV8: lm_arch_t = 1;
+pub const LM_ARCH_THUMBV7: lm_arch_t = 2;
+pub const LM_ARCH_THUMBV8: lm_arch_t = 3;
+pub const LM_ARCH_ARMV7EB: lm_arch_t = 4;
+pub const LM_ARCH_THUMBV7EB: lm_arch_t = 5;
+pub const LM_ARCH_ARMV8EB: lm_arch_t = 6;
+pub const LM_ARCH_THUMBV8EB: lm_arch_t = 7;
+pub const LM_ARCH_AARCH64: lm_arch_t = 8;
+pub const LM_ARCH_MIPS: lm_arch_t = 9;
+pub const LM_ARCH_MIPS64: lm_arch_t = 10;
+pub const LM_ARCH_MIPSEL: lm_arch_t = 11;
+pub const LM_ARCH_MIPSEL64: lm_arch_t = 12;
+pub const LM_ARCH_X86_16: lm_arch_t = 13;
+pub const LM_ARCH_X86: lm_arch_t = 14;
+pub const LM_ARCH_X64: lm_arch_t = 15;
+pub const LM_ARCH_PPC32: lm_arch_t = 16;
+pub const LM_ARCH_PPC64: lm_arch_t = 17;
+pub const LM_ARCH_PPC64LE: lm_arch_t = 18;
+pub const LM_ARCH_SPARC: lm_arch_t = 19;
+pub const LM_ARCH_SPARC64: lm_arch_t = 20;
+pub const LM_ARCH_SPARCEL: lm_arch_t = 21;
+pub const LM_ARCH_SYSZ: lm_arch_t = 22;
+pub const LM_ARCH_MAX: lm_arch_t = 23;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct lm_process_t {
     pub pid: lm_pid_t,
     pub ppid: lm_pid_t,
+    pub arch: lm_arch_t,
     pub bits: lm_size_t,
     pub start_time: lm_time_t,
     pub path: [lm_char_t; 4096usize],
@@ -888,11 +905,10 @@ extern "C" {
     pub fn LM_Assemble(code: lm_string_t, instruction_out: *mut lm_inst_t) -> lm_bool_t;
 }
 extern "C" {
-    #[doc = " The function assembles instructions into machine code.\n\n @param code The instructions to be assembled.\n Example: `\"mov eax, ebx ; jmp eax\"`.\n @param arch The architecture to be assembled.\n @param bits The bitness of the architecture to be assembled.\n It can be `32` or `64`.\n @param runtime_address The runtime address to resolve\n the addressing (for example, relative jumps will be resolved using this address).\n @param payload_out A pointer to the buffer that will receive the assembled instructions.\n The buffer should be freed with `LM_FreePayload` after use.\n\n @return On success, it returns the size of the assembled instructions, in bytes.\n On failure, it returns `0`."]
+    #[doc = " The function assembles instructions into machine code.\n\n @param code The instructions to be assembled.\n Example: `\"mov eax, ebx ; jmp eax\"`.\n @param arch The architecture to be assembled.\n @param runtime_address The runtime address to resolve\n the addressing (for example, relative jumps will be resolved using this address).\n @param payload_out A pointer to the buffer that will receive the assembled instructions.\n The buffer should be freed with `LM_FreePayload` after use.\n\n @return On success, it returns the size of the assembled instructions, in bytes.\n On failure, it returns `0`."]
     pub fn LM_AssembleEx(
         code: lm_string_t,
         arch: lm_arch_t,
-        bits: lm_size_t,
         runtime_address: lm_address_t,
         payload_out: *mut *mut lm_byte_t,
     ) -> lm_size_t;
@@ -907,11 +923,10 @@ extern "C" {
         -> lm_bool_t;
 }
 extern "C" {
-    #[doc = " The function disassembles instructions into an array of\n `lm_inst_t` structs.\n\n @param machine_code The address of the instructions to be disassembled.\n @param arch The architecture to be disassembled.\n @param bits The bitness of the architecture to be disassembled.\n It can be `32` or `64`.\n @param max_size The maximum number of bytes to disassemble (0 for as\n many as possible, limited by `instruction_count`).\n @param instruction_count The amount of instructions\n to disassemble (0 for as many as possible, limited by `max_size`).\n @param runtime_address The runtime address to resolve\n the addressing (for example, relative jumps will be resolved using this address).\n @param instructions_out A pointer to the buffer that will receive the disassembled instructions.\n The buffer should be freed with `LM_FreeInstructions` after use.\n\n @return On success, it returns the count of the instructions disassembled. On failure, it\n returns `0`."]
+    #[doc = " The function disassembles instructions into an array of\n `lm_inst_t` structs.\n\n @param machine_code The address of the instructions to be disassembled.\n @param arch The architecture to be disassembled.\n @param max_size The maximum number of bytes to disassemble (0 for as\n many as possible, limited by `instruction_count`).\n @param instruction_count The amount of instructions\n to disassemble (0 for as many as possible, limited by `max_size`).\n @param runtime_address The runtime address to resolve\n the addressing (for example, relative jumps will be resolved using this address).\n @param instructions_out A pointer to the buffer that will receive the disassembled instructions.\n The buffer should be freed with `LM_FreeInstructions` after use.\n\n @return On success, it returns the count of the instructions disassembled. On failure, it\n returns `0`."]
     pub fn LM_DisassembleEx(
         machine_code: lm_address_t,
         arch: lm_arch_t,
-        bits: lm_size_t,
         max_size: lm_size_t,
         instruction_count: lm_size_t,
         runtime_address: lm_address_t,

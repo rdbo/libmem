@@ -25,6 +25,7 @@
 
 #include <libmem/libmem.h>
 #include <winutils/winutils.h>
+#include <arch/arch.h>
 #include <assert.h>
 
 typedef struct {

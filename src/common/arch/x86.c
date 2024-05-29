@@ -9,7 +9,6 @@ get_architecture()
 	return LM_GetBits() == 64 ? LM_ARCH_X64 : LM_ARCH_X86;
 }
 
-/* TODO: Make generic 'generate_hook_payload' that takes an 'lm_arch_t' instead of bits */
 lm_size_t
 generate_hook_payload(lm_address_t from, lm_address_t to, lm_size_t bits, lm_byte_t **payload_out)
 {

@@ -46,7 +46,7 @@ LM_Assemble(lm_string_t code,
 	if (!code || !instruction_out)
 		return ret;
 
-	if (!LM_AssembleEx(code, LM_GetArchitecture(), LM_GetBits(), 0, &payload))
+	if (!LM_AssembleEx(code, LM_GetArchitecture(), 0, &payload))
 		return ret;
 
 	ret = LM_Disassemble((lm_address_t)payload, instruction_out);
@@ -61,56 +61,120 @@ LM_Assemble(lm_string_t code,
 LM_API lm_size_t LM_CALL
 LM_AssembleEx(lm_string_t  code,
               lm_arch_t    arch,
-	      lm_size_t    bits,
 	      lm_address_t runtime_address,
 	      lm_byte_t  **payload_out)
 {
 	ks_engine *ks;
-	ks_arch ksarch;
+	ks_arch ksarch = 0;
 	ks_mode ksmode = 0;
 	lm_size_t size = 0;
 	size_t asmsize;
 	size_t count;
-	static const ks_arch arch_cvt_table[] = {
-		KS_ARCH_ARM,
-		KS_ARCH_ARM64,
-		KS_ARCH_MIPS,
-		KS_ARCH_X86,
-		KS_ARCH_PPC,
-		KS_ARCH_SPARC,
-		KS_ARCH_SYSTEMZ,
-		KS_ARCH_EVM,
-	};
 
-	if (!code || arch >= LM_ARCH_MAX || (bits != 32 && bits != 64) || !payload_out)
+	if (!code || arch >= LM_ARCH_MAX || !payload_out)
 		return size;
 
-	ksarch = arch_cvt_table[arch];
+	switch (arch) {
+	/* ARM */
+	case LM_ARCH_ARMV7:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_ARM;
+		break;
+	case LM_ARCH_ARMV8:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_ARM | KS_MODE_V8;
+		break;
+	case LM_ARCH_THUMBV7:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_THUMB;
+		break;
+	case LM_ARCH_THUMBV8:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_THUMB | KS_MODE_V8;
+		break;
 
-	switch (ksarch) {
-	case KS_ARCH_X86:
-		if (bits == 64)
-			ksmode = KS_MODE_64;
-		else
-			ksmode = KS_MODE_32;
+	case LM_ARCH_ARMV7EB:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_ARM;
 		break;
-	case KS_ARCH_ARM:
-		ksmode = KS_MODE_ARM;
+	case LM_ARCH_THUMBV7EB:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_THUMB;
 		break;
-	case KS_ARCH_ARM64:
+	case LM_ARCH_ARMV8EB:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_ARM | KS_MODE_V8;
+		break;
+	case LM_ARCH_THUMBV8EB:
+		ksarch = KS_ARCH_ARM;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_THUMB | KS_MODE_V8;
+		break;
+
+	case LM_ARCH_AARCH64:
+		ksarch = KS_ARCH_ARM64;
 		ksmode = KS_MODE_LITTLE_ENDIAN;
 		break;
-	case KS_ARCH_MIPS:
-		if (bits == 64)
-			ksmode = KS_MODE_MIPS64;
-		else
-			ksmode = KS_MODE_MIPS32;
+	/* MIPS */
+	case LM_ARCH_MIPS:
+		ksarch = KS_ARCH_MIPS;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_MIPS32;
 		break;
-	case KS_ARCH_SPARC:
-		if (bits == 64)
-			ksmode = KS_MODE_SPARC64;
-		else
-			ksmode = KS_MODE_SPARC32;
+	case LM_ARCH_MIPS64:
+		ksarch = KS_ARCH_MIPS;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_MIPS64;
+		break;
+	case LM_ARCH_MIPSEL:
+		ksarch = KS_ARCH_MIPS;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_MIPS32;
+		break;
+	case LM_ARCH_MIPSEL64:
+		ksarch = KS_ARCH_MIPS;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_MIPS64;
+		break;
+	/* X86 */
+	case LM_ARCH_X86_16:
+		ksarch = KS_ARCH_X86;
+		ksmode = KS_MODE_16;
+		break;
+	case LM_ARCH_X86:
+		ksarch = KS_ARCH_X86;
+		ksmode = KS_MODE_32;
+		break;
+	case LM_ARCH_X64:
+		ksarch = KS_ARCH_X86;
+		ksmode = KS_MODE_64;
+		break;
+	/* PowerPC */
+	case LM_ARCH_PPC32:
+		ksarch = KS_ARCH_PPC;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_PPC32;
+		break;
+	case LM_ARCH_PPC64:
+		ksarch = KS_ARCH_PPC;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_PPC64;
+		break;
+	case LM_ARCH_PPC64LE:
+		ksarch = KS_ARCH_PPC;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_PPC32;
+		break;
+
+	/* SPARC */
+	case LM_ARCH_SPARC:
+		ksarch = KS_ARCH_SPARC;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_SPARC32;
+		break;
+	case LM_ARCH_SPARC64:
+		ksarch = KS_ARCH_SPARC;
+		ksmode = KS_MODE_BIG_ENDIAN | KS_MODE_SPARC64;
+		break;
+	case LM_ARCH_SPARCEL:
+		ksarch = KS_ARCH_SPARC;
+		ksmode = KS_MODE_LITTLE_ENDIAN | KS_MODE_SPARC32;
+		break;
+	/* SystemZ */
+	case LM_ARCH_SYSZ:
+		ksarch = KS_ARCH_SYSTEMZ;
+		ksmode = 0;
 		break;
 	}
 
@@ -145,7 +209,7 @@ LM_Disassemble(lm_address_t machine_code,
 	if (!machine_code || !instruction_out)
 		return LM_FALSE;
 
-	if (LM_DisassembleEx(machine_code, LM_GetArchitecture(), LM_GetBits(), LM_INST_MAX, 1, 0, &insts) == 0)
+	if (LM_DisassembleEx(machine_code, LM_GetArchitecture(), LM_INST_MAX, 1, 0, &insts) == 0)
 		return LM_FALSE;
 
 	*instruction_out = *insts;
@@ -160,7 +224,6 @@ LM_Disassemble(lm_address_t machine_code,
 LM_API lm_size_t LM_CALL
 LM_DisassembleEx(lm_address_t machine_code,
 		 lm_arch_t    arch,
-		 lm_size_t    bits,
 		 lm_size_t    max_size,
 		 lm_size_t    instruction_count,
 		 lm_address_t runtime_address,
@@ -174,35 +237,110 @@ LM_DisassembleEx(lm_address_t machine_code,
 	lm_inst_t *insts;
 	lm_size_t i;
 
-	static const cs_arch arch_cvt_table[] = {
-		CS_ARCH_ARM,
-		CS_ARCH_ARM64,
-		CS_ARCH_MIPS,
-		CS_ARCH_X86,
-		CS_ARCH_PPC,
-		CS_ARCH_SPARC,
-		CS_ARCH_SYSZ,
-		CS_ARCH_EVM,
-	};
-
-	if (machine_code == LM_ADDRESS_BAD || arch >= LM_ARCH_MAX || (bits != 32 && bits != 64) || (max_size == 0 && instruction_count == 0) || !instructions_out)
+	if (machine_code == LM_ADDRESS_BAD || arch >= LM_ARCH_MAX || (max_size == 0 && instruction_count == 0) || !instructions_out)
 		return inst_count;
 
-	csarch = arch_cvt_table[arch];
+	switch (arch) {
+	/* ARM */
+	case LM_ARCH_ARMV7:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_ARM;
+		break;
+	case LM_ARCH_ARMV8:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_ARM | CS_MODE_V8;
+		break;
+	case LM_ARCH_THUMBV7:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_THUMB;
+		break;
+	case LM_ARCH_THUMBV8:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_THUMB | CS_MODE_V8;
+		break;
 
-	switch (csarch) {
-	case CS_ARCH_X86:
-	case CS_ARCH_MIPS:
-		if (bits == 64)
-			csmode = CS_MODE_64;
-		else
-			csmode = CS_MODE_32;
+	case LM_ARCH_ARMV7EB:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_ARM;
 		break;
-	case CS_ARCH_ARM:
-	case CS_ARCH_ARM64:
-		csmode = CS_MODE_ARM;
+	case LM_ARCH_THUMBV7EB:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_THUMB;
 		break;
-	case CS_ARCH_SPARC:
+	case LM_ARCH_ARMV8EB:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_ARM | CS_MODE_V8;
+		break;
+	case LM_ARCH_THUMBV8EB:
+		csarch = CS_ARCH_ARM;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_THUMB | CS_MODE_V8;
+		break;
+
+	case LM_ARCH_AARCH64:
+		csarch = CS_ARCH_ARM64;
+		csmode = CS_MODE_LITTLE_ENDIAN;
+		break;
+	/* MIPS */
+	case LM_ARCH_MIPS:
+		csarch = CS_ARCH_MIPS;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_MIPS32;
+		break;
+	case LM_ARCH_MIPS64:
+		csarch = CS_ARCH_MIPS;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_MIPS64;
+		break;
+	case LM_ARCH_MIPSEL:
+		csarch = CS_ARCH_MIPS;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_MIPS32;
+		break;
+	case LM_ARCH_MIPSEL64:
+		csarch = CS_ARCH_MIPS;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_MIPS64;
+		break;
+	/* X86 */
+	case LM_ARCH_X86_16:
+		csarch = CS_ARCH_X86;
+		csmode = CS_MODE_16;
+		break;
+	case LM_ARCH_X86:
+		csarch = CS_ARCH_X86;
+		csmode = CS_MODE_32;
+		break;
+	case LM_ARCH_X64:
+		csarch = CS_ARCH_X86;
+		csmode = CS_MODE_64;
+		break;
+	/* PowerPC */
+	case LM_ARCH_PPC32:
+		csarch = CS_ARCH_PPC;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_32;
+		break;
+	case LM_ARCH_PPC64:
+		csarch = CS_ARCH_PPC;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_64;
+		break;
+	case LM_ARCH_PPC64LE:
+		csarch = CS_ARCH_PPC;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_32;
+		break;
+
+	/* SPARC */
+	case LM_ARCH_SPARC:
+		csarch = CS_ARCH_SPARC;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_32;
+		break;
+	case LM_ARCH_SPARC64:
+		csarch = CS_ARCH_SPARC;
+		csmode = CS_MODE_BIG_ENDIAN | CS_MODE_64;
+		break;
+	case LM_ARCH_SPARCEL:
+		csarch = CS_ARCH_SPARC;
+		csmode = CS_MODE_LITTLE_ENDIAN | CS_MODE_32;
+		break;
+	/* SystemZ */
+	case LM_ARCH_SYSZ:
+		csarch = CS_ARCH_SYSZ;
+		csmode = 0;
 		break;
 	}
 
@@ -263,6 +401,26 @@ LM_CodeLength(lm_address_t machine_code,
 
 /********************************/
 
+static lm_arch_t
+get_process_arch(const lm_process_t *process)
+{
+	lm_arch_t current_arch = LM_GetArchitecture();
+	lm_arch_t process_arch = current_arch;
+	switch (current_arch) {
+	case LM_ARCH_X86_16:
+	case LM_ARCH_X86:
+	case LM_ARCH_X64:
+		if (process->bits == 64) {
+			process_arch = LM_ARCH_X64;
+		} else {
+			process_arch = LM_ARCH_X86;
+		}
+		break;
+	}
+
+	return process_arch;
+}
+
 LM_API lm_size_t LM_CALL
 LM_CodeLengthEx(const lm_process_t *process,
 		lm_address_t        machine_code,
@@ -279,7 +437,7 @@ LM_CodeLengthEx(const lm_process_t *process,
 		if (LM_ReadMemoryEx(process, machine_code, codebuf, sizeof(codebuf)) == 0)
 			return 0;
 
-		if (LM_DisassembleEx((lm_address_t)codebuf, LM_GetArchitecture(), process->bits, LM_INST_MAX, 1, 0, &insts) == 0)
+		if (LM_DisassembleEx((lm_address_t)codebuf, get_process_arch(process), LM_INST_MAX, 1, 0, &insts) == 0)
 			return 0;
 
 		machine_code += insts[0].size;

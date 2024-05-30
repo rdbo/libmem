@@ -1,6 +1,7 @@
 from libmem import *
 import ctypes
 import struct
+import time
 
 def separator():
     print("========================================")
@@ -223,14 +224,32 @@ print(f"[*] Signature Scan Match: {hex(sig_scan)}")
 
 separator()
 
-# TODO: Add tests for 'LM_DataScanEx', 'LM_PatternScanEx', 'LM_SigScanEx'
-# separator()
+scan_alloc = LM_AllocMemoryEx(proc, 1024, LM_PROT_RW)
+print(f"[*] External Scan Alloc: {hex(scan_alloc)}")
+buf_addr = scan_alloc + 0x10
+LM_WriteMemoryEx(proc, buf_addr, bytearray(buf.value))
+print(f"[*] Externally Scanning For Buffer At: {hex(buf_addr)}")
+scan_addr = buf_addr - 0x10
+scan_size = 0x100
+data_scan = LM_DataScanEx(proc, bytearray(buf.value), scan_addr, scan_size)
+print(f"[*] Data Scan Match: {hex(data_scan)}")
+pattern_scan = LM_PatternScanEx(proc, bytearray(buf.value), "xxxx?x?x?x", scan_addr, scan_size)
+print(f"[*] Pattern Scan Match: {hex(pattern_scan)}")
+sig_scan = LM_SigScanEx(proc, "10 20 30 40 ?? ?? 70 80 ?? A0", scan_addr, scan_size)
+print(f"[*] Signature Scan Match: {hex(sig_scan)}")
 
 # TODO: Add tests for 'LM_HookCode' and 'LM_UnhookCode'
 # separator()
 
-# TODO: Add tests for 'LM_HookCodeEx' and 'LM_UnhookCodeEx'
-# separator()
+wait_message_addr = LM_FindSymbolAddress(mod, "wait_message")
+hk_wait_message_addr = LM_FindSymbolAddress(mod, "hk_wait_message")
+trampoline = LM_HookCodeEx(proc, wait_message_addr, hk_wait_message_addr)
+print(f"[*] External Hook Trampoline: {trampoline}")
+time.sleep(3)
+LM_UnhookCodeEx(proc, wait_message_addr, trampoline)
+print("[*] Unhooked External Function")
+
+separator()
 
 print("[*] Assemblying Instruction")
 inst = LM_Assemble("mov eax, ebx")

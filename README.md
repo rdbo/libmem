@@ -58,7 +58,7 @@ int main()
 	printf("[*] Found 'take_damage' function: %p\n", fn_take_damage);
 
 	LM_HookCode(fn_take_damage, hk_take_damage, LM_NULLPTR);
-	printf("[*] 'take_damage' function was hooked! Player will no longer receive damage\n");
+	printf("[*] 'take_damage' hooked, player will no longer receive damage\n");
 
 	return 0;
 }

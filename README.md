@@ -29,16 +29,12 @@ NOTE: Submodules and external dependencies might have their own licenses! Check 
 - Assemble/Dissassemble Code (JIT)
 - Do VMT Hooking/Unhooking
 - Load/Unload Modules
-- Get Page Information
+- Get Memory Segment Information
 - Enumerate Process Threads
 
 ***And much more!***
 
 ## Examples
-
-For the API manual, access the [documentation](https://github.com/rdbo/libmem/blob/master/docs/README.md)
-
-For more examples, access the [examples directory](https://github.com/rdbo/libmem/blob/master/examples/README.md)
 
 ### C/C++
 ```c
@@ -122,6 +118,13 @@ inst = LM_Disassemble(bytearray(b"\x55"))
 print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
 ```
 
+## Documentation
+The main documentation for libmem can be found in `include/libmem.h`.
+All APIs are documented and contain very descriptive information about each function, their parameters and return value.
+They are located in nearby comments, so you should be able to see them by hovering on your text editor/IDE.
+
+Similarly, the bindings documentation is embedded with their packages, so your text editor/IDE should be able to access the documentation for each API.
+
 ## Unnoficial Bindings
 These bindings are done by the community/third-parties and are not affiliated with the libmem project or its author.
 
@@ -142,7 +145,7 @@ include(FetchContent)
 FetchContent_Declare(libmem-config URL "https://raw.githubusercontent.com/rdbo/libmem/config-v1/libmem-config.cmake" DOWNLOAD_NO_EXTRACT TRUE)
 FetchContent_MakeAvailable(libmem-config)
 set(CMAKE_PREFIX_PATH "${libmem-config_SOURCE_DIR}" "${CMAKE_PREFIX_PATH}")
-set(LIBMEM_DOWNLOAD_VERSION "4.4.0")
+set(LIBMEM_DOWNLOAD_VERSION "5.0.0")
 
 # Find libmem package
 find_package(libmem CONFIG REQUIRED)
@@ -241,9 +244,11 @@ Link the generated libmem library against your binary (`liblibmem.so` for Unix-l
 ```
 
 ## Usage (Rust)
+**NOTE**: You no longer have to install libmem to use with Rust, as long as the `fetch` feature is enabled on the libmem crate (default). If you disable that feature, it will look for libmem in your system, and you can make the libmem path explicit by using the environment var `LIBMEM_DIR=<path to libmem's directory>`.
+
 Add the following line to your `Cargo.toml` under `[dependencies]`:
 ```toml
-libmem = "4"
+libmem = "5"
 ```
 Import libmem in your Rust source code:
 ```rust
@@ -251,6 +256,8 @@ use libmem::*;
 ```
 
 ## Usage (Python)
+**NOTE**: You no longer have to install libmem to use with Python. If no installation is found, the package will fetch and link libmem for you seamlessly. You can use the `LIBDIR=<path to libmem's directory>` environment variable to tell the libmem package where to look for your installation (if you installed it).
+
 Make sure to have Python >= 3.6 active  
 Either install the `libmem` package from PyPi by running the following command:  
 ```
@@ -294,6 +301,7 @@ LM_GetProcess
 LM_GetProcessEx
 LM_FindProcess
 LM_IsProcessAlive
+LM_GetBits
 LM_GetSystemBits
 
 LM_EnumThreads
@@ -314,14 +322,14 @@ LM_UnloadModuleEx
 LM_EnumSymbols
 LM_FindSymbolAddress
 LM_DemangleSymbol
-LM_FreeDemangleSymbol
+LM_FreeDemangledSymbol
 LM_EnumSymbolsDemangled
 LM_FindSymbolAddressDemangled
 
-LM_EnumPages
-LM_EnumPagesEx
-LM_GetPage
-LM_GetPageEx
+LM_EnumSegments
+LM_EnumSegmentsEx
+LM_FindSegment
+LM_FindSegmentEx
 
 LM_ReadMemory
 LM_ReadMemoryEx
@@ -345,19 +353,20 @@ LM_PatternScanEx
 LM_SigScan
 LM_SigScanEx
 
-LM_HookCode
-LM_HookCodeEx
-LM_UnhookCode
-LM_UnhookCodeEx
-
+LM_GetArchitecture
 LM_Assemble
 LM_AssembleEx
-LM_FreeCodeBuffer
+LM_FreePayload
 LM_Disassemble
 LM_DisassembleEx
 LM_FreeInstructions
 LM_CodeLength
 LM_CodeLengthEx
+
+LM_HookCode
+LM_HookCodeEx
+LM_UnhookCode
+LM_UnhookCodeEx
 
 LM_VmtNew
 LM_VmtHook

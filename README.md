@@ -73,16 +73,21 @@ fn godmode() -> Option<()> {
     let client_module = find_module_ex(&game_process, "libclient.so")?;
 
     let fn_update_health = sig_scan_ex(
-        &game_process, "55 48 89 E5 66 B8 ?? ?? 48 8B 5D FC",
-        client_module.base, client_module.size
+        &game_process,
+        "55 48 89 E5 66 B8 ?? ?? 48 8B 5D FC",
+        client_module.base,
+        client_module.size,
     )?;
-    println!("[*] Signature scan result for 'update_health' function: {}", fn_update_health);
+    println!(
+        "[*] Signature scan result for 'update_health' function: {}",
+        fn_update_health
+    );
 
     let shellcode = assemble_ex("mov rbx, 1337; mov [rdi], rbx; ret", Arch::X64, 0)?;
-    write_memory_ex(&game_process, &shellcode.as_slice())?;
+    write_memory_ex(&game_process, fn_update_health + 8, &shellcode.as_slice())?;
     println!("[*] Patched 'update_health' function to always set health to 1337!");
 
-    Ok(())
+    Some(())
 }
 
 fn main() {

@@ -17,8 +17,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import libmem._libmem as _libmem
-from libmem._libmem import lm_process_t, lm_thread_t, lm_module_t, lm_symbol_t, lm_prot_t, lm_page_t, lm_inst_t, lm_vmt_t
-from libmem._libmem import LM_PROT_X, LM_PROT_R, LM_PROT_W, LM_PROT_XR, LM_PROT_XW, LM_PROT_RW, LM_PROT_XRW, LM_BITS
+from libmem._libmem import lm_process_t, lm_thread_t, lm_module_t, lm_symbol_t, lm_prot_t, lm_segment_t, lm_inst_t, lm_vmt_t
+from libmem._libmem import LM_PROT_X, LM_PROT_R, LM_PROT_W, LM_PROT_XR, LM_PROT_XW, LM_PROT_RW, LM_PROT_XRW, LM_ARCH_ARMV7, LM_ARCH_ARMV8, LM_ARCH_THUMBV7, LM_ARCH_THUMBV8, LM_ARCH_ARMV7EB, LM_ARCH_THUMBV7EB, LM_ARCH_ARMV8EB, LM_ARCH_THUMBV8EB, LM_ARCH_AARCH64, LM_ARCH_MIPS, LM_ARCH_MIPS64, LM_ARCH_MIPSEL, LM_ARCH_MIPSEL64, LM_ARCH_X86_16, LM_ARCH_X86, LM_ARCH_X64, LM_ARCH_PPC32, LM_ARCH_PPC64, LM_ARCH_PPC64LE, LM_ARCH_SPARC, LM_ARCH_SPARC64, LM_ARCH_SPARCEL, LM_ARCH_SYSZ, LM_ARCH_MAX
 from typing import Optional, List, Tuple
 
 def LM_FreeMemory(alloc: int, size: int) -> bool:
@@ -30,8 +30,8 @@ def LM_Assemble(code: str) -> Optional[lm_inst_t]:
 def LM_DemangleSymbol(symbol: str) -> Optional[str]:
     return _libmem.LM_DemangleSymbol(symbol)
 
-def LM_EnumPagesEx(pproc: lm_process_t) -> Optional[List[lm_page_t]]:
-    return _libmem.LM_EnumPagesEx(pproc)
+def LM_EnumSegmentsEx(pproc: lm_process_t) -> Optional[List[lm_segment_t]]:
+    return _libmem.LM_EnumSegmentsEx(pproc)
 
 def LM_EnumSymbolsDemangled(pmod: lm_module_t) -> Optional[List[lm_symbol_t]]:
     return _libmem.LM_EnumSymbolsDemangled(pmod)
@@ -69,8 +69,8 @@ def LM_SigScanEx(pproc: lm_process_t, sig: str, addr: int, scansize: int) -> Opt
 def LM_GetThreadProcess(pthr: lm_thread_t) -> Optional[lm_process_t]:
     return _libmem.LM_GetThreadProcess(pthr)
 
-def LM_EnumPages() -> Optional[List[lm_page_t]]:
-    return _libmem.LM_EnumPages()
+def LM_EnumSegments() -> Optional[List[lm_segment_t]]:
+    return _libmem.LM_EnumSegments()
 
 def LM_ReadMemoryEx(pproc: lm_process_t, src: int, size: int) -> Optional[bytearray]:
     return _libmem.LM_ReadMemoryEx(pproc, src, size)
@@ -96,8 +96,8 @@ def LM_CodeLengthEx(pproc: lm_process_t, code: int, minlength: int) -> Optional[
 def LM_Disassemble(code: int) -> Optional[lm_inst_t]:
     return _libmem.LM_Disassemble(code)
 
-def LM_GetPageEx(pproc: lm_process_t, addr: int) -> Optional[lm_page_t]:
-    return _libmem.LM_GetPageEx(pproc, addr)
+def LM_GetSegmentEx(pproc: lm_process_t, addr: int) -> Optional[lm_segment_t]:
+    return _libmem.LM_GetSegmentEx(pproc, addr)
 
 def LM_GetProcess() -> Optional[lm_process_t]:
     return _libmem.LM_GetProcess()
@@ -138,8 +138,8 @@ def LM_ProtMemoryEx(pproc: lm_process_t, addr: int, size: int, prot: lm_prot_t) 
 def LM_GetProcessEx(pid: int) -> Optional[lm_process_t]:
     return _libmem.LM_GetProcessEx(pid)
 
-def LM_GetPage(addr: int) -> Optional[lm_page_t]:
-    return _libmem.LM_GetPage(addr)
+def LM_GetSegment(addr: int) -> Optional[lm_segment_t]:
+    return _libmem.LM_GetSegment(addr)
 
 def LM_FindModule(name: str) -> Optional[lm_module_t]:
     return _libmem.LM_FindModule(name)

@@ -532,7 +532,7 @@ py_LM_FindSymbolAddress(PyObject *self,
 			PyObject *args)
 {
 	py_lm_module_obj *pymodule;
-	lm_cchar_t       *symname;
+	lm_char_t        *symname;
 	lm_address_t      symaddr;
 
 	if (!PyArg_ParseTuple(args, "Os", &pymodule, &symname))
@@ -551,20 +551,20 @@ static PyObject *
 py_LM_DemangleSymbol(PyObject *self,
 		     PyObject *args)
 {
-	lm_cchar_t  *symbol;
-	lm_cstring_t newsym;
+	lm_char_t  *symbol;
+	lm_char_t  *newsym;
 	PyObject    *pynewsym;
 
 	if (!PyArg_ParseTuple(args, "s", &symbol))
 		return NULL;
 
-	newsym = LM_DemangleSymbol(symbol, (lm_cchar_t *)LM_NULLPTR, 0);
+	newsym = LM_DemangleSymbol(symbol, (lm_char_t *)LM_NULLPTR, 0);
 	if (!newsym)
 		return Py_BuildValue("");
 
 	pynewsym = PyUnicode_FromString(newsym);
 
-	LM_FreeDemangleSymbol(newsym);
+	LM_FreeDemangledSymbol(newsym);
 
 	return pynewsym;
 }
@@ -600,7 +600,7 @@ py_LM_FindSymbolAddressDemangled(PyObject *self,
 				 PyObject *args)
 {
 	py_lm_module_obj *pymodule;
-	lm_cchar_t       *symname;
+	lm_char_t       *symname;
 	lm_address_t      symaddr;
 
 	if (!PyArg_ParseTuple(args, "Os", &pymodule, &symname))
@@ -616,30 +616,30 @@ py_LM_FindSymbolAddressDemangled(PyObject *self,
 /****************************************/
 
 static lm_bool_t
-_py_LM_EnumPagesCallback(lm_page_t *ppage,
-			 lm_void_t *arg)
+_py_LM_EnumSegmentsCallback(lm_segment_t *psegment,
+			    lm_void_t *arg)
 {
 	PyObject *pylist = (PyObject *)arg;
-	py_lm_page_obj *pypage;
+	py_lm_segment_obj *pysegment;
 
-	pypage = (py_lm_page_obj *)PyObject_CallObject((PyObject *)&py_lm_page_t, NULL);
-	pypage->page = *ppage;
-	pypage->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pypage->page.prot);
+	pysegment = (py_lm_segment_obj *)PyObject_CallObject((PyObject *)&py_lm_segment_t, NULL);
+	pysegment->segment = *psegment;
+	pysegment->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pysegment->segment.prot);
 
-	PyList_Append(pylist, (PyObject *)pypage);
+	PyList_Append(pylist, (PyObject *)pysegment);
 
 	return LM_TRUE;
 }
 
 static PyObject *
-py_LM_EnumPages(PyObject *self,
+py_LM_EnumSegments(PyObject *self,
 		PyObject *args)
 {
 	PyObject *pylist = PyList_New(0);
 	if (!pylist)
 		return NULL;
 
-	if (!LM_EnumPages(_py_LM_EnumPagesCallback, (lm_void_t *)pylist)) {
+	if (!LM_EnumSegments(_py_LM_EnumSegmentsCallback, (lm_void_t *)pylist)) {
 		Py_DECREF(pylist); /* destroy list */
 		pylist = Py_BuildValue("");
 	}
@@ -650,7 +650,7 @@ py_LM_EnumPages(PyObject *self,
 /****************************************/
 
 static PyObject *
-py_LM_EnumPagesEx(PyObject *self,
+py_LM_EnumSegmentsEx(PyObject *self,
 		  PyObject *args)
 {
 	py_lm_process_obj *pyproc;
@@ -663,7 +663,7 @@ py_LM_EnumPagesEx(PyObject *self,
 	if (!pylist)
 		return NULL;
 
-	if (!LM_EnumPagesEx(&pyproc->proc, _py_LM_EnumPagesCallback, (lm_void_t *)pylist)) {
+	if (!LM_EnumSegmentsEx(&pyproc->proc, _py_LM_EnumSegmentsCallback, (lm_void_t *)pylist)) {
 		Py_DECREF(pylist); /* destroy list */
 		pylist = Py_BuildValue("");
 	}
@@ -674,48 +674,48 @@ py_LM_EnumPagesEx(PyObject *self,
 /****************************************/
 
 static PyObject *
-py_LM_GetPage(PyObject *self,
-	      PyObject *args)
+py_LM_FindSegment(PyObject *self,
+		  PyObject *args)
 {
 	lm_address_t address;
-	lm_page_t page;
-	py_lm_page_obj *pypage;
+	lm_segment_t segment;
+	py_lm_segment_obj *pysegment;
 
 	if (!PyArg_ParseTuple(args, "n", &address))
 		return NULL;
 
-	if (!LM_GetPage(address, &page))
+	if (!LM_FindSegment(address, &segment))
 		return Py_BuildValue("");
 
-	pypage = (py_lm_page_obj *)PyObject_CallObject((PyObject *)&py_lm_page_t, NULL);
-	pypage->page = page;
-	pypage->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pypage->page.prot);
+	pysegment = (py_lm_segment_obj *)PyObject_CallObject((PyObject *)&py_lm_segment_t, NULL);
+	pysegment->segment = segment;
+	pysegment->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pysegment->segment.prot);
 
-	return (PyObject *)pypage;
+	return (PyObject *)pysegment;
 }
 
 /****************************************/
 
 static PyObject *
-py_LM_GetPageEx(PyObject *self,
+py_LM_FindSegmentEx(PyObject *self,
 		PyObject *args)
 {
 	py_lm_process_obj *pyproc;
 	lm_address_t address;
-	lm_page_t page;
-	py_lm_page_obj *pypage;
+	lm_segment_t segment;
+	py_lm_segment_obj *pysegment;
 
 	if (!PyArg_ParseTuple(args, "On", &pyproc, &address))
 		return NULL;
 
-	if (!LM_GetPageEx(&pyproc->proc, address, &page))
+	if (!LM_FindSegmentEx(&pyproc->proc, address, &segment))
 		return Py_BuildValue("");
 
-	pypage = (py_lm_page_obj *)PyObject_CallObject((PyObject *)&py_lm_page_t, NULL);
-	pypage->page = page;
-	pypage->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pypage->page.prot);
+	pysegment = (py_lm_segment_obj *)PyObject_CallObject((PyObject *)&py_lm_segment_t, NULL);
+	pysegment->segment = segment;
+	pysegment->prot = (py_lm_prot_obj *)PyObject_CallFunction((PyObject *)&py_lm_prot_t, "i", pysegment->segment.prot);
 
-	return (PyObject *)pypage;
+	return (PyObject *)pysegment;
 }
 
 /****************************************/
@@ -732,7 +732,7 @@ py_LM_ReadMemory(PyObject *self,
 	if (!PyArg_ParseTuple(args, "nn", &src, &size))
 		return NULL;
 
-	dst = LM_MALLOC(size);
+	dst = malloc(size);
 	if (!dst)
 		return Py_BuildValue("");
 
@@ -742,7 +742,7 @@ py_LM_ReadMemory(PyObject *self,
 		pybuf = Py_BuildValue("");
 	}
 
-	LM_FREE(dst);
+	free(dst);
 
 	return pybuf;
 }
@@ -762,7 +762,7 @@ py_LM_ReadMemoryEx(PyObject *self,
 	if (!PyArg_ParseTuple(args, "Onn", &pyproc, &src, &size))
 		return NULL;
 
-	dst = LM_MALLOC(size);
+	dst = malloc(size);
 	if (!dst)
 		return Py_BuildValue("");
 
@@ -772,7 +772,7 @@ py_LM_ReadMemoryEx(PyObject *self,
 		pybuf = Py_BuildValue("");
 	}
 
-	LM_FREE(dst);
+	free(dst);
 
 	return pybuf;
 }
@@ -785,13 +785,13 @@ py_LM_WriteMemory(PyObject *self,
 {
 	lm_address_t dst;
 	PyObject *pysrc;
-	lm_bytearr_t src;
+	lm_bytearray_t src;
 	lm_size_t size;
 
 	if (!PyArg_ParseTuple(args, "nY", &dst, &pysrc))
 		return NULL;
 
-	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
+	src = (lm_bytearray_t)PyByteArray_AsString(pysrc);
 	size = (lm_size_t)PyByteArray_Size(pysrc);
 
 	if (LM_WriteMemory(dst, src, size) != size)
@@ -809,13 +809,13 @@ py_LM_WriteMemoryEx(PyObject *self,
 	py_lm_process_obj *pyproc;
 	lm_address_t dst;
 	PyObject *pysrc;
-	lm_bytearr_t src;
+	lm_bytearray_t src;
 	lm_size_t size;
 
 	if (!PyArg_ParseTuple(args, "OnY", &pyproc, &dst, &pysrc))
 		return NULL;
 
-	src = (lm_bytearr_t)PyByteArray_AsString(pysrc);
+	src = (lm_bytearray_t)PyByteArray_AsString(pysrc);
 	size = (lm_size_t)PyByteArray_Size(pysrc);
 
 	if (LM_WriteMemoryEx(&pyproc->proc, dst, src, size) != size)
@@ -1012,7 +1012,7 @@ py_LM_DeepPointer(PyObject *self,
 	if (noffsets == 0)
 		return PyLong_FromSize_t(base);
 
-	offsets = LM_CALLOC(sizeof(lm_address_t), noffsets);
+	offsets = calloc(sizeof(lm_address_t), noffsets);
 	if (!offsets)
 		return NULL;
 
@@ -1022,7 +1022,7 @@ py_LM_DeepPointer(PyObject *self,
 
 	pointer = LM_DeepPointer(base, offsets, noffsets);
 
-	LM_FREE(offsets);
+	free(offsets);
 
 	if (pointer == LM_ADDRESS_BAD)
 		return Py_BuildValue("");
@@ -1051,7 +1051,7 @@ py_LM_DeepPointerEx(PyObject *self,
 	if (noffsets == 0)
 		return PyLong_FromSize_t(base);
 
-	offsets = LM_CALLOC(sizeof(lm_address_t), noffsets);
+	offsets = calloc(sizeof(lm_address_t), noffsets);
 	if (!offsets)
 		return NULL;
 
@@ -1061,7 +1061,7 @@ py_LM_DeepPointerEx(PyObject *self,
 
 	pointer = LM_DeepPointerEx(&pyproc->proc, base, offsets, noffsets);
 
-	LM_FREE(offsets);
+	free(offsets);
 
 	if (pointer == LM_ADDRESS_BAD)
 		return Py_BuildValue("");
@@ -1078,14 +1078,14 @@ py_LM_DataScan(PyObject *self,
 	PyObject *pydata;
 	lm_address_t addr;
 	lm_size_t scansize;
-	lm_bytearr_t data;
+	lm_bytearray_t data;
 	lm_size_t size;
 	lm_address_t scan_match;
 
 	if (!PyArg_ParseTuple(args, "Ynn", &pydata, &addr, &scansize))
 		return NULL;
 
-	data = (lm_bytearr_t)PyByteArray_AsString(pydata);
+	data = (lm_bytearray_t)PyByteArray_AsString(pydata);
 	size = (lm_size_t)PyByteArray_Size(pydata);
 
 	scan_match = LM_DataScan(data, size, addr, scansize);
@@ -1105,14 +1105,14 @@ py_LM_DataScanEx(PyObject *self,
 	PyObject *pydata;
 	lm_address_t addr;
 	lm_size_t scansize;
-	lm_bytearr_t data;
+	lm_bytearray_t data;
 	lm_size_t size;
 	lm_address_t scan_match;
 
 	if (!PyArg_ParseTuple(args, "OYnn", &pyproc, &pydata, &addr, &scansize))
 		return NULL;
 
-	data = (lm_bytearr_t)PyByteArray_AsString(pydata);
+	data = (lm_bytearray_t)PyByteArray_AsString(pydata);
 	size = (lm_size_t)PyByteArray_Size(pydata);
 
 	scan_match = LM_DataScanEx(&pyproc->proc, data, size, addr, scansize);
@@ -1132,7 +1132,7 @@ py_LM_PatternScan(PyObject *self,
 	lm_char_t *mask;
 	lm_address_t addr;
 	lm_size_t scansize;
-	lm_bytearr_t pattern;
+	lm_bytearray_t pattern;
 	lm_address_t scan_match;
 
 #	if LM_CHARSET == LM_CHARSET_UC
@@ -1143,7 +1143,7 @@ py_LM_PatternScan(PyObject *self,
 		return NULL;
 #	endif
 
-	pattern = (lm_bytearr_t)PyByteArray_AsString(pypattern);
+	pattern = (lm_bytearray_t)PyByteArray_AsString(pypattern);
 
 	scan_match = LM_PatternScan(pattern, mask, addr, scansize);
 	if (scan_match == LM_ADDRESS_BAD)
@@ -1163,7 +1163,7 @@ py_LM_PatternScanEx(PyObject *self,
 	lm_char_t *mask;
 	lm_address_t addr;
 	lm_size_t scansize;
-	lm_bytearr_t pattern;
+	lm_bytearray_t pattern;
 	lm_address_t scan_match;
 
 #	if LM_CHARSET == LM_CHARSET_UC
@@ -1174,7 +1174,7 @@ py_LM_PatternScanEx(PyObject *self,
 		return NULL;
 #	endif
 
-	pattern = (lm_bytearr_t)PyByteArray_AsString(pypattern);
+	pattern = (lm_bytearray_t)PyByteArray_AsString(pypattern);
 
 	scan_match = LM_PatternScanEx(&pyproc->proc, pattern, mask, addr, scansize);
 	if (scan_match == LM_ADDRESS_BAD)
@@ -1324,7 +1324,7 @@ static PyObject *
 py_LM_Assemble(PyObject *self,
 	       PyObject *args)
 {
-	lm_cstring_t code;
+	lm_string_t code;
 	lm_inst_t inst;
 	py_lm_inst_obj *pyinst;
 
@@ -1346,10 +1346,10 @@ static PyObject *
 py_LM_AssembleEx(PyObject *self,
 		 PyObject *args)
 {
-	lm_cstring_t code;
+	lm_string_t code;
 	lm_size_t bits;
 	lm_address_t runtime_addr;
-	lm_bytearr_t codebuf;
+	lm_byte_t *codebuf;
 	lm_size_t codelen;
 	PyObject *pycodebuf;
 
@@ -1362,7 +1362,7 @@ py_LM_AssembleEx(PyObject *self,
 
 	pycodebuf = PyByteArray_FromStringAndSize((const char *)codebuf, codelen);
 
-	LM_FreeCodeBuffer(codebuf);
+	LM_FreePayload(codebuf);
 
 	return pycodebuf;
 }
@@ -1497,10 +1497,10 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumSymbolsDemangled", py_LM_EnumSymbolsDemangled, METH_VARARGS, "Lists all demangled symbols from a module" },
 	{ "LM_FindSymbolAddressDemangled", py_LM_FindSymbolAddressDemangled, METH_VARARGS, "Searches for a demangled symbol in a module" },
 	/****************************************/
-	{ "LM_EnumPages", py_LM_EnumPages, METH_NOARGS, "Lists all pages from the calling process" },
-	{ "LM_EnumPagesEx", py_LM_EnumPagesEx, METH_VARARGS, "Lists all pages from a remote process" },
-	{ "LM_GetPage", py_LM_GetPage, METH_VARARGS, "Get information about the page of an address in the current process" },
-	{ "LM_GetPageEx", py_LM_GetPageEx, METH_VARARGS, "Get information about the page of an address in a remote process" },
+	{ "LM_EnumSegments", py_LM_EnumSegments, METH_NOARGS, "Lists all segments from the calling process" },
+	{ "LM_EnumSegmentsEx", py_LM_EnumSegmentsEx, METH_VARARGS, "Lists all segments from a remote process" },
+	{ "LM_FindSegment", py_LM_FindSegment, METH_VARARGS, "Get information about the segment of an address in the current process" },
+	{ "LM_FindSegmentEx", py_LM_FindSegmentEx, METH_VARARGS, "Get information about the segment of an address in a remote process" },
 	/****************************************/
 	{ "LM_ReadMemory", py_LM_ReadMemory, METH_VARARGS, "Read memory from the calling process" },
 	{ "LM_ReadMemoryEx", py_LM_ReadMemoryEx, METH_VARARGS, "Read memory from a remote process" },
@@ -1567,7 +1567,7 @@ PyInit__libmem(void)
 	if (PyType_Ready(&py_lm_prot_t) < 0)
 		goto ERR_PYMOD;
 
-	if (PyType_Ready(&py_lm_page_t) < 0)
+	if (PyType_Ready(&py_lm_segment_t) < 0)
 		goto ERR_PYMOD;
 
 	if (PyType_Ready(&py_lm_inst_t) < 0)
@@ -1606,10 +1606,10 @@ PyInit__libmem(void)
 			       (PyObject *)&py_lm_prot_t) < 0)
 		goto ERR_PROT;
 
-	Py_INCREF(&py_lm_page_t);
-	if (PyModule_AddObject(pymod, "lm_page_t",
-			       (PyObject *)&py_lm_page_t) < 0)
-		goto ERR_PAGE;
+	Py_INCREF(&py_lm_segment_t);
+	if (PyModule_AddObject(pymod, "lm_segment_t",
+			       (PyObject *)&py_lm_segment_t) < 0)
+		goto ERR_segment;
 
 	Py_INCREF(&py_lm_inst_t);
 	if (PyModule_AddObject(pymod, "lm_inst_t",
@@ -1629,7 +1629,39 @@ PyInit__libmem(void)
 	DECL_GLOBAL_PROT(LM_PROT_XW);
 	DECL_GLOBAL_PROT(LM_PROT_RW);
 	DECL_GLOBAL_PROT(LM_PROT_XRW);
-	DECL_GLOBAL_LONG(LM_BITS);
+
+	DECL_GLOBAL_LONG(LM_ARCH_ARMV7);
+	DECL_GLOBAL_LONG(LM_ARCH_ARMV8);
+	DECL_GLOBAL_LONG(LM_ARCH_THUMBV7);
+	DECL_GLOBAL_LONG(LM_ARCH_THUMBV8);
+
+	DECL_GLOBAL_LONG(LM_ARCH_ARMV7EB);
+	DECL_GLOBAL_LONG(LM_ARCH_THUMBV7EB);
+	DECL_GLOBAL_LONG(LM_ARCH_ARMV8EB);
+	DECL_GLOBAL_LONG(LM_ARCH_THUMBV8EB);
+
+	DECL_GLOBAL_LONG(LM_ARCH_AARCH64);
+
+	DECL_GLOBAL_LONG(LM_ARCH_MIPS);
+	DECL_GLOBAL_LONG(LM_ARCH_MIPS64);
+	DECL_GLOBAL_LONG(LM_ARCH_MIPSEL);
+	DECL_GLOBAL_LONG(LM_ARCH_MIPSEL64);
+
+	DECL_GLOBAL_LONG(LM_ARCH_X86_16);
+	DECL_GLOBAL_LONG(LM_ARCH_X86);
+	DECL_GLOBAL_LONG(LM_ARCH_X64);
+
+	DECL_GLOBAL_LONG(LM_ARCH_PPC32);
+	DECL_GLOBAL_LONG(LM_ARCH_PPC64);
+	DECL_GLOBAL_LONG(LM_ARCH_PPC64LE);
+
+	DECL_GLOBAL_LONG(LM_ARCH_SPARC);
+	DECL_GLOBAL_LONG(LM_ARCH_SPARC64);
+	DECL_GLOBAL_LONG(LM_ARCH_SPARCEL);
+
+	DECL_GLOBAL_LONG(LM_ARCH_SYSZ);
+
+	DECL_GLOBAL_LONG(LM_ARCH_MAX);
 
 	goto EXIT; /* no errors */
 
@@ -1642,8 +1674,8 @@ ERR_INST:
 ERR_PROT:
 	Py_DECREF(&py_lm_prot_t);
 	Py_DECREF(pymod);
-ERR_PAGE:
-	Py_DECREF(&py_lm_page_t);
+ERR_segment:
+	Py_DECREF(&py_lm_segment_t);
 	Py_DECREF(pymod);
 ERR_SYMBOL:
 	Py_DECREF(&py_lm_symbol_t);

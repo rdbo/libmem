@@ -26,6 +26,7 @@
 #include <libmem/libmem.h>
 #include <Python.h>
 #include <structmember.h>
+#include <stddef.h>
 
 #define T_SIZE T_PYSSIZET
 
@@ -35,9 +36,12 @@ typedef struct {
 	lm_process_t proc;
 } py_lm_process_obj;
 
+/* TODO: Make 'arch' its own type */
+
 static PyMemberDef py_lm_process_members[] = {
 	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), READONLY, "Process ID" },
 	{ "ppid", T_INT, offsetof(py_lm_process_obj, proc.ppid), READONLY, "Parent Process ID" },
+	{ "arch", T_INT, offsetof(py_lm_process_obj, proc.arch), READONLY, "Process Architecture" },
 	{ "bits", T_SIZE, offsetof(py_lm_process_obj, proc.bits), READONLY, "Process Bits" },
         { "start_time", T_ULONGLONG, offsetof(py_lm_process_obj, proc.start_time), READONLY, "Process Start Time" },
 	{ NULL }
@@ -59,7 +63,7 @@ PyObject *
 py_lm_process_str(PyObject *self)
 {
 	py_lm_process_obj *pyproc = (py_lm_process_obj *)self;
-	return PyUnicode_FromFormat("lm_process_t(pid = %d, ppid = %d, bits = %zu, start_time = %llu, path = \"%s\", name = \"%s\")", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.bits, pyproc->proc.start_time, pyproc->proc.path, pyproc->proc.name);
+	return PyUnicode_FromFormat("lm_process_t(pid = %d, ppid = %d, arch = %zu, bits = %zu, start_time = %llu, path = \"%s\", name = \"%s\")", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.arch, pyproc->proc.bits, pyproc->proc.start_time, pyproc->proc.path, pyproc->proc.name);
 }
 
 static PyGetSetDef py_lm_process_accessors[] = {
@@ -92,6 +96,7 @@ typedef struct {
 
 static PyMemberDef py_lm_thread_members[] = {
 	{ "tid", T_INT, offsetof(py_lm_thread_obj, thread.tid), READONLY, "Thread ID" },
+	{ "owner_pid", T_INT, offsetof(py_lm_thread_obj, thread.owner_pid), READONLY, "Thread Owner PID" },
 	{ NULL }
 };
 
@@ -268,46 +273,46 @@ static PyTypeObject py_lm_prot_t = {
 /* lm_page_t */
 typedef struct {
 	PyObject_HEAD
-	lm_page_t page;
+	lm_segment_t segment;
 	py_lm_prot_obj *prot;
-} py_lm_page_obj;
+} py_lm_segment_obj;
 
-static PyMemberDef py_lm_page_members[] = {
-	{ "base", T_SIZE, offsetof(py_lm_page_obj, page.base), READONLY, "Page Base Address" },
-	{ "end", T_SIZE, offsetof(py_lm_page_obj, page.end), READONLY, "Page End Address" },
-	{ "size", T_SIZE, offsetof(py_lm_page_obj, page.size), READONLY, "Page Size" },
-	{ "prot", T_OBJECT, offsetof(py_lm_page_obj, prot), READONLY, "Page Protection Flags" },
+static PyMemberDef py_lm_segment_members[] = {
+	{ "base", T_SIZE, offsetof(py_lm_segment_obj, segment.base), READONLY, "Segment Base Address" },
+	{ "end", T_SIZE, offsetof(py_lm_segment_obj, segment.end), READONLY, "Segment End Address" },
+	{ "size", T_SIZE, offsetof(py_lm_segment_obj, segment.size), READONLY, "Segment Size" },
+	{ "prot", T_OBJECT, offsetof(py_lm_segment_obj, prot), READONLY, "Segment Protection Flags" },
 	{ NULL }
 };
 
 PyObject *
-py_lm_page_str(PyObject *self)
+py_lm_segment_str(PyObject *self)
 {
-	py_lm_page_obj *pypage = (py_lm_page_obj *)self;
+	py_lm_segment_obj *pysegment = (py_lm_segment_obj *)self;
 	PyObject *pyprotstr;
 	const char *protstr;
 	PyObject *fmtstr;
 
-	pyprotstr = PyObject_Str((PyObject *)pypage->prot);
+	pyprotstr = PyObject_Str((PyObject *)pysegment->prot);
 	protstr = PyUnicode_AsUTF8(pyprotstr);
-	fmtstr = PyUnicode_FromFormat("lm_page_t(base = %p, end = %p, size = %p, prot = %s)", (void *)pypage->page.base, (void *)pypage->page.end, (void *)pypage->page.size, protstr);
+	fmtstr = PyUnicode_FromFormat("lm_segment_t(base = %p, end = %p, size = %p, prot = %s)", (void *)pysegment->segment.base, (void *)pysegment->segment.end, (void *)pysegment->segment.size, protstr);
 
 	Py_DECREF(pyprotstr); /* delete protection string object */
 
 	return fmtstr;
 }
 
-static PyTypeObject py_lm_page_t = {
+static PyTypeObject py_lm_segment_t = {
 	PyVarObject_HEAD_INIT(NULL, 0)
-	.tp_name = "libmem.lm_page_t",
-	.tp_doc = "Stores information about a page",
-	.tp_basicsize = sizeof(py_lm_page_obj),
+	.tp_name = "libmem.lm_segment_t",
+	.tp_doc = "Stores information about a segment",
+	.tp_basicsize = sizeof(py_lm_segment_obj),
 	.tp_itemsize = 0,
 	.tp_flags = Py_TPFLAGS_DEFAULT,
 	.tp_new = PyType_GenericNew,
-	.tp_members = py_lm_page_members,
-	.tp_str = py_lm_page_str,
-	.tp_repr = py_lm_page_str
+	.tp_members = py_lm_segment_members,
+	.tp_str = py_lm_segment_str,
+	.tp_repr = py_lm_segment_str
 };
 
 /****************************************/
@@ -319,6 +324,7 @@ typedef struct {
 } py_lm_inst_obj;
 
 static PyMemberDef py_lm_inst_members[] = {
+	{ "address", T_SIZE, offsetof(py_lm_inst_obj, inst.address), READONLY, "Instruction Address" },
 	{ "size", T_SIZE, offsetof(py_lm_inst_obj, inst.size), READONLY, "Instruction Size" },
 	{ NULL }
 };

@@ -68,45 +68,25 @@ int main()
 ```rust
 use libmem::*;
 
-fn some_function() {
-    // ...
-}
+fn godmode() -> Option<()> {
+    let game_process = find_process("game_linux64")?;
+    let client_module = find_module_ex(&game_process, "libclient.so")?;
 
-fn hk_some_function() {
-    // ...
-}
+    let fn_update_health = sig_scan_ex(
+        &game_process, "55 48 89 E5 66 B8 ?? ?? 48 8B 5D FC",
+        client_module.base, client_module.size
+    )?;
+    println!("[*] Signature scan result for 'update_health' function: {}", fn_update_health);
 
-unsafe fn test() {
-    // reading/writing memory
-    let number : i32 = 0;
-    let number_addr = &number as *const i32 as lm_address_t;
-    let value : i32 = 1337;
-    LM_WriteMemory(number_addr, &value).unwrap(); // write 1337 to number
-    let read_number : i32 = LM_ReadMemory(number_addr).unwrap();
-    println!("[*] Number Value: {}", read_number); // it will show 1337
+    let shellcode = assemble_ex("mov rbx, 1337; mov [rdi], rbx; ret", Arch::X64, 0)?;
+    write_memory_ex(&game_process, &shellcode.as_slice())?;
+    println!("[*] Patched 'update_health' function to always set health to 1337!");
 
-    // hooking/detouring functions
-    let func_addr = some_function as *const () as lm_address_t;
-    let hk_addr = hk_some_function as *const () as lm_address_t;
-    println!("[*] Hooking 'some_function'");
-    println!("[*] Original Address: {:#x}", func_addr);
-
-    let trampoline = LM_HookCode(func_addr, hk_addr).unwrap();
-    println!("[*] Trampoline: {:#x?}", trampoline);
-
-    some_function(); // this will call 'hk_some_function'
-
-    // restore the original code from 'some_function'
-    LM_UnhookCode(some_function_addr, trampoline).unwrap();
-
-    println!("[*] Unhooked 'some_function'");
-    some_function(); // call 'some_function' to see if it has been unhooked
+    Ok(())
 }
 
 fn main() {
-    unsafe {
-        test();
-    }
+    godmode();
 }
 ```
 

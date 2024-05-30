@@ -11,7 +11,7 @@ This project is licensed under the `GNU AGPLv3.0` (no later versions)
 
 Read `LICENSE` for more information
 
-NOTE: Submodules and external dependencies might have their own licenses! Check for other `LICENSE` files as well.
+**NOTE:** Submodules and external dependencies might have their own licenses! Check for their licenses as well.
 
 ## Features
 - Cross Platform (Windows/Linux/FreeBSD)

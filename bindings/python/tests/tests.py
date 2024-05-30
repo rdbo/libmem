@@ -201,7 +201,7 @@ print("[*] Address 0: ", hex(addr0))
 print("[*] Address 1: ", hex(addr1))
 print("[*] Address 2: ", hex(addr2))
 
-deep_ptr = LM_DeepPointer(addr2, [0])
+deep_ptr = LM_DeepPointer(addr2, [0, 0])
 print("[*] Deep Pointer result: " + hex(deep_ptr))
 
 value = int.from_bytes(LM_ReadMemory(deep_ptr, 4), byteorder="little")

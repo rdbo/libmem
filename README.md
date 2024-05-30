@@ -40,19 +40,25 @@ NOTE: Submodules and external dependencies might have their own licenses! Check 
 ```c
 #include <libmem/libmem.h>
 
+void hk_take_damage(int amount)
+{
+  printf("hooked take_damage! no damage will be taken\n");
+  return;
+}
+
 int main()
 {
-	lm_module_t mod;
-	lm_address_t main_sym;
+	lm_module_t game_mod;
+	lm_address_t fn_take_damage;
 
-	LM_FindModule("mygamemodule.so", &mod);
-	main_sym = LM_FindSymbolAddress(&mod, "main");
-	printf("[*] Module Name: %s\n", mod.name);
-	printf("[*] Module Path: %s\n", mod.path);
-	printf("[*] Module Base: %p\n", mod.base);
-	printf("[*] Module Size: %p\n", mod.size);
-	printf("[*] Module End:  %p\n", mod.end);
-	printf("[*] Main Addr:   %p\n"), main_sym);
+	LM_FindModule("game.dll", &game_mod);
+	printf("[*] Base address of 'game.dll': %p\n", game_mod.base);
+
+	fn_take_damage = LM_FindSymbolAddress(&game_mod, "take_damage");
+	printf("[*] Found 'take_damage' function: %p\n", fn_take_damage);
+
+	LM_HookCode(fn_take_damage, hk_take_damage, LM_NULLPTR);
+	printf("[*] 'take_damage' function was hooked! Player will no longer receive damage\n");
 
 	return 0;
 }

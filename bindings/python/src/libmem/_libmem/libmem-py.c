@@ -49,6 +49,7 @@ _py_LM_EnumProcessesCallback(lm_process_t *pproc,
 
 	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
 	pyproc->proc = *pproc;
+	pyproc->arch = (py_lm_arch_obj *)PyObject_CallFunction((PyObject *)&py_lm_arch_t, "i", pyproc->proc.arch);
 
 	PyList_Append(pylist, (PyObject *)pyproc);
 
@@ -85,6 +86,7 @@ py_LM_GetProcess(PyObject *self,
 
 	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
 	pyproc->proc = proc;
+	pyproc->arch = (py_lm_arch_obj *)PyObject_CallFunction((PyObject *)&py_lm_arch_t, "i", pyproc->proc.arch);
 
 	return (PyObject *)pyproc;
 }
@@ -107,6 +109,7 @@ py_LM_GetProcessEx(PyObject *self,
 
 	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
 	pyproc->proc = proc;
+	pyproc->arch = (py_lm_arch_obj *)PyObject_CallFunction((PyObject *)&py_lm_arch_t, "i", pyproc->proc.arch);
 
 	return (PyObject *)pyproc;
 }
@@ -134,6 +137,7 @@ py_LM_FindProcess(PyObject *self,
 
 	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
 	pyproc->proc = proc;
+	pyproc->arch = (py_lm_arch_obj *)PyObject_CallFunction((PyObject *)&py_lm_arch_t, "i", pyproc->proc.arch);
 
 	return (PyObject *)pyproc;
 }
@@ -279,6 +283,7 @@ py_LM_GetThreadProcess(PyObject *self,
 
 	pyproc = (py_lm_process_obj *)PyObject_CallObject((PyObject *)&py_lm_process_t, NULL);
 	pyproc->proc = proc;
+	pyproc->arch = (py_lm_arch_obj *)PyObject_CallFunction((PyObject *)&py_lm_arch_t, "i", pyproc->proc.arch);
 
 	return (PyObject *)pyproc;
 }
@@ -1576,6 +1581,9 @@ PyInit__libmem(void)
 	if (PyType_Ready(&py_lm_vmt_t) < 0)
 		goto ERR_PYMOD;
 
+	if (PyType_Ready(&py_lm_arch_t) < 0)
+		goto ERR_PYMOD;
+
 	pymod = PyModule_Create(&libmem_mod);
 	if (!pymod)
 		goto ERR_PYMOD;
@@ -1609,7 +1617,7 @@ PyInit__libmem(void)
 	Py_INCREF(&py_lm_segment_t);
 	if (PyModule_AddObject(pymod, "lm_segment_t",
 			       (PyObject *)&py_lm_segment_t) < 0)
-		goto ERR_segment;
+		goto ERR_SEGMENT;
 
 	Py_INCREF(&py_lm_inst_t);
 	if (PyModule_AddObject(pymod, "lm_inst_t",
@@ -1620,6 +1628,11 @@ PyInit__libmem(void)
 	if (PyModule_AddObject(pymod, "lm_vmt_t",
 			       (PyObject *)&py_lm_vmt_t) < 0)
 		goto ERR_VMT;
+
+	Py_INCREF(&py_lm_arch_t);
+	if (PyModule_AddObject(pymod, "lm_arch_t",
+			       (PyObject *)&py_lm_arch_t) < 0)
+		goto ERR_ARCH;
 
 	/* global variables */
 	DECL_GLOBAL_PROT(LM_PROT_X);
@@ -1665,6 +1678,9 @@ PyInit__libmem(void)
 
 	goto EXIT; /* no errors */
 
+ERR_ARCH:
+	Py_DECREF(&py_lm_arch_t);
+	Py_DECREF(pymod);
 ERR_VMT:
 	Py_DECREF(&py_lm_vmt_t);
 	Py_DECREF(pymod);
@@ -1674,7 +1690,7 @@ ERR_INST:
 ERR_PROT:
 	Py_DECREF(&py_lm_prot_t);
 	Py_DECREF(pymod);
-ERR_segment:
+ERR_SEGMENT:
 	Py_DECREF(&py_lm_segment_t);
 	Py_DECREF(pymod);
 ERR_SYMBOL:

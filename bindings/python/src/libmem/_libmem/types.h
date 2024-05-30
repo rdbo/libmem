@@ -30,18 +30,102 @@
 
 #define T_SIZE T_PYSSIZET
 
+/****************************************/
+
+/* lm_arch_t */
+typedef struct {
+	PyObject_HEAD
+	lm_arch_t arch;
+} py_lm_arch_obj;
+
+int
+py_lm_arch_init(PyObject *self,
+		PyObject *args,
+		PyObject *kwds)
+{
+	lm_arch_t arch;
+	py_lm_arch_obj *pyarch = (py_lm_arch_obj *)self;
+
+	if (!PyArg_ParseTuple(args, "i", &arch))
+		return -1;
+
+	pyarch->arch = arch;
+
+	return 0;
+}
+
+PyObject *
+py_lm_arch_str(PyObject *self)
+{
+	py_lm_arch_obj *pyarch = (py_lm_arch_obj *)self;
+	const char *archstr;
+
+	switch (pyarch->arch) {
+	case LM_ARCH_ARMV7: archstr = "LM_ARCH_ARMV7"; break;
+	case LM_ARCH_ARMV8: archstr = "LM_ARCH_ARMV8"; break;
+	case LM_ARCH_THUMBV7: archstr = "LM_ARCH_THUMBV7"; break;
+	case LM_ARCH_THUMBV8: archstr = "LM_ARCH_THUMBV8"; break;
+
+	case LM_ARCH_ARMV7EB: archstr = "LM_ARCH_ARMV7EB"; break;
+	case LM_ARCH_THUMBV7EB: archstr = "LM_ARCH_THUMBV7EB"; break;
+	case LM_ARCH_ARMV8EB: archstr = "LM_ARCH_ARMV8EB"; break;
+	case LM_ARCH_THUMBV8EB: archstr = "LM_ARCH_THUMBV8EB"; break;
+
+	case LM_ARCH_AARCH64: archstr = "LM_ARCH_AARCH64"; break;
+
+	case LM_ARCH_MIPS: archstr = "LM_ARCH_MIPS"; break;
+	case LM_ARCH_MIPS64: archstr = "LM_ARCH_MIPS64"; break;
+	case LM_ARCH_MIPSEL: archstr = "LM_ARCH_MIPSEL"; break;
+	case LM_ARCH_MIPSEL64: archstr = "LM_ARCH_MIPSEL64"; break;
+
+	case LM_ARCH_X86_16: archstr = "LM_ARCH_X86_16"; break;
+	case LM_ARCH_X86: archstr = "LM_ARCH_X86"; break;
+	case LM_ARCH_X64: archstr = "LM_ARCH_X64"; break;
+
+	case LM_ARCH_PPC32: archstr = "LM_ARCH_PPC32"; break;
+	case LM_ARCH_PPC64: archstr = "LM_ARCH_PPC64"; break;
+	case LM_ARCH_PPC64LE: archstr = "LM_ARCH_PPC64LE"; break;
+
+	case LM_ARCH_SPARC: archstr = "LM_ARCH_SPARC"; break;
+	case LM_ARCH_SPARC64: archstr = "LM_ARCH_SPARC64"; break;
+	case LM_ARCH_SPARCEL: archstr = "LM_ARCH_SPARCEL"; break;
+
+	case LM_ARCH_SYSZ: archstr = "LM_ARCH_SYSZ"; break;
+
+	case LM_ARCH_MAX: archstr = "LM_ARCH_MAX"; break;
+
+	default: archstr = "LM_ARCH_NONE"; break;
+	}
+
+	return PyUnicode_FromFormat("%s", archstr);
+}
+
+static PyTypeObject py_lm_arch_t = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name = "libmem.lm_arch_t",
+	.tp_doc = "Stores a processor architecture",
+	.tp_basicsize = sizeof(py_lm_arch_obj),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_str = py_lm_arch_str,
+	.tp_repr = py_lm_arch_str,
+	.tp_init = py_lm_arch_init
+};
+
+/****************************************/
+
 /* lm_process_t */
 typedef struct {
 	PyObject_HEAD
 	lm_process_t proc;
+	py_lm_arch_obj *arch;
 } py_lm_process_obj;
-
-/* TODO: Make 'arch' its own type */
 
 static PyMemberDef py_lm_process_members[] = {
 	{ "pid", T_INT, offsetof(py_lm_process_obj, proc.pid), READONLY, "Process ID" },
 	{ "ppid", T_INT, offsetof(py_lm_process_obj, proc.ppid), READONLY, "Parent Process ID" },
-	{ "arch", T_INT, offsetof(py_lm_process_obj, proc.arch), READONLY, "Process Architecture" },
+	{ "arch", T_OBJECT, offsetof(py_lm_process_obj, arch), READONLY, "Process Architecture" },
 	{ "bits", T_SIZE, offsetof(py_lm_process_obj, proc.bits), READONLY, "Process Bits" },
         { "start_time", T_ULONGLONG, offsetof(py_lm_process_obj, proc.start_time), READONLY, "Process Start Time" },
 	{ NULL }
@@ -63,7 +147,16 @@ PyObject *
 py_lm_process_str(PyObject *self)
 {
 	py_lm_process_obj *pyproc = (py_lm_process_obj *)self;
-	return PyUnicode_FromFormat("lm_process_t(pid = %d, ppid = %d, arch = %zu, bits = %zu, start_time = %llu, path = \"%s\", name = \"%s\")", pyproc->proc.pid, pyproc->proc.ppid, pyproc->proc.arch, pyproc->proc.bits, pyproc->proc.start_time, pyproc->proc.path, pyproc->proc.name);
+	PyObject *pyarchstr;
+	PyObject *pyfmtstr;
+
+	pyarchstr = PyObject_Str((PyObject *)pyproc->arch);
+
+	pyfmtstr = PyUnicode_FromFormat("lm_process_t(pid = %d, ppid = %d, arch = %s, bits = %zu, start_time = %llu, path = \"%s\", name = \"%s\")", pyproc->proc.pid, pyproc->proc.ppid, PyUnicode_AsUTF8(pyarchstr), pyproc->proc.bits, pyproc->proc.start_time, pyproc->proc.path, pyproc->proc.name);
+
+	Py_DECREF(pyarchstr);
+
+	return pyfmtstr;
 }
 
 static PyGetSetDef py_lm_process_accessors[] = {

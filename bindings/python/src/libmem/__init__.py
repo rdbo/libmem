@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import libmem._libmem as _libmem
-from libmem._libmem import lm_process_t, lm_thread_t, lm_module_t, lm_symbol_t, lm_prot_t, lm_segment_t, lm_inst_t, lm_vmt_t
+from libmem._libmem import lm_process_t, lm_thread_t, lm_module_t, lm_symbol_t, lm_prot_t, lm_segment_t, lm_inst_t, lm_vmt_t, lm_arch_t
 from libmem._libmem import LM_PROT_X, LM_PROT_R, LM_PROT_W, LM_PROT_XR, LM_PROT_XW, LM_PROT_RW, LM_PROT_XRW, LM_ARCH_ARMV7, LM_ARCH_ARMV8, LM_ARCH_THUMBV7, LM_ARCH_THUMBV8, LM_ARCH_ARMV7EB, LM_ARCH_THUMBV7EB, LM_ARCH_ARMV8EB, LM_ARCH_THUMBV8EB, LM_ARCH_AARCH64, LM_ARCH_MIPS, LM_ARCH_MIPS64, LM_ARCH_MIPSEL, LM_ARCH_MIPSEL64, LM_ARCH_X86_16, LM_ARCH_X86, LM_ARCH_X64, LM_ARCH_PPC32, LM_ARCH_PPC64, LM_ARCH_PPC64LE, LM_ARCH_SPARC, LM_ARCH_SPARC64, LM_ARCH_SPARCEL, LM_ARCH_SYSZ, LM_ARCH_MAX
 from typing import Optional, List, Tuple
 

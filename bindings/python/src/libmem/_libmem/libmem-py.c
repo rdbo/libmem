@@ -40,6 +40,12 @@
 	Py_DECREF(global); \
 }
 
+#define DECL_GLOBAL_ARCH(var) { \
+	global = PyObject_CallFunction((PyObject *)&py_lm_arch_t, "i", var); \
+	PyObject_SetAttrString(pymod, #var, global); \
+	Py_DECREF(global); \
+}
+
 static lm_bool_t
 _py_LM_EnumProcessesCallback(lm_process_t *pproc,
 			     lm_void_t    *arg)
@@ -157,6 +163,15 @@ py_LM_IsProcessAlive(PyObject *self,
 		Py_RETURN_TRUE;
 
 	Py_RETURN_FALSE;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_GetBits(PyObject *self,
+		    PyObject *args)
+{
+	return PyLong_FromSize_t(LM_GetBits());
 }
 
 /****************************************/
@@ -1244,6 +1259,163 @@ py_LM_SigScanEx(PyObject *self,
 /****************************************/
 
 static PyObject *
+py_LM_GetArchitecture(PyObject *self,
+		      PyObject *args)
+{
+	return PyObject_CallFunction((PyObject *)&py_lm_arch_t, "i", LM_GetArchitecture());
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_Assemble(PyObject *self,
+	       PyObject *args)
+{
+	lm_string_t code;
+	lm_inst_t inst;
+	py_lm_inst_obj *pyinst;
+
+	if (!PyArg_ParseTuple(args, "s", &code))
+		return NULL;
+
+	if (!LM_Assemble(code, &inst))
+		return Py_BuildValue("");
+
+	pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
+	pyinst->inst = inst;
+
+	return (PyObject *)pyinst;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_AssembleEx(PyObject *self,
+		 PyObject *args)
+{
+	lm_string_t code;
+	py_lm_arch_obj *pyarch;
+	lm_address_t runtime_addr;
+	lm_byte_t *codebuf;
+	lm_size_t codelen;
+	PyObject *pycodebuf;
+
+	if (!PyArg_ParseTuple(args, "sOn", &code, &pyarch, &runtime_addr))
+		return NULL;
+
+	codelen = LM_AssembleEx(code, pyarch->arch, runtime_addr, &codebuf);
+	if (!codelen)
+		return Py_BuildValue("");
+
+	pycodebuf = PyByteArray_FromStringAndSize((const char *)codebuf, codelen);
+
+	LM_FreePayload(codebuf);
+
+	return pycodebuf;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_Disassemble(PyObject *self,
+		  PyObject *args)
+{
+	lm_address_t code;
+	lm_inst_t inst;
+	py_lm_inst_obj *pyinst;
+
+	if (!PyArg_ParseTuple(args, "n", &code))
+		return NULL;
+
+	if (!LM_Disassemble(code, &inst))
+		return Py_BuildValue("");
+
+	pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
+	pyinst->inst = inst;
+
+	return (PyObject *)pyinst;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_DisassembleEx(PyObject *self,
+		    PyObject *args)
+{
+	lm_address_t code;
+	py_lm_arch_obj *pyarch;
+	lm_size_t size;
+	lm_size_t count;
+	lm_address_t runtime_addr;
+	lm_inst_t *insts;
+	lm_size_t inst_count;
+	PyObject *pyinsts;
+	lm_size_t i;
+	py_lm_inst_obj *pyinst;
+
+	if (!PyArg_ParseTuple(args, "nOnnn", &code, &pyarch, &size, &count, &runtime_addr))
+		return NULL;
+
+	inst_count = LM_DisassembleEx(code, pyarch->arch, size, count, runtime_addr, &insts);
+	if (!inst_count)
+		return Py_BuildValue("");
+
+	pyinsts = PyList_New((Py_ssize_t)inst_count);
+	for (i = 0; i < inst_count; ++i) {
+		pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
+		pyinst->inst = insts[i];
+		PyList_SetItem(pyinsts, i, (PyObject *)pyinst);
+	}
+
+	LM_FreeInstructions(insts);
+
+	return pyinsts;
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_CodeLength(PyObject *self,
+		 PyObject *args)
+{
+	lm_address_t code;
+	lm_size_t minlength;
+	lm_size_t aligned_length;
+
+	if (!PyArg_ParseTuple(args, "nn", &code, &minlength))
+		return NULL;
+
+	aligned_length = LM_CodeLength(code, minlength);
+	if (!aligned_length)
+		return Py_BuildValue("");
+
+	return (PyObject *)PyLong_FromSize_t(aligned_length);
+}
+
+/****************************************/
+
+static PyObject *
+py_LM_CodeLengthEx(PyObject *self,
+		   PyObject *args)
+{
+	py_lm_process_obj *pyproc;
+	lm_address_t code;
+	lm_size_t minlength;
+	lm_size_t aligned_length;
+
+	if (!PyArg_ParseTuple(args, "Onn", &pyproc, &code, &minlength))
+		return NULL;
+
+	aligned_length = LM_CodeLengthEx(&pyproc->proc, code, minlength);
+	if (!aligned_length)
+		return Py_BuildValue("");
+
+	return (PyObject *)PyLong_FromSize_t(aligned_length);
+}
+
+/****************************************/
+
+static PyObject *
 py_LM_HookCode(PyObject *self,
 	       PyObject *args)
 {
@@ -1325,160 +1497,13 @@ py_LM_UnhookCodeEx(PyObject *self,
 
 /****************************************/
 
-static PyObject *
-py_LM_Assemble(PyObject *self,
-	       PyObject *args)
-{
-	lm_string_t code;
-	lm_inst_t inst;
-	py_lm_inst_obj *pyinst;
-
-	if (!PyArg_ParseTuple(args, "s", &code))
-		return NULL;
-
-	if (!LM_Assemble(code, &inst))
-		return Py_BuildValue("");
-
-	pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
-	pyinst->inst = inst;
-
-	return (PyObject *)pyinst;
-}
-
-/****************************************/
-
-static PyObject *
-py_LM_AssembleEx(PyObject *self,
-		 PyObject *args)
-{
-	lm_string_t code;
-	lm_size_t bits;
-	lm_address_t runtime_addr;
-	lm_byte_t *codebuf;
-	lm_size_t codelen;
-	PyObject *pycodebuf;
-
-	if (!PyArg_ParseTuple(args, "snn", &code, &bits, &runtime_addr))
-		return NULL;
-
-	codelen = LM_AssembleEx(code, bits, runtime_addr, &codebuf);
-	if (!codelen)
-		return Py_BuildValue("");
-
-	pycodebuf = PyByteArray_FromStringAndSize((const char *)codebuf, codelen);
-
-	LM_FreePayload(codebuf);
-
-	return pycodebuf;
-}
-
-/****************************************/
-
-static PyObject *
-py_LM_Disassemble(PyObject *self,
-		  PyObject *args)
-{
-	lm_address_t code;
-	lm_inst_t inst;
-	py_lm_inst_obj *pyinst;
-
-	if (!PyArg_ParseTuple(args, "n", &code))
-		return NULL;
-
-	if (!LM_Disassemble(code, &inst))
-		return Py_BuildValue("");
-
-	pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
-	pyinst->inst = inst;
-
-	return (PyObject *)pyinst;
-}
-
-/****************************************/
-
-static PyObject *
-py_LM_DisassembleEx(PyObject *self,
-		    PyObject *args)
-{
-	lm_address_t code;
-	lm_size_t bits;
-	lm_size_t size;
-	lm_size_t count;
-	lm_address_t runtime_addr;
-	lm_inst_t *insts;
-	lm_size_t inst_count;
-	PyObject *pyinsts;
-	lm_size_t i;
-	py_lm_inst_obj *pyinst;
-
-	if (!PyArg_ParseTuple(args, "nnnnn", &code, &bits, &size, &count, &runtime_addr))
-		return NULL;
-
-	inst_count = LM_DisassembleEx(code, bits, size, count, runtime_addr, &insts);
-	if (!inst_count)
-		return Py_BuildValue("");
-
-	pyinsts = PyList_New((Py_ssize_t)inst_count);
-	for (i = 0; i < inst_count; ++i) {
-		pyinst = (py_lm_inst_obj *)PyObject_CallObject((PyObject *)&py_lm_inst_t, NULL);
-		pyinst->inst = insts[i];
-		PyList_SetItem(pyinsts, i, (PyObject *)pyinst);
-	}
-
-	LM_FreeInstructions(insts);
-
-	return pyinsts;
-}
-
-/****************************************/
-
-static PyObject *
-py_LM_CodeLength(PyObject *self,
-		 PyObject *args)
-{
-	lm_address_t code;
-	lm_size_t minlength;
-	lm_size_t aligned_length;
-
-	if (!PyArg_ParseTuple(args, "nn", &code, &minlength))
-		return NULL;
-
-	aligned_length = LM_CodeLength(code, minlength);
-	if (!aligned_length)
-		return Py_BuildValue("");
-
-	return (PyObject *)PyLong_FromSize_t(aligned_length);
-}
-
-/****************************************/
-
-static PyObject *
-py_LM_CodeLengthEx(PyObject *self,
-		   PyObject *args)
-{
-	py_lm_process_obj *pyproc;
-	lm_address_t code;
-	lm_size_t minlength;
-	lm_size_t aligned_length;
-
-	if (!PyArg_ParseTuple(args, "Onn", &pyproc, &code, &minlength))
-		return NULL;
-
-	aligned_length = LM_CodeLengthEx(&pyproc->proc, code, minlength);
-	if (!aligned_length)
-		return Py_BuildValue("");
-
-	return (PyObject *)PyLong_FromSize_t(aligned_length);
-}
-
-/****************************************/
-
 static PyMethodDef libmem_methods[] = {
 	{ "LM_EnumProcesses", py_LM_EnumProcesses, METH_NOARGS, "Lists all current living processes" },
 	{ "LM_GetProcess", py_LM_GetProcess, METH_NOARGS, "Gets information about the calling process" },
 	{ "LM_GetProcessEx", py_LM_GetProcessEx, METH_VARARGS, "Gets information about a process from a process ID" },
 	{ "LM_FindProcess", py_LM_FindProcess, METH_VARARGS, "Searches for an existing process" },
 	{ "LM_IsProcessAlive", py_LM_IsProcessAlive, METH_VARARGS, "Checks if a process is alive" },
+	{ "LM_GetBits", py_LM_GetBits, METH_VARARGS, "Checks if a process is alive" },
 	{ "LM_GetSystemBits", py_LM_GetSystemBits, METH_VARARGS, "Checks if a process is alive" },
 	/****************************************/
 	{ "LM_EnumThreads", py_LM_EnumThreads, METH_NOARGS, "Lists all threads from the calling process" },
@@ -1534,6 +1559,7 @@ static PyMethodDef libmem_methods[] = {
 	{ "LM_UnhookCode", py_LM_UnhookCode, METH_VARARGS, "Unhook/restore code in the current process" },
 	{ "LM_UnhookCodeEx", py_LM_UnhookCodeEx, METH_VARARGS, "Unhook/restore code in a remote process" },
 	/****************************************/
+	{ "LM_GetArchitecture", py_LM_GetArchitecture, METH_VARARGS, "Gets the current processor architecture" },
 	{ "LM_Assemble", py_LM_Assemble, METH_VARARGS, "Assemble instruction from text" },
 	{ "LM_AssembleEx", py_LM_AssembleEx, METH_VARARGS, "Assemble instructions from text" },
 	{ "LM_Disassemble", py_LM_Disassemble, METH_VARARGS, "Disassemble instruction from an address in the current process" },
@@ -1643,38 +1669,38 @@ PyInit__libmem(void)
 	DECL_GLOBAL_PROT(LM_PROT_RW);
 	DECL_GLOBAL_PROT(LM_PROT_XRW);
 
-	DECL_GLOBAL_LONG(LM_ARCH_ARMV7);
-	DECL_GLOBAL_LONG(LM_ARCH_ARMV8);
-	DECL_GLOBAL_LONG(LM_ARCH_THUMBV7);
-	DECL_GLOBAL_LONG(LM_ARCH_THUMBV8);
+	DECL_GLOBAL_ARCH(LM_ARCH_ARMV7);
+	DECL_GLOBAL_ARCH(LM_ARCH_ARMV8);
+	DECL_GLOBAL_ARCH(LM_ARCH_THUMBV7);
+	DECL_GLOBAL_ARCH(LM_ARCH_THUMBV8);
 
-	DECL_GLOBAL_LONG(LM_ARCH_ARMV7EB);
-	DECL_GLOBAL_LONG(LM_ARCH_THUMBV7EB);
-	DECL_GLOBAL_LONG(LM_ARCH_ARMV8EB);
-	DECL_GLOBAL_LONG(LM_ARCH_THUMBV8EB);
+	DECL_GLOBAL_ARCH(LM_ARCH_ARMV7EB);
+	DECL_GLOBAL_ARCH(LM_ARCH_THUMBV7EB);
+	DECL_GLOBAL_ARCH(LM_ARCH_ARMV8EB);
+	DECL_GLOBAL_ARCH(LM_ARCH_THUMBV8EB);
 
-	DECL_GLOBAL_LONG(LM_ARCH_AARCH64);
+	DECL_GLOBAL_ARCH(LM_ARCH_AARCH64);
 
-	DECL_GLOBAL_LONG(LM_ARCH_MIPS);
-	DECL_GLOBAL_LONG(LM_ARCH_MIPS64);
-	DECL_GLOBAL_LONG(LM_ARCH_MIPSEL);
-	DECL_GLOBAL_LONG(LM_ARCH_MIPSEL64);
+	DECL_GLOBAL_ARCH(LM_ARCH_MIPS);
+	DECL_GLOBAL_ARCH(LM_ARCH_MIPS64);
+	DECL_GLOBAL_ARCH(LM_ARCH_MIPSEL);
+	DECL_GLOBAL_ARCH(LM_ARCH_MIPSEL64);
 
-	DECL_GLOBAL_LONG(LM_ARCH_X86_16);
-	DECL_GLOBAL_LONG(LM_ARCH_X86);
-	DECL_GLOBAL_LONG(LM_ARCH_X64);
+	DECL_GLOBAL_ARCH(LM_ARCH_X86_16);
+	DECL_GLOBAL_ARCH(LM_ARCH_X86);
+	DECL_GLOBAL_ARCH(LM_ARCH_X64);
 
-	DECL_GLOBAL_LONG(LM_ARCH_PPC32);
-	DECL_GLOBAL_LONG(LM_ARCH_PPC64);
-	DECL_GLOBAL_LONG(LM_ARCH_PPC64LE);
+	DECL_GLOBAL_ARCH(LM_ARCH_PPC32);
+	DECL_GLOBAL_ARCH(LM_ARCH_PPC64);
+	DECL_GLOBAL_ARCH(LM_ARCH_PPC64LE);
 
-	DECL_GLOBAL_LONG(LM_ARCH_SPARC);
-	DECL_GLOBAL_LONG(LM_ARCH_SPARC64);
-	DECL_GLOBAL_LONG(LM_ARCH_SPARCEL);
+	DECL_GLOBAL_ARCH(LM_ARCH_SPARC);
+	DECL_GLOBAL_ARCH(LM_ARCH_SPARC64);
+	DECL_GLOBAL_ARCH(LM_ARCH_SPARCEL);
 
-	DECL_GLOBAL_LONG(LM_ARCH_SYSZ);
+	DECL_GLOBAL_ARCH(LM_ARCH_SYSZ);
 
-	DECL_GLOBAL_LONG(LM_ARCH_MAX);
+	DECL_GLOBAL_ARCH(LM_ARCH_MAX);
 
 	goto EXIT; /* no errors */
 

@@ -98,15 +98,18 @@ fn main() {
 ### Python
 ```py
 from libmem import *
+import time
 
-# Assemble/Disassemble code
-print("[*] Assembly")
-inst = LM_Assemble("mov eax, ebx")
-print(f"{code} : {inst.bytes}")
+process = LM_FindProcess("game.exe")
+game_mod = LM_FindModuleEx(process, process.name)
 
-print("[*] Disassembly:")
-inst = LM_Disassemble(bytearray(b"\x55"))
-print(f"{inst.bytes} : {inst.mnemonic} {inst.op_str}")
+# Resolve a Cheat Engine pointer scan
+health_pointer = LM_DeepPointerEx(game_mod.base + 0xdeadbeef, [0xA0, 0x04, 0x10, 0xF0, 0x0])
+
+# Set player health to 1337 forever
+while True:
+    LM_WriteMemoryEx(process, health_pointer, bytearray(int(1337).to_bytes(4)))
+    time.sleep(0.2)
 ```
 
 ## Documentation

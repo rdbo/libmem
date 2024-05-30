@@ -2,6 +2,7 @@ from libmem import *
 import ctypes
 import struct
 import time
+import os
 
 def separator():
     print("========================================")
@@ -82,9 +83,24 @@ print(f"[*] Remote Process Module: {mod}")
 
 separator()
 
-# TODO: Add tests for LM_LoadModule(Ex) and LM_UnloadModule(Ex)
+libpath = f"{os.path.dirname(os.path.realpath(__file__))}{os.sep}{os.pardir}{os.sep}{os.pardir}{os.sep}{os.pardir}{os.sep}build{os.sep}tests{os.sep}libtest.so"
+print(f"[*] Loadable Library Path: {libpath}")
+cur_loaded_mod = LM_LoadModule(libpath)
+print()
+print(f"[*] Loaded Module into Current Process: {cur_loaded_mod}")
 
-# separator()
+LM_UnloadModule(cur_loaded_mod)
+print("[*] Unloaded Module from Current Process")
+
+separator()
+
+loaded_mod = LM_LoadModuleEx(proc, libpath)
+print("[*] Loaded Module into Target Process: ", loaded_mod)
+
+LM_UnloadModuleEx(proc, loaded_mod)
+print("[*] Unloaded Module from Target Process")
+
+separator()
 
 print("[*] Symbol Enumeration")
 
@@ -97,7 +113,7 @@ print("[*] Symbol Address Search")
 symaddr = LM_FindSymbolAddress(curmod, "Py_BytesMain")
 if symaddr == None:
     symaddr = LM_FindSymbolAddress(curmod, "_start_c")
-print(f"[*] Py_BytesMain Address: {symaddr}")
+print(f"[*] Py_BytesMain Address: {hex(symaddr)}")
 
 separator()
 
@@ -111,9 +127,12 @@ print("[*] Demangled Symbol Enumeration")
 
 print("\n".join([str(sym) for sym in LM_EnumSymbolsDemangled(curmod)[:5]]))
 
-# TODO: Add test for 'LM_FindSymbolAddressDemangled'
+separator()
 
-# separator()
+symaddr = LM_FindSymbolAddressDemangled(curmod, "Py_BytesMain")
+if symaddr == None:
+    symaddr = LM_FindSymbolAddressDemangled(curmod, "_start_c")
+print(f"[*] Py_BytesMain Address (Demangled): {hex(symaddr)}")
 
 separator()
 

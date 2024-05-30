@@ -130,13 +130,8 @@ py_LM_FindProcess(PyObject *self,
 	lm_process_t       proc;
 	py_lm_process_obj *pyproc;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "u", &procstr))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "s", &procstr))
 		return NULL;
-#	endif
 
 	if (!LM_FindProcess(procstr, &proc))
 		return Py_BuildValue("");
@@ -370,13 +365,8 @@ py_LM_FindModule(PyObject *self,
 	lm_module_t       mod;
 	py_lm_module_obj *pymodule;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "u", &modstr))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "s", &modstr))
 		return NULL;
-#	endif
 
 	if (!LM_FindModule(modstr, &mod))
 		return Py_BuildValue("");
@@ -398,13 +388,8 @@ py_LM_FindModuleEx(PyObject *self,
 	lm_module_t        mod;
 	py_lm_module_obj  *pymodule;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "Ou", &pyproc, &modstr))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "Os", &pyproc, &modstr))
 		return NULL;
-#	endif
 
 	if (!LM_FindModuleEx(&pyproc->proc, modstr, &mod))
 		return Py_BuildValue("");
@@ -425,13 +410,8 @@ py_LM_LoadModule(PyObject *self,
 	lm_module_t       mod;
 	py_lm_module_obj *pymodule;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "u", &modpath))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "s", &modpath))
 		return NULL;
-#	endif
 
 	if (!LM_LoadModule(modpath, &mod))
 		return Py_BuildValue("");
@@ -453,13 +433,8 @@ py_LM_LoadModuleEx(PyObject *self,
 	lm_module_t        mod;
 	py_lm_module_obj  *pymodule;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "Ou", &pyproc, &modpath))
-			return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "Os", &pyproc, &modpath))
 		return NULL;
-#	endif
 
 	if (!LM_LoadModuleEx(&pyproc->proc, modpath, &mod))
 		return Py_BuildValue("");
@@ -1155,13 +1130,8 @@ py_LM_PatternScan(PyObject *self,
 	lm_bytearray_t pattern;
 	lm_address_t scan_match;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "Yunn", &pypattern, &mask, &addr, &scansize))
-		return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "Ysnn", &pypattern, &mask, &addr, &scansize))
 		return NULL;
-#	endif
 
 	pattern = (lm_bytearray_t)PyByteArray_AsString(pypattern);
 
@@ -1186,13 +1156,8 @@ py_LM_PatternScanEx(PyObject *self,
 	lm_bytearray_t pattern;
 	lm_address_t scan_match;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "OYunn", &pyproc, &pypattern, &mask, &addr, &scansize))
-		return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "OYsnn", &pyproc, &pypattern, &mask, &addr, &scansize))
 		return NULL;
-#	endif
 
 	pattern = (lm_bytearray_t)PyByteArray_AsString(pypattern);
 
@@ -1214,13 +1179,8 @@ py_LM_SigScan(PyObject *self,
 	lm_size_t scansize;
 	lm_address_t scan_match;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "unn", &sig, &addr, &scansize))
-		return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "snn", &sig, &addr, &scansize))
 		return NULL;
-#	endif
 
 	scan_match = LM_SigScan(sig, addr, scansize);
 	if (scan_match == LM_ADDRESS_BAD)
@@ -1241,13 +1201,8 @@ py_LM_SigScanEx(PyObject *self,
 	lm_size_t scansize;
 	lm_address_t scan_match;
 
-#	if LM_CHARSET == LM_CHARSET_UC
-	if (!PyArg_ParseTuple(args, "Ounn", &pyproc, &sig, &addr, &scansize))
-		return NULL;
-#	else
 	if (!PyArg_ParseTuple(args, "Osnn", &pyproc, &sig, &addr, &scansize))
 		return NULL;
-#	endif
 
 	scan_match = LM_SigScanEx(&pyproc->proc, sig, addr, scansize);
 	if (scan_match == LM_ADDRESS_BAD)

@@ -27,7 +27,7 @@ print(parent_proc)
 separator()
 
 print("[*] Remote Process")
-proc = LM_FindProcess("test1")
+proc = LM_FindProcess("target")
 print(proc)
 
 separator()
@@ -116,21 +116,21 @@ print("\n".join([str(sym) for sym in LM_EnumSymbolsDemangled(curmod)[:5]]))
 
 separator()
 
-print("[*] Page Enumeration - Current Process")
-print("\n".join([str(page) for page in LM_EnumPages()[:5]]))
+print("[*] Segment Enumeration - Current Process")
+print("\n".join([str(segment) for segment in LM_EnumSegments()[:5]]))
 
 separator()
 
-print("[*] Page Enumeration - Remote Process")
-print("\n".join([str(page) for page in LM_EnumPagesEx(proc)[:5]]))
+print("[*] Segment Enumeration - Remote Process")
+print("\n".join([str(segment) for segment in LM_EnumSegmentsEx(proc)[:5]]))
 
 separator()
 
-print(f"[*] Page From Current Process Module: {LM_GetPage(symaddr)}")
+print(f"[*] Segment From Current Process Module: {LM_FindSegment(symaddr)}")
 
 separator()
 
-print(f"[*] Page From Remote Process Module: {LM_GetPageEx(proc, mod.base)}")
+print(f"[*] Segment From Remote Process Module: {LM_FindSegmentEx(proc, mod.base)}")
 
 separator()
 
@@ -164,16 +164,16 @@ separator()
 print("[*] Changing Memory Protection - Current Process")
 old_prot = LM_ProtMemory(curmod.base, 0x1000, LM_PROT_XRW)
 print(f"[*] Old Memory Protection ({hex(curmod.base)}): {old_prot}")
-page = LM_GetPage(curmod.base)
-print(f"[*] Current Memory Protection ({hex(curmod.base)}): {page.prot}")
+segment = LM_FindSegment(curmod.base)
+print(f"[*] Current Memory Protection ({hex(curmod.base)}): {segment.prot}")
 
 separator()
 
 print("[*] Changing Memory Protection - Remote Process")
 old_prot = LM_ProtMemoryEx(proc, mod.base, 0x1000, LM_PROT_XRW)
 print(f"[*] Old Memory Protection ({hex(mod.base)}): {old_prot}")
-page = LM_GetPageEx(proc, mod.base)
-print(f"[*] Current Memory Protection ({hex(mod.base)}): {page.prot}")
+segment = LM_FindSegmentEx(proc, mod.base)
+print(f"[*] Current Memory Protection ({hex(mod.base)}): {segment.prot}")
 
 separator()
 
@@ -190,15 +190,18 @@ LM_FreeMemoryEx(proc, alloc, alloc_size)
 
 separator()
 
-addr1 = LM_AllocMemory(4, LM_PROT_RW)
+addr0 = LM_AllocMemory(4, LM_PROT_RW)
+addr1 = LM_AllocMemory(8, LM_PROT_RW)
 addr2 = LM_AllocMemory(8, LM_PROT_RW)
 
-LM_WriteMemory(addr1, bytearray(b"\x10\x00\x00\x00"))
+LM_WriteMemory(addr0, bytearray(b"\x10\x00\x00\x00"))
+LM_WriteMemory(addr1, bytearray(addr0.to_bytes(8, byteorder="little")))
 LM_WriteMemory(addr2, bytearray(addr1.to_bytes(8, byteorder="little")))
+print("[*] Address 0: ", hex(addr0))
 print("[*] Address 1: ", hex(addr1))
 print("[*] Address 2: ", hex(addr2))
 
-deep_ptr = LM_DeepPointer(addr2, [0, 0])
+deep_ptr = LM_DeepPointer(addr2, [0])
 print("[*] Deep Pointer result: " + hex(deep_ptr))
 
 value = int.from_bytes(LM_ReadMemory(deep_ptr, 4), byteorder="little")
@@ -236,7 +239,7 @@ print(inst)
 separator()
 
 print("[*] Assemblying Instructions")
-insts = LM_AssembleEx("push ebp; mov ebp, esp; mov esp, ebp; pop ebp; ret", 32, 0)
+insts = LM_AssembleEx("push ebp; mov ebp, esp; mov esp, ebp; pop ebp; ret", LM_ARCH_X86, 0)
 print(", ".join([hex(b) for b in insts]))
 
 separator()
@@ -248,7 +251,7 @@ print(inst)
 separator()
 
 print("[*] Disassembly of PyBytesMain Instructions")
-insts = LM_DisassembleEx(symaddr, 32, 0x100, 5, symaddr)
+insts = LM_DisassembleEx(symaddr, LM_ARCH_X86, 0x100, 5, symaddr)
 print("\n".join([str(inst) for inst in insts]))
 
 separator()

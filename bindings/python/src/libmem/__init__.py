@@ -30,7 +30,7 @@ def LM_GetProcess() -> Optional[lm_process_t]:
 LM_GetProcess.__doc__ = _libmem.LM_GetProcess.__doc__
 
 def LM_GetProcessEx(pid: int) -> Optional[lm_process_t]:
-    return _libmem.LM_GetProcessEx()
+    return _libmem.LM_GetProcessEx(pid)
 LM_GetProcessEx.__doc__ = _libmem.LM_GetProcessEx.__doc__
 
 def LM_FindProcess(process_name: str) -> Optional[lm_process_t]:

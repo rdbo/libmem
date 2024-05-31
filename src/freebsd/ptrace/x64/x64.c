@@ -42,7 +42,7 @@ ptrace_get_syscall_ret(pid_t pid)
 
 	errno = 0;
 
-	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, NULL);
+	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
 	if (ret != -1) {
 		ret = regs.r_rax;
 	}
@@ -269,7 +269,7 @@ ptrace_get_libcall_ret(pid_t pid)
 
 	errno = 0;
 
-	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, NULL);
+	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
 	if (ret != -1) {
 		ret = regs.r_rax;
 	}

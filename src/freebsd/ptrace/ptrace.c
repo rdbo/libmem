@@ -51,7 +51,7 @@ ptrace_read(pid_t pid, long src, char *dst, size_t size)
 		diff = size - bytes_read;
 
 		errno = 0;
-		data = ptrace(PT_READ_D, pid, src + bytes_read, 0);
+		data = ptrace(PT_READ_D, pid, (caddr_t)(src + bytes_read), 0);
 		if (data == -1 && errno)
 			break;
 		
@@ -86,7 +86,7 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 			/* Read missing aligned bytes for a ptrace write into the 
 			 * data before writing */
 			errno = 0;
-			data = ptrace(PT_READ_D, pid, destaddr, 0);
+			data = ptrace(PT_READ_D, pid, (caddr_t)destaddr, 0);
 			if (data == -1 && errno)
 				break;
 
@@ -94,7 +94,7 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 		}
 		memcpy(&data, &src[bytes_written], write_diff);
 		
-		if (ptrace(PT_WRITE_D, pid, destaddr, data))
+		if (ptrace(PT_WRITE_D, pid, (caddr_t)destaddr, data))
 			break;
 	}
 

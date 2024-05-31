@@ -80,6 +80,12 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	shellcode = (char *)shellcode32;
 	shellcode_size = sizeof(shellcode32);
 
+	/* Setup stack */
+	regs.r_esp -= sizeof(ptsys->stack);
+	regs.r_esp &= -16UL;
+	if (ptrace_write(pid, regs.r_esp, ptsys->stack, sizeof(ptsys->stack)) != sizeof(ptsys->stack))
+		goto FREE_REGS_EXIT;
+
 	/* Backup original code to restore later */
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
@@ -166,6 +172,11 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
 	ptsys.args[0] = addr;
 	ptsys.args[1] = size;
 	ptsys.args[2] = prot;
+
+	/* Setup FreeBSD syscall convention */
+	*(uint32_t *)&ptsys.stack[0] = prot;
+	*(uint32_t *)&ptsys.stack[4] = size;
+	*(uint32_t *)&ptsys.stack[8] = addr;
 
 	return ptrace_syscall(pid, bits, &ptsys);
 }

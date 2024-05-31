@@ -28,6 +28,7 @@
 typedef struct {
 	int syscall_num;
 	long args[6];
+	unsigned char stack[256];
 } ptrace_syscall_t;
 
 typedef struct {

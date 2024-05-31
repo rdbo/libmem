@@ -199,16 +199,6 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 	if (ptrace_write(pid, regs.r_esp, ptlib->stack, sizeof(ptlib->stack)) != sizeof(ptlib->stack))
 		goto FREE_REGS_EXIT;
 
-	/* Setup register arguments for x86_64 */
-	if (bits == 64) {
-		regs.r_edi = ptlib->args[0];
-		regs.r_esi = ptlib->args[1];
-		regs.r_edx = ptlib->args[2];
-		regs.r_ecx = ptlib->args[3];
-		regs.r_e8 = ptlib->args[4];
-		regs.r_e9 = ptlib->args[5];
-	}
-
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
 		goto FREE_REGS_EXIT;

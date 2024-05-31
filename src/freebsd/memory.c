@@ -70,7 +70,7 @@ LM_WriteMemoryEx(const lm_process_t *process,
 	snprintf(mem_path, LM_ARRLEN(mem_path), "%s/%d/mem",
 	         PROCFS_PATH, process->pid);
 
-	fd = open(mem_path, O_RDONLY);
+	fd = open(mem_path, O_WRONLY);
 	if (fd == -1)
 		return 0;
 

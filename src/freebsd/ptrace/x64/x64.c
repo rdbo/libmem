@@ -121,7 +121,7 @@ EXIT:
 void
 ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
-	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+	struct reg *pregs = (struct reg *)orig_regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
@@ -203,7 +203,7 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
-	**(struct user_regs_struct **)orig_regs = regs;
+	**(struct reg **)orig_regs = regs;
 
 	/* Setup stack */
 	regs.r_rax = ptlib->address;

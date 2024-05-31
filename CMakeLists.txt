@@ -49,6 +49,11 @@ message(STATUS
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+if(${CMAKE_BUILD_TYPE} STREQUAL Release)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
+endif() 
+
 # External dependencies
 set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
 set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
@@ -145,7 +150,7 @@ else()
 	message(FATAL_ERROR "[!] Unsupported platform")
 endif()
 
-target_link_libraries(libmem ${LIBMEM_DEPS})
+target_link_libraries(libmem ${LIBMEM_DEPS} "-Wl,--gc-sections")
 if(LIBMEM_BUILD_STATIC)
 	# Create a bundled static library containing all dependencies (to mimic the shared library behavior)
 	set_target_properties(libmem PROPERTIES OUTPUT_NAME "libmem_partial")

@@ -114,7 +114,7 @@ ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shell
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
 	ptrace(PT_SETREGS, pid, (caddr_t)pregs, 0);
-	ptrace_write(pid, pregs->r_rip, orig_code, shellcode_size);
+	ptrace_write(pid, pregs->r_eip, orig_code, shellcode_size);
 
 	free(orig_regs);
 	free(orig_code);
@@ -232,7 +232,7 @@ ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shell
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
 	ptrace(PT_SETREGS, pid, (caddr_t)pregs, 0);
-	ptrace_write(pid, pregs->r_rip, orig_code, shellcode_size);
+	ptrace_write(pid, pregs->r_eip, orig_code, shellcode_size);
 
 	free(orig_regs);
 	free(orig_code);

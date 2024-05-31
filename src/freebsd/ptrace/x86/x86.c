@@ -37,54 +37,66 @@
 long
 ptrace_get_syscall_ret(pid_t pid)
 {
+	long ret;
+	struct reg regs;
+
 	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, EAX * sizeof(long), NULL);
+
+	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
+	if (ret != -1) {
+		ret = regs.r_eax;
+	}
+
+	return ret;
 }
 
 size_t
 ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **orig_regs, void **orig_code)
 {
-	static const char shellcode[] = { 0xcd, 0x80 };
-	struct user_regs_struct regs;
-	size_t shellcode_size = sizeof(shellcode);
+	static const char shellcode32[] = { 0xcd, 0x80 };
+	struct reg regs;
+	char *shellcode;
+	size_t shellcode_size = 0;
 
 	assert((bits == 64 || bits == 32) && ptsys != NULL && orig_regs != NULL && *orig_regs == NULL && orig_code != NULL && *orig_code == NULL);
 
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0) == -1)
 		return 0;
 
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
 
-	*(struct user_regs_struct *)(*orig_regs) = regs;
+	*(struct reg *)(*orig_regs) = regs;
 
 	/* Setup registers */
-	regs.eax = ptsys->syscall_num;
-	regs.ebx = ptsys->args[0];
-	regs.ecx = ptsys->args[1];
-	regs.edx = ptsys->args[2];
-	regs.esi = ptsys->args[3];
-	regs.edi = ptsys->args[4];
-	regs.ebp = ptsys->args[5];
+	regs.r_eax = ptsys->syscall_num;
+	regs.r_ebx = ptsys->args[0];
+	regs.r_ecx = ptsys->args[1];
+	regs.r_edx = ptsys->args[2];
+	regs.r_esi = ptsys->args[3];
+	regs.r_edi = ptsys->args[4];
+	regs.r_ebp = ptsys->args[5];
+	shellcode = (char *)shellcode32;
+	shellcode_size = sizeof(shellcode32);
 
 	/* Backup original code to restore later */
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
 		goto FREE_REGS_EXIT;
 
-	if (ptrace_read(pid, regs.eip, *orig_code, shellcode_size) != shellcode_size)
+	if (ptrace_read(pid, regs.r_eip, *orig_code, shellcode_size) != shellcode_size)
 		goto FREE_EXIT;
 
-	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_SETREGS, pid, (caddr_t)&regs, 0) == -1)
 		goto FREE_EXIT;
 
-	if (ptrace_write(pid, (long)regs.eip, shellcode, shellcode_size) == 0)
+	if (ptrace_write(pid, (long)regs.r_eip, shellcode, shellcode_size) == 0)
 		goto CLEAN_EXIT;
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
+	ptrace(PT_SETREGS, pid, (caddr_t)*orig_regs, 0);
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:
@@ -97,12 +109,12 @@ EXIT:
 void
 ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
-	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+	struct reg *pregs = (struct reg *)orig_regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
-	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
-	ptrace_write(pid, pregs->eip, orig_code, shellcode_size);
+	ptrace(PT_SETREGS, pid, (caddr_t)pregs, 0);
+	ptrace_write(pid, pregs->r_rip, orig_code, shellcode_size);
 
 	free(orig_regs);
 	free(orig_code);
@@ -114,7 +126,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	long alloc;
 	ptrace_syscall_t ptsys;
 	
-	ptsys.syscall_num = SYS_mmap2;
+	ptsys.syscall_num = SYS_mmap;
 
 	/* Setup mmap arguments */
 	ptsys.args[0] = 0;                      /* `void *addr` */
@@ -125,7 +137,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	ptsys.args[5] = 0;                      /* `off_t offset` */
 
 	alloc = ptrace_syscall(pid, bits, &ptsys);
-	if (alloc == -1 && errno || (void *)alloc == MAP_FAILED)
+	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)
 		alloc = -1;
 
 	return alloc;
@@ -162,48 +174,57 @@ size_t
 ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **orig_regs, void **orig_code)
 {
 	const uint8_t shellcode[] = {
-		/* call eax */
+		/* call rax */
 		0xFF, 0xD0,
 		/* int3 */
 		0xCC
 	};
 	size_t shellcode_size = sizeof(shellcode);
-	struct user_regs_struct regs;
-	size_t i;
+	struct reg regs;
 
 	assert((bits == 32 || bits == 64) && ptlib && orig_regs && orig_code);
 
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0) == -1)
 		return 0;
 
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
-	**(struct user_regs_struct **)orig_regs = regs;
+	**(struct reg **)orig_regs = regs;
 
 	/* Setup stack */
-	regs.eax = ptlib->address;
-	regs.esp -= sizeof(ptlib->stack);
-	regs.esp &= -16UL;
-	if (ptrace_write(pid, regs.esp, ptlib->stack, sizeof(ptlib->stack)) != sizeof(ptlib->stack))
+	regs.r_eax = ptlib->address;
+	regs.r_esp -= sizeof(ptlib->stack);
+	regs.r_esp &= -16UL;
+	if (ptrace_write(pid, regs.r_esp, ptlib->stack, sizeof(ptlib->stack)) != sizeof(ptlib->stack))
 		goto FREE_REGS_EXIT;
+
+	/* Setup register arguments for x86_64 */
+	if (bits == 64) {
+		regs.r_edi = ptlib->args[0];
+		regs.r_esi = ptlib->args[1];
+		regs.r_edx = ptlib->args[2];
+		regs.r_ecx = ptlib->args[3];
+		regs.r_e8 = ptlib->args[4];
+		regs.r_e9 = ptlib->args[5];
+	}
 
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
 		goto FREE_REGS_EXIT;
 
-	if (ptrace_read(pid, regs.eip, *orig_code, shellcode_size) != shellcode_size)
+	if (ptrace_read(pid, regs.r_eip, *orig_code, shellcode_size) != shellcode_size)
 		goto FREE_EXIT;
 
-	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_SETREGS, pid, (caddr_t)&regs, 0) == -1)
 		goto FREE_EXIT;
 
-	if (ptrace_write(pid, regs.eip, shellcode, shellcode_size) == 0)
+	if (ptrace_write(pid, regs.r_eip, shellcode, shellcode_size) == 0)
 		goto CLEAN_EXIT;
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
+	ptrace(PT_SETREGS, pid, (caddr_t)*orig_regs, 0);
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:
@@ -216,12 +237,12 @@ EXIT:
 void
 ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
-	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+	struct reg *pregs = (struct reg *)orig_regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
-	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
-	ptrace_write(pid, pregs->eip, orig_code, shellcode_size);
+	ptrace(PT_SETREGS, pid, (caddr_t)pregs, 0);
+	ptrace_write(pid, pregs->r_rip, orig_code, shellcode_size);
 
 	free(orig_regs);
 	free(orig_code);
@@ -230,6 +251,15 @@ ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shell
 long
 ptrace_get_libcall_ret(pid_t pid)
 {
+	long ret;
+	struct reg regs;
+
 	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, EAX * sizeof(long), NULL);
+
+	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
+	if (ret != -1) {
+		ret = regs.r_eax;
+	}
+
+	return ret;
 }

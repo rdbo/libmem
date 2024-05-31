@@ -71,7 +71,7 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	*(struct reg *)(*orig_regs) = regs;
 
 	/* Setup registers */
-	regs.rax = ptsys->syscall_num;
+	regs.r_rax = ptsys->syscall_num;
 	if (bits == 64) {
 		regs.r_rdi = ptsys->args[0];
 		regs.r_rsi = ptsys->args[1];

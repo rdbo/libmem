@@ -31,7 +31,7 @@
 int
 ptrace_attach(pid_t pid)
 {
-	if (ptrace(PTRACE_ATTACH, pid, NULL, NULL) == -1)
+	if (ptrace(PT_ATTACH, pid, 0, 0) == -1)
 		return -1;
 
 	waitpid(pid, NULL, 0);
@@ -51,7 +51,7 @@ ptrace_read(pid_t pid, long src, char *dst, size_t size)
 		diff = size - bytes_read;
 
 		errno = 0;
-		data = ptrace(PTRACE_PEEKDATA, pid, src + bytes_read, NULL);
+		data = ptrace(PT_READ_D, pid, src + bytes_read, 0);
 		if (data == -1 && errno)
 			break;
 		
@@ -86,7 +86,7 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 			/* Read missing aligned bytes for a ptrace write into the 
 			 * data before writing */
 			errno = 0;
-			data = ptrace(PTRACE_PEEKDATA, pid, destaddr, NULL);
+			data = ptrace(PT_READ_D, pid, destaddr, 0);
 			if (data == -1 && errno)
 				break;
 
@@ -94,27 +94,12 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 		}
 		memcpy(&data, &src[bytes_written], write_diff);
 		
-		if (ptrace(PTRACE_POKEDATA, pid, destaddr, data))
+		if (ptrace(PT_WRITE_D, pid, destaddr, data))
 			break;
 	}
 
 	return bytes_written;
 }
-
-/*
-#include <sys/user.h>
-#include <stdio.h>
-void
-dump_registers(pid_t pid)
-{
-	struct user_regs_struct regs;
-	
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) < 0)
-		return;
-
-	printf("\trax: %lx\n\trbx: %lx\n\trcx: %lx\n\trdx: %lx\n\trsi: %lx\n\trdi: %lx\n\trbp: %lx\n\trsp: %lx\n\trip: %lx\n", regs.rax, regs.rbx, regs.rcx, regs.rdx, regs.rsi, regs.rdi, regs.rbp, regs.rsp, regs.rip);
-}
-*/
 
 long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
@@ -128,29 +113,8 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0)
 		return ret;
 
-	/*
-	/* Step to system call * /
-	/*
-	printf("PRE-SYSCALL REGS:\n");
-	dump_registers(pid);
-	* /
-
-	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
-	waitpid(pid, NULL, 0);
-
-	/* Run system call * /
-	ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
-	waitpid(pid, NULL, 0);
-
-	/*
-	printf("POST-SYSCALL REGS:\n");
-	dump_registers(pid);
-	* /
-	*/
-
-	/* NOTE: It seems that 'PTRACE_SYSCALL' doesn't trigger with `int $0x80`,
-	 * so 'PTRACE_SINGLESTEP' is used instead */
-	ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
+	/* Step to system call */
+	ptrace(PT_STEP, pid, 0, 0);
 	waitpid(pid, NULL, 0);
 
 	/* Get return value */
@@ -164,7 +128,7 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 void
 ptrace_detach(pid_t pid)
 {
-	ptrace(PTRACE_DETACH, pid, NULL, NULL);
+	ptrace(PT_DETACH, pid, 0, 0);
 }
 
 long
@@ -179,22 +143,12 @@ ptrace_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib)
 	if ((shellcode_size = ptrace_setup_libcall(pid, bits, ptlib, &orig_regs, &orig_code)) == 0)
 		return ret;
 
-	/*
-	printf("PRE-LIBCALL REGS:\n");
-	dump_registers(pid);
-	*/
-
 	/* Continue until a breakpoint is triggered */
-	ptrace(PTRACE_CONT, pid, NULL, NULL);
+	ptrace(PT_CONTINUE, pid, 0, 0);
 	waitpid(pid, NULL, 0);
 
 	/* Get return value */
 	ret = ptrace_get_libcall_ret(pid);
-
-	/*
-	printf("POST-LIBCALL REGS:\n");
-	dump_registers(pid);
-	*/
 
 	/* Restore program state prior to syscall */
 	ptrace_restore_libcall(pid, orig_regs, orig_code, shellcode_size);

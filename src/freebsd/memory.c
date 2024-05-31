@@ -21,11 +21,13 @@
  */
 
 #include <libmem/libmem.h>
+#include <posixutils/posixutils.h>
 #include "consts.h"
 #include "ptrace/ptrace.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 
 LM_API lm_size_t LM_CALL
 LM_ReadMemoryEx(const lm_process_t *process,

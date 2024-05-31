@@ -142,6 +142,15 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	ptsys.args[4] = -1;                     /* `int fd` */
 	ptsys.args[5] = 0;                      /* `off_t offset` */
 
+	/* Setup FreeBSD syscall convention */
+	*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
+	*(uint32_t *)&ptsys.stack[4] = 0;
+	*(uint32_t *)&ptsys.stack[8] = -1;
+	*(uint32_t *)&ptsys.stack[12] = MAP_PRIVATE | MAP_ANON;
+	*(uint32_t *)&ptsys.stack[16] = prot;
+	*(uint32_t *)&ptsys.stack[20] = size;
+	*(uint32_t *)&ptsys.stack[24] = 0;
+
 	alloc = ptrace_syscall(pid, bits, &ptsys);
 	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)
 		alloc = -1;
@@ -174,9 +183,10 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
 	ptsys.args[2] = prot;
 
 	/* Setup FreeBSD syscall convention */
-	*(uint32_t *)&ptsys.stack[0] = prot;
-	*(uint32_t *)&ptsys.stack[4] = size;
-	*(uint32_t *)&ptsys.stack[8] = addr;
+	*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
+	*(uint32_t *)&ptsys.stack[4] = prot;
+	*(uint32_t *)&ptsys.stack[8] = size;
+	*(uint32_t *)&ptsys.stack[12] = addr;
 
 	return ptrace_syscall(pid, bits, &ptsys);
 }

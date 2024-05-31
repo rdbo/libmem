@@ -22,24 +22,6 @@
 
 #include <libmem/libmem.h>
 
-LM_API lm_bool_t LM_CALL
-LM_EnumSegments(lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
-                			      lm_void_t    *arg),
-		lm_void_t          *arg)
-{
-	lm_process_t process;
-
-	if (!callback)
-		return LM_FALSE;
-
-	if (!LM_GetProcess(&process))
-		return LM_FALSE;
-
-	return LM_EnumSegmentsEx(&process, callback, arg);
-}
-
-/********************************/
-
 typedef struct {
 	lm_address_t  address;
 	lm_segment_t *segment_out;

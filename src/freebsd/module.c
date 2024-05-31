@@ -116,6 +116,115 @@ LM_LoadModule(lm_string_t  path,
 
 /********************************/
 
+lm_bool_t
+find_dlfcn_module_callback(lm_module_t *module, lm_void_t *arg)
+{
+	static const char *name_matches[] = {
+		"libc.", "libc-", "libdl.", "libdl-", "ld-musl-", "ld-musl."
+	};
+	size_t i;
+	size_t len;
+
+	for (i = 0; i < LM_ARRLEN(name_matches); ++i) {
+		len = strlen(name_matches[i]);
+		if (!strncmp(module->name, name_matches[i], len)) {
+			*(lm_module_t *)arg = *module;
+			return LM_FALSE;
+		}
+	}
+
+	return LM_TRUE;
+}
+
+lm_bool_t
+find_dlopen_symbol_callback(lm_symbol_t *symbol, lm_void_t *arg)
+{
+	static const char *symbol_matches[] = {
+		"__libc_dlopen_mode", "dlopen"
+	};
+	size_t i;
+
+	for (i = 0; i < LM_ARRLEN(symbol_matches); ++i) {
+		if (!strcmp(symbol->name, symbol_matches[i])) {
+			*(lm_address_t *)arg = symbol->address;
+			return LM_FALSE;
+		}
+	}
+
+	return LM_TRUE;
+}
+
+LM_API lm_bool_t LM_CALL
+LM_LoadModuleEx(const lm_process_t *process,
+		lm_string_t         path,
+		lm_module_t        *module_out)
+{
+	lm_bool_t ret = LM_FALSE;
+	lm_module_t dlopen_mod;
+	lm_address_t dlopen_addr = LM_ADDRESS_BAD;
+	size_t path_size;
+	lm_address_t path_addr;
+	ptrace_libcall_t ptlib;
+	long call_ret;
+
+	if (!process || !path)
+		return ret;
+
+	dlopen_mod.base = LM_ADDRESS_BAD;
+	LM_EnumModulesEx(process, find_dlfcn_module_callback, &dlopen_mod);
+	if (dlopen_mod.base == LM_ADDRESS_BAD)
+		return ret;
+
+	LM_EnumSymbols(&dlopen_mod, find_dlopen_symbol_callback, &dlopen_addr);
+	if (dlopen_addr == LM_ADDRESS_BAD)
+		return ret;
+
+	path_size = (strlen(path) + 1) * sizeof(char);
+	path_addr = LM_AllocMemoryEx(process, path_size, LM_PROT_RW);
+	if (path_addr == LM_ADDRESS_BAD)
+		return ret;
+
+	if (LM_WriteMemoryEx(process, path_addr, path, path_size) != path_size)
+		goto FREE_EXIT;
+
+	/* Setup arguments both on the stack and on registers to prevent possible issues */
+	ptlib.address = dlopen_addr;
+	ptlib.args[0] = path_addr;
+	ptlib.args[1] = RTLD_LAZY;
+	if (process->bits == 64) {
+		*(uint64_t *)&ptlib.stack[0] = (uint64_t)path_addr;
+		*(int32_t *)&ptlib.stack[8] = (int32_t)RTLD_LAZY;
+	} else {
+		*(uint32_t *)&ptlib.stack[0] = (uint32_t)path_addr;
+		*(int32_t *)&ptlib.stack[4] = (int32_t)RTLD_LAZY;
+	}
+
+	if (ptrace_attach(process->pid))
+		goto FREE_EXIT;
+
+	call_ret = ptrace_libcall(process->pid, process->bits, &ptlib);
+	if (call_ret == -1 || call_ret == 0)
+		goto DETACH_EXIT;
+
+	if (module_out) {
+		lm_char_t *name;
+
+		/* NOTE: We search by name instead of path because the path can be misleading,
+		 *       having for example `../` and similar */
+		name = strrchr(path, '/');
+		ret = LM_FindModuleEx(process, name, module_out);
+	} else {
+		ret = LM_TRUE;
+	}
+DETACH_EXIT:
+	ptrace_detach(process->pid);
+FREE_EXIT:
+	LM_FreeMemoryEx(process, path_addr, path_size);
+	return ret;
+}
+
+/********************************/
+
 LM_API lm_bool_t LM_CALL
 LM_UnloadModule(const lm_module_t *module)
 {
@@ -134,4 +243,14 @@ LM_UnloadModule(const lm_module_t *module)
 	dlclose(handle);
 
 	return LM_TRUE;
+}
+
+/********************************/
+
+LM_API lm_bool_t LM_CALL
+LM_UnloadModuleEx(const lm_process_t *process,
+		  const lm_module_t  *module)
+{
+	/* TODO: Implement */
+	return LM_FALSE;
 }

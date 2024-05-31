@@ -82,7 +82,12 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
 	endif()
 	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/linux/*.c" "${LIBMEM_DIR}/src/linux/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
+	if(${LIBMEM_ARCH} STREQUAL x86_64)
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/freebsd/ptrace/x64/*.c")
+	elseif(${LIBMEM_ARCH} STREQUAL i686 OR ${LIBMEM_ARCH} STREQUAL i386)
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/freebsd/ptrace/x86/*.c")
+	endif()
+	file(GLOB LIBMEM_SRC "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/ptrace/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 endif()
 set(LIBMEM_DEPS
 	capstone

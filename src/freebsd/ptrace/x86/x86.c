@@ -145,10 +145,10 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	/* Setup FreeBSD syscall convention */
 	*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
 	*(uint32_t *)&ptsys.stack[4] = 0;
-	*(uint32_t *)&ptsys.stack[8] = -1;
-	*(uint32_t *)&ptsys.stack[12] = MAP_PRIVATE | MAP_ANON;
-	*(uint32_t *)&ptsys.stack[16] = prot;
-	*(uint32_t *)&ptsys.stack[20] = size;
+	*(uint32_t *)&ptsys.stack[8] = size;
+	*(uint32_t *)&ptsys.stack[12] = prot;
+	*(uint32_t *)&ptsys.stack[16] = MAP_PRIVATE | MAP_ANON;
+	*(uint32_t *)&ptsys.stack[20] = -1;
 	*(uint32_t *)&ptsys.stack[24] = 0;
 
 	alloc = ptrace_syscall(pid, bits, &ptsys);
@@ -184,9 +184,9 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
 
 	/* Setup FreeBSD syscall convention */
 	*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
-	*(uint32_t *)&ptsys.stack[4] = prot;
+	*(uint32_t *)&ptsys.stack[4] = addr;
 	*(uint32_t *)&ptsys.stack[8] = size;
-	*(uint32_t *)&ptsys.stack[12] = addr;
+	*(uint32_t *)&ptsys.stack[12] = prot;
 
 	return ptrace_syscall(pid, bits, &ptsys);
 }

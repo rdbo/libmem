@@ -149,7 +149,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	ptsys.args[5] = 0;                      /* `off_t offset` */
 
 	alloc = ptrace_syscall(pid, bits, &ptsys);
-	if (alloc == -1 && errno || (void *)alloc == MAP_FAILED)
+	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)
 		alloc = -1;
 
 	return alloc;
@@ -193,7 +193,6 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 	};
 	size_t shellcode_size = sizeof(shellcode);
 	struct reg regs;
-	size_t i;
 
 	assert((bits == 32 || bits == 64) && ptlib && orig_regs && orig_code);
 

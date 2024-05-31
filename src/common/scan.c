@@ -177,7 +177,7 @@ sig_to_pattern(lm_string_t signature, lm_byte_t **pattern_out, lm_char_t **mask_
 
 	/* NOTE: There must be exactly 1 space between the bytes. Any more than that can result in bad convertion */
 	for (ptr = (lm_char_t *)signature; ptr && *ptr; ptr = endptr, ++bytecount) {
-		if (alloc = realloc(pattern, (bytecount + 1) * sizeof(lm_byte_t))) {
+		if ((alloc = realloc(pattern, (bytecount + 1) * sizeof(lm_byte_t)))) {
 			pattern = (lm_byte_t *)alloc;
 		} else {
 			free(pattern);
@@ -185,7 +185,7 @@ sig_to_pattern(lm_string_t signature, lm_byte_t **pattern_out, lm_char_t **mask_
 			return LM_FALSE;
 		}
 
-		if (alloc = realloc(mask, (bytecount + 2) * sizeof(lm_char_t))) {
+		if ((alloc = realloc(mask, (bytecount + 2) * sizeof(lm_char_t)))) {
 			mask = (lm_char_t *)alloc;
 		} else {
 			free(mask);

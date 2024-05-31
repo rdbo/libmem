@@ -39,6 +39,9 @@ LM_ReadMemoryEx(const lm_process_t *process,
 	lm_char_t mem_path[LM_PATH_MAX] = { 0 };
 	ssize_t rdsize;
 
+	if (!process || source == LM_ADDRESS_BAD || !dest || size == 0)
+		return 0;
+
 	snprintf(mem_path, LM_ARRLEN(mem_path), "%s/%d/mem",
 	         PROCFS_PATH, process->pid);
 
@@ -66,6 +69,9 @@ LM_WriteMemoryEx(const lm_process_t *process,
 	int fd;
 	lm_char_t mem_path[LM_PATH_MAX] = { 0 };
 	ssize_t rdsize;
+
+	if (!process || dest == LM_ADDRESS_BAD || !source || size == 0)
+		return 0;
 
 	snprintf(mem_path, LM_ARRLEN(mem_path), "%s/%d/mem",
 	         PROCFS_PATH, process->pid);

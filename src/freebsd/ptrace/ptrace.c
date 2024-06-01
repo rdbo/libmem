@@ -195,8 +195,15 @@ DBG_dump_info(pid_t pid)
 	runtime_addr = (lm_address_t)regs.r_eip;
 #	endif
 
+	if (result == 0) {
+		perror("failed to read instructions at program counter");
+		return;
+	}
+
+	printf("(read size: %ld)\n", result);
+
 	inst_count = LM_DisassembleEx(
-		(lm_address_t)instruction_ptr, arch, sizeof(instruction_ptr),
+		(lm_address_t)instruction_ptr, arch, (lm_size_t)result,
 		0, runtime_addr, &instructions
 	);
 	if (inst_count == 0) {

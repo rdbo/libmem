@@ -101,6 +101,54 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 	return bytes_written;
 }
 
+#ifdef _DEBUG
+void
+DBG_dump_info(pid_t pid)
+{
+	struct reg regs;
+	char stack[256];
+	long result;
+	size_t i;
+
+	result = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
+	printf("ptrace get regs result: %ld\n", result);
+	printf("ptrace registers:\n");
+
+#	if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+	printf("\teax: %lx", regs.r_eax);
+	printf("\tebx: %lx", regs.r_ebx);
+	printf("\tecx: %lx", regs.r_ecx);
+	printf("\tedx: %lx", regs.r_edx);
+	printf("\tesi: %lx", regs.r_esi);
+	printf("\tedi: %lx", regs.r_edi);
+	printf("\tebp: %lx", regs.r_ebp);
+	printf("\tesp: %lx", regs.r_esp);
+
+	ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
+#	elif defined(__x86_64__) || defined(_M_X64)
+	printf("\trax: %lx", regs.r_rax);
+	printf("\trbx: %lx", regs.r_rbx);
+	printf("\trcx: %lx", regs.r_rcx);
+	printf("\trdx: %lx", regs.r_rdx);
+	printf("\trsi: %lx", regs.r_rsi);
+	printf("\trdi: %lx", regs.r_rdi);
+	printf("\trbp: %lx", regs.r_rbp);
+	printf("\trsp: %lx", regs.r_rsp);
+	printf("\tr8: %lx", regs.r_r8);
+	printf("\tr9 %lx", regs.r_r9);
+	printf("\tr10: %lx", regs.r_r10);
+
+	ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
+#	endif
+
+	printf("stack dump: \n[ ");
+	for (i = 0; i < sizeof(stack); ++i) {
+		printf("%hhx ", stack[i]);
+	}
+	printf("]\n");
+}
+#endif
+
 long
 ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 {
@@ -109,9 +157,21 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	void *orig_code = NULL;
 	size_t shellcode_size;
 
+#	ifdef _DEBUG
+	printf("[*] Original program state dump:\n");
+	DBG_dump_info(pid);
+	printf("--------------------------------\n");
+#	endif
+
 	/* Write shellcode and setup regs */
 	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0)
 		return ret;
+
+#	ifdef _DEBUG
+	printf("[*] Pre-syscall dump:\n");
+	DBG_dump_info(pid);
+	printf("--------------------------------\n");
+#	endif
 
 	/* Step to system call */
 	ptrace(PT_STEP, pid, 0, 0);
@@ -120,8 +180,20 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	/* Get return value */
 	ret = ptrace_get_syscall_ret(pid);
 
+#	ifdef _DEBUG
+	printf("[*] Post-syscall dump:\n");
+	DBG_dump_info(pid);
+	printf("--------------------------------\n");
+#	endif
+
 	/* Restore program state prior to syscall */
 	ptrace_restore_syscall(pid, orig_regs, orig_code, shellcode_size);
+
+#	ifdef _DEBUG
+	printf("[*] Post-restore dump:\n");
+	DBG_dump_info(pid);
+	printf("--------------------------------\n");
+#	endif
 	return ret;
 }
 

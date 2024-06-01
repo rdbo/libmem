@@ -106,19 +106,38 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 #endif
 
 #ifdef DEBUG
+#include <stdio.h>
+#include <libmem/libmem.h>
+
+#if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+#	define X86_32 1
+#elif defined(__x86_64__) || defined(_M_X64)
+#	define X86_64 1
+#endif
+
 void
 DBG_dump_info(pid_t pid)
 {
 	struct reg regs;
 	char stack[256];
+	char instruction_ptr[32];
 	long result;
-	size_t i;
+	size_t i, j;
+	lm_inst_t *instructions;
+	lm_address_t runtime_addr;
+	lm_size_t inst_count;
+	lm_arch_t arch = (lm_arch_t)-1;
 
 	result = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
+	if (result == -1) {
+		perror("ptrace failed");
+		return;
+	}
+	result = 0;
 	printf("ptrace get regs result: %ld\n", result);
 	printf("ptrace registers:\n");
 
-#	if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+#	if X86_32
 	printf("\teax: %lx\n", (unsigned long)regs.r_eax);
 	printf("\tebx: %lx\n", (unsigned long)regs.r_ebx);
 	printf("\tecx: %lx\n", (unsigned long)regs.r_ecx);
@@ -127,9 +146,10 @@ DBG_dump_info(pid_t pid)
 	printf("\tedi: %lx\n", (unsigned long)regs.r_edi);
 	printf("\tebp: %lx\n", (unsigned long)regs.r_ebp);
 	printf("\tesp: %lx\n", (unsigned long)regs.r_esp);
+	printf("\teip: %lx\n", (unsigned long)regs.r_eip);
 
 	result = (long)ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
-#	elif defined(__x86_64__) || defined(_M_X64)
+#	elif X86_64
 	printf("\trax: %lx\n", (unsigned long)regs.r_rax);
 	printf("\trbx: %lx\n", (unsigned long)regs.r_rbx);
 	printf("\trcx: %lx\n", (unsigned long)regs.r_rcx);
@@ -141,16 +161,51 @@ DBG_dump_info(pid_t pid)
 	printf("\tr8: %lx\n", (unsigned long)regs.r_r8);
 	printf("\tr9 %lx\n", (unsigned long)regs.r_r9);
 	printf("\tr10: %lx\n", (unsigned long)regs.r_r10);
+	printf("\trip: %lx\n", (unsigned long)regs.r_rip);
 
 	result = (long)ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
 #	endif
 	printf("ptrace_read result: %ld\n", result);
+	if (result != sizeof(stack)) {
+		perror("failed to read stack");
+		return;
+	}
 	
 	printf("stack dump: \n[ ");
 	for (i = 0; i < sizeof(stack); i += sizeof(uint32_t)) {
 		printf("%p ", (void *)(unsigned long)(*(uint32_t *)&stack[i]));
 	}
 	printf("]\n");
+
+	result = 0;
+
+#	if X86_32
+	arch = LM_ARCH_X86;
+	result = (long)ptrace_read(pid, regs.r_eip, instruction_ptr, sizeof(instruction_ptr));
+	runtime_addr = (lm_address_t)regs.r_eip;
+#	elif X86_64
+	arch = LM_ARCH_X64;
+	result = (long)ptrace_read(pid, regs.r_rip, instruction_ptr, sizeof(instruction_ptr));
+	runtime_addr = (lm_address_t)regs.r_eip;
+#	endif
+
+	inst_count = LM_DisassembleEx(
+		(lm_address_t)instruction_ptr, arch, sizeof(instruction_ptr),
+		0, runtime_addr, &instructions
+	);
+	if (inst_count == 0) {
+		printf("failed to disassemble instructions in the program counter\n");
+		return;
+	}
+
+	for (i = 0; i < inst_count; ++i) {
+		printf("%s %s @ %zx -> [ ", instructions[i].mnemonic, instructions[i].op_str, instructions[i].address);
+
+		for (j = 0; j < instructions[i].size; ++i) {
+			printf("%hhx ", instructions[i].bytes[j]);
+		}
+		printf("]\n");
+	}
 }
 #endif
 

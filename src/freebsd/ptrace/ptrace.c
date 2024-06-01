@@ -199,7 +199,7 @@ DBG_dump_info(pid_t pid)
 	}
 
 	for (i = 0; i < inst_count; ++i) {
-		printf("%s %s @ %zx -> [ ", instructions[i].mnemonic, instructions[i].op_str, instructions[i].address);
+		printf("%s %s @ %p -> [ ", instructions[i].mnemonic, instructions[i].op_str, (void *)instructions[i].address);
 
 		for (j = 0; j < instructions[i].size; ++i) {
 			printf("%hhx ", instructions[i].bytes[j]);

@@ -119,28 +119,28 @@ DBG_dump_info(pid_t pid)
 	printf("ptrace registers:\n");
 
 #	if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
-	printf("\teax: %lx", regs.r_eax);
-	printf("\tebx: %lx", regs.r_ebx);
-	printf("\tecx: %lx", regs.r_ecx);
-	printf("\tedx: %lx", regs.r_edx);
-	printf("\tesi: %lx", regs.r_esi);
-	printf("\tedi: %lx", regs.r_edi);
-	printf("\tebp: %lx", regs.r_ebp);
-	printf("\tesp: %lx", regs.r_esp);
+	printf("\teax: %lx\n", regs.r_eax);
+	printf("\tebx: %lx\n", regs.r_ebx);
+	printf("\tecx: %lx\n", regs.r_ecx);
+	printf("\tedx: %lx\n", regs.r_edx);
+	printf("\tesi: %lx\n", regs.r_esi);
+	printf("\tedi: %lx\n", regs.r_edi);
+	printf("\tebp: %lx\n", regs.r_ebp);
+	printf("\tesp: %lx\n", regs.r_esp);
 
 	ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
 #	elif defined(__x86_64__) || defined(_M_X64)
-	printf("\trax: %lx", regs.r_rax);
-	printf("\trbx: %lx", regs.r_rbx);
-	printf("\trcx: %lx", regs.r_rcx);
-	printf("\trdx: %lx", regs.r_rdx);
-	printf("\trsi: %lx", regs.r_rsi);
-	printf("\trdi: %lx", regs.r_rdi);
-	printf("\trbp: %lx", regs.r_rbp);
-	printf("\trsp: %lx", regs.r_rsp);
-	printf("\tr8: %lx", regs.r_r8);
-	printf("\tr9 %lx", regs.r_r9);
-	printf("\tr10: %lx", regs.r_r10);
+	printf("\trax: %lx\n", regs.r_rax);
+	printf("\trbx: %lx\n", regs.r_rbx);
+	printf("\trcx: %lx\n", regs.r_rcx);
+	printf("\trdx: %lx\n", regs.r_rdx);
+	printf("\trsi: %lx\n", regs.r_rsi);
+	printf("\trdi: %lx\n", regs.r_rdi);
+	printf("\trbp: %lx\n", regs.r_rbp);
+	printf("\trsp: %lx\n", regs.r_rsp);
+	printf("\tr8: %lx\n", regs.r_r8);
+	printf("\tr9 %lx\n", regs.r_r9);
+	printf("\tr10: %lx\n", regs.r_r10);
 
 	ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
 #	endif

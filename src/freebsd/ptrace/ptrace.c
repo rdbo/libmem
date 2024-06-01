@@ -120,7 +120,7 @@ DBG_dump_info(pid_t pid)
 {
 	struct reg regs;
 	char stack[256];
-	char instruction_ptr[32];
+	char instruction_ptr[64];
 	long result;
 	size_t i, j;
 	lm_inst_t *instructions;

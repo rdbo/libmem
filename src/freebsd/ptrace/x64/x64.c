@@ -37,8 +37,17 @@
 long
 ptrace_get_syscall_ret(pid_t pid)
 {
+	long ret;
+	struct reg regs;
+
 	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long), NULL);
+
+	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
+	if (ret != -1) {
+		ret = regs.r_rax;
+	}
+
+	return ret;
 }
 
 size_t
@@ -46,66 +55,60 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 {
 	static const char shellcode32[] = { 0xcd, 0x80 };
 	static const char shellcode64[] = { 0x0f, 0x05 };
-	struct user_regs_struct regs;
+	struct reg regs;
 	char *shellcode;
 	size_t shellcode_size = 0;
 
 	assert((bits == 64 || bits == 32) && ptsys != NULL && orig_regs != NULL && *orig_regs == NULL && orig_code != NULL && *orig_code == NULL);
 
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0) == -1)
 		return 0;
 
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
 
-	*(struct user_regs_struct *)(*orig_regs) = regs;
+	*(struct reg *)(*orig_regs) = regs;
 
 	/* Setup registers */
-	regs.rax = ptsys->syscall_num;
+	regs.r_rax = ptsys->syscall_num;
 	if (bits == 64) {
-		regs.rdi = ptsys->args[0];
-		regs.rsi = ptsys->args[1];
-		regs.rdx = ptsys->args[2];
-		regs.r10 = ptsys->args[3];
-		regs.r8 = ptsys->args[4];
-		regs.r9 = ptsys->args[5];
+		regs.r_rdi = ptsys->args[0];
+		regs.r_rsi = ptsys->args[1];
+		regs.r_rdx = ptsys->args[2];
+		regs.r_r10 = ptsys->args[3];
+		regs.r_r8 = ptsys->args[4];
+		regs.r_r9 = ptsys->args[5];
 		shellcode = (char *)shellcode64;
 		shellcode_size = sizeof(shellcode64);
 	} else {
-		regs.rbx = ptsys->args[0];
-		regs.rcx = ptsys->args[1];
-		regs.rdx = ptsys->args[2];
-		regs.rsi = ptsys->args[3];
-		regs.rdi = ptsys->args[4];
-		regs.rbp = ptsys->args[5];
+		regs.r_rbx = ptsys->args[0];
+		regs.r_rcx = ptsys->args[1];
+		regs.r_rdx = ptsys->args[2];
+		regs.r_rsi = ptsys->args[3];
+		regs.r_rdi = ptsys->args[4];
+		regs.r_rbp = ptsys->args[5];
 		shellcode = (char *)shellcode32;
 		shellcode_size = sizeof(shellcode32);
 	}
-
-	/* Setup stack */
-	regs.r_rsp -= sizeof(ptsys->stack);
-	regs.r_rsp &= -16UL;
-	if (ptrace_write(pid, regs.r_rsp, ptsys->stack, sizeof(ptsys->stack)) != sizeof(ptsys->stack))
-		goto FREE_REGS_EXIT;
 
 	/* Backup original code to restore later */
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
 		goto FREE_REGS_EXIT;
 
-	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size)
+	if (ptrace_read(pid, regs.r_rip, *orig_code, shellcode_size) != shellcode_size)
 		goto FREE_EXIT;
 
-	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_SETREGS, pid, (caddr_t)&regs, 0) == -1)
 		goto FREE_EXIT;
 
-	if (ptrace_write(pid, (long)regs.rip, shellcode, shellcode_size) == 0)
+	if (ptrace_write(pid, (long)regs.r_rip, shellcode, shellcode_size) == 0)
 		goto CLEAN_EXIT;
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
+	ptrace(PT_SETREGS, pid, (caddr_t)*orig_regs, 0);
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:
@@ -118,12 +121,12 @@ EXIT:
 void
 ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
-	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+	struct reg *pregs = (struct reg *)orig_regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
-	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
-	ptrace_write(pid, pregs->rip, orig_code, shellcode_size);
+	ptrace(PT_SETREGS, pid, (caddr_t)pregs, 0);
+	ptrace_write(pid, pregs->r_rip, orig_code, shellcode_size);
 
 	free(orig_regs);
 	free(orig_code);
@@ -135,11 +138,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	long alloc;
 	ptrace_syscall_t ptsys;
 	
-	if (bits == 64) {
-		ptsys.syscall_num = SYS_mmap;
-	} else {
-		ptsys.syscall_num = 192; /* x86_64 mmap syscall number */
-	}
+	ptsys.syscall_num = SYS_mmap;
 
 	/* Setup mmap arguments */
 	ptsys.args[0] = 0;                      /* `void *addr` */
@@ -150,7 +149,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	ptsys.args[5] = 0;                      /* `off_t offset` */
 
 	alloc = ptrace_syscall(pid, bits, &ptsys);
-	if (alloc == -1 && errno || (void *)alloc == MAP_FAILED)
+	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)
 		alloc = -1;
 
 	return alloc;
@@ -161,10 +160,7 @@ ptrace_free(pid_t pid, size_t bits, long alloc, size_t size)
 {
 	ptrace_syscall_t ptsys;
 
-	if (bits == 32)
-		ptsys.syscall_num = 91; /* x86_32 munmap syscall number */
-	else
-		ptsys.syscall_num = SYS_munmap;
+	ptsys.syscall_num = SYS_munmap;
 
 	ptsys.args[0] = alloc; /* `void *addr` */
 	ptsys.args[1] = size;  /* `size_t length` */
@@ -177,10 +173,7 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
 {
 	ptrace_syscall_t ptsys;
 
-	if (bits == 32)
-		ptsys.syscall_num = 125; /* x86_32 mprotect syscall number */
-	else
-		ptsys.syscall_num = SYS_mprotect;
+	ptsys.syscall_num = SYS_mprotect;
 
 	ptsys.args[0] = addr;
 	ptsys.args[1] = size;
@@ -199,52 +192,51 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		0xCC
 	};
 	size_t shellcode_size = sizeof(shellcode);
-	struct user_regs_struct regs;
-	size_t i;
+	struct reg regs;
 
 	assert((bits == 32 || bits == 64) && ptlib && orig_regs && orig_code);
 
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0) == -1)
 		return 0;
 
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
-	**(struct user_regs_struct **)orig_regs = regs;
+	**(struct reg **)orig_regs = regs;
 
 	/* Setup stack */
-	regs.rax = ptlib->address;
-	regs.rsp -= sizeof(ptlib->stack);
-	regs.rsp &= -16UL;
-	if (ptrace_write(pid, regs.rsp, ptlib->stack, sizeof(ptlib->stack)) != sizeof(ptlib->stack))
+	regs.r_rax = ptlib->address;
+	regs.r_rsp -= sizeof(ptlib->stack);
+	regs.r_rsp &= -16UL;
+	if (ptrace_write(pid, regs.r_rsp, ptlib->stack, sizeof(ptlib->stack)) != sizeof(ptlib->stack))
 		goto FREE_REGS_EXIT;
 
 	/* Setup register arguments for x86_64 */
 	if (bits == 64) {
-		regs.rdi = ptlib->args[0];
-		regs.rsi = ptlib->args[1];
-		regs.rdx = ptlib->args[2];
-		regs.rcx = ptlib->args[3];
-		regs.r8 = ptlib->args[4];
-		regs.r9 = ptlib->args[5];
+		regs.r_rdi = ptlib->args[0];
+		regs.r_rsi = ptlib->args[1];
+		regs.r_rdx = ptlib->args[2];
+		regs.r_rcx = ptlib->args[3];
+		regs.r_r8 = ptlib->args[4];
+		regs.r_r9 = ptlib->args[5];
 	}
 
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)
 		goto FREE_REGS_EXIT;
 
-	if (ptrace_read(pid, regs.rip, *orig_code, shellcode_size) != shellcode_size)
+	if (ptrace_read(pid, regs.r_rip, *orig_code, shellcode_size) != shellcode_size)
 		goto FREE_EXIT;
 
-	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+	if (ptrace(PT_SETREGS, pid, (caddr_t)&regs, 0) == -1)
 		goto FREE_EXIT;
 
-	if (ptrace_write(pid, regs.rip, shellcode, shellcode_size) == 0)
+	if (ptrace_write(pid, regs.r_rip, shellcode, shellcode_size) == 0)
 		goto CLEAN_EXIT;
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
+	ptrace(PT_SETREGS, pid, (caddr_t)*orig_regs, 0);
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:
@@ -257,12 +249,12 @@ EXIT:
 void
 ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
-	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+	struct reg *pregs = (struct reg *)orig_regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
-	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
-	ptrace_write(pid, pregs->rip, orig_code, shellcode_size);
+	ptrace(PT_SETREGS, pid, (caddr_t)pregs, 0);
+	ptrace_write(pid, pregs->r_rip, orig_code, shellcode_size);
 
 	free(orig_regs);
 	free(orig_code);
@@ -271,6 +263,15 @@ ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shell
 long
 ptrace_get_libcall_ret(pid_t pid)
 {
+	long ret;
+	struct reg regs;
+
 	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long), NULL);
+
+	ret = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
+	if (ret != -1) {
+		ret = regs.r_rax;
+	}
+
+	return ret;
 }

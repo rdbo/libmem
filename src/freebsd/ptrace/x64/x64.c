@@ -92,6 +92,12 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 		shellcode_size = sizeof(shellcode32);
 	}
 
+	/* Setup stack (required for x86_32) */
+	regs.r_rsp -= sizeof(ptsys->stack);
+	regs.r_rsp &= -16UL;
+	if (ptrace_write(pid, regs.r_rsp, ptsys->stack, sizeof(ptsys->stack)) != sizeof(ptsys->stack))
+		goto FREE_REGS_EXIT;
+
 	/* Backup original code to restore later */
 	*orig_code = malloc(shellcode_size);
 	if (*orig_code == NULL)

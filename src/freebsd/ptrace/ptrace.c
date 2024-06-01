@@ -204,6 +204,7 @@ DBG_dump_info(pid_t pid)
 		return;
 	}
 
+	printf("(instruction count: %zd)\n", inst_count);
 	for (i = 0; i < inst_count; ++i) {
 		printf("%s %s @ %p -> [ ", instructions[i].mnemonic, instructions[i].op_str, (void *)instructions[i].address);
 

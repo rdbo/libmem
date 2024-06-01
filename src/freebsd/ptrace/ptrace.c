@@ -144,7 +144,7 @@ DBG_dump_info(pid_t pid)
 
 	result = (long)ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
 #	endif
-	printf("ptrace_read result: %ld", result);
+	printf("ptrace_read result: %ld\n", result);
 	
 	printf("stack dump: \n[ ");
 	for (i = 0; i < sizeof(stack); ++i) {

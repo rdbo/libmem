@@ -27,20 +27,17 @@ Read `LICENSE` for more information
 |:warning:|Untested|
 
 ## Features
-`libmem` can:
-- Find Processes
-- Find Modules
-- Find Symbols
-- Read/Write/Set Memory
-- Allocate/Protect Memory
-- Scan Memory by Pattern/Signature
-- Resolve pointer scans/pointer maps
-- Hook/Unhook Functions
-- Assemble/Dissassemble Code (JIT)
-- Do VMT Hooking/Unhooking
-- Load/Unload Modules
-- Get Memory Segment Information
-- Enumerate Process Threads
+- [x] Internal and External
+- [x] Find and Enumerate Processes, Modules, Symbols, Threads and Segments
+- [x] Read/Write Memory
+- [x] Allocate/Protect Memory
+- [x] Scan Memory by Pattern/Signature
+- [x] Resolve Pointer Scans/Pointer Maps
+- [x] Hook/Unhook Functions
+- [x] Assemble/Dissassemble Code (JIT)
+- [x] VMT Hooking/Unhooking
+- [x] Load/Unload Modules
+- [x] Enumerate Process Threads
 
 ***And much more!***
 

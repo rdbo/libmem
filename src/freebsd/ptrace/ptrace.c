@@ -128,7 +128,7 @@ DBG_dump_info(pid_t pid)
 	printf("\tebp: %lx\n", (unsigned long)regs.r_ebp);
 	printf("\tesp: %lx\n", (unsigned long)regs.r_esp);
 
-	ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
+	result = (long)ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
 #	elif defined(__x86_64__) || defined(_M_X64)
 	printf("\trax: %lx\n", (unsigned long)regs.r_rax);
 	printf("\trbx: %lx\n", (unsigned long)regs.r_rbx);
@@ -142,9 +142,10 @@ DBG_dump_info(pid_t pid)
 	printf("\tr9 %lx\n", (unsigned long)regs.r_r9);
 	printf("\tr10: %lx\n", (unsigned long)regs.r_r10);
 
-	ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
+	result = (long)ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
 #	endif
-
+	printf("ptrace_read result: %ld", result);
+	
 	printf("stack dump: \n[ ");
 	for (i = 0; i < sizeof(stack); ++i) {
 		printf("%hhx ", stack[i]);

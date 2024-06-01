@@ -170,6 +170,8 @@ DBG_dump_info(pid_t pid)
 		perror("failed to read stack");
 		return;
 	}
+
+	printf("\n");
 	
 	printf("stack dump: \n[ ");
 	for (i = 0; i < sizeof(stack); i += sizeof(uint32_t)) {
@@ -178,6 +180,10 @@ DBG_dump_info(pid_t pid)
 	printf("]\n");
 
 	result = 0;
+
+	printf("\n");
+
+	printf("program counter instructions dump:\n");
 
 #	if X86_32
 	arch = LM_ARCH_X86;

@@ -49,7 +49,7 @@ message(STATUS
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
-if(${CMAKE_BUILD_TYPE} STREQUAL Release)
+if(${CMAKE_BUILD_TYPE} STREQUAL Release AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
 endif() 

@@ -15,13 +15,13 @@ Read `LICENSE` for more information
 
 ## Platforms
 |OS|x86|x64|ARM|Aarch64|
-|--|---|---|---|-------|
+|:--:|:---:|:---:|:---:|:-------:|
 |Windows|:white_check_mark:|:white_check_mark:|:warning:|:warning:|
 |Linux|:white_check_mark:|:white_check_mark:|:warning:|:warning:|
 |FreeBSD|:heavy_check_mark:|:heavy_check_mark:|:warning:|:warning:|
 
 |Status|Description|
-|------|-----------|
+|:------:|:-----------:|
 |:white_check_mark:|100% working|
 |:heavy_check_mark:|Mostly working|
 |:warning:|Untested|

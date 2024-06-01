@@ -182,6 +182,11 @@ ptrace_free(pid_t pid, size_t bits, long alloc, size_t size)
 	ptsys.args[0] = alloc; /* `void *addr` */
 	ptsys.args[1] = size;  /* `size_t length` */
 
+	/* Setup FreeBSD syscall convention */
+	*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
+	*(uint32_t *)&ptsys.stack[4] = alloc;
+	*(uint32_t *)&ptsys.stack[8] = size;
+
 	return ptrace_syscall(pid, bits, &ptsys);
 }
 

@@ -182,6 +182,12 @@ ptrace_free(pid_t pid, size_t bits, long alloc, size_t size)
 	ptsys.args[0] = alloc; /* `void *addr` */
 	ptsys.args[1] = size;  /* `size_t length` */
 
+	if (bits == 32) {
+		*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
+		*(uint32_t *)&ptsys.stack[4] = alloc;
+		*(uint32_t *)&ptsys.stack[8] = size;
+	}
+
 	return ptrace_syscall(pid, bits, &ptsys);
 }
 
@@ -195,6 +201,13 @@ ptrace_mprotect(pid_t pid, size_t bits, long addr, size_t size, int prot)
 	ptsys.args[0] = addr;
 	ptsys.args[1] = size;
 	ptsys.args[2] = prot;
+
+	if (bits == 32) {
+		*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
+		*(uint32_t *)&ptsys.stack[4] = addr;
+		*(uint32_t *)&ptsys.stack[8] = size;
+		*(uint32_t *)&ptsys.stack[12] = prot;
+	}
 
 	return ptrace_syscall(pid, bits, &ptsys);
 }

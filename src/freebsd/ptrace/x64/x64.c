@@ -154,6 +154,17 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	ptsys.args[4] = -1;                     /* `int fd` */
 	ptsys.args[5] = 0;                      /* `off_t offset` */
 
+	if (bits == 32) {
+		*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
+		*(uint32_t *)&ptsys.stack[4] = 0;                       /* void *addr */
+		*(uint32_t *)&ptsys.stack[8] = size;                    /* size_t len */
+		*(uint32_t *)&ptsys.stack[12] = prot;                   /* int prot */
+		*(uint32_t *)&ptsys.stack[16] = MAP_PRIVATE | MAP_ANON; /* int flags */
+		*(uint32_t *)&ptsys.stack[20] = -1;                     /* int fd */
+		*(uint32_t *)&ptsys.stack[24] = 0;                      /* long pad */
+		*(uint32_t *)&ptsys.stack[28] = 0;                      /* off_t pos */
+	}
+
 	alloc = ptrace_syscall(pid, bits, &ptsys);
 	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)
 		alloc = -1;

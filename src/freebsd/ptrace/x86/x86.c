@@ -143,14 +143,27 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 	ptsys.args[5] = 0;                      /* `off_t offset` */
 
 	/* Setup FreeBSD syscall convention */
+
+	/*
+	 * NOTE: There is a pad in the FreeBSD x86 system call:
+	 * struct mmap_args {
+	 * 	void *addr;
+	 * 	size_t len;
+	 * 	int prot;
+	 * 	int flags;
+	 * 	int fd;
+	 * 	long pad;
+	 * 	off_t pos;
+	 * };
+	 */
 	*(uint32_t *)&ptsys.stack[0] = ptsys.syscall_num;
-	*(uint32_t *)&ptsys.stack[4] = 0;
-	*(uint32_t *)&ptsys.stack[8] = size;
-	*(uint32_t *)&ptsys.stack[12] = prot;
-	*(uint32_t *)&ptsys.stack[16] = MAP_PRIVATE | MAP_ANON;
-	*(uint32_t *)&ptsys.stack[20] = -1;
-	*(uint32_t *)&ptsys.stack[24] = 0; /* long pad; */
-	*(uint32_t *)&ptsys.stack[28] = 0;
+	*(uint32_t *)&ptsys.stack[4] = 0;                       /* void *addr */
+	*(uint32_t *)&ptsys.stack[8] = size;                    /* size_t len */
+	*(uint32_t *)&ptsys.stack[12] = prot;                   /* int prot */
+	*(uint32_t *)&ptsys.stack[16] = MAP_PRIVATE | MAP_ANON; /* int flags */
+	*(uint32_t *)&ptsys.stack[20] = -1;                     /* int fd */
+	*(uint32_t *)&ptsys.stack[24] = 0;                      /* long pad */
+	*(uint32_t *)&ptsys.stack[28] = 0;                      /* off_t pos */
 
 	alloc = ptrace_syscall(pid, bits, &ptsys);
 	if ((alloc == -1 && errno) || (void *)alloc == MAP_FAILED)

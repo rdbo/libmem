@@ -101,6 +101,10 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 	return bytes_written;
 }
 
+#ifndef NDEBUG
+#	define DEBUG 1
+#endif
+
 #ifdef DEBUG
 void
 DBG_dump_info(pid_t pid)

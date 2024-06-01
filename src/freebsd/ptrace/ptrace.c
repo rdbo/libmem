@@ -194,7 +194,7 @@ DBG_dump_info(pid_t pid)
 #	elif X86_64
 	arch = LM_ARCH_X64;
 	result = (long)ptrace_read(pid, regs.r_rip, instruction_ptr, sizeof(instruction_ptr));
-	runtime_addr = (lm_address_t)regs.r_eip;
+	runtime_addr = (lm_address_t)regs.r_rip;
 #	endif
 
 	if (result == 0) {

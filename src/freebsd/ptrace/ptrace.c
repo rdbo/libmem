@@ -128,6 +128,8 @@ DBG_dump_info(pid_t pid)
 	lm_size_t inst_count;
 	lm_arch_t arch = (lm_arch_t)-1;
 
+	printf("target pid: %d\n", pid);
+
 	result = ptrace(PT_GETREGS, pid, (caddr_t)&regs, 0);
 	if (result == -1) {
 		perror("ptrace failed");

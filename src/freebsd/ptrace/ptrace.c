@@ -147,7 +147,7 @@ DBG_dump_info(pid_t pid)
 	printf("ptrace_read result: %ld\n", result);
 	
 	printf("stack dump: \n[ ");
-	for (i = 0; i < (sizeof(stack) / sizeof(uint32_t)); i += sizeof(uint32_t)) {
+	for (i = 0; i < sizeof(stack); i += sizeof(uint32_t)) {
 		printf("%x ", *(uint32_t *)&stack[i]);
 	}
 	printf("]\n");

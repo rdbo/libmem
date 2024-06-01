@@ -165,7 +165,7 @@ DBG_dump_info(pid_t pid)
 	printf("\tr10: %lx\n", (unsigned long)regs.r_r10);
 	printf("\trip: %lx\n", (unsigned long)regs.r_rip);
 
-	result = (long)ptrace_read(pid, regs.r_esp, stack, sizeof(stack));
+	result = (long)ptrace_read(pid, regs.r_rsp, stack, sizeof(stack));
 #	endif
 	printf("ptrace_read result: %ld\n", result);
 	if (result != sizeof(stack)) {

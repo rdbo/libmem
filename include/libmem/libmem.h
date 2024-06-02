@@ -134,15 +134,18 @@ enum {
 	LM_ARCH_THUMBV8EB, /* ARMv8, big endian, thumb mode */
 
 	LM_ARCH_AARCH64,   /* ARM64/AArch64 */
+
 	/* MIPS */
 	LM_ARCH_MIPS,     /* Mips32 */
 	LM_ARCH_MIPS64,   /* Mips64 */
 	LM_ARCH_MIPSEL,   /* Mips32, little endian */
 	LM_ARCH_MIPSEL64, /* Mips64, little endian */
+
 	/* X86 */
 	LM_ARCH_X86_16, /* x86_16 */
 	LM_ARCH_X86,    /* x86_32 */
 	LM_ARCH_X64,    /* x86_64 */
+
 	/* PowerPC */
 	LM_ARCH_PPC32,   /* PowerPC 32 */
 	LM_ARCH_PPC64,   /* PowerPC 64 */
@@ -152,6 +155,7 @@ enum {
 	LM_ARCH_SPARC,   /* Sparc */
 	LM_ARCH_SPARC64, /* Sparc64 */
 	LM_ARCH_SPARCEL, /* Sparc, little endian */
+
 	/* SystemZ */
 	LM_ARCH_SYSZ, /* S390X */
 
@@ -159,7 +163,7 @@ enum {
 };
 typedef uint32_t lm_arch_t;
 
-typedef struct {
+typedef struct lm_process_t {
 	lm_pid_t  pid;
 	lm_pid_t  ppid;
 	lm_arch_t arch;
@@ -169,12 +173,12 @@ typedef struct {
 	lm_char_t name[LM_PATH_MAX];
 } lm_process_t;
 
-typedef struct {
+typedef struct lm_thread_t {
 	lm_tid_t tid;
 	lm_pid_t owner_pid;
 } lm_thread_t;
 
-typedef struct {
+typedef struct lm_module_t {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
@@ -183,19 +187,19 @@ typedef struct {
 } lm_module_t;
 
 /* An allocated segment of memory */
-typedef struct {
+typedef struct lm_segment_t {
 	lm_address_t base;
 	lm_address_t end;
 	lm_size_t    size;
 	lm_prot_t    prot;
 } lm_segment_t;
 
-typedef struct {
+typedef struct lm_symbol_t {
 	lm_string_t  name;
 	lm_address_t address;
 } lm_symbol_t;
 
-typedef struct {
+typedef struct lm_inst_t {
 	lm_address_t address;
 	lm_size_t    size;
 	lm_byte_t    bytes[LM_INST_MAX];

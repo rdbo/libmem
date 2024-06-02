@@ -23,10 +23,88 @@
 #ifndef LIBMEM_HPP
 #define LIBMEM_HPP
 
-#ifndef __cplusplus
-#	define __cplusplus 1
-#endif
+#include <cstdint>
+#include <cstddef>
+#include <string>
+#include <optional>
+#include <vector>
 
-#include "libmem.h"
+struct lm_process_t;
+
+namespace lm {
+	// Re-declarations
+	typedef uint32_t Pid;
+	typedef uint32_t Tid;
+	typedef uint64_t Time;
+
+	// Wrappers
+	enum class Prot: uint32_t {
+		R = (1 << 0),
+		W = (1 << 1),
+		X = (1 << 2),
+		XR = X | R,
+		XW = X | W,
+		RW = R | W,
+		XRW = X | R | W,
+	};
+
+	enum class Arch: uint32_t {
+		/* ARM */
+		ARMV7 = 0, /* ARMv7 */
+		ARMV8,     /* ARMv8 */
+		THUMBV7,   /* ARMv7, thumb mode */
+		THUMBV8,   /* ARMv8, thumb mode */
+
+		ARMV7EB,   /* ARMv7, big endian */
+		THUMBV7EB, /* ARMv7, big endian, thumb mode */
+		ARMV8EB,   /* ARMv8, big endian */
+		THUMBV8EB, /* ARMv8, big endian, thumb mode */
+
+		AARCH64,   /* ARM64/AArch64 */
+
+		/* MIPS */
+		MIPS,     /* Mips32 */
+		MIPS64,   /* Mips64 */
+		MIPSEL,   /* Mips32, little endian */
+		MIPSEL64, /* Mips64, little endian */
+
+		/* X86 */
+		X86_16, /* x86_16 */
+		X86,    /* x86_32 */
+		X64,    /* x86_64 */
+
+		/* PowerPC */
+		PPC32,   /* PowerPC 32 */
+		PPC64,   /* PowerPC 64 */
+		PPC64LE, /* PowerPC 64, little endian */
+
+		/* SPARC */
+		SPARC,   /* Sparc */
+		SPARC64, /* Sparc64 */
+		SPARCEL, /* Sparc, little endian */
+
+		/* SystemZ */
+		SYSZ, /* S390X */
+
+		MAX,
+	};
+
+	struct Process {
+		Pid pid;
+		Pid ppid;
+		Arch arch;
+		size_t bits;
+		Time start_time;
+		std::string path;
+		std::string name;
+
+		Process(struct lm_process_t *process);
+		std::string to_string();
+	};
+
+	/// Searches for a process by its name
+	std::optional<std::vector<Process>> enum_processes();
+	std::optional<Process> find_process(const char *process_name);
+}
 
 #endif

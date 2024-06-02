@@ -2,6 +2,7 @@ file(GLOB_RECURSE UNIT_SRC "${TESTS_DIR}/unit/*.c")
 set(TARGET_SRC "${TESTS_DIR}/target.c")
 set(LIBTEST_SRC "${TESTS_DIR}/libtest.c")
 set(LIBTEST_PATH "${PROJECT_BINARY_DIR}/tests/libtest${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set(CPPTESTS_SRC "${TESTS_DIR}/cpptests.cpp")
 cmake_path(NATIVE_PATH LIBTEST_PATH LIBTEST_PATH)
 string(REPLACE "\\" "\\\\" LIBTEST_PATH "${LIBTEST_PATH}")
 
@@ -26,3 +27,6 @@ target_include_directories(target
     ${LIBMEM_INC}
 )
 target_link_libraries(target libmem)
+
+add_executable(cpptests ${CPPTESTS_SRC})
+target_link_libraries(cpptests libmem)

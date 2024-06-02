@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <libmem/libmem.hpp>
 #include <libmem/libmem.h>
+#include <memory>
 #include <string>
 #include <sstream>
 
@@ -45,7 +47,7 @@ std::optional<std::vector<Process>> lm::enum_processes()
 	auto processes = std::vector<Process>();
 	if (LM_EnumProcesses(enum_processes_callback, &processes) != LM_TRUE)
 		return std::nullopt;
-	return { processes };
+	return { std::move(processes) };
 }
 
 std::optional<Process> lm::find_process(const char *process_name)

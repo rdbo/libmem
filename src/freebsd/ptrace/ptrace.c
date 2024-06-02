@@ -101,11 +101,7 @@ ptrace_write(pid_t pid, long dst, const char *src, size_t size)
 	return bytes_written;
 }
 
-#ifndef NDEBUG
-#	define DEBUG 1
-#endif
-
-#ifdef DEBUG
+#ifdef LIBMEM_DEBUG
 #include <stdio.h>
 #include <libmem/libmem.h>
 
@@ -233,7 +229,7 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	void *orig_code = NULL;
 	size_t shellcode_size;
 
-#	ifdef DEBUG
+#	ifdef LIBMEM_DEBUG
 	printf("[*] Original program state dump:\n");
 	DBG_dump_info(pid);
 	printf("--------------------------------\n");
@@ -243,7 +239,7 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	if ((shellcode_size = ptrace_setup_syscall(pid, bits, ptsys, &orig_regs, &orig_code)) == 0)
 		return ret;
 
-#	ifdef DEBUG
+#	ifdef LIBMEM_DEBUG
 	printf("[*] Pre-syscall dump:\n");
 	DBG_dump_info(pid);
 	printf("--------------------------------\n");
@@ -256,7 +252,7 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	/* Get return value */
 	ret = ptrace_get_syscall_ret(pid);
 
-#	ifdef DEBUG
+#	ifdef LIBMEM_DEBUG
 	printf("[*] Post-syscall dump:\n");
 	DBG_dump_info(pid);
 	printf("--------------------------------\n");
@@ -265,7 +261,7 @@ ptrace_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys)
 	/* Restore program state prior to syscall */
 	ptrace_restore_syscall(pid, orig_regs, orig_code, shellcode_size);
 
-#	ifdef DEBUG
+#	ifdef LIBMEM_DEBUG
 	printf("[*] Post-restore dump:\n");
 	DBG_dump_info(pid);
 	printf("--------------------------------\n");

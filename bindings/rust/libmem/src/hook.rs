@@ -4,8 +4,8 @@ use std::mem::{transmute_copy, MaybeUninit};
 
 #[derive(Debug)]
 pub struct Trampoline {
-    address: Address,
-    size: usize,
+    pub address: Address,
+    pub size: usize,
 }
 
 impl Trampoline {
@@ -16,8 +16,8 @@ impl Trampoline {
 
 #[derive(Debug)]
 pub struct RemoteTrampoline {
-    address: Address,
-    size: usize,
+    pub address: Address,
+    pub size: usize,
 }
 
 pub unsafe fn hook_code(from: Address, to: Address) -> Option<Trampoline> {

@@ -89,7 +89,7 @@ TRAMP_EXIT:
 PROT_EXIT:
 	LM_ProtMemory(from, hooksize, old_prot, LM_NULLPTR);
 FREE_EXIT:
-	LM_FreePayload(payload);
+	free(payload);
 
 	return trampsize; /* NOTE: Even if the trampoline was not generated, 
 			   *       the function will still return what would've
@@ -171,7 +171,7 @@ TRAMP_EXIT:
 PROT_EXIT:
 	LM_ProtMemoryEx(process, from, hooksize, old_prot, LM_NULLPTR);
 FREE_EXIT:
-	LM_FreePayload(payload);
+	free(payload);
 
 	return trampsize; /* NOTE: Even if the trampoline was not generated, 
 			   *       the function will still return what would've

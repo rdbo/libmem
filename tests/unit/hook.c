@@ -61,6 +61,9 @@ char *test_LM_HookCode(struct hook_args *arg)
 	arg->hksize = LM_HookCode(hook_address, (lm_address_t)hk_target_function, &arg->trampoline);
 	mu_assert("failed to hook target function", arg->hksize > 0);
 	target_function_trampoline = (int (*)(char *, int))arg->trampoline;
+	LM_Disassemble((lm_address_t)target_function, &inst);
+	printf("<FROM DISASM: %s %s> ", inst.mnemonic, inst.op_str);
+	fflush(stdout);
 	mu_assert("target function not hooked", target_function(NULL, -1) == 1337);
 	mu_assert("function attempted to run with bad arguments (invalid from)", LM_HookCode(LM_ADDRESS_BAD, (lm_address_t)hk_target_function, LM_NULLPTR) == 0);
 	mu_assert("function attempted to run with bad arguments (invalid to)", LM_HookCode(hook_address, LM_ADDRESS_BAD, LM_NULLPTR) == 0);
@@ -82,6 +85,7 @@ char *test_LM_UnhookCode(struct hook_args *arg)
 char *test_LM_HookCodeEx(struct hook_args *arg)
 {
 	lm_address_t hk_wait_message_addr;
+	lm_inst_t inst;
 
 	wait_message_addr = LM_FindSymbolAddress(arg->ptargetmod, "wait_message");
 	mu_assert("failed to find wait_message function on target module", wait_message_addr != LM_ADDRESS_BAD);
@@ -109,6 +113,11 @@ char *test_LM_HookCodeEx(struct hook_args *arg)
 	mu_assert("failed to hook target function", arg->hksize > 0);
 
 	printf("<trampoline: %p> ", (void *)arg->trampoline);
+
+	LM_ReadMemoryEx(arg->ptargetproc, wait_message_addr, inst.bytes, sizeof(inst.bytes));
+	LM_Disassemble((lm_address_t)inst.bytes, &inst);
+	printf("<FROM DISASM: %s %s> ", inst.mnemonic, inst.op_str);
+	fflush(stdout);
 
 	printf("<WAITING FOR FUNCTION TO RUN> ");
 	fflush(stdout);

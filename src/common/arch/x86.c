@@ -12,31 +12,34 @@ get_architecture()
 lm_size_t
 generate_hook_payload(lm_address_t from, lm_address_t to, lm_size_t bits, lm_byte_t **payload_out)
 {
-	char code[255];
-	lm_size_t size;
+	lm_byte_t *code = NULL;
+	lm_byte_t jump32[] = { 0xE9, 0x0, 0x0, 0x0, 0x0 }; /* jmp <rel addr> */
+	lm_byte_t jump64[] = {
+		0xFF, 0x25, 0x0, 0x0, 0x0, 0x0, /* jmp [rip] */
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* <abs addr> */
+	};
+	lm_byte_t *payload;
+	lm_size_t size = 0;
+	lm_address_t relative_addr;
 
-	if (bits == 64) {
-		/*
-		 * NOTE: There is an 8-byte long nop after the jmp, because
-		 *       that's where we will put the jump address. This avoids
-		 *       modifying registers.
-		 */
-		snprintf(code, sizeof(code), "jmp [rip]; nop; nop; nop; nop; nop; nop; nop; nop");
+	relative_addr = to - from - sizeof(jump32);
+
+	if (bits == 64 && ((int64_t)relative_addr < (int64_t)0xFFFFFFFF00000000) || relative_addr > 0x7FFFFFFF) {
+		size = sizeof(jump64);
+		payload = (lm_byte_t *)jump64;
+		*(uint64_t *)(&jump64[6]) = (uint64_t)to;
 	} else {
-		snprintf(code, sizeof(code), "jmp 0x%x", (unsigned int)to);
+		size = sizeof(jump32);
+		payload = (lm_byte_t *)jump32;
+		*(uint32_t *)(&jump32[1]) = (uint32_t)relative_addr;
 	}
 
-	if (bits == 64)
-		size = LM_AssembleEx(code, LM_ARCH_X64, from, payload_out);
-	else
-		size = LM_AssembleEx(code, LM_ARCH_X86, from, payload_out);
+	code = malloc(size);
+	if (!code)
+		return 0;
 
-	if (size > 0 && bits == 64) {
-		/* Patch the jump address into the payload */
-		lm_byte_t *payload = *payload_out;
-
-		*(uint64_t *)(&payload[size - sizeof(uint64_t)]) = (uint64_t)to;
-	}
+	memcpy(code, payload, size);
+	*payload_out = code;
 
 	return size;
 }

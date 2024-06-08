@@ -24,7 +24,7 @@ generate_hook_payload(lm_address_t from, lm_address_t to, lm_size_t bits, lm_byt
 
 	relative_addr = to - from - sizeof(jump32);
 
-	if (bits == 64 && ((int64_t)relative_addr < (int64_t)0xFFFFFFFF00000000) || relative_addr > 0x7FFFFFFF) {
+	if (bits == 64 && ((int64_t)relative_addr < (int64_t)0xFFFFFFFF00000000) || (int64_t)relative_addr > (int64_t)0x7FFFFFFF) {
 		size = sizeof(jump64);
 		payload = (lm_byte_t *)jump64;
 		*(uint64_t *)(&jump64[6]) = (uint64_t)to;

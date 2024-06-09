@@ -2,6 +2,8 @@
 #include <iostream>
 #include <filesystem>
 
+namespace LM = libmem; // Alias libmem to a shorter namespace for convenience
+
 #ifdef _MSC_VER
 	/* MSVC */
 #	define LM_API_EXPORT __declspec(dllexport)

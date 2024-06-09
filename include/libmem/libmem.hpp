@@ -34,7 +34,7 @@ struct lm_thread_t;
 struct lm_module_t;
 struct lm_symbol_t;
 
-namespace LM {
+namespace libmem {
 	// Re-declarations
 	typedef uint32_t Pid;
 	typedef uint32_t Tid;

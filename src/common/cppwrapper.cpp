@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream>
 
-using namespace LM;
+using namespace libmem;
 
 // Types
 
@@ -153,7 +153,7 @@ lm_bool_t enum_processes_callback(lm_process_t *process, lm_void_t *arg)
 	return LM_TRUE;
 }
 
-std::optional<std::vector<Process>> LM::EnumProcesses()
+std::optional<std::vector<Process>> libmem::EnumProcesses()
 {
 	auto processes = std::vector<Process>();
 	if (LM_EnumProcesses(enum_processes_callback, &processes) != LM_TRUE)
@@ -161,7 +161,7 @@ std::optional<std::vector<Process>> LM::EnumProcesses()
 	return { std::move(processes) };
 }
 
-std::optional<Process> LM::GetProcess()
+std::optional<Process> libmem::GetProcess()
 {
 	lm_process_t proc;
 	if (LM_GetProcess(&proc) != LM_TRUE)
@@ -169,7 +169,7 @@ std::optional<Process> LM::GetProcess()
 	return { Process(&proc) };
 }
 
-std::optional<Process> LM::GetProcess(Pid pid)
+std::optional<Process> libmem::GetProcess(Pid pid)
 {
 	lm_process_t proc;
 	if (LM_GetProcessEx(pid, &proc) != LM_TRUE)
@@ -177,7 +177,7 @@ std::optional<Process> LM::GetProcess(Pid pid)
 	return { Process(&proc) };
 }
 
-std::optional<Process> LM::FindProcess(const char *process_name)
+std::optional<Process> libmem::FindProcess(const char *process_name)
 {
 	lm_process_t process;
 
@@ -186,19 +186,19 @@ std::optional<Process> LM::FindProcess(const char *process_name)
 	return { Process(&process) };
 }
 
-bool LM::IsProcessAlive(const Process *process)
+bool libmem::IsProcessAlive(const Process *process)
 {
 	lm_process_t proc = process->convert();
 
 	return LM_IsProcessAlive(&proc);
 }
 
-size_t LM::GetBits()
+size_t libmem::GetBits()
 {
 	return LM_GetBits();
 }
 
-size_t LM::GetSystemBits()
+size_t libmem::GetSystemBits()
 {
 	return LM_GetSystemBits();
 }
@@ -214,7 +214,7 @@ lm_bool_t enum_threads_callback(lm_thread_t *thread, lm_void_t *arg)
 	return LM_TRUE;
 }
 
-std::optional<std::vector<Thread>> LM::EnumThreads()
+std::optional<std::vector<Thread>> libmem::EnumThreads()
 {
 	auto threads = std::vector<Thread>();
 	if (LM_EnumThreads(enum_threads_callback, &threads) != LM_TRUE)
@@ -222,7 +222,7 @@ std::optional<std::vector<Thread>> LM::EnumThreads()
 	return { std::move(threads) };
 }
 
-std::optional<std::vector<Thread>> LM::EnumThreads(const Process *process)
+std::optional<std::vector<Thread>> libmem::EnumThreads(const Process *process)
 {
 	auto threads = std::vector<Thread>();
 	auto proc = process->convert();
@@ -232,7 +232,7 @@ std::optional<std::vector<Thread>> LM::EnumThreads(const Process *process)
 	return { std::move(threads) };
 }
 
-std::optional<Thread> LM::GetThread()
+std::optional<Thread> libmem::GetThread()
 {
 	lm_thread_t thread;
 
@@ -242,7 +242,7 @@ std::optional<Thread> LM::GetThread()
 	return Thread(&thread);
 }
 
-std::optional<Thread> LM::GetThread(const Process *process)
+std::optional<Thread> libmem::GetThread(const Process *process)
 {
 	lm_thread_t thread;
 	auto proc = process->convert();
@@ -253,7 +253,7 @@ std::optional<Thread> LM::GetThread(const Process *process)
 	return Thread(&thread);
 }
 
-std::optional<Process> LM::GetThreadProcess(const Thread *thread)
+std::optional<Process> libmem::GetThreadProcess(const Thread *thread)
 {
 	lm_process_t proc;
 	auto thr = thread->convert();
@@ -272,7 +272,7 @@ lm_bool_t enum_modules_callback(lm_module_t *module, lm_void_t *arg)
 	return LM_TRUE;
 }
 
-std::optional<std::vector<Module>> LM::EnumModules()
+std::optional<std::vector<Module>> libmem::EnumModules()
 {
 	auto modules = std::vector<Module>();
 	if (LM_EnumModules(enum_modules_callback, &modules) != LM_TRUE)
@@ -280,7 +280,7 @@ std::optional<std::vector<Module>> LM::EnumModules()
 	return { std::move(modules) };
 }
 
-std::optional<std::vector<Module>> LM::EnumModules(const Process *process)
+std::optional<std::vector<Module>> libmem::EnumModules(const Process *process)
 {
 	auto modules = std::vector<Module>();
 	auto proc = process->convert();
@@ -290,7 +290,7 @@ std::optional<std::vector<Module>> LM::EnumModules(const Process *process)
 	return { std::move(modules) };
 }
 
-std::optional<Module> LM::FindModule(const char *name)
+std::optional<Module> libmem::FindModule(const char *name)
 {
 	lm_module_t mod;
 
@@ -299,7 +299,7 @@ std::optional<Module> LM::FindModule(const char *name)
 	return Module(&mod);
 }
 
-std::optional<Module> LM::FindModule(const Process *process, const char *name)
+std::optional<Module> libmem::FindModule(const Process *process, const char *name)
 {
 	lm_module_t mod;
 	auto proc = process->convert();
@@ -309,7 +309,7 @@ std::optional<Module> LM::FindModule(const Process *process, const char *name)
 	return Module(&mod);
 }
 
-std::optional<Module> LM::LoadModule(const char *path)
+std::optional<Module> libmem::LoadModule(const char *path)
 {
 	lm_module_t mod;
 
@@ -318,7 +318,7 @@ std::optional<Module> LM::LoadModule(const char *path)
 	return Module(&mod);
 }
 
-std::optional<Module> LM::LoadModule(const Process *process, const char *path)
+std::optional<Module> libmem::LoadModule(const Process *process, const char *path)
 {
 	lm_module_t mod;
 	auto proc = process->convert();
@@ -328,14 +328,14 @@ std::optional<Module> LM::LoadModule(const Process *process, const char *path)
 	return Module(&mod);
 }
 
-bool LM::UnloadModule(const Module *module)
+bool libmem::UnloadModule(const Module *module)
 {
 	auto mod = module->convert();
 
 	return LM_UnloadModule(&mod) == LM_TRUE;
 }
 
-bool LM::UnloadModule(const Process *process, const Module *module)
+bool libmem::UnloadModule(const Process *process, const Module *module)
 {
 	auto mod = module->convert();
 	auto proc = process->convert();
@@ -354,7 +354,7 @@ lm_bool_t enum_symbols_callback(lm_symbol_t *symbol, lm_void_t *arg)
 	return LM_TRUE;
 }
 
-std::optional<std::vector<Symbol>> LM::EnumSymbols(const Module *module)
+std::optional<std::vector<Symbol>> libmem::EnumSymbols(const Module *module)
 {
 	auto symbols = std::vector<Symbol>();
 	auto mod = module->convert();
@@ -364,7 +364,7 @@ std::optional<std::vector<Symbol>> LM::EnumSymbols(const Module *module)
 	return { std::move(symbols) };
 }
 
-std::optional<Address> LM::FindSymbolAddress(const Module *module, const char *symbol_name)
+std::optional<Address> libmem::FindSymbolAddress(const Module *module, const char *symbol_name)
 {
 	lm_address_t addr;
 	auto mod = module->convert();
@@ -375,7 +375,7 @@ std::optional<Address> LM::FindSymbolAddress(const Module *module, const char *s
 	return addr;
 }
 
-std::optional<std::string> LM::DemangleSymbol(const char *symbol_name)
+std::optional<std::string> libmem::DemangleSymbol(const char *symbol_name)
 {
 	auto demangled_symbol = LM_DemangleSymbol(symbol_name, NULL, 0);
 	if (!demangled_symbol)
@@ -387,7 +387,7 @@ std::optional<std::string> LM::DemangleSymbol(const char *symbol_name)
 	return symbol;
 }
 
-std::optional<std::vector<Symbol>> LM::EnumSymbolsDemangled(const Module *module)
+std::optional<std::vector<Symbol>> libmem::EnumSymbolsDemangled(const Module *module)
 {
 	auto symbols = std::vector<Symbol>();
 	auto mod = module->convert();
@@ -397,7 +397,7 @@ std::optional<std::vector<Symbol>> LM::EnumSymbolsDemangled(const Module *module
 	return { std::move(symbols) };
 }
 
-std::optional<Address> LM::FindSymbolAddressDemangled(const Module *module, const char *symbol_name)
+std::optional<Address> libmem::FindSymbolAddressDemangled(const Module *module, const char *symbol_name)
 {
 	lm_address_t addr;
 	auto mod = module->convert();

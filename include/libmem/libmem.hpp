@@ -30,6 +30,7 @@
 #include <vector>
 
 struct lm_process_t;
+struct lm_thread_t;
 
 namespace LM {
 	// Re-declarations
@@ -103,14 +104,54 @@ namespace LM {
 		struct lm_process_t convert() const;
 	};
 
+	struct Thread {
+		Tid tid;
+		Pid owner_pid;
+
+		Thread(const struct lm_thread_t *thread);
+		std::string to_string() const;
+		struct lm_thread_t convert() const;
+	};
+
+	// Process API
+
 	/// Searches for a process by its name
 	std::optional<std::vector<Process>> EnumProcesses();
+
+	/// Gets the current process
 	std::optional<Process> GetProcess();
+
+	/// Gets a process by its process ID
 	std::optional<Process> GetProcess(Pid pid);
+
+	/// Finds a process by its name
 	std::optional<Process> FindProcess(const char *process_name);
+
+	/// Checks if a process is alive or not
 	bool IsProcessAlive(const Process *process);
+
+	/// Gets the process architecture bits
 	size_t GetBits();
+
+	/// Gets the system architecture bits
 	size_t GetSystemBits();
+
+	// Thread API
+
+	/// Enumerates the thread of the current process
+	std::optional<std::vector<Thread>> EnumThreads();
+
+	/// Enumerates the thread of a remote process
+	std::optional<std::vector<Thread>> EnumThreads(const Process *process);
+
+	/// Gets the current thread
+	std::optional<Thread> GetThread();
+
+	/// Gets a thread in a remote process
+	std::optional<Thread> GetThread(const Process *process);
+
+	/// Gets the process that owns a thread
+	std::optional<Process> GetThreadProcess(const Thread *thread);
 }
 
 #endif

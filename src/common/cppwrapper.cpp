@@ -20,7 +20,8 @@ Process::Process(const struct lm_process_t *process)
 	this->name = std::string(process->name);
 }
 
-std::string Process::to_string() const {
+std::string Process::to_string() const
+{
 	std::stringstream ss;
 
 	ss << "Process{ pid: " << this->pid << 
@@ -32,7 +33,8 @@ std::string Process::to_string() const {
 	return ss.str();
 }
 
-struct lm_process_t Process::convert() const {
+struct lm_process_t Process::convert() const
+{
 	lm_process_t proc;
 	size_t len;
 
@@ -53,11 +55,39 @@ struct lm_process_t Process::convert() const {
 	return std::move(proc);
 }
 
+// --------------------------------
+
+Thread::Thread(const struct lm_thread_t *thread)
+{
+	this->tid = thread->tid;
+	this->owner_pid = thread->owner_pid;
+}
+
+std::string Thread::to_string() const
+{
+	std::stringstream ss;
+
+	ss << "Thread{ tid: " << this->tid <<
+		", owner_pid: " << this->owner_pid << " }";
+	return ss.str();
+}
+
+struct lm_thread_t Thread::convert() const
+{
+	lm_thread_t thread;
+
+	thread.tid = this->tid;
+	thread.owner_pid = this->owner_pid;
+
+	return std::move(thread);
+}
+
 /*******************************/
 
-// Functions
+// Process API
 
-lm_bool_t enum_processes_callback(lm_process_t *process, lm_void_t *arg) {
+lm_bool_t enum_processes_callback(lm_process_t *process, lm_void_t *arg)
+{
 	auto pvec = reinterpret_cast<std::vector<Process> *>(arg);
 	pvec->push_back(Process(process));
 	return LM_TRUE;
@@ -111,4 +141,64 @@ size_t LM::GetBits()
 size_t LM::GetSystemBits()
 {
 	return LM_GetSystemBits();
+}
+
+// --------------------------------
+
+// Thread API
+
+lm_bool_t enum_threads_callback(lm_thread_t *thread, lm_void_t *arg)
+{
+	auto pvec = reinterpret_cast<std::vector<Thread> *>(arg);
+	pvec->push_back(Thread(thread));
+	return LM_TRUE;
+}
+
+std::optional<std::vector<Thread>> LM::EnumThreads()
+{
+	auto threads = std::vector<Thread>();
+	if (LM_EnumThreads(enum_threads_callback, &threads) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(threads) };
+}
+
+std::optional<std::vector<Thread>> LM::EnumThreads(const Process *process)
+{
+	auto threads = std::vector<Thread>();
+	auto proc = process->convert();
+
+	if (LM_EnumThreadsEx(&proc, enum_threads_callback, &threads) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(threads) };
+}
+
+std::optional<Thread> LM::GetThread()
+{
+	lm_thread_t thread;
+
+	if (LM_GetThread(&thread) != LM_TRUE)
+		return std::nullopt;
+
+	return Thread(&thread);
+}
+
+std::optional<Thread> LM::GetThread(const Process *process)
+{
+	lm_thread_t thread;
+	auto proc = process->convert();
+
+	if (LM_GetThreadEx(&proc, &thread) != LM_TRUE)
+		return std::nullopt;
+
+	return Thread(&thread);
+}
+
+std::optional<Process> LM::GetThreadProcess(const Thread *thread)
+{
+	lm_process_t proc;
+	auto thr = thread->convert();
+
+	if (LM_GetThreadProcess(&thr, &proc) != LM_TRUE)
+		return std::nullopt;
+	return Process(&proc);
 }

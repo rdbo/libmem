@@ -12,11 +12,11 @@ int main()
 	std::cout << "[*] Process Enumeration: " << std::endl;
 	auto processes = LM::EnumProcesses().value();
 	for (auto process: std::vector(processes.begin(), processes.begin() + 3)) {
-		std::cout << process.to_string() << std::endl;
+		std::cout << " - " << process.to_string() << std::endl;
 	}
 	std::cout << "..." << std::endl;
 	for (auto process: std::vector(processes.end() - 3, processes.end())) {
-		std::cout << process.to_string() << std::endl;
+		std::cout << " - " << process.to_string() << std::endl;
 	}
 
 	separator();
@@ -41,6 +41,37 @@ int main()
 
 	std::cout << "[*] Bits: " << LM::GetBits() << std::endl;
 	std::cout << "[*] System Bits: " << LM::GetSystemBits() << std::endl;
+
+	separator();
+
+	std::cout << "[*] Thread Enumeration: " << std::endl;
+	auto threads = LM::EnumThreads().value();
+
+	for (auto thread: threads) {
+		std::cout << " - " << thread.to_string() << std::endl;
+	}
+
+	separator();
+
+	std::cout << "[*] Remote Thread Enumeration: " << std::endl;
+	threads = LM::EnumThreads(&process).value();
+
+	for (auto thread: threads) {
+		std::cout << " - " << thread.to_string() << std::endl;
+	}
+
+	separator();
+
+	std::cout << "[*] Current Thread: " << LM::GetThread().value().to_string() << std::endl;
+
+	separator();
+
+	auto thread = LM::GetThread(&process).value();
+	std::cout << "[*] Remote Thread: " << thread.to_string() << std::endl;
+
+	separator();
+
+	std::cout << "[*] Remote Thread Owner Process: " << LM::GetThreadProcess(&thread).value().to_string() << std::endl;
 
 	separator();
 

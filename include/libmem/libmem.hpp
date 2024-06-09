@@ -31,7 +31,7 @@
 
 struct lm_process_t;
 
-namespace lm {
+namespace LM {
 	// Re-declarations
 	typedef uint32_t Pid;
 	typedef uint32_t Tid;
@@ -103,8 +103,8 @@ namespace lm {
 	};
 
 	/// Searches for a process by its name
-	std::optional<std::vector<Process>> enum_processes();
-	std::optional<Process> find_process(const char *process_name);
+	std::optional<std::vector<Process>> EnumProcesses();
+	std::optional<Process> FindProcess(const char *process_name);
 }
 
 #endif

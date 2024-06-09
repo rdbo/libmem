@@ -3,12 +3,12 @@
 
 int main()
 {
-	auto processes = lm::enum_processes().value();
+	auto processes = LM::EnumProcesses().value();
 	for (auto process: processes) {
 		std::cout << process.to_string() << std::endl;
 	}
 	
-	auto process = lm::find_process("st").value();
+	auto process = LM::FindProcess("st").value();
 	std::cout << process.to_string() << std::endl;
 	return 0;
 }

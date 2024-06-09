@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream>
 
-using namespace lm;
+using namespace LM;
 
 // Types
 
@@ -42,7 +42,7 @@ lm_bool_t enum_processes_callback(lm_process_t *process, lm_void_t *arg) {
 	return LM_TRUE;
 }
 
-std::optional<std::vector<Process>> lm::enum_processes()
+std::optional<std::vector<Process>> LM::EnumProcesses()
 {
 	auto processes = std::vector<Process>();
 	if (LM_EnumProcesses(enum_processes_callback, &processes) != LM_TRUE)
@@ -50,7 +50,7 @@ std::optional<std::vector<Process>> lm::enum_processes()
 	return { std::move(processes) };
 }
 
-std::optional<Process> lm::find_process(const char *process_name)
+std::optional<Process> LM::FindProcess(const char *process_name)
 {
 	lm_process_t process;
 

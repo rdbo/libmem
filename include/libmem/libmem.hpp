@@ -98,13 +98,19 @@ namespace LM {
 		std::string path;
 		std::string name;
 
-		Process(struct lm_process_t *process);
-		std::string to_string();
+		Process(const struct lm_process_t *process);
+		std::string to_string() const;
+		struct lm_process_t convert() const;
 	};
 
 	/// Searches for a process by its name
 	std::optional<std::vector<Process>> EnumProcesses();
+	std::optional<Process> GetProcess();
+	std::optional<Process> GetProcess(Pid pid);
 	std::optional<Process> FindProcess(const char *process_name);
+	bool IsProcessAlive(const Process *process);
+	size_t GetBits();
+	size_t GetSystemBits();
 }
 
 #endif

@@ -125,6 +125,23 @@ struct lm_module_t Module::convert() const
 	return std::move(mod);
 }
 
+// --------------------------------
+
+Symbol::Symbol(const struct lm_symbol_t *symbol)
+{
+	this->name = std::string(symbol->name);
+	this->address = symbol->address;
+}
+
+std::string Symbol::to_string() const
+{
+	std::stringstream ss;
+
+	ss << "Symbol{ name: \"" << this->name << "\"" << 
+		", address: " << reinterpret_cast<void *>(this->address) << " }";
+	return ss.str();
+}
+
 /*******************************/
 
 // Process API
@@ -324,4 +341,69 @@ bool LM::UnloadModule(const Process *process, const Module *module)
 	auto proc = process->convert();
 
 	return LM_UnloadModuleEx(&proc, &mod) == LM_TRUE;
+}
+
+// --------------------------------
+
+// Symbol API
+
+lm_bool_t enum_symbols_callback(lm_symbol_t *symbol, lm_void_t *arg)
+{
+	auto pvec = reinterpret_cast<std::vector<Symbol> *>(arg);
+	pvec->push_back(Symbol(symbol));
+	return LM_TRUE;
+}
+
+std::optional<std::vector<Symbol>> LM::EnumSymbols(const Module *module)
+{
+	auto symbols = std::vector<Symbol>();
+	auto mod = module->convert();
+
+	if (LM_EnumSymbols(&mod, enum_symbols_callback, &symbols) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(symbols) };
+}
+
+std::optional<Address> LM::FindSymbolAddress(const Module *module, const char *symbol_name)
+{
+	lm_address_t addr;
+	auto mod = module->convert();
+
+	addr = LM_FindSymbolAddress(&mod, symbol_name);
+	if (addr == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return addr;
+}
+
+std::optional<std::string> LM::DemangleSymbol(const char *symbol_name)
+{
+	auto demangled_symbol = LM_DemangleSymbol(symbol_name, NULL, 0);
+	if (!demangled_symbol)
+		return std::nullopt;
+
+	auto symbol = std::string(demangled_symbol);
+	LM_FreeDemangledSymbol(demangled_symbol);
+
+	return symbol;
+}
+
+std::optional<std::vector<Symbol>> LM::EnumSymbolsDemangled(const Module *module)
+{
+	auto symbols = std::vector<Symbol>();
+	auto mod = module->convert();
+
+	if (LM_EnumSymbolsDemangled(&mod, enum_symbols_callback, &symbols) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(symbols) };
+}
+
+std::optional<Address> LM::FindSymbolAddressDemangled(const Module *module, const char *symbol_name)
+{
+	lm_address_t addr;
+	auto mod = module->convert();
+
+	addr = LM_FindSymbolAddressDemangled(&mod, symbol_name);
+	if (addr == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return addr;
 }

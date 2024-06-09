@@ -32,6 +32,7 @@
 struct lm_process_t;
 struct lm_thread_t;
 struct lm_module_t;
+struct lm_symbol_t;
 
 namespace LM {
 	// Re-declarations
@@ -127,6 +128,14 @@ namespace LM {
 		struct lm_module_t convert() const;
 	};
 
+	struct Symbol {
+		std::string name;
+		Address address;
+
+		Symbol(const struct lm_symbol_t *symbol);
+		std::string to_string() const;
+	};
+
 	// Process API
 
 	/// Searches for a process by its name
@@ -192,6 +201,23 @@ namespace LM {
 
 	/// Unloads a module from a remote process
 	bool UnloadModule(const Process *process, const Module *module);
+
+	// Symbol API
+
+	/// Enumerates the symbols from a module
+	std::optional<std::vector<Symbol>> EnumSymbols(const Module *module);
+
+	/// Finds the address of a symbol within a module
+	std::optional<Address> FindSymbolAddress(const Module *module, const char *symbol_name);
+
+	/// Demangles a mangled symbol name
+	std::optional<std::string> DemangleSymbol(const char *symbol_name);
+
+	/// Enumerates the symbols from a module and demangles them
+	std::optional<std::vector<Symbol>> EnumSymbolsDemangled(const Module *module);
+
+	/// Finds the address of a demangled symbol within a module
+	std::optional<Address> FindSymbolAddressDemangled(const Module *module, const char *symbol_name);
 }
 
 #endif

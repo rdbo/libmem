@@ -82,6 +82,49 @@ struct lm_thread_t Thread::convert() const
 	return std::move(thread);
 }
 
+// --------------------------------
+
+Module::Module(const struct lm_module_t *module)
+{
+	this->base = module->base;
+	this->end = module->end;
+	this->size = module->size;
+	this->path = std::string(module->path);
+	this->name = std::string(module->name);
+}
+
+std::string Module::to_string() const
+{
+	std::stringstream ss;
+
+	ss << "Module{ base: " << reinterpret_cast<void *>(this->base) << 
+		", end: " << reinterpret_cast<void *>(this->end) << 
+		", size: " << reinterpret_cast<void *>(this->size) << 
+		", path: \"" << this->path << "\"" <<
+		", name: \"" << this->name << "\" }";
+	return ss.str();
+}
+
+struct lm_module_t Module::convert() const
+{
+	lm_module_t mod;
+	size_t len;
+
+	mod.base = this->base;
+	mod.end = this->end;
+	mod.size = this->size;
+
+	len = std::min(static_cast<size_t>(LM_PATH_MAX - 1), this->path.length());
+	strncpy(mod.path, this->path.c_str(), len);
+	mod.path[len] = '\0';
+
+	len = std::min(static_cast<size_t>(LM_PATH_MAX - 1), this->name.length());
+	strncpy(mod.name, this->name.c_str(), len);
+	mod.name[len] = '\0';
+
+	return std::move(mod);
+}
+
 /*******************************/
 
 // Process API
@@ -201,4 +244,84 @@ std::optional<Process> LM::GetThreadProcess(const Thread *thread)
 	if (LM_GetThreadProcess(&thr, &proc) != LM_TRUE)
 		return std::nullopt;
 	return Process(&proc);
+}
+
+// --------------------------------
+
+lm_bool_t enum_modules_callback(lm_module_t *module, lm_void_t *arg)
+{
+	auto pvec = reinterpret_cast<std::vector<Module> *>(arg);
+	pvec->push_back(Module(module));
+	return LM_TRUE;
+}
+
+std::optional<std::vector<Module>> LM::EnumModules()
+{
+	auto modules = std::vector<Module>();
+	if (LM_EnumModules(enum_modules_callback, &modules) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(modules) };
+}
+
+std::optional<std::vector<Module>> LM::EnumModules(const Process *process)
+{
+	auto modules = std::vector<Module>();
+	auto proc = process->convert();
+
+	if (LM_EnumModulesEx(&proc, enum_modules_callback, &modules) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(modules) };
+}
+
+std::optional<Module> LM::FindModule(const char *name)
+{
+	lm_module_t mod;
+
+	if (LM_FindModule(name, &mod) != LM_TRUE)
+		return std::nullopt;
+	return Module(&mod);
+}
+
+std::optional<Module> LM::FindModule(const Process *process, const char *name)
+{
+	lm_module_t mod;
+	auto proc = process->convert();
+
+	if (LM_FindModuleEx(&proc, name, &mod) != LM_TRUE)
+		return std::nullopt;
+	return Module(&mod);
+}
+
+std::optional<Module> LM::LoadModule(const char *path)
+{
+	lm_module_t mod;
+
+	if (LM_LoadModule(path, &mod) != LM_TRUE)
+		return std::nullopt;
+	return Module(&mod);
+}
+
+std::optional<Module> LM::LoadModule(const Process *process, const char *path)
+{
+	lm_module_t mod;
+	auto proc = process->convert();
+
+	if (LM_LoadModuleEx(&proc, path, &mod) != LM_TRUE)
+		return std::nullopt;
+	return Module(&mod);
+}
+
+bool LM::UnloadModule(const Module *module)
+{
+	auto mod = module->convert();
+
+	return LM_UnloadModule(&mod) == LM_TRUE;
+}
+
+bool LM::UnloadModule(const Process *process, const Module *module)
+{
+	auto mod = module->convert();
+	auto proc = process->convert();
+
+	return LM_UnloadModuleEx(&proc, &mod) == LM_TRUE;
 }

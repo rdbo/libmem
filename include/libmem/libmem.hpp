@@ -31,12 +31,14 @@
 
 struct lm_process_t;
 struct lm_thread_t;
+struct lm_module_t;
 
 namespace LM {
 	// Re-declarations
 	typedef uint32_t Pid;
 	typedef uint32_t Tid;
 	typedef uint64_t Time;
+	typedef uintptr_t Address;
 
 	// Wrappers
 	enum class Prot: uint32_t {
@@ -113,6 +115,18 @@ namespace LM {
 		struct lm_thread_t convert() const;
 	};
 
+	struct Module {
+		Address base;
+		Address end;
+		size_t size;
+		std::string path;
+		std::string name;
+
+		Module(const struct lm_module_t *module);
+		std::string to_string() const;
+		struct lm_module_t convert() const;
+	};
+
 	// Process API
 
 	/// Searches for a process by its name
@@ -152,6 +166,32 @@ namespace LM {
 
 	/// Gets the process that owns a thread
 	std::optional<Process> GetThreadProcess(const Thread *thread);
+
+	// Module API
+
+	/// Enumerates modules in the current process
+	std::optional<std::vector<Module>> EnumModules();
+
+	/// Enumerates modules in a remote process
+	std::optional<std::vector<Module>> EnumModules(const Process *process);
+
+	/// Searches for a module in the current process
+	std::optional<Module> FindModule(const char *name);
+
+	/// Searches for a module in a remote process
+	std::optional<Module> FindModule(const Process *process, const char *name);
+
+	/// Loads a module into the current process
+	std::optional<Module> LoadModule(const char *path);
+
+	/// Loads a module into a remote process
+	std::optional<Module> LoadModule(const Process *process, const char *path);
+
+	/// Unloads a module from the current process
+	bool UnloadModule(const Module *module);
+
+	/// Unloads a module from a remote process
+	bool UnloadModule(const Process *process, const Module *module);
 }
 
 #endif

@@ -33,6 +33,7 @@ struct lm_process_t;
 struct lm_thread_t;
 struct lm_module_t;
 struct lm_symbol_t;
+struct lm_segment_t;
 
 namespace libmem {
 	// Re-declarations
@@ -136,6 +137,16 @@ namespace libmem {
 		std::string to_string() const;
 	};
 
+	struct Segment {
+		Address base;
+		Address end;
+		size_t size;
+		Prot prot;
+
+		Segment(const struct lm_segment_t *segment);
+		std::string to_string() const;
+	};
+
 	// Process API
 
 	/// Searches for a process by its name
@@ -218,6 +229,20 @@ namespace libmem {
 
 	/// Finds the address of a demangled symbol within a module
 	std::optional<Address> FindSymbolAddressDemangled(const Module *module, const char *symbol_name);
+
+	// Segment API
+
+	/// Enumerates the memory segments in the current process
+	std::optional<std::vector<Segment>> EnumSegments();
+
+	/// Enumerates the memory segments in a remote process
+	std::optional<std::vector<Segment>> EnumSegments(const Process *process);
+
+	/// Searches for a memory segment that a given address is within in the current process
+	std::optional<Segment> FindSegment(Address address);
+
+	/// Searches for a memory segment that a given address is within in a remote process
+	std::optional<Segment> FindSegment(const Process *process, Address address);
 }
 
 #endif

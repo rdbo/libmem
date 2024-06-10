@@ -181,5 +181,37 @@ LM_API_EXPORT int main()
 
 	separator();
 
+	std::cout << "[*] Segment Enumeration: " << std::endl;
+	auto segments = LM::EnumSegments().value();
+	for (auto segment: std::vector(segments.begin(), segments.begin() + 3)) {
+		std::cout << " - " << segment.to_string() << std::endl;
+	}
+	std::cout << "..." << std::endl;
+	for (auto segment: std::vector(segments.end() - 3, segments.end())) {
+		std::cout << " - " << segment.to_string() << std::endl;
+	}
+
+	separator();
+
+	std::cout << "[*] Remote Segment Enumeration: " << std::endl;
+	segments = LM::EnumSegments(&process).value();
+	for (auto segment: std::vector(segments.begin(), segments.begin() + 3)) {
+		std::cout << " - " << segment.to_string() << std::endl;
+	}
+	std::cout << "..." << std::endl;
+	for (auto segment: std::vector(segments.end() - 3, segments.end())) {
+		std::cout << " - " << segment.to_string() << std::endl;
+	}
+
+	separator();
+
+	auto segment = LM::FindSegment(cur_mod.base).value();
+	std::cout << "[*] Found Segment in Current Process: " << segment.to_string() << std::endl;
+
+	separator();
+
+	segment = LM::FindSegment(&process, mod.base).value();
+	std::cout << "[*] Found Segment in Remote Process: " << segment.to_string() << std::endl;
+
 	return 0;
 }

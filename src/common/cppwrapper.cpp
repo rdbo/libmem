@@ -142,6 +142,28 @@ std::string Symbol::to_string() const
 	return ss.str();
 }
 
+// --------------------------------
+
+Segment::Segment(const struct lm_segment_t *segment)
+{
+	this->base = segment->base;
+	this->end = segment->end;
+	this->size = segment->size;
+	this->prot = static_cast<Prot>(segment->prot);
+}
+
+std::string Segment::to_string() const
+{
+	std::stringstream ss;
+
+	ss << "Segment{ base: " << reinterpret_cast<void *>(this->base) << 
+		", end: " << reinterpret_cast<void *>(this->end) << 
+		", size: " << reinterpret_cast<void *>(this->size) <<
+		", prot: " << static_cast<uint32_t>(this->prot) << " }";
+
+	return ss.str();
+}
+
 /*******************************/
 
 // Process API
@@ -406,4 +428,52 @@ std::optional<Address> libmem::FindSymbolAddressDemangled(const Module *module, 
 	if (addr == LM_ADDRESS_BAD)
 		return std::nullopt;
 	return addr;
+}
+
+// --------------------------------
+
+// Segment API
+
+lm_bool_t enum_segments_callback(lm_segment_t *segment, lm_void_t *arg)
+{
+	auto pvec = reinterpret_cast<std::vector<Segment> *>(arg);
+	pvec->push_back(Segment(segment));
+	return LM_TRUE;
+}
+
+std::optional<std::vector<Segment>> libmem::EnumSegments()
+{
+	auto segments = std::vector<Segment>();
+	if (LM_EnumSegments(enum_segments_callback, &segments) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(segments) };
+}
+
+std::optional<std::vector<Segment>> libmem::EnumSegments(const Process *process)
+{
+	auto segments = std::vector<Segment>();
+	auto proc = process->convert();
+
+	if (LM_EnumSegmentsEx(&proc, enum_segments_callback, &segments) != LM_TRUE)
+		return std::nullopt;
+	return { std::move(segments) };
+}
+
+std::optional<Segment> libmem::FindSegment(Address address)
+{
+	lm_segment_t segment;
+
+	if (LM_FindSegment(address, &segment) != LM_TRUE)
+		return std::nullopt;
+	return Segment(&segment);
+}
+
+std::optional<Segment> libmem::FindSegment(const Process *process, Address address)
+{
+	lm_segment_t segment;
+	auto proc = process->convert();
+
+	if (LM_FindSegmentEx(&proc, address, &segment) != LM_TRUE)
+		return std::nullopt;
+	return Segment(&segment);
 }

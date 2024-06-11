@@ -1,12 +1,15 @@
+#include <chrono>
 #include <libmem/libmem.hpp>
 #include <iostream>
 #include <filesystem>
+#include <thread>
 
 namespace LM = libmem; // Alias libmem to a shorter namespace for convenience
 
 using LM::Address;
 using LM::Prot;
 using LM::Arch;
+using LM::Trampoline;
 
 #ifdef _MSC_VER
 	/* MSVC */
@@ -29,6 +32,23 @@ struct PointerBase {
 
 	int player_health;
 };
+
+void my_function(int number, char letter)
+{
+	std::cout << "MyNumber: " << number << std::endl;
+	std::cout << "MyLetter: " << letter << std::endl;
+}
+
+static Trampoline my_function_tramp;
+void hk_my_function(int number, char letter)
+{
+	std::cout << "Hooked 'my_function'!" << std::endl;
+	std::cout << "Original Number: " << number << std::endl;
+	std::cout << "Original Letter: " << letter << std::endl;
+	std::cout << "Calling original function with custom parameters..." << std::endl;
+
+	my_function_tramp.callable<void (*)(int, char)>()(1337, 'W');
+}
 
 void setup_pointer_base(PointerBase *base, Address address)
 {
@@ -349,7 +369,7 @@ LM_API_EXPORT int main()
 	for (auto byte: payload) {
 		std::cout << std::hex << std::setw(2) << (int)byte << " ";
 	}
-	std::cout << "]" << std::endl;
+	std::cout << std::dec << "]" << std::endl;
 
 	auto disas_inst = LM::Disassemble(reinterpret_cast<Address>(inst.bytes.data())).value();
 	std::cout << "[*] Disassembled Instruction: " << disas_inst.to_string() << std::endl;
@@ -361,6 +381,30 @@ LM_API_EXPORT int main()
 	}
 
 	// TODO: Test CodeLength
+
+	separator();
+
+	my_function_tramp = LM::HookCode(reinterpret_cast<Address>(my_function), reinterpret_cast<Address>(hk_my_function)).value();
+	my_function(10, 'L');
+
+	std::cout << std::endl;
+	LM::UnhookCode(reinterpret_cast<Address>(my_function), my_function_tramp);
+	my_function(10, 'A');
+
+	separator();
+
+	auto wait_message_addr = LM::FindSymbolAddress(&mod, "wait_message").value();
+	std::cout << "[*] 'wait_message' address: " << reinterpret_cast<void *>(wait_message_addr) << std::endl;
+
+	auto hk_wait_message_addr = LM::FindSymbolAddress(&mod, "hk_wait_message").value();
+	std::cout << "[*] 'hk_wait_message' address: " << reinterpret_cast<void *>(hk_wait_message_addr) << std::endl;
+
+	auto remote_tramp = LM::HookCode(&process, wait_message_addr, hk_wait_message_addr).value();
+	std::cout << "[*] Hooked Remote Function! Waiting for it to run..." << std::endl;
+	std::this_thread::sleep_for(std::chrono::duration(std::chrono::seconds(3)));
+
+	LM::UnhookCode(&process, wait_message_addr, remote_tramp);
+	std::cout << "[*] Unhooked Remote Function" << std::endl;
 
 	separator();
 

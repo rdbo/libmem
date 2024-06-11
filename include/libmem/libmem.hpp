@@ -158,6 +158,22 @@ namespace libmem {
 		std::string to_string() const;
 	};
 
+	struct Trampoline {
+		Address address;
+		size_t size;
+
+		template <typename T>
+		inline T callable()
+		{
+			return reinterpret_cast<T>(this->address);
+		}
+	};
+
+	struct RemoteTrampoline {
+		Address address;
+		size_t size;
+	};
+
 	// Process API
 
 	/// Searches for a process by its name
@@ -382,6 +398,22 @@ namespace libmem {
 
 	/// Calculates the instruction aligned length based on a minimum size in a remote process
 	size_t CodeLength(const Process *process, Address machine_code, size_t min_length);
+
+	// Hook API
+
+	/// Places a hook in the address 'from', jumping to the address 'to' in the current process
+	std::optional<Trampoline> HookCode(Address from, Address to);
+
+	/// Places a hook in the address 'from', jumping to the address 'to' in a remote process
+	std::optional<RemoteTrampoline> HookCode(const Process *process, Address from, Address to);
+
+	/// Removes the hook/detour placed in the address 'from', restoring the original code in the current process
+	/// NOTE: the trampoline will become unusable after this operation
+	bool UnhookCode(Address from, Trampoline &trampoline);
+
+	/// Removes the hook/detour placed in the address 'from', restoring the original code in a remote process
+	/// NOTE: the trampoline will become unusable after this operation
+	bool UnhookCode(const Process *process, Address from, RemoteTrampoline &trampoline);
 }
 
 #endif

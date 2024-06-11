@@ -755,3 +755,44 @@ size_t libmem::CodeLength(const Process *process, Address machine_code, size_t m
 
 	return LM_CodeLengthEx(&proc, machine_code, min_length);
 }
+
+// --------------------------------
+
+// Hook API
+
+std::optional<Trampoline> libmem::HookCode(Address from, Address to)
+{
+	lm_address_t tramp;
+	size_t size;
+
+	size = LM_HookCode(from, to, &tramp);
+	if (size == 0)
+		return std::nullopt;
+
+	return { Trampoline { tramp, size } };
+}
+
+std::optional<RemoteTrampoline> libmem::HookCode(const Process *process, Address from, Address to)
+{
+	lm_address_t tramp;
+	size_t size;
+	auto proc = process->convert();
+
+	size = LM_HookCodeEx(&proc, from, to, &tramp);
+	if (size == 0)
+		return std::nullopt;
+
+	return { RemoteTrampoline { tramp, size } };
+}
+
+bool libmem::UnhookCode(Address from, Trampoline &trampoline)
+{
+	return LM_UnhookCode(from, trampoline.address, trampoline.size) == LM_TRUE;
+}
+
+bool libmem::UnhookCode(const Process *process, Address from, RemoteTrampoline &trampoline)
+{
+	auto proc = process->convert();
+
+	return LM_UnhookCodeEx(&proc, from, trampoline.address, trampoline.size) == LM_TRUE;
+}

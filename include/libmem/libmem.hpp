@@ -182,7 +182,7 @@ namespace libmem {
 		void Unhook(size_t fn_index);
 		Address GetOriginal(size_t fn_index);
 		void Reset();
-	}
+	};
 
 	// Process API
 

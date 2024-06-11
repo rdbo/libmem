@@ -301,5 +301,43 @@ LM_API_EXPORT int main()
 
 	separator();
 
+	uint8_t scan_me[] = { 0xFF, 0x0, 0xFF, 0x0, 0x10, 0x20, 0x30, 0x42, 0x0, 0x50, 0x0, 0x0 };
+	Address scan_start = reinterpret_cast<Address>(scan_me);
+	size_t scan_size = sizeof(scan_me);
+	Address desired = reinterpret_cast<Address>(&scan_me[4]);
+	Address scan;
+
+	std::cout << "[*] Desired Scan Address: " << reinterpret_cast<void *>(desired) << std::endl;
+
+	scan = LM::DataScan({ 0x10, 0x20, 0x30, 0x42 }, scan_start, scan_size).value();
+	std::cout << "[*] Data Scan Result: " << reinterpret_cast<void *>(scan) << std::endl;
+
+	scan = LM::PatternScan({ 0x10, 0xFF, 0x30, 0x42, 0xFF, 0x50 }, "x?xx?x", scan_start, scan_size).value();
+	std::cout << "[*] Pattern Scan Result: " << reinterpret_cast<void *>(scan) << std::endl;
+
+	scan = LM::SigScan("10 ?? 30 42 ?? 50", scan_start, scan_size).value();
+	std::cout << "[*] Signature Scan Result: " << reinterpret_cast<void *>(scan) << std::endl;
+
+	separator();
+
+	scan_start = LM::AllocMemory(&process, scan_size, Prot::RW).value();
+	LM::WriteMemory(&process, scan_start, scan_me, scan_size);
+
+	desired = scan_start + 4;
+	std::cout << "[*] Desired Remote Scan Address: " << reinterpret_cast<void *>(desired) << std::endl;
+
+	scan = LM::DataScan(&process, { 0x10, 0x20, 0x30, 0x42 }, scan_start, scan_size).value();
+	std::cout << "[*] Data Scan Result: " << reinterpret_cast<void *>(scan) << std::endl;
+
+	scan = LM::PatternScan(&process, { 0x10, 0xFF, 0x30, 0x42, 0xFF, 0x50 }, "x?xx?x", scan_start, scan_size).value();
+	std::cout << "[*] Pattern Scan Result: " << reinterpret_cast<void *>(scan) << std::endl;
+
+	scan = LM::SigScan(&process, "10 ?? 30 42 ?? 50", scan_start, scan_size).value();
+	std::cout << "[*] Signature Scan Result: " << reinterpret_cast<void *>(scan) << std::endl;
+
+	LM::FreeMemory(&process, scan_start, scan_size);
+
+	separator();
+
 	return 0;
 }

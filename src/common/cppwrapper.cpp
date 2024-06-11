@@ -588,3 +588,70 @@ std::optional<Address> libmem::DeepPointer(const Process *process, Address base,
 		return std::nullopt;
 	return { address };
 }
+
+// --------------------------------
+
+// Scan API
+
+std::optional<Address> libmem::DataScan(std::vector<uint8_t> data, Address address, size_t scansize)
+{
+	lm_address_t scan;
+
+	scan = LM_DataScan(data.data(), data.size(), address, scansize);
+	if (scan == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { scan };
+}
+
+std::optional<Address> libmem::DataScan(const Process *process, std::vector<uint8_t> data, Address address, size_t scansize)
+{
+	lm_address_t scan;
+	auto proc = process->convert();
+
+	scan = LM_DataScanEx(&proc, data.data(), data.size(), address, scansize);
+	if (scan == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { scan };
+}
+
+std::optional<Address> libmem::PatternScan(std::vector<uint8_t> pattern, const char *mask, Address address, size_t scansize)
+{
+	lm_address_t scan;
+
+	scan = LM_PatternScan(pattern.data(), mask, address, scansize);
+	if (scan == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { scan };
+}
+
+std::optional<Address> libmem::PatternScan(const Process *process, std::vector<uint8_t> pattern, const char *mask, Address address, size_t scansize)
+{
+	lm_address_t scan;
+	auto proc = process->convert();
+
+	scan = LM_PatternScanEx(&proc, pattern.data(), mask, address, scansize);
+	if (scan == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { scan };
+}
+
+std::optional<Address> libmem::SigScan(const char *signature, Address address, size_t scansize)
+{
+	lm_address_t scan;
+
+	scan = LM_SigScan(signature, address, scansize);
+	if (scan == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { scan };
+}
+
+std::optional<Address> libmem::SigScan(const Process *process, const char *signature, Address address, size_t scansize)
+{
+	lm_address_t scan;
+	auto proc = process->convert();
+
+	scan = LM_SigScanEx(&proc, signature, address, scansize);
+	if (scan == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { scan };
+}

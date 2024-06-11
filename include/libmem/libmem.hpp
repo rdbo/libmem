@@ -327,6 +327,26 @@ namespace libmem {
 
 	/// Resolves a deep pointer (also known as pointer scan or pointer map) in a remote process
 	std::optional<Address> DeepPointer(const Process *process, Address base, const std::vector<Address> &offsets);
+
+	// Scan API
+
+	/// Scans for some data in the current process
+	std::optional<Address> DataScan(std::vector<uint8_t> data, Address address, size_t scansize);
+
+	/// Scans for some data in a remote process
+	std::optional<Address> DataScan(const Process *process, std::vector<uint8_t> data, Address address, size_t scansize);
+
+	/// Scans for a byte pattern with a mask in the current process
+	std::optional<Address> PatternScan(std::vector<uint8_t> pattern, const char *mask, Address address, size_t scansize);
+
+	/// Scans for a byte pattern with a mask in a remote process
+	std::optional<Address> PatternScan(const Process *process, std::vector<uint8_t> pattern, const char *mask, Address address, size_t scansize);
+
+	/// Scans for a byte signature in the current process (e.g "DE AD ?? BE EF")
+	std::optional<Address> SigScan(const char *signature, Address address, size_t scansize);
+
+	/// Scans for a byte signature in a remote process (e.g "DE AD ?? BE EF")
+	std::optional<Address> SigScan(const Process *process, const char *signature, Address address, size_t scansize);
 }
 
 #endif

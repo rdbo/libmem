@@ -292,7 +292,7 @@ LM_API_EXPORT int main()
 
 	setup_pointer_base(&ptrbase, alloc);
 	LM::WriteMemory(&process, alloc, ptrbase);
-	auto player_health_addr = LM::DeepPointer(&process, alloc, offsets).value();
+	auto player_health_addr = LM::DeepPointer(&process, alloc, { 0xF0, 0xA0, 0x00 }).value();
 	LM::WriteMemory<int>(&process, player_health_addr, 1337);
 	ptrbase = LM::ReadMemory<PointerBase>(&process, alloc).value();
 	std::cout << "[*] Remote Player Health (Modified after Deep Pointer): " << ptrbase.player_health << std::endl;

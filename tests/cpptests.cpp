@@ -4,6 +4,9 @@
 
 namespace LM = libmem; // Alias libmem to a shorter namespace for convenience
 
+using LM::Address;
+using LM::Prot;
+
 #ifdef _MSC_VER
 	/* MSVC */
 #	define LM_API_EXPORT __declspec(dllexport)
@@ -11,6 +14,29 @@ namespace LM = libmem; // Alias libmem to a shorter namespace for convenience
 	/* GCC/Clang */
 #	define LM_API_EXPORT __attribute__((visibility("default")))
 #endif
+
+struct PointerBase {
+	void *next;
+	struct PointerLayer0 {
+		char pad[0xF0];
+		void *next;
+	} layer0;
+	struct PointerLayer1 {
+		char pad[0xA0];
+		int *final;
+	} layer1;
+
+	int player_health;
+};
+
+void setup_pointer_base(PointerBase *base, Address address)
+{
+	auto ptrsize = sizeof(void *);
+	base->next = reinterpret_cast<void *>(address + ptrsize);
+	base->layer0.next = reinterpret_cast<void *>(reinterpret_cast<Address>(base->next) + sizeof(PointerBase::PointerLayer0));
+	base->layer1.final = reinterpret_cast<int *>(reinterpret_cast<Address>(base->layer0.next) + sizeof(PointerBase::PointerLayer1));
+	base->player_health = 10;
+}
 
 LM_API_EXPORT void separator()
 {
@@ -212,6 +238,68 @@ LM_API_EXPORT int main()
 
 	segment = LM::FindSegment(&process, mod.base).value();
 	std::cout << "[*] Found Segment in Remote Process: " << segment.to_string() << std::endl;
+
+	separator();
+
+	int number = 10;
+	Address number_addr = reinterpret_cast<Address>(&number);
+	int readnum;
+	Address alloc;
+	PointerBase ptrbase;
+	std::vector<Address> offsets = { 0xF0, 0xA0, 0x0 };
+
+	readnum = LM::ReadMemory<int>(number_addr);
+	std::cout << "[*] Read Number: " << readnum << std::endl;
+
+	LM::WriteMemory(number_addr, 1337);
+	std::cout << "[*] Wrote Number: " << number << std::endl;
+
+	LM::SetMemory(number_addr, 0, sizeof(number));
+	std::cout << "[*] Set Number: " << number << std::endl;
+
+	alloc = LM::AllocMemory(1024, Prot::XRW).value();
+	segment = LM::FindSegment(alloc).value();
+	std::cout << "[*] Allocated Memory: " << segment.to_string() << std::endl;
+
+	LM::ProtMemory(alloc, 1024, Prot::RW);
+	segment = LM::FindSegment(alloc).value();
+	std::cout << "[*] Protected Memory: " << segment.to_string() << std::endl;
+
+	std::cout << "[*] Freed Memory: " << (LM::FreeMemory(alloc, 1024) ? "OK": "Err") << std::endl;
+
+	setup_pointer_base(&ptrbase, reinterpret_cast<Address>(&ptrbase));
+	auto player_health = LM::DeepPointer<int>(reinterpret_cast<Address>(&ptrbase), offsets);
+	*player_health = 1337;
+	std::cout << "[*] Player Health (Modified after Deep Pointer): " << ptrbase.player_health << std::endl;
+
+	separator();
+
+	alloc = LM::AllocMemory(&process, 1024, Prot::XRW).value();
+	segment = LM::FindSegment(&process, alloc).value();
+	std::cout << "[*] Allocated Remote Memory: " << segment.to_string() << std::endl;
+
+	LM::ProtMemory(&process, alloc, 1024, Prot::RW);
+	segment = LM::FindSegment(&process, alloc).value();
+	std::cout << "[*] Protected Remote Memory: " << segment.to_string() << std::endl;
+
+	LM::WriteMemory(&process, alloc, 1337);
+	readnum = LM::ReadMemory<int>(&process, alloc).value();
+	std::cout << "[*] Read/Wrote Remote Memory: " << readnum << std::endl;
+
+	LM::SetMemory(&process, alloc, 0, sizeof(int));
+	readnum = LM::ReadMemory<int>(&process, alloc).value();
+	std::cout << "[*] Read/Set Remote Memory: " << readnum << std::endl;
+
+	setup_pointer_base(&ptrbase, alloc);
+	LM::WriteMemory(&process, alloc, ptrbase);
+	auto player_health_addr = LM::DeepPointer(&process, alloc, offsets).value();
+	LM::WriteMemory<int>(&process, player_health_addr, 1337);
+	ptrbase = LM::ReadMemory<PointerBase>(&process, alloc).value();
+	std::cout << "[*] Remote Player Health (Modified after Deep Pointer): " << ptrbase.player_health << std::endl;
+
+	std::cout << "[*] Freed Remote Memory: " << (LM::FreeMemory(&process, alloc, 1024) ? "OK": "Err") << std::endl;
+
+	separator();
 
 	return 0;
 }

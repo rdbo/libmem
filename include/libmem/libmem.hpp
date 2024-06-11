@@ -243,6 +243,90 @@ namespace libmem {
 
 	/// Searches for a memory segment that a given address is within in a remote process
 	std::optional<Segment> FindSegment(const Process *process, Address address);
+
+	// Memory API
+
+	/// Reads memory from a source address in the current process
+	size_t ReadMemory(Address source, uint8_t *dest, size_t size);
+
+	/// Reads memory from a source address in the current process
+	template <typename T>
+	inline T ReadMemory(Address source)
+	{
+		T dest;
+		ReadMemory(source, reinterpret_cast<uint8_t *>(&dest), sizeof(dest));
+		return dest;
+	}
+
+	/// Reads memory from a source address in a remote process
+	size_t ReadMemory(const Process *process, Address source, uint8_t *dest, size_t size);
+
+	/// Reads memory from a source address in a remote process
+	template <typename T>
+	inline std::optional<T> ReadMemory(const Process *process, Address source)
+	{
+		T dest;
+		if (ReadMemory(process, source, reinterpret_cast<uint8_t *>(&dest), sizeof(dest)) != sizeof(dest))
+			return std::nullopt;
+		return dest;
+	}
+
+	/// Writes memory into a destination address in the current process
+	size_t WriteMemory(Address dest, uint8_t *source, size_t size);
+
+	/// Writes memory into a destination address in the current process
+	template <typename T>
+	inline void WriteMemory(Address dest, T source)
+	{
+		WriteMemory(dest, reinterpret_cast<uint8_t *>(&source), sizeof(T));
+	}
+
+	/// Writes memory into a destination address in a remote  process
+	size_t WriteMemory(const Process *process, Address dest, uint8_t *source, size_t size);
+
+	/// Writes memory into a destination address in a remote  process
+	template <typename T>
+	inline void WriteMemory(const Process *process, Address dest, T source)
+	{
+		WriteMemory(process, dest, reinterpret_cast<uint8_t *>(&source), sizeof(T));
+	}
+
+	/// Sets a memory region to a specific byte in the current process
+	size_t SetMemory(Address dest, uint8_t byte, size_t size);
+
+	/// Sets a memory region to a specific byte in a remote process
+	size_t SetMemory(const Process *process, Address dest, uint8_t byte, size_t size);
+
+	/// Changes the memory protection flags of a memory region in the current process
+	std::optional<Prot> ProtMemory(Address address, size_t size, Prot prot);
+
+	/// Changes the memory protection flags of a memory region in a remote process
+	std::optional<Prot> ProtMemory(const Process *process, Address address, size_t size, Prot prot);
+
+	/// Allocates memory in the current process (page-aligned)
+	std::optional<Address> AllocMemory(size_t size, Prot prot);
+
+	/// Allocates memory in a remote process (page-aligned)
+	std::optional<Address> AllocMemory(const Process *process, size_t size, Prot prot);
+
+	/// Frees memory allocated in the current process (page-aligned)
+	bool FreeMemory(Address address, size_t size);
+
+	/// Frees memory allocated in a remote process (page-aligned)
+	bool FreeMemory(const Process *process, Address address, size_t size);
+
+	/// Resolves a deep pointer (also known as pointer scan or pointer map) in the current process
+	Address DeepPointer(Address base, const std::vector<Address> &offsets);
+
+	/// Resolves a deep pointer (also known as pointer scan or pointer map) in the current process
+	template <typename T>
+	inline T *DeepPointer(Address base, const std::vector<Address> &offsets)
+	{
+		return reinterpret_cast<T *>(DeepPointer(base, offsets));
+	}
+
+	/// Resolves a deep pointer (also known as pointer scan or pointer map) in a remote process
+	std::optional<Address> DeepPointer(const Process *process, Address base, const std::vector<Address> &offsets);
 }
 
 #endif

@@ -477,3 +477,114 @@ std::optional<Segment> libmem::FindSegment(const Process *process, Address addre
 		return std::nullopt;
 	return Segment(&segment);
 }
+
+// --------------------------------
+
+// Memory API
+
+size_t libmem::ReadMemory(Address source, uint8_t *dest, size_t size)
+{
+	return LM_ReadMemory(source, dest, size);
+}
+
+size_t libmem::ReadMemory(const Process *process, Address source, uint8_t *dest, size_t size)
+{
+	auto proc = process->convert();
+
+	return LM_ReadMemoryEx(&proc, source, dest, size);
+}
+
+size_t libmem::WriteMemory(Address dest, uint8_t *source, size_t size)
+{
+	return LM_WriteMemory(dest, source, size);
+}
+
+size_t libmem::WriteMemory(const Process *process, Address dest, uint8_t *source, size_t size)
+{
+	auto proc = process->convert();
+	
+	return LM_WriteMemoryEx(&proc, dest, source, size);
+}
+
+size_t libmem::SetMemory(Address dest, uint8_t byte, size_t size)
+{
+	return LM_SetMemory(dest, byte, size);
+}
+
+size_t libmem::SetMemory(const Process *process, Address dest, uint8_t byte, size_t size)
+{
+	auto proc = process->convert();
+
+	return LM_SetMemoryEx(&proc, dest, byte, size);
+}
+
+std::optional<Prot> libmem::ProtMemory(Address address, size_t size, Prot prot)
+{
+	lm_prot_t old_prot;
+
+	if (!LM_ProtMemory(address, size, static_cast<lm_prot_t>(prot), &old_prot))
+		return std::nullopt;
+	return { static_cast<Prot>(old_prot) };
+}
+
+std::optional<Prot> libmem::ProtMemory(const Process *process, Address address, size_t size, Prot prot)
+{
+	lm_prot_t old_prot;
+	auto proc = process->convert();
+
+	if (!LM_ProtMemoryEx(&proc, address, size, static_cast<lm_prot_t>(prot), &old_prot))
+		return std::nullopt;
+	return { static_cast<Prot>(old_prot) };
+}
+
+std::optional<Address> libmem::AllocMemory(size_t size, Prot prot)
+{
+	lm_address_t alloc;
+
+	alloc = LM_AllocMemory(size, static_cast<lm_prot_t>(prot));
+	if (alloc == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { alloc };
+}
+
+std::optional<Address> libmem::AllocMemory(const Process *process, size_t size, Prot prot)
+{
+	lm_address_t alloc;
+	auto proc = process->convert();
+
+	alloc = LM_AllocMemoryEx(&proc, size, static_cast<lm_prot_t>(prot));
+	if (alloc == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { alloc };
+}
+
+bool libmem::FreeMemory(Address address, size_t size)
+{
+	return LM_FreeMemory(address, size) == LM_TRUE;
+}
+
+bool libmem::FreeMemory(const Process *process, Address address, size_t size)
+{
+	auto proc = process->convert();
+
+	return LM_FreeMemoryEx(&proc, address, size) == LM_TRUE;
+}
+
+Address libmem::DeepPointer(Address base, const std::vector<Address> &offsets)
+{
+	auto offsets_buf = offsets.data();
+
+	return LM_DeepPointer(base, offsets_buf, offsets.size());
+}
+
+std::optional<Address> libmem::DeepPointer(const Process *process, Address base, const std::vector<Address> &offsets)
+{
+	auto offsets_buf = offsets.data();
+	auto proc = process->convert();
+	lm_address_t address;
+
+	address = LM_DeepPointerEx(&proc, base, offsets_buf, offsets.size());
+	if (address == LM_ADDRESS_BAD)
+		return std::nullopt;
+	return { address };
+}

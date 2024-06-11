@@ -6,6 +6,7 @@ namespace LM = libmem; // Alias libmem to a shorter namespace for convenience
 
 using LM::Address;
 using LM::Prot;
+using LM::Arch;
 
 #ifdef _MSC_VER
 	/* MSVC */
@@ -336,6 +337,30 @@ LM_API_EXPORT int main()
 	std::cout << "[*] Signature Scan Result: " << reinterpret_cast<void *>(scan) << std::endl;
 
 	LM::FreeMemory(&process, scan_start, scan_size);
+
+	separator();
+
+	auto inst = LM::Assemble("mov eax, ebx").value();
+	std::cout << "[*] Assembled Instruction: " << inst.to_string() << std::endl;
+
+	auto code_str = "push rbp; mov rbp, rsp; mov rax, 0; mov rsp, rbp; pop rbp; ret";
+	auto payload = LM::Assemble(code_str, Arch::X64, 0x1000).value();
+	std::cout << "[*] Assembled '" << code_str << "': [ ";
+	for (auto byte: payload) {
+		std::cout << std::hex << std::setw(2) << (int)byte << " ";
+	}
+	std::cout << "]" << std::endl;
+
+	auto disas_inst = LM::Disassemble(reinterpret_cast<Address>(inst.bytes.data())).value();
+	std::cout << "[*] Disassembled Instruction: " << disas_inst.to_string() << std::endl;
+
+	auto disas_insts = LM::Disassemble(reinterpret_cast<Address>(payload.data()), Arch::X64, payload.size(), 0, 0x1000).value();
+	std::cout << "[*] Disassembled Payload: " << std::endl;
+	for (auto inst: disas_insts) {
+		std::cout << "\t" << inst.to_string() << std::endl;
+	}
+
+	// TODO: Test CodeLength
 
 	separator();
 

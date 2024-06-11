@@ -1223,7 +1223,7 @@ LM_FreePayload(lm_byte_t *payload);
  */
 LM_API lm_bool_t LM_CALL
 LM_Disassemble(lm_address_t machine_code,
-		lm_inst_t   *instruction_out);
+	       lm_inst_t   *instruction_out);
 
 /**
  * The function disassembles instructions into an array of

@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 using namespace libmem;
 
@@ -160,6 +161,32 @@ std::string Segment::to_string() const
 		", end: " << reinterpret_cast<void *>(this->end) << 
 		", size: " << reinterpret_cast<void *>(this->size) <<
 		", prot: " << static_cast<uint32_t>(this->prot) << " }";
+
+	return ss.str();
+}
+
+// --------------------------------
+
+Inst::Inst(const struct lm_inst_t *inst)
+{
+	this->address = inst->address;
+	this->bytes = std::vector(inst->bytes, inst->bytes + inst->size);
+	this->mnemonic = std::string(inst->mnemonic);
+	this->op_str = std::string(inst->op_str);
+}
+
+std::string Inst::to_string() const
+{
+	std::stringstream ss;
+
+	ss << reinterpret_cast<void *>(this->address) << ": " <<
+		this->mnemonic << " " << this->op_str << " -> [ ";
+
+	for (auto byte: this->bytes) {
+		ss << std::hex << std::setw(2) << (int)byte << " ";
+	}
+
+	ss << "]";
 
 	return ss.str();
 }
@@ -654,4 +681,77 @@ std::optional<Address> libmem::SigScan(const Process *process, const char *signa
 	if (scan == LM_ADDRESS_BAD)
 		return std::nullopt;
 	return { scan };
+}
+
+// --------------------------------
+
+// Assemble/Disassemble API
+
+Arch libmem::GetArchitecture()
+{
+	return static_cast<Arch>(LM_GetArchitecture());
+}
+
+std::optional<Inst> libmem::Assemble(const char *code)
+{
+	lm_inst_t inst;
+
+	if (LM_Assemble(code, &inst) != LM_TRUE)
+		return std::nullopt;
+
+	return { Inst(&inst) };
+}
+
+std::optional<std::vector<uint8_t>> libmem::Assemble(const char *code, Arch arch, Address runtime_address)
+{
+	lm_byte_t *payload;
+	size_t size;
+
+	size = LM_AssembleEx(code, static_cast<lm_arch_t>(arch), runtime_address, &payload);
+	if (size == 0)
+		return std::nullopt;
+
+	auto payload_vec = std::vector(payload, payload + size);
+
+	LM_FreePayload(payload);
+
+	return { std::move(payload_vec) };
+}
+
+std::optional<Inst> libmem::Disassemble(Address machine_code)
+{
+	lm_inst_t inst;
+
+	if (LM_Disassemble(machine_code, &inst) != LM_TRUE)
+		return std::nullopt;
+
+	return { Inst(&inst) };
+}
+
+std::optional<std::vector<Inst>> libmem::Disassemble(Address machine_code, Arch arch, size_t max_size, size_t instruction_count, Address runtime_address)
+{
+	lm_inst_t *insts;
+	size_t count;
+
+	count = LM_DisassembleEx(machine_code, static_cast<lm_arch_t>(arch), max_size, instruction_count, runtime_address, &insts);
+	if (count == 0)
+		return std::nullopt;
+
+	std::vector<Inst> inst_vec = {};
+	for (size_t i = 0; i < count; ++i)
+		inst_vec.push_back(Inst(&insts[i]));
+
+	return { inst_vec };
+}
+
+size_t libmem::CodeLength(Address machine_code, size_t min_length)
+{
+	return LM_CodeLength(machine_code, min_length);
+}
+
+size_t libmem::CodeLength(const Process *process, Address machine_code, size_t min_length)
+{
+	auto proc = process->convert();
+
+	return LM_CodeLengthEx(&proc, machine_code, min_length);
 }

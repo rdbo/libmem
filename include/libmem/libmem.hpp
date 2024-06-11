@@ -34,6 +34,7 @@ struct lm_thread_t;
 struct lm_module_t;
 struct lm_symbol_t;
 struct lm_segment_t;
+struct lm_inst_t;
 
 namespace libmem {
 	// Re-declarations
@@ -144,6 +145,16 @@ namespace libmem {
 		Prot prot;
 
 		Segment(const struct lm_segment_t *segment);
+		std::string to_string() const;
+	};
+
+	struct Inst {
+		Address address;
+		std::vector<uint8_t> bytes;
+		std::string mnemonic;
+		std::string op_str;
+
+		Inst(const struct lm_inst_t *inst);
 		std::string to_string() const;
 	};
 
@@ -347,6 +358,30 @@ namespace libmem {
 
 	/// Scans for a byte signature in a remote process (e.g "DE AD ?? BE EF")
 	std::optional<Address> SigScan(const Process *process, const char *signature, Address address, size_t scansize);
+
+	// Assemble/Disassemble API
+
+	/// Gets the current process architecture
+	Arch GetArchitecture();
+
+	/// Assembles an instruction in the current architecture into machine code
+	std::optional<Inst> Assemble(const char *code);
+
+	/// Assembles one or more instructions into machine code
+	std::optional<std::vector<uint8_t>> Assemble(const char *code, Arch arch, Address runtime_address);
+
+	/// Disassembles a single instruction from machine code in the current architecture
+	std::optional<Inst> Disassemble(Address machine_code);
+
+	/// Disassembles one or more instructions from machine code
+	/// NOTE: 'max_size' and 'instruction_count' can't both be 0, choose one if you want to
+	std::optional<std::vector<Inst>> Disassemble(Address machine_code, Arch arch, size_t max_size, size_t instruction_count, Address runtime_address);
+
+	/// Calculates the instruction aligned length based on a minimum size in the current process
+	size_t CodeLength(Address machine_code, size_t min_length);
+
+	/// Calculates the instruction aligned length based on a minimum size in a remote process
+	size_t CodeLength(const Process *process, Address machine_code, size_t min_length);
 }
 
 #endif

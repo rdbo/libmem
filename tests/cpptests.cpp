@@ -192,12 +192,12 @@ LM_API_EXPORT int main()
 	auto libpath = std::filesystem::current_path() / "tests" / "libtest.so";
 	std::cout << "[*] Library Path: " << libpath << std::endl;
 
-	auto cur_loaded_mod = LM::LoadModule(libpath.c_str()).value();
+	auto cur_loaded_mod = LM::LoadModule(reinterpret_cast<const char *>(libpath.c_str())).value();
 	std::cout << "[*] Loaded Module into Current Process: " << cur_loaded_mod.to_string() << std::endl;
 
 	separator();
 
-	auto loaded_mod = LM::LoadModule(&process, libpath.c_str()).value();
+	auto loaded_mod = LM::LoadModule(&process, reinterpret_cast<const char *>(libpath.c_str())).value();
 	std::cout << "[*] Loaded Module into Remote Process: " << loaded_mod.to_string() << std::endl;
 
 	separator();

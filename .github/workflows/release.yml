@@ -59,9 +59,6 @@ jobs:
               {"target": "x86_64-windows-msvc-shared-md", "runs-on": "windows-2019"}
               {"target": "x86_64-windows-msvc-static-md", "runs-on": "windows-2019"}
               {"target": "x86_64-windows-msvc-static-mt", "runs-on": "windows-2019"}
-              {"target": "aarch64-windows-msvc-shared-md", "runs-on": "windows-2022"}
-              {"target": "aarch64-windows-msvc-static-md", "runs-on": "windows-2022"}
-              {"target": "aarch64-windows-msvc-static-mt", "runs-on": "windows-2022"}
               '
           )
           printf 'Matrix: %s\n' "$(jq <<< "$matrix")"

@@ -181,7 +181,7 @@ namespace libmem {
 	public:
 		Vmt(Address *vtable);
 		~Vmt();
-		bool Hook(size_t from_fn_index, Address to);
+		void Hook(size_t from_fn_index, Address to);
 		void Unhook(size_t fn_index);
 		Address GetOriginal(size_t fn_index);
 		template <typename T>

@@ -205,9 +205,9 @@ Vmt::~Vmt()
 	delete this->vmt;
 }
 
-bool Vmt::Hook(size_t from_fn_index, Address to)
+void Vmt::Hook(size_t from_fn_index, Address to)
 {
-	return LM_VmtHook(this->vmt, from_fn_index, to) == LM_TRUE;
+	LM_VmtHook(this->vmt, from_fn_index, to);
 }
 
 void Vmt::Unhook(size_t fn_index)

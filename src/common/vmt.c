@@ -76,8 +76,12 @@ LM_VmtHook(lm_vmt_t    *vmt,
 {
 	lm_vmt_entry_t *entry;
 	lm_vmt_entry_t *head;
+	lm_prot_t old_prot;
 
 	if (!vmt)
+		return LM_FALSE;
+
+	if (LM_ProtMemory((lm_address_t)&vmt->vtable[from_fn_index], sizeof(vmt->vtable[0]), LM_PROT_XRW, &old_prot) != LM_TRUE)
 		return LM_FALSE;
 
 	/* Check if the function has been hooked before; if not, create a new hook entry */
@@ -96,27 +100,33 @@ LM_VmtHook(lm_vmt_t    *vmt,
 	}
 
 	vmt->vtable[from_fn_index] = to;
+	LM_ProtMemory((lm_address_t)&vmt->vtable[from_fn_index], sizeof(vmt->vtable[0]), old_prot, LM_NULLPTR);
 
 	return LM_TRUE;
 }
 
 /********************************/
 
-LM_API lm_void_t LM_CALL
+LM_API lm_bool_t LM_CALL
 LM_VmtUnhook(lm_vmt_t *vmt,
 	     lm_size_t fn_index)
 {
 	lm_vmt_entry_t *entry;
 	lm_vmt_entry_t *prev;
+	lm_prot_t old_prot;
 
 	if (!vmt)
-		return;
+		return LM_FALSE;
+
+	if (LM_ProtMemory((lm_address_t)&vmt->vtable[fn_index], sizeof(vmt->vtable[0]), LM_PROT_XRW, &old_prot) != LM_TRUE)
+		return LM_FALSE;
 
 	entry = vmt_search(vmt, fn_index);
 	if (!entry)
-		return;
+		return LM_TRUE;
 
 	vmt->vtable[fn_index] = entry->orig_func;
+	LM_ProtMemory((lm_address_t)&vmt->vtable[fn_index], sizeof(vmt->vtable[0]), old_prot, LM_NULLPTR);
 
 	prev = vmt_search_prev(vmt, entry);
 	if (prev) {
@@ -126,6 +136,8 @@ LM_VmtUnhook(lm_vmt_t *vmt,
 	}
 
 	free(entry);
+
+	return LM_TRUE;
 }
 
 /********************************/
@@ -153,14 +165,20 @@ LM_VmtReset(lm_vmt_t *vmt)
 {
 	lm_vmt_entry_t *entry;
 	lm_vmt_entry_t *next;
+	lm_prot_t old_prot;
 
 	if (!vmt)
 		return;
 
+	/* TODO: Optimize VMT memory protection (not necessary to protect for each entry) */
 	for (entry = vmt->hkentries; entry != LM_NULLPTR; entry = next) {
+		LM_ProtMemory((lm_address_t)&vmt->vtable[entry->index], sizeof(vmt->vtable[0]), LM_PROT_XRW, &old_prot);
+
 		vmt->vtable[entry->index] = entry->orig_func;
 		next = entry->next;
 		free(entry);
+
+		LM_ProtMemory((lm_address_t)&vmt->vtable[entry->index], sizeof(vmt->vtable[0]), old_prot, LM_NULLPTR);
 	}
 
 	vmt->hkentries = LM_NULLPTR;

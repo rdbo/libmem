@@ -214,7 +214,7 @@ typedef struct lm_vmt_entry_t {
 	struct lm_vmt_entry_t *next;
 } lm_vmt_entry_t;
 
-typedef struct {
+typedef struct lm_vmt_t {
 	lm_address_t   *vtable;
 	lm_vmt_entry_t *hkentries;
 } lm_vmt_t;
@@ -1388,7 +1388,7 @@ LM_VmtHook(lm_vmt_t    *vmt,
  * @param vmt The VMT manager.
  * @param fn_index The index of the VMT function to unhook.
  */
-LM_API lm_void_t LM_CALL
+LM_API lm_bool_t LM_CALL
 LM_VmtUnhook(lm_vmt_t *vmt,
 	     lm_size_t fn_index);
 

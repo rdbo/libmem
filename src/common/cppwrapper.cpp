@@ -191,6 +191,40 @@ std::string Inst::to_string() const
 	return ss.str();
 }
 
+// --------------------------------
+
+Vmt::Vmt(Address *vtable)
+{
+	this->vmt = new lm_vmt_t{};
+	LM_VmtNew(vtable, this->vmt);
+}
+
+Vmt::~Vmt()
+{
+	LM_VmtFree(this->vmt);
+	delete this->vmt;
+}
+
+bool Vmt::Hook(size_t from_fn_index, Address to)
+{
+	return LM_VmtHook(this->vmt, from_fn_index, to) == LM_TRUE;
+}
+
+void Vmt::Unhook(size_t fn_index)
+{
+	LM_VmtUnhook(this->vmt, fn_index);
+}
+
+Address Vmt::GetOriginal(size_t fn_index)
+{
+	return LM_VmtGetOriginal(this->vmt, fn_index);
+}
+
+void Vmt::Reset()
+{
+	LM_VmtReset(this->vmt);
+}
+
 /*******************************/
 
 // Process API

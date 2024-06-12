@@ -10,6 +10,7 @@ using LM::Address;
 using LM::Prot;
 using LM::Arch;
 using LM::Trampoline;
+using LM::Vmt;
 
 #ifdef _MSC_VER
 	/* MSVC */
@@ -32,6 +33,24 @@ struct PointerBase {
 
 	int player_health;
 };
+
+class SomeClass {
+private:
+	std::string name;
+public:
+	SomeClass(const char *name): name(name) {}
+	virtual void print_name()
+	{
+		std::cout << "My name is: " << this->name << std::endl;
+	}
+};
+
+static Vmt *vmt;
+void hk_print_name(void *thisptr)
+{
+	std::cout << "print_name hooked!" << std::endl;
+	std::cout << "Calling original 'print_name'...";
+}
 
 void my_function(int number, char letter)
 {
@@ -405,6 +424,20 @@ LM_API_EXPORT int main()
 
 	LM::UnhookCode(&process, wait_message_addr, remote_tramp);
 	std::cout << "[*] Unhooked Remote Function" << std::endl;
+
+	separator();
+
+	SomeClass some_obj = SomeClass("Tester");
+	some_obj.print_name();
+	std::cout << std::endl;
+
+	vmt = new Vmt(*reinterpret_cast<Address **>(&some_obj));
+	vmt->Hook(0, reinterpret_cast<Address>(hk_print_name));
+	some_obj.print_name();
+	delete vmt;
+	std::cout << std::endl;
+
+	some_obj.print_name();
 
 	separator();
 

@@ -35,6 +35,7 @@ struct lm_module_t;
 struct lm_symbol_t;
 struct lm_segment_t;
 struct lm_inst_t;
+struct lm_vmt_t;
 
 namespace libmem {
 	// Re-declarations
@@ -175,12 +176,19 @@ namespace libmem {
 	};
 
 	class Vmt {
+	private:
+		struct lm_vmt_t *vmt;
 	public:
-		Vmt(Address vtable);
+		Vmt(Address *vtable);
 		~Vmt();
 		bool Hook(size_t from_fn_index, Address to);
 		void Unhook(size_t fn_index);
 		Address GetOriginal(size_t fn_index);
+		template <typename T>
+		inline T GetOriginal(size_t fn_index)
+		{
+			return reinterpret_cast<T>(this->GetOriginal(fn_index));
+		}
 		void Reset();
 	};
 

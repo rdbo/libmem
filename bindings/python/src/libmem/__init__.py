@@ -205,29 +205,29 @@ deep_pointer_ex.__doc__ = _libmem.LM_DeepPointerEx.__doc__
 
 # --------------------------------
 
-def DataScan(data: bytearray, address: int, scansize: int) -> Optional[int]:
+def data_scan(data: bytearray, address: int, scansize: int) -> Optional[int]:
     return _libmem.LM_DataScan(data, address, scansize)
-DataScan.__doc__ = _libmem.LM_DataScan.__doc__
+data_scan.__doc__ = _libmem.LM_DataScan.__doc__
 
-def DataScanEx(process: Process, data: bytearray, address: int, scansize: int) -> Optional[int]:
+def data_scan_ex(process: Process, data: bytearray, address: int, scansize: int) -> Optional[int]:
     return _libmem.LM_DataScanEx(process, data, address, scansize)
-DataScanEx.__doc__ = _libmem.LM_DataScanEx.__doc__
+data_scan_ex.__doc__ = _libmem.LM_DataScanEx.__doc__
 
-def PatternScan(pattern: bytearray, mask: str, address: int, scansize: int) -> Optional[int]:
+def pattern_scan(pattern: bytearray, mask: str, address: int, scansize: int) -> Optional[int]:
     return _libmem.LM_PatternScan(pattern, mask, address, scansize)
-PatternScan.__doc__ = _libmem.LM_PatternScan.__doc__
+pattern_scan.__doc__ = _libmem.LM_PatternScan.__doc__
 
-def PatternScanEx(process: Process, pattern: bytearray, mask: str, address: int, scansize: int) -> Optional[int]:
+def pattern_scan_ex(process: Process, pattern: bytearray, mask: str, address: int, scansize: int) -> Optional[int]:
     return _libmem.LM_PatternScanEx(process, pattern, mask, address, scansize)
-PatternScanEx.__doc__ = _libmem.LM_PatternScanEx.__doc__
+pattern_scan_ex.__doc__ = _libmem.LM_PatternScanEx.__doc__
 
-def SigScan(signature: str, address: int, scansize: int) -> Optional[int]:
+def sig_scan(signature: str, address: int, scansize: int) -> Optional[int]:
     return _libmem.LM_SigScan(signature, address, scansize)
-SigScan.__doc__ = _libmem.LM_SigScan.__doc__
+sig_scan.__doc__ = _libmem.LM_SigScan.__doc__
 
-def SigScanEx(process: Process, signature: str, address: int, scansize: int) -> Optional[int]:
+def sig_scan_ex(process: Process, signature: str, address: int, scansize: int) -> Optional[int]:
     return _libmem.LM_SigScanEx(process, signature, address, scansize)
-SigScanEx.__doc__ = _libmem.LM_SigScanEx.__doc__
+sig_scan_ex.__doc__ = _libmem.LM_SigScanEx.__doc__
 
 # --------------------------------
 

@@ -12,219 +12,219 @@ print("[*] libmem-py tests")
 separator()
 
 print("[*] Process Enumeration")
-print("\n".join([str(proc) for proc in LM_EnumProcesses()[:5]]))
+print("\n".join([str(proc) for proc in enum_processes()[:5]]))
 
 separator()
 
 print("[*] Current Process")
-curproc = LM_GetProcess()
+curproc = get_process()
 print(curproc)
 
 separator()
 
 print("[*] Parent Process of Current Process")
-parent_proc = LM_GetProcessEx(curproc.ppid)
+parent_proc = get_process_ex(curproc.ppid)
 print(parent_proc)
 
 separator()
 
 print("[*] Remote Process")
-proc = LM_FindProcess("target")
+proc = find_process("target")
 print(proc)
 
 separator()
 
-print(f"[*] Is Remote Process Alive? {'Yes' if LM_IsProcessAlive(proc) else 'No'}")
+print(f"[*] Is Remote Process Alive? {'Yes' if is_process_alive(proc) else 'No'}")
 
 separator()
 
-print(f"[*] System Bits: {LM_GetSystemBits()}")
+print(f"[*] System Bits: {get_system_bits()}")
 
 separator()
 
-print(f"[*] Current Process Threads: {LM_EnumThreads()}")
+print(f"[*] Current Process Threads: {enum_threads()}")
 
 separator()
 
-print(f"[*] Remote Process Threads: {LM_EnumThreadsEx(proc)}")
+print(f"[*] Remote Process Threads: {enum_threads_ex(proc)}")
 
 separator()
 
-thread = LM_GetThread()
+thread = get_thread()
 print(f"[*] Current Thread: {thread}")
 
 separator()
 
-print(f"[*] Remote Thread: {LM_GetThreadEx(proc)}")
+print(f"[*] Remote Thread: {get_thread_ex(proc)}")
 
 separator()
 
-print(f"[*] Process From Thread '{thread}': {LM_GetThreadProcess(thread)}")
+print(f"[*] Process From Thread '{thread}': {get_thread_process(thread)}")
 
 separator()
 
 print("[*] Module Enumeration - Current Process")
-print("\n".join([str(mod) for mod in LM_EnumModules()[:5]]))
+print("\n".join([str(mod) for mod in enum_modules()[:5]]))
 
 separator()
 
 print("[*] Module Enumeration - Remote Process")
-print("\n".join([str(mod) for mod in LM_EnumModulesEx(proc)[:5]]))
+print("\n".join([str(mod) for mod in enum_modules_ex(proc)[:5]]))
 
 separator()
 
-curmod = LM_FindModule(curproc.path)
+curmod = find_module(curproc.path)
 print(f"[*] Current Process Module: {curmod}")
 
 separator()
 
-mod = LM_FindModuleEx(proc, proc.path)
+mod = find_module_ex(proc, proc.path)
 print(f"[*] Remote Process Module: {mod}")
 
 separator()
 
 libpath = f"{os.path.dirname(os.path.realpath(__file__))}{os.sep}{os.pardir}{os.sep}{os.pardir}{os.sep}{os.pardir}{os.sep}build{os.sep}tests{os.sep}libtest.so"
 print(f"[*] Loadable Library Path: {libpath}")
-cur_loaded_mod = LM_LoadModule(libpath)
+cur_loaded_mod = load_module(libpath)
 print()
 print(f"[*] Loaded Module into Current Process: {cur_loaded_mod}")
 
-LM_UnloadModule(cur_loaded_mod)
+unload_module(cur_loaded_mod)
 print("[*] Unloaded Module from Current Process")
 
 separator()
 
-loaded_mod = LM_LoadModuleEx(proc, libpath)
+loaded_mod = load_module_ex(proc, libpath)
 print("[*] Loaded Module into Target Process: ", loaded_mod)
 
-LM_UnloadModuleEx(proc, loaded_mod)
+unload_module_ex(proc, loaded_mod)
 print("[*] Unloaded Module from Target Process")
 
 separator()
 
 print("[*] Symbol Enumeration")
 
-print("\n".join([str(sym) for sym in LM_EnumSymbols(curmod)[:5]]))
+print("\n".join([str(sym) for sym in enum_symbols(curmod)[:5]]))
 
 separator()
 
 print("[*] Symbol Address Search")
 
-symaddr = LM_FindSymbolAddress(curmod, "Py_BytesMain")
+symaddr = find_symbol_address(curmod, "Py_BytesMain")
 if symaddr == None:
-    symaddr = LM_FindSymbolAddress(curmod, "_start_c")
+    symaddr = find_symbol_address(curmod, "_start_c")
 print(f"[*] Py_BytesMain Address: {hex(symaddr)}")
 
 separator()
 
-mangled = "_Z15_LM_EnumSymbolsP11lm_module_tPFiP11lm_symbol_tPvES3_"
-demangled = LM_DemangleSymbol(mangled)
+mangled = "_Z15_enum_symbolsP11module_tPFiP11symbol_tPvES3_"
+demangled = demangle_symbol(mangled)
 print(f"[*] Demangled '{mangled}': {demangled}")
 
 separator()
 
 print("[*] Demangled Symbol Enumeration")
 
-print("\n".join([str(sym) for sym in LM_EnumSymbolsDemangled(curmod)[:5]]))
+print("\n".join([str(sym) for sym in enum_symbols_demangled(curmod)[:5]]))
 
 separator()
 
-symaddr = LM_FindSymbolAddressDemangled(curmod, "Py_BytesMain")
+symaddr = find_symbol_address_demangled(curmod, "Py_BytesMain")
 if symaddr == None:
-    symaddr = LM_FindSymbolAddressDemangled(curmod, "_start_c")
+    symaddr = find_symbol_address_demangled(curmod, "_start_c")
 print(f"[*] Py_BytesMain Address (Demangled): {hex(symaddr)}")
 
 separator()
 
 print("[*] Segment Enumeration - Current Process")
-print("\n".join([str(segment) for segment in LM_EnumSegments()[:5]]))
+print("\n".join([str(segment) for segment in enum_segments()[:5]]))
 
 separator()
 
 print("[*] Segment Enumeration - Remote Process")
-print("\n".join([str(segment) for segment in LM_EnumSegmentsEx(proc)[:5]]))
+print("\n".join([str(segment) for segment in enum_segments_ex(proc)[:5]]))
 
 separator()
 
-print(f"[*] Segment From Current Process Module: {LM_FindSegment(symaddr)}")
+print(f"[*] Segment From Current Process Module: {find_segment(symaddr)}")
 
 separator()
 
-print(f"[*] Segment From Remote Process Module: {LM_FindSegmentEx(proc, mod.base)}")
+print(f"[*] Segment From Remote Process Module: {find_segment_ex(proc, mod.base)}")
 
 separator()
 
 val = ctypes.c_int(10)
 val_addr = ctypes.addressof(val)
-rdbuf = LM_ReadMemory(val_addr, ctypes.sizeof(val))
+rdbuf = read_memory(val_addr, ctypes.sizeof(val))
 rdval = struct.unpack("@i", rdbuf)[0]
 print(f"[*] Read Integer From '{hex(val_addr)}': {str(rdval)}")
 
 separator()
 
-# TODO: Add tests for 'LM_ReadMemoryEx'
+# TODO: Add tests for 'read_memory_ex'
 # separator()
 
-LM_WriteMemory(val_addr, bytearray(b"\x39\x05\x00\x00"))
-print(f"[*] Integer After LM_WriteMemory: {val}")
+write_memory(val_addr, bytearray(b"\x39\x05\x00\x00"))
+print(f"[*] Integer After write_memory: {val}")
 
 separator()
 
-# TODO: Add tests for 'LM_WriteMemoryEx'
+# TODO: Add tests for 'write_memory_ex'
 # separator()
 
-LM_SetMemory(val_addr, b"\x00", ctypes.sizeof(val))
-print(f"[*] Integer After LM_SetMemory: {val}")
+set_memory(val_addr, b"\x00", ctypes.sizeof(val))
+print(f"[*] Integer After set_memory: {val}")
 
 separator()
 
-# TODO: Add tests for 'LM_SetMemoryEx'
+# TODO: Add tests for 'set_memory_ex'
 # separator()
 
 print("[*] Changing Memory Protection - Current Process")
-old_prot = LM_ProtMemory(curmod.base, 0x1000, LM_PROT_XRW)
+old_prot = prot_memory(curmod.base, 0x1000, PROT_XRW)
 print(f"[*] Old Memory Protection ({hex(curmod.base)}): {old_prot}")
-segment = LM_FindSegment(curmod.base)
+segment = find_segment(curmod.base)
 print(f"[*] Current Memory Protection ({hex(curmod.base)}): {segment.prot}")
 
 separator()
 
 print("[*] Changing Memory Protection - Remote Process")
-old_prot = LM_ProtMemoryEx(proc, mod.base, 0x1000, LM_PROT_XRW)
+old_prot = prot_memory_ex(proc, mod.base, 0x1000, PROT_XRW)
 print(f"[*] Old Memory Protection ({hex(mod.base)}): {old_prot}")
-segment = LM_FindSegmentEx(proc, mod.base)
+segment = find_segment_ex(proc, mod.base)
 print(f"[*] Current Memory Protection ({hex(mod.base)}): {segment.prot}")
 
 separator()
 
 alloc_size = 0x1000
-alloc = LM_AllocMemory(alloc_size, LM_PROT_XRW)
+alloc = alloc_memory(alloc_size, PROT_XRW)
 print(f"[*] Allocated Memory - Current Process: {hex(alloc)}")
-LM_FreeMemory(alloc, alloc_size)
+free_memory(alloc, alloc_size)
 
 separator()
 
-alloc = LM_AllocMemoryEx(proc, alloc_size, LM_PROT_XRW)
+alloc = alloc_memory_ex(proc, alloc_size, PROT_XRW)
 print(f"[*] Allocated Memory - Remote Process: {hex(alloc)}")
-LM_FreeMemoryEx(proc, alloc, alloc_size)
+free_memory_ex(proc, alloc, alloc_size)
 
 separator()
 
-addr0 = LM_AllocMemory(4, LM_PROT_RW)
-addr1 = LM_AllocMemory(8, LM_PROT_RW)
-addr2 = LM_AllocMemory(8, LM_PROT_RW)
+addr0 = alloc_memory(4, PROT_RW)
+addr1 = alloc_memory(8, PROT_RW)
+addr2 = alloc_memory(8, PROT_RW)
 
-LM_WriteMemory(addr0, bytearray(b"\x10\x00\x00\x00"))
-LM_WriteMemory(addr1, bytearray(addr0.to_bytes(8, byteorder="little")))
-LM_WriteMemory(addr2, bytearray(addr1.to_bytes(8, byteorder="little")))
+write_memory(addr0, bytearray(b"\x10\x00\x00\x00"))
+write_memory(addr1, bytearray(addr0.to_bytes(8, byteorder="little")))
+write_memory(addr2, bytearray(addr1.to_bytes(8, byteorder="little")))
 print("[*] Address 0: ", hex(addr0))
 print("[*] Address 1: ", hex(addr1))
 print("[*] Address 2: ", hex(addr2))
 
-deep_ptr = LM_DeepPointer(addr2, [0, 0])
+deep_ptr = deep_pointer(addr2, [0, 0])
 print("[*] Deep Pointer result: " + hex(deep_ptr))
 
-value = int.from_bytes(LM_ReadMemory(deep_ptr, 4), byteorder="little")
+value = int.from_bytes(read_memory(deep_ptr, 4), byteorder="little")
 print("[*] Deep Pointer value: " + hex(value))
 
 separator()
@@ -234,79 +234,79 @@ buf_addr = ctypes.addressof(buf)
 print(f"[*] Scanning For Buffer At: {hex(buf_addr)}")
 scan_addr = buf_addr - 0x10
 scan_size = 0x100
-data_scan = LM_DataScan(bytearray(buf.value), scan_addr, scan_size)
+data_scan = data_scan(bytearray(buf.value), scan_addr, scan_size)
 print(f"[*] Data Scan Match: {hex(data_scan)}")
-pattern_scan = LM_PatternScan(bytearray(buf.value), "xxxx?x?x?x", scan_addr, scan_size)
+pattern_scan = pattern_scan(bytearray(buf.value), "xxxx?x?x?x", scan_addr, scan_size)
 print(f"[*] Pattern Scan Match: {hex(pattern_scan)}")
-sig_scan = LM_SigScan("10 20 30 40 ?? ?? 70 80 ?? A0", scan_addr, scan_size)
+sig_scan = sig_scan("10 20 30 40 ?? ?? 70 80 ?? A0", scan_addr, scan_size)
 print(f"[*] Signature Scan Match: {hex(sig_scan)}")
 
 separator()
 
-scan_alloc = LM_AllocMemoryEx(proc, 1024, LM_PROT_RW)
+scan_alloc = alloc_memory_ex(proc, 1024, PROT_RW)
 print(f"[*] External Scan Alloc: {hex(scan_alloc)}")
 buf_addr = scan_alloc + 0x10
-LM_WriteMemoryEx(proc, buf_addr, bytearray(buf.value))
+write_memory_ex(proc, buf_addr, bytearray(buf.value))
 print(f"[*] Externally Scanning For Buffer At: {hex(buf_addr)}")
 scan_addr = buf_addr - 0x10
 scan_size = 0x100
-data_scan = LM_DataScanEx(proc, bytearray(buf.value), scan_addr, scan_size)
+data_scan = data_scan_ex(proc, bytearray(buf.value), scan_addr, scan_size)
 print(f"[*] Data Scan Match: {hex(data_scan)}")
-pattern_scan = LM_PatternScanEx(proc, bytearray(buf.value), "xxxx?x?x?x", scan_addr, scan_size)
+pattern_scan = pattern_scan_ex(proc, bytearray(buf.value), "xxxx?x?x?x", scan_addr, scan_size)
 print(f"[*] Pattern Scan Match: {hex(pattern_scan)}")
-sig_scan = LM_SigScanEx(proc, "10 20 30 40 ?? ?? 70 80 ?? A0", scan_addr, scan_size)
+sig_scan = sig_scan_ex(proc, "10 20 30 40 ?? ?? 70 80 ?? A0", scan_addr, scan_size)
 print(f"[*] Signature Scan Match: {hex(sig_scan)}")
 
-# TODO: Add tests for 'LM_HookCode' and 'LM_UnhookCode'
+# TODO: Add tests for 'hook_code' and 'unhook_code'
 # separator()
 
-wait_message_addr = LM_FindSymbolAddress(mod, "wait_message")
-hk_wait_message_addr = LM_FindSymbolAddress(mod, "hk_wait_message")
-trampoline = LM_HookCodeEx(proc, wait_message_addr, hk_wait_message_addr)
+wait_message_addr = find_symbol_address(mod, "wait_message")
+hk_wait_message_addr = find_symbol_address(mod, "hk_wait_message")
+trampoline = hook_code_ex(proc, wait_message_addr, hk_wait_message_addr)
 print(f"[*] External Hook Trampoline: {trampoline}")
 time.sleep(3)
-LM_UnhookCodeEx(proc, wait_message_addr, trampoline)
+unhook_code_ex(proc, wait_message_addr, trampoline)
 print("[*] Unhooked External Function")
 
 separator()
 
 print("[*] Assemblying Instruction")
-inst = LM_Assemble("mov eax, ebx")
+inst = assemble("mov eax, ebx")
 print(inst)
 
 separator()
 
 print("[*] Assemblying Instructions")
-insts = LM_AssembleEx("push ebp; mov ebp, esp; mov esp, ebp; pop ebp; ret", LM_ARCH_X86, 0)
+insts = assemble_ex("push ebp; mov ebp, esp; mov esp, ebp; pop ebp; ret", ARCH_X86, 0)
 print(", ".join([hex(b) for b in insts]))
 
 separator()
 
 print("[*] Disassembly of PyBytesMain Instruction")
-inst = LM_Disassemble(symaddr)
+inst = disassemble(symaddr)
 print(inst)
 
 separator()
 
 print("[*] Disassembly of PyBytesMain Instructions")
-insts = LM_DisassembleEx(symaddr, LM_ARCH_X86, 0x100, 5, symaddr)
+insts = disassemble_ex(symaddr, ARCH_X86, 0x100, 5, symaddr)
 print("\n".join([str(inst) for inst in insts]))
 
 separator()
 
 minlength = 0x5
-aligned_length = LM_CodeLength(symaddr, minlength)
+aligned_length = code_length(symaddr, minlength)
 print(f"[*] Aligned Length for Minimum '{minlength}' Bytes is '{aligned_length}' Bytes (PyBytesMain)")
 
 separator()
 
-# TODO: Add tests for 'LM_CodeLengthEx'
+# TODO: Add tests for 'code_length_ex'
 # separator()
 
 print("[*] VMT Hooking")
 
 vtable = ctypes.c_ulonglong(0x1020304050607080)
-vmt = lm_vmt_t(ctypes.addressof(vtable))
+vmt = Vmt(ctypes.addressof(vtable))
 print(f"[*] Original Function: {hex(vmt.get_original(0))}")
 vmt.hook(0, 0xdeadbeef)
 print(f"[*] VMT After Hook: {hex(vtable.value)}")

@@ -993,7 +993,7 @@ extern "C" {
 }
 extern "C" {
     #[doc = " The function unhooks the VMT function at index `fn_index` in the VMT managed by `vmt`,\n restoring the original function.\n\n @param vmt The VMT manager.\n @param fn_index The index of the VMT function to unhook."]
-    pub fn LM_VmtUnhook(vmt: *mut lm_vmt_t, fn_index: lm_size_t);
+    pub fn LM_VmtUnhook(vmt: *mut lm_vmt_t, fn_index: lm_size_t) -> lm_bool_t;
 }
 extern "C" {
     #[doc = " The function returns the original VMT function at index `fn_index` in the VMT managed by `vmt`.\n If the function has not been hooked before, it returns the function pointer at that index in the VMT array.\n\n @param vmt The VMT manager.\n @param fn_index The index of the VMT function to query.\n\n @return The original VMT function at index `fn_index` in the VMT managed by `vmt`."]

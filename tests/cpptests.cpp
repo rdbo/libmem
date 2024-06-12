@@ -49,7 +49,9 @@ static Vmt *vmt;
 void hk_print_name(void *thisptr)
 {
 	std::cout << "print_name hooked!" << std::endl;
-	std::cout << "Calling original 'print_name'...";
+	std::cout << "Calling original 'print_name'..." << std::endl;
+
+	vmt->GetOriginal<void (*)(void *)>(0)(thisptr);
 }
 
 void my_function(int number, char letter)
@@ -427,17 +429,18 @@ LM_API_EXPORT int main()
 
 	separator();
 
-	SomeClass some_obj = SomeClass("Tester");
-	some_obj.print_name();
+	SomeClass *some_obj = new SomeClass("Tester");
+	some_obj->print_name();
 	std::cout << std::endl;
 
-	vmt = new Vmt(*reinterpret_cast<Address **>(&some_obj));
+	vmt = new Vmt(*reinterpret_cast<Address **>(some_obj));
 	vmt->Hook(0, reinterpret_cast<Address>(hk_print_name));
-	some_obj.print_name();
+	some_obj->print_name();
 	delete vmt;
 	std::cout << std::endl;
 
-	some_obj.print_name();
+	some_obj->print_name();
+	delete some_obj;
 
 	separator();
 

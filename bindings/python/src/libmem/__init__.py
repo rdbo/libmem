@@ -21,187 +21,187 @@ from libmem._libmem import lm_process_t as Process, lm_thread_t as Thread, lm_mo
 from libmem._libmem import LM_PROT_X as PROT_X, LM_PROT_R as PROT_R, LM_PROT_W as PROT_W, LM_PROT_XR as PROT_XR, LM_PROT_XW as PROT_XW, LM_PROT_RW as PROT_RW, LM_PROT_XRW as PROT_XRW, LM_ARCH_ARMV7 as ARCH_ARMV7, LM_ARCH_ARMV8 as ARCH_ARMV8, LM_ARCH_THUMBV7 as ARCH_THUMBV7, LM_ARCH_THUMBV8 as ARCH_THUMBV8, LM_ARCH_ARMV7EB as ARCH_ARMV7EB, LM_ARCH_THUMBV7EB as ARCH_THUMBV7EB, LM_ARCH_ARMV8EB as ARCH_ARMV8EB, LM_ARCH_THUMBV8EB as ARCH_THUMBV8EB, LM_ARCH_AARCH64 as ARCH_AARCH64, LM_ARCH_MIPS as ARCH_MIPS, LM_ARCH_MIPS64 as ARCH_MIPS64, LM_ARCH_MIPSEL as ARCH_MIPSEL, LM_ARCH_MIPSEL64 as ARCH_MIPSEL64, LM_ARCH_X86_16 as ARCH_X86_16, LM_ARCH_X86 as ARCH_X86, LM_ARCH_X64 as ARCH_X64, LM_ARCH_PPC32 as ARCH_PPC32, LM_ARCH_PPC64 as ARCH_PPC64, LM_ARCH_PPC64LE as ARCH_PPC64LE, LM_ARCH_SPARC as ARCH_SPARC, LM_ARCH_SPARC64 as ARCH_SPARC64, LM_ARCH_SPARCEL as ARCH_SPARCEL, LM_ARCH_SYSZ as ARCH_SYSZ, LM_ARCH_MAX as ARCH_MAX
 from typing import Optional, List, Tuple
 
-def EnumProcesses() -> Optional[List[Process]]:
+def enum_processes() -> Optional[List[Process]]:
     return _libmem.LM_EnumProcesses()
-EnumProcesses.__doc__ = _libmem.LM_EnumProcesses.__doc__
+enum_processes.__doc__ = _libmem.LM_EnumProcesses.__doc__
 
-def GetProcess() -> Optional[Process]:
+def get_process() -> Optional[Process]:
     return _libmem.LM_GetProcess()
-GetProcess.__doc__ = _libmem.LM_GetProcess.__doc__
+get_process.__doc__ = _libmem.LM_GetProcess.__doc__
 
-def GetProcessEx(pid: int) -> Optional[Process]:
+def get_process_ex(pid: int) -> Optional[Process]:
     return _libmem.LM_GetProcessEx(pid)
-GetProcessEx.__doc__ = _libmem.LM_GetProcessEx.__doc__
+get_process_ex.__doc__ = _libmem.LM_GetProcessEx.__doc__
 
-def FindProcess(process_name: str) -> Optional[Process]:
+def find_process(process_name: str) -> Optional[Process]:
     return _libmem.LM_FindProcess(process_name)
-FindProcess.__doc__ = _libmem.LM_FindProcess.__doc__
+find_process.__doc__ = _libmem.LM_FindProcess.__doc__
 
-def IsProcessAlive(process: Process) -> bool:
+def is_process_alive(process: Process) -> bool:
     return _libmem.LM_IsProcessAlive(process)
-IsProcessAlive.__doc__ = _libmem.LM_IsProcessAlive.__doc__
+is_process_alive.__doc__ = _libmem.LM_IsProcessAlive.__doc__
 
-def GetBits() -> int:
+def get_bits() -> int:
     return _libmem.LM_GetBits()
-GetBits.__doc__ = _libmem.LM_GetBits.__doc__
+get_bits.__doc__ = _libmem.LM_GetBits.__doc__
 
-def GetSystemBits() -> int:
+def get_system_bits() -> int:
     return _libmem.LM_GetSystemBits()
-GetSystemBits.__doc__ = _libmem.LM_GetSystemBits.__doc__
+get_system_bits.__doc__ = _libmem.LM_GetSystemBits.__doc__
 
 # --------------------------------
 
-def EnumThreads() -> Optional[List[Thread]]:
+def enum_threads() -> Optional[List[Thread]]:
     return _libmem.LM_EnumThreads()
-EnumThreads.__doc__ = _libmem.LM_EnumThreads.__doc__
+enum_threads.__doc__ = _libmem.LM_EnumThreads.__doc__
 
-def EnumThreadsEx(process: Process) -> Optional[List[Thread]]:
+def enum_threads_ex(process: Process) -> Optional[List[Thread]]:
     return _libmem.LM_EnumThreadsEx(process)
-EnumThreadsEx.__doc__ = _libmem.LM_EnumThreadsEx.__doc__
+enum_threads_ex.__doc__ = _libmem.LM_EnumThreadsEx.__doc__
 
-def GetThread() -> Optional[Thread]:
+def get_thread() -> Optional[Thread]:
     return _libmem.LM_GetThread()
-GetThread.__doc__ = _libmem.LM_GetThread.__doc__
+get_thread.__doc__ = _libmem.LM_GetThread.__doc__
 
-def GetThreadEx(process: Process) -> Optional[Thread]:
+def get_thread_ex(process: Process) -> Optional[Thread]:
     return _libmem.LM_GetThreadEx(process)
-GetThreadEx.__doc__ = _libmem.LM_GetThreadEx.__doc__
+get_thread_ex.__doc__ = _libmem.LM_GetThreadEx.__doc__
 
-def GetThreadProcess(thread: Thread) -> Optional[Process]:
+def get_thread_process(thread: Thread) -> Optional[Process]:
     return _libmem.LM_GetThreadProcess(thread)
-GetThreadProcess.__doc__ = _libmem.LM_GetThreadProcess.__doc__
+get_thread_process.__doc__ = _libmem.LM_GetThreadProcess.__doc__
 
 # --------------------------------
 
-def EnumModules() -> Optional[List[Module]]:
+def enum_modules() -> Optional[List[Module]]:
     return _libmem.LM_EnumModules()
-EnumModules.__doc__ = _libmem.LM_EnumModules.__doc__
+enum_modules.__doc__ = _libmem.LM_EnumModules.__doc__
 
-def EnumModulesEx(process: Process) -> Optional[List[Module]]:
+def enum_modules_ex(process: Process) -> Optional[List[Module]]:
     return _libmem.LM_EnumModulesEx(process)
-EnumModulesEx.__doc__ = _libmem.LM_EnumModulesEx.__doc__
+enum_modules_ex.__doc__ = _libmem.LM_EnumModulesEx.__doc__
 
-def FindModule(module_name: str) -> Optional[Module]:
+def find_module(module_name: str) -> Optional[Module]:
     return _libmem.LM_FindModule(module_name)
-FindModule.__doc__ = _libmem.LM_FindModule.__doc__
+find_module.__doc__ = _libmem.LM_FindModule.__doc__
 
-def FindModuleEx(process: Process, module_name: str) -> Optional[Module]:
+def find_module_ex(process: Process, module_name: str) -> Optional[Module]:
     return _libmem.LM_FindModuleEx(process, module_name)
-FindModuleEx.__doc__ = _libmem.LM_FindModuleEx.__doc__
+find_module_ex.__doc__ = _libmem.LM_FindModuleEx.__doc__
 
-def LoadModule(module_path: str) -> Optional[Module]:
+def load_module(module_path: str) -> Optional[Module]:
     return _libmem.LM_LoadModule(module_path)
-LoadModule.__doc__ = _libmem.LM_LoadModule.__doc__
+load_module.__doc__ = _libmem.LM_LoadModule.__doc__
 
-def LoadModuleEx(process: Process, module_path: str) -> Optional[Module]:
+def load_module_ex(process: Process, module_path: str) -> Optional[Module]:
     return _libmem.LM_LoadModuleEx(process, module_path)
-LoadModuleEx.__doc__ = _libmem.LM_LoadModuleEx.__doc__
+load_module_ex.__doc__ = _libmem.LM_LoadModuleEx.__doc__
 
-def UnloadModule(module: Module) -> bool:
+def unload_module(module: Module) -> bool:
     return _libmem.LM_UnloadModule(module)
-UnloadModule.__doc__ = _libmem.LM_UnloadModule.__doc__
+unload_module.__doc__ = _libmem.LM_UnloadModule.__doc__
 
-def UnloadModuleEx(process: Process, module: Module) -> bool:
+def unload_module_ex(process: Process, module: Module) -> bool:
     return _libmem.LM_UnloadModuleEx(process, module)
-UnloadModuleEx.__doc__ = _libmem.LM_UnloadModuleEx.__doc__
+unload_module_ex.__doc__ = _libmem.LM_UnloadModuleEx.__doc__
 
 # --------------------------------
 
-def EnumSymbols(module: Module) -> Optional[List[Symbol]]:
+def enum_symbols(module: Module) -> Optional[List[Symbol]]:
     return _libmem.LM_EnumSymbols(module)
-EnumSymbols.__doc__ = _libmem.LM_EnumSymbols.__doc__
+enum_symbols.__doc__ = _libmem.LM_EnumSymbols.__doc__
 
-def FindSymbolAddress(module: Module, symbol_name: str) -> Optional[int]:
+def find_symbol_address(module: Module, symbol_name: str) -> Optional[int]:
     return _libmem.LM_FindSymbolAddress(module, symbol_name)
-FindSymbolAddress.__doc__ = _libmem.LM_FindSymbolAddress.__doc__
+find_symbol_address.__doc__ = _libmem.LM_FindSymbolAddress.__doc__
 
-def DemangleSymbol(mangled_symbol: str) -> Optional[str]:
+def demangle_symbol(mangled_symbol: str) -> Optional[str]:
     return _libmem.LM_DemangleSymbol(mangled_symbol)
-DemangleSymbol.__doc__ = _libmem.LM_DemangleSymbol.__doc__
+demangle_symbol.__doc__ = _libmem.LM_DemangleSymbol.__doc__
 
-def EnumSymbolsDemangled(module: Module) -> Optional[List[Symbol]]:
+def enum_symbols_demangled(module: Module) -> Optional[List[Symbol]]:
     return _libmem.LM_EnumSymbolsDemangled(module)
-EnumSymbolsDemangled.__doc__ = _libmem.LM_EnumSymbolsDemangled.__doc__
+enum_symbols_demangled.__doc__ = _libmem.LM_EnumSymbolsDemangled.__doc__
 
-def FindSymbolAddressDemangled(module: Module, demangled_symbol_name: str):
+def find_symbol_address_demangled(module: Module, demangled_symbol_name: str):
     return _libmem.LM_FindSymbolAddressDemangled(module, demangled_symbol_name)
-FindSymbolAddressDemangled.__doc__ = _libmem.LM_FindSymbolAddressDemangled.__doc__
+find_symbol_address_demangled.__doc__ = _libmem.LM_FindSymbolAddressDemangled.__doc__
 
 # --------------------------------
 
-def EnumSegments() -> Optional[List[Segment]]:
+def enum_segments() -> Optional[List[Segment]]:
     return _libmem.LM_EnumSegments()
-EnumSegments.__doc__ = _libmem.LM_EnumSegments.__doc__
+enum_segments.__doc__ = _libmem.LM_EnumSegments.__doc__
 
-def EnumSegmentsEx(process: Process) -> Optional[List[Segment]]:
+def enum_segments_ex(process: Process) -> Optional[List[Segment]]:
     return _libmem.LM_EnumSegmentsEx(process)
-EnumSegmentsEx.__doc__ = _libmem.LM_EnumSegmentsEx.__doc__
+enum_segments_ex.__doc__ = _libmem.LM_EnumSegmentsEx.__doc__
 
-def FindSegment(address: int) -> Optional[Segment]:
+def find_segment(address: int) -> Optional[Segment]:
     return _libmem.LM_FindSegment(address)
-FindSegment.__doc__ = _libmem.LM_FindSegment.__doc__
+find_segment.__doc__ = _libmem.LM_FindSegment.__doc__
 
-def FindSegmentEx(process: Process, address: int) -> Optional[Segment]:
+def find_segment_ex(process: Process, address: int) -> Optional[Segment]:
     return _libmem.LM_FindSegmentEx(process, address)
-FindSegmentEx.__doc__ = _libmem.LM_FindSegmentEx.__doc__
+find_segment_ex.__doc__ = _libmem.LM_FindSegmentEx.__doc__
 
 # --------------------------------
 
-def ReadMemory(src: int, size: int) -> Optional[bytearray]:
+def read_memory(src: int, size: int) -> Optional[bytearray]:
     return _libmem.LM_ReadMemory(src, size)
-ReadMemory.__doc__ = _libmem.LM_ReadMemory.__doc__
+read_memory.__doc__ = _libmem.LM_ReadMemory.__doc__
 
-def ReadMemoryEx(process: Process, source: int, size: int) -> Optional[bytearray]:
-    return _libmem.LM_ReadMemoryEx(process, src, size)
-ReadMemoryEx.__doc__ = _libmem.LM_ReadMemoryEx.__doc__
+def read_memory_ex(process: Process, source: int, size: int) -> Optional[bytearray]:
+    return _libmem.LM_ReadMemoryEx(process, source, size)
+read_memory_ex.__doc__ = _libmem.LM_ReadMemoryEx.__doc__
 
-def WriteMemory(dest: int, source: bytearray) -> bool:
-    return _libmem.LM_WriteMemory
-WriteMemory.__doc__ = _libmem.LM_WriteMemory.__doc__
+def write_memory(dest: int, source: bytearray) -> bool:
+    return _libmem.LM_WriteMemory(dest, source)
+write_memory.__doc__ = _libmem.LM_WriteMemory.__doc__
 
-def WriteMemoryEx(process: Process, dest: int, source: bytearray) -> bool:
+def write_memory_ex(process: Process, dest: int, source: bytearray) -> bool:
     return _libmem.LM_WriteMemoryEx(process, dest, source)
-WriteMemoryEx.__doc__ = _libmem.LM_WriteMemoryEx.__doc__
+write_memory_ex.__doc__ = _libmem.LM_WriteMemoryEx.__doc__
 
-def SetMemory(dest: int, byte: bytes, size: int) -> bool:
+def set_memory(dest: int, byte: bytes, size: int) -> bool:
     return _libmem.LM_SetMemory(dest, byte, size)
-SetMemory.__doc__ = _libmem.LM_SetMemory.__doc__
+set_memory.__doc__ = _libmem.LM_SetMemory.__doc__
 
-def SetMemoryEx(process: Process, dest: int, byte: bytes, size: int) -> bool:
+def set_memory_ex(process: Process, dest: int, byte: bytes, size: int) -> bool:
     return _libmem.LM_SetMemoryEx(process, dest, byte, size)
-SetMemoryEx.__doc__ = _libmem.LM_SetMemoryEx.__doc__
+set_memory_ex.__doc__ = _libmem.LM_SetMemoryEx.__doc__
 
-def ProtMemory(address: int, size: int, prot: Prot) -> Optional[Prot]:
+def prot_memory(address: int, size: int, prot: Prot) -> Optional[Prot]:
     return _libmem.LM_ProtMemory(address, size, prot)
-ProtMemory.__doc__ = _libmem.LM_ProtMemory.__doc__
+prot_memory.__doc__ = _libmem.LM_ProtMemory.__doc__
 
-def ProtMemoryEx(process: Process, address: int, size: int, prot: Prot) -> Optional[Prot]:
+def prot_memory_ex(process: Process, address: int, size: int, prot: Prot) -> Optional[Prot]:
     return _libmem.LM_ProtMemoryEx(process, address, size, prot)
-ProtMemoryEx.__doc__ = _libmem.LM_ProtMemoryEx.__doc__
+prot_memory_ex.__doc__ = _libmem.LM_ProtMemoryEx.__doc__
 
-def AllocMemory(size: int, prot: Prot) -> Optional[int]:
+def alloc_memory(size: int, prot: Prot) -> Optional[int]:
     return _libmem.LM_AllocMemory(size, prot)
-AllocMemory.__doc__ = _libmem.LM_AllocMemory.__doc__
+alloc_memory.__doc__ = _libmem.LM_AllocMemory.__doc__
 
-def AllocMemoryEx(process: Process, size: int, prot: Prot) -> Optional[int]:
+def alloc_memory_ex(process: Process, size: int, prot: Prot) -> Optional[int]:
     return _libmem.LM_AllocMemoryEx(process, size, prot)
-AllocMemoryEx.__doc__ = _libmem.LM_AllocMemoryEx.__doc__
+alloc_memory_ex.__doc__ = _libmem.LM_AllocMemoryEx.__doc__
 
-def FreeMemory(address: int, size: int) -> bool:
+def free_memory(address: int, size: int) -> bool:
     return _libmem.LM_FreeMemory(address, size)
-FreeMemory.__doc__ = _libmem.LM_FreeMemory.__doc__
+free_memory.__doc__ = _libmem.LM_FreeMemory.__doc__
 
-def FreeMemoryEx(process: Process, address: int, size: int) -> bool:
+def free_memory_ex(process: Process, address: int, size: int) -> bool:
     return _libmem.LM_FreeMemoryEx(process, address, size)
-FreeMemoryEx.__doc__ = _libmem.LM_FreeMemoryEx.__doc__
+free_memory_ex.__doc__ = _libmem.LM_FreeMemoryEx.__doc__
 
-def DeepPointer(base: int, offsets: List[int]) -> Optional[int]:
+def deep_pointer(base: int, offsets: List[int]) -> Optional[int]:
     return _libmem.LM_DeepPointer(base, offsets)
-DeepPointer.__doc__ = _libmem.LM_DeepPointer.__doc__
+deep_pointer.__doc__ = _libmem.LM_DeepPointer.__doc__
 
-def DeepPointerEx(process: Process, base: int, offsets: List[int]) -> Optional[int]:
+def deep_pointer_ex(process: Process, base: int, offsets: List[int]) -> Optional[int]:
     return _libmem.LM_DeepPointerEx(process, base, offsets)
-DeepPointerEx.__doc__ = _libmem.LM_DeepPointerEx.__doc__
+deep_pointer_ex.__doc__ = _libmem.LM_DeepPointerEx.__doc__
 
 # --------------------------------
 
@@ -231,49 +231,49 @@ SigScanEx.__doc__ = _libmem.LM_SigScanEx.__doc__
 
 # --------------------------------
 
-def HookCode(from_address: int, to_address: int) -> Optional[Tuple[int, int]]:
+def hook_code(from_address: int, to_address: int) -> Optional[Tuple[int, int]]:
     return _libmem.LM_HookCode(from_address, to_address)
-HookCode.__doc__ = _libmem.LM_HookCode.__doc__
+hook_code.__doc__ = _libmem.LM_HookCode.__doc__
 
-def HookCodeEx(process: Process, from_address: int, to_address: int) -> Optional[Tuple[int, int]]:
+def hook_code_ex(process: Process, from_address: int, to_address: int) -> Optional[Tuple[int, int]]:
     return _libmem.LM_HookCodeEx(process, from_address, to_address)
-HookCodeEx.__doc__ = _libmem.LM_HookCodeEx.__doc__
+hook_code_ex.__doc__ = _libmem.LM_HookCodeEx.__doc__
 
-def UnhookCode(from_address: int, trampoline: Tuple[int, int]) -> bool:
+def unhook_code(from_address: int, trampoline: Tuple[int, int]) -> bool:
     return _libmem.LM_UnhookCode(from_address, trampoline)
-UnhookCode.__doc__ = _libmem.LM_UnhookCode.__doc__
+unhook_code.__doc__ = _libmem.LM_UnhookCode.__doc__
 
-def UnhookCodeEx(process: Process, from_address: int, trampoline: Tuple[int, int]) -> bool:
+def unhook_code_ex(process: Process, from_address: int, trampoline: Tuple[int, int]) -> bool:
     return _libmem.LM_UnhookCodeEx(process, from_address, trampoline)
-UnhookCodeEx.__doc__ = _libmem.LM_UnhookCodeEx.__doc__
+unhook_code_ex.__doc__ = _libmem.LM_UnhookCodeEx.__doc__
 
 # --------------------------------
 
-def GetArchitecture() -> Arch:
+def get_architecture() -> Arch:
     return _libmem.LM_GetArchitecture()
-GetArchitecture.__doc__ = _libmem.LM_GetArchitecture.__doc__
+get_architecture.__doc__ = _libmem.LM_GetArchitecture.__doc__
 
-def Assemble(code: str) -> Optional[Inst]:
+def assemble(code: str) -> Optional[Inst]:
     return _libmem.LM_Assemble(code)
-Assemble.__doc__ = _libmem.LM_Assemble.__doc__
+assemble.__doc__ = _libmem.LM_Assemble.__doc__
 
-def AssembleEx(code: str, arch: Arch, runtime_address: int) -> Optional[bytearray]:
+def assemble_ex(code: str, arch: Arch, runtime_address: int) -> Optional[bytearray]:
     return _libmem.LM_AssembleEx(code, arch, runtime_address)
-AssembleEx.__doc__ = _libmem.LM_AssembleEx.__doc__
+assemble_ex.__doc__ = _libmem.LM_AssembleEx.__doc__
 
-def Disassemble(machine_code: int) -> Optional[Inst]:
+def disassemble(machine_code: int) -> Optional[Inst]:
     return _libmem.LM_Disassemble(machine_code)
-Disassemble.__doc__ = _libmem.LM_Disassemble.__doc__
+disassemble.__doc__ = _libmem.LM_Disassemble.__doc__
 
-def DisassembleEx(machine_code: int, arch: Arch, max_size: int, instructions_count: int, runtime_address: int) -> Optional[List[Inst]]:
+def disassemble_ex(machine_code: int, arch: Arch, max_size: int, instructions_count: int, runtime_address: int) -> Optional[List[Inst]]:
     return _libmem.LM_DisassembleEx(machine_code, arch, max_size, instructions_count, runtime_address)
-DisassembleEx.__doc__ = _libmem.LM_DisassembleEx.__doc__
+disassemble_ex.__doc__ = _libmem.LM_DisassembleEx.__doc__
 
-def CodeLength(machine_code: int, min_length: int) -> Optional[int]:
+def code_length(machine_code: int, min_length: int) -> Optional[int]:
     return _libmem.LM_CodeLength(machine_code, min_length)
-CodeLength.__doc__ = _libmem.LM_CodeLength.__doc__
+code_length.__doc__ = _libmem.LM_CodeLength.__doc__
 
-def CodeLengthEx(process: Process, machine_code: int, min_length: int) -> Optional[int]:
+def code_length_ex(process: Process, machine_code: int, min_length: int) -> Optional[int]:
     return _libmem.LM_CodeLengthEx(process, machine_code, min_length)
-CodeLengthEx.__doc__ = _libmem.LM_CodeLengthEx.__doc__
+code_length_ex.__doc__ = _libmem.LM_CodeLengthEx.__doc__
 

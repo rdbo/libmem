@@ -42,6 +42,39 @@ Read `LICENSE` for more information
 ***And much more!***
 
 ## Examples
+### Modern C++
+```
+/* C++20 or higher */
+#include <libmem/libmem.hpp>
+#include <iostream>
+
+using namespace libmem;
+
+int main()
+{
+	Address disas_addr = (Address)main;
+
+	// Disassemble function 'main' until a 'ret' is found
+	for (;;) {
+		auto inst = Disassemble(disas_addr).value();
+		std::cout << inst.to_string() << std::endl;
+		if (inst.mnemonic == "ret")
+			break;
+		disas_addr += inst.bytes.size();
+	}
+
+	return 0;
+}
+
+/*
+Output:
+0x55b1a3259275: push rbp -> [ 55 ]
+0x55b1a3259276: mov rbp, rsp -> [ 48 89 e5 ]
+...
+0x55b1a325941a: leave  -> [ c9 ]
+0x55b1a325941b: ret  -> [ c3 ]
+*/
+```
 
 ### C/C++
 ```c

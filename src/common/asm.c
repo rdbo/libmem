@@ -209,7 +209,7 @@ LM_Disassemble(lm_address_t machine_code,
 	if (!machine_code || !instruction_out)
 		return LM_FALSE;
 
-	if (LM_DisassembleEx(machine_code, LM_GetArchitecture(), LM_INST_MAX, 1, 0, &insts) == 0)
+	if (LM_DisassembleEx(machine_code, LM_GetArchitecture(), LM_INST_MAX, 1, machine_code, &insts) == 0)
 		return LM_FALSE;
 
 	*instruction_out = *insts;

@@ -43,7 +43,7 @@ Read `LICENSE` for more information
 
 ## Examples
 ### Modern C++
-```
+```cpp
 /* C++20 or higher */
 #include <libmem/libmem.hpp>
 #include <iostream>

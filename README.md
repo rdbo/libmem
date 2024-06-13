@@ -107,15 +107,15 @@ fn main() {
 from libmem import *
 import time
 
-process = LM_FindProcess("game.exe")
-game_mod = LM_FindModuleEx(process, process.name)
+process = find_process("game.exe")
+game_mod = find_module_ex(process, process.name)
 
 # Resolve a Cheat Engine pointer scan
-health_pointer = LM_DeepPointerEx(game_mod.base + 0xdeadbeef, [0xA0, 0x04, 0x10, 0xF0, 0x0])
+health_pointer = deep_pointer_ex(process, game_mod.base + 0xdeadbeef, [0xA0, 0x04, 0x10, 0xF0, 0x0])
 
 # Set player health to 1337 forever
 while True:
-    LM_WriteMemoryEx(process, health_pointer, bytearray(int(1337).to_bytes(4)))
+    write_memory_ex(process, health_pointer, bytearray(int(1337).to_bytes(4)))
     time.sleep(0.2)
 ```
 

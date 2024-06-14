@@ -52,7 +52,7 @@ using namespace libmem;
 
 int main()
 {
-	Address disas_addr = (Address)main;
+	Address disas_addr = reinterpret_cast<Address>(main);
 
 	// Disassemble function 'main' until a 'ret' is found
 	for (;;) {

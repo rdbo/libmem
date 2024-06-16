@@ -165,6 +165,9 @@ fn main() {
     println!("[*] Read memory from number: {}", read_number);
     unsafe { write_memory::<i32>(number_addr, &1337) };
     println!("[*] Wrote new memory on number: {}", number);
+    let buf: Vec<u8> = vec![0x64, 0, 0, 0];
+    unsafe { write_memory(number_addr, buf.as_slice()) };
+    println!("[*] Wrote buffer to number: {}", number);
     unsafe { set_memory(number_addr, 0, std::mem::size_of_val(&number)) };
     println!("[*] Zeroed number memory: {}", number);
 
@@ -226,7 +229,13 @@ fn main() {
     write_memory_ex(&target_process, target_alloc, &1337).unwrap();
     println!("[*] Wrote number to the target process memory");
 
-    set_memory_ex(&target_process, target_alloc + 4, 0xFF, 4).unwrap();
+    write_memory_ex(
+        &target_process,
+        target_alloc + 4,
+        &[0x39u8, 0x05, 0xFF, 0xFF],
+    );
+
+    set_memory_ex(&target_process, target_alloc + 6, 0x0, 2).unwrap();
     println!("[*] Set bytes on the target process memory");
 
     let (written_number, set_number) =

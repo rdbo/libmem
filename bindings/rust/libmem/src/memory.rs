@@ -47,8 +47,8 @@ pub fn read_memory_ex<T>(process: &Process, source: Address) -> Option<T> {
 /// let value_to_write: u32 = 1337;
 /// write_memory(0xdeadbeef, &value_to_write);
 /// ```
-pub unsafe fn write_memory<T>(dest: Address, value: &T) {
-    let size = mem::size_of::<T>();
+pub unsafe fn write_memory<T: ?Sized>(dest: Address, value: &T) {
+    let size = mem::size_of_val(value);
     unsafe {
         // This function can't actually fail, no need for extra checking.
         // If it fails, the program will crash anyways.
@@ -62,9 +62,9 @@ pub unsafe fn write_memory<T>(dest: Address, value: &T) {
 /// let value_to_write: u32 = 1337;
 /// write_memory_ex(&process, 0xdeadbeef, &value_to_write);
 /// ```
-pub fn write_memory_ex<T>(process: &Process, dest: Address, value: &T) -> Option<()> {
+pub fn write_memory_ex<T: ?Sized>(process: &Process, dest: Address, value: &T) -> Option<()> {
     let raw_process: lm_process_t = process.to_owned().into();
-    let size = mem::size_of::<T>();
+    let size = mem::size_of_val(value);
     let result = unsafe {
         libmem_sys::LM_WriteMemoryEx(
             &raw_process as *const lm_process_t,

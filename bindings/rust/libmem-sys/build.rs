@@ -51,7 +51,7 @@ fn download_and_resolve_libmem() {
             download_url
         ));
 
-        if !StatusCode::is_success(&req.status()) {
+        if !req.status().is_success() {
             panic!(
                 "Request to download URL failed with code '{}': {}",
                 req.status(),

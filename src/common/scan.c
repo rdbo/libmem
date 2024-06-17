@@ -23,6 +23,7 @@
 #include <libmem/libmem.h>
 #include <memory.h>
 #include <assert.h>
+#include <string.h>
 
 LM_API lm_address_t LM_CALL
 LM_DataScan(lm_bytearray_t data,

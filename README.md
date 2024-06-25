@@ -317,7 +317,7 @@ All:
 - libmath (used in keystone)
 
 Windows:  
-- Windows SDK (-luser32, -lpsapi, -lntdll) 
+- Windows SDK (user32.lib, psapi.lib, ntdll.lib, shell32.lib)
 
 Linux/Android:  
 - libdl (-ldl)

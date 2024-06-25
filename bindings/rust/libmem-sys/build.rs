@@ -105,7 +105,7 @@ fn main() {
     // Resolve link dependencies
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let deps = if target_os == "windows" {
-        vec!["user32", "psapi", "ntdll"]
+        vec!["user32", "psapi", "ntdll", "shell32"]
     } else if target_os == "linux" {
         vec!["dl", "m", "stdc++"]
     } else if target_os == "freebsd" {

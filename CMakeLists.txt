@@ -127,6 +127,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN
 		user32
 		psapi
 		ntdll
+  		shell32
 	)
 	target_compile_definitions(libmem PUBLIC alloca=_alloca)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)

@@ -134,7 +134,11 @@ LM_LoadModuleEx(const lm_process_t *process,
 	WaitForSingleObject(hthread, INFINITE);
 	CloseHandle(hthread);
 
-	result = LM_TRUE;
+	if (module_out) {
+		result = LM_FindModuleEx(process, path);
+	} else {
+		result = LM_TRUE;
+	}
 FREE_EXIT:
 	LM_FreeMemoryEx(process, modpath_addr, sizeof(wpath));
 	return result;

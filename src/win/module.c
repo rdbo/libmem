@@ -88,8 +88,14 @@ LM_LoadModule(lm_string_t  path,
 
 	/* TODO: Get library information through the HMODULE returned by LoadLibraryW (should be faster) */
 
-	if (module_out)
-		return LM_FindModule(path, module_out);
+	if (module_out) {
+		lm_char_t *name;
+
+		/* NOTE: We search by name instead of path because the path can be misleading,
+		 *       having for example `..\` and similar */
+		name = strrchr(path, '\\');
+		return LM_FindModule(name, module_out);
+	}
 
 	return LM_TRUE;
 }
@@ -135,7 +141,12 @@ LM_LoadModuleEx(const lm_process_t *process,
 	CloseHandle(hthread);
 
 	if (module_out) {
-		result = LM_FindModuleEx(process, path);
+		lm_char_t *name;
+
+		/* NOTE: We search by name instead of path because the path can be misleading,
+		 *       having for example `..\` and similar */
+		name = strrchr(path, '\\');
+		result = LM_FindModuleEx(process, name, module_out);
 	} else {
 		result = LM_TRUE;
 	}

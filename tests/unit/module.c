@@ -52,6 +52,8 @@ char *test_LM_FindModule(lm_process_t *pcurproc)
 	
 	mu_assert("failed to find current process module", LM_FindModule(pcurproc->name, &mod) == LM_TRUE);
 	mu_assert("found module is invalid", CHECK_MODULE(&mod));
+	printf("<MODNAME: %s> <MODBASE: %p> ", mod.name, (void *)mod.base);
+	fflush(stdout);
 	mu_assert("function attempted to run with bad arguments (invalid name)", LM_FindModule(LM_NULLPTR, &mod) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid modbuf)", LM_FindModule(pcurproc->name, LM_NULLPTR) == LM_FALSE);
 	
@@ -64,6 +66,8 @@ char *test_LM_FindModuleEx(lm_process_t *ptargetproc)
 	
 	mu_assert("failed to find process module", LM_FindModuleEx(ptargetproc, ptargetproc->name, &mod) == LM_TRUE);
 	mu_assert("found module is invalid", CHECK_MODULE(&mod));
+	printf("<MODNAME: %s> <MODBASE: %p> ", mod.name, (void *)mod.base);
+	fflush(stdout);
 	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_FindModuleEx(LM_NULLPTR, ptargetproc->name, &mod) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid name)", LM_FindModuleEx(ptargetproc, LM_NULLPTR, &mod) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid modbuf)", LM_FindModuleEx(ptargetproc, ptargetproc->name, LM_NULLPTR) == LM_FALSE);
@@ -73,8 +77,12 @@ char *test_LM_FindModuleEx(lm_process_t *ptargetproc)
 
 char *test_LM_LoadModule(lm_module_t *pmod)
 {
+	memset(pmod, 0, sizeof(lm_module_t)); /* Prevent the module from having correct values without running the function */
+
 	mu_assert("failed to load module into current process", LM_LoadModule(LIBTEST_PATH, pmod) == LM_TRUE);
 	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));
+	printf("<MODNAME: %s> <MODBASE: %p> ", pmod->name, (void *)pmod->base);
+	fflush(stdout);
 	mu_assert("function attempted to run with bad arguments", LM_LoadModule(LM_NULLPTR, LM_NULLPTR) == LM_FALSE);
 
 	return NULL;
@@ -96,6 +104,8 @@ char *test_LM_LoadModuleEx(struct load_module_args *arg)
 
 	mu_assert("failed to load module into target process", LM_LoadModuleEx(ptargetproc, LIBTEST_PATH, pmod) == LM_TRUE);
 	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));
+	printf("<MODNAME: %s> <MODBASE: %p> ", pmod->name, (void *)pmod->base);
+	fflush(stdout);
 	mu_assert("function attempted to run with bad arguments (invalid proc)", LM_LoadModuleEx(LM_NULLPTR, LIBTEST_PATH, pmod) == LM_FALSE);
 	mu_assert("function attempted to run with bad arguments (invalid path)", LM_LoadModuleEx(ptargetproc, LM_NULLPTR, pmod) == LM_FALSE);
 

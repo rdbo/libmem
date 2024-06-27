@@ -92,6 +92,7 @@ char *test_LM_LoadModuleEx(struct load_module_args *arg)
 {
 	lm_process_t *ptargetproc = arg->ptargetproc;
 	lm_module_t *pmod = arg->pmod;
+	memset(pmod, 0, sizeof(lm_module_t)); /* Prevent the module from having correct values without running the function */
 
 	mu_assert("failed to load module into target process", LM_LoadModuleEx(ptargetproc, LIBTEST_PATH, pmod) == LM_TRUE);
 	mu_assert("loaded module is invalid", CHECK_MODULE(pmod));

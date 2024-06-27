@@ -172,11 +172,11 @@ void test_scan(lm_process_t *ptargetproc)
 LM_API_EXPORT int
 main()
 {
-	lm_process_t current_process;
-	lm_process_t target_process;
-	lm_thread_t  current_thread;
-	lm_thread_t  target_thread;
-	lm_module_t  target_module;
+	lm_process_t current_process = { 0 };
+	lm_process_t target_process = { 0 };
+	lm_thread_t  current_thread = { 0 };
+	lm_thread_t  target_thread = { 0 };
+	lm_module_t  target_module = { 0 };
 	
 	printf("[*] Unit Tests\n");
 	printf("[*] NOTE: Some operations may require root access (or Administrator)\n");

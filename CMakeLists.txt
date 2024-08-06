@@ -97,8 +97,10 @@ set(LIBMEM_DEPS
 
 if (LIBMEM_BUILD_STATIC)
 	add_library(libmem STATIC ${LIBMEM_SRC})
+	target_compile_definitions(libmem PUBLIC LM_STATIC)
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
+	target_compile_definitions(libmem PUBLIC LM_EXPORT)
 endif()
 target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
@@ -115,7 +117,6 @@ if (LIBMEM_BUILD_TESTS)
 endif()
 
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
-target_compile_definitions(libmem PUBLIC LM_EXPORT)
 add_dependencies(libmem
 	capstone-engine
 	keystone-engine

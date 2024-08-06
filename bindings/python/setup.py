@@ -12,7 +12,7 @@ additional_include_dirs = []
 additional_library_dirs = []
 
 def get_version():
-    return "5.0.0"
+    return "5.0.1"
 
 def get_operating_system():
     if sys.platform.find("bsd") != -1:

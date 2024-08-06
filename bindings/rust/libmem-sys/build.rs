@@ -5,7 +5,6 @@ use std::env;
 #[cfg(feature = "fetch")]
 fn download_and_resolve_libmem() {
     use flate2::read::GzDecoder;
-    use reqwest::StatusCode;
     use std::{
         fs::File,
         io::{self, Cursor},

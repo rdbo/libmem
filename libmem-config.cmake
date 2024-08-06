@@ -14,7 +14,7 @@
 #   fetchcontent_makeavailable(libmem-config)
 #   set(CMAKE_PREFIX_PATH "${libmem-config_SOURCE_DIR}" "${CMAKE_PREFIX_PATH}")
 #
-#   set(LIBMEM_DOWNLOAD_VERSION "5.0.0")
+#   set(LIBMEM_DOWNLOAD_VERSION "5.0.1")
 #   find_package(libmem CONFIG REQUIRED)
 #   [...]
 #   target_link_libraries(my-target PRIVATE libmem::libmem)
@@ -32,7 +32,7 @@
 #
 #   LIBMEM_DOWNLOAD_VERSION (required if LIBMEM_ROOT is empty and LIBMEM_DOWNLOAD_URL contains "{{version}}")
 #     libmem version to download, used to construct LIBMEM_DOWNLOAD_URL.
-#     Example: "5.0.0-pre1"
+#     Example: "5.0.1"
 #
 #   LIBMEM_DOWNLOAD_TARGET (optional)
 #     libmem target to download, used to construct LIBMEM_DOWNLOAD_URL.
@@ -72,7 +72,7 @@ endif()
 
 set(LIBMEM_ROOT "" CACHE PATH "Path to the root folder of the pre-built version of libmem (containing include and lib folders, downloaded automatically if empty)")
 set(LIBMEM_DOWNLOAD_URL "https://github.com/rdbo/libmem/releases/download/{{version}}/libmem-{{version}}-{{target}}.tar.gz" CACHE STRING "URL for downloading the archive containing the pre-built version of libmem")
-set(LIBMEM_DOWNLOAD_VERSION "" CACHE STRING "libmem version to download, used to construct LIBMEM_DOWNLOAD_URL (e.g. \"5.0.0-pre1\")")
+set(LIBMEM_DOWNLOAD_VERSION "" CACHE STRING "libmem version to download, used to construct LIBMEM_DOWNLOAD_URL (e.g. \"5.0.1\")")
 set(LIBMEM_DOWNLOAD_TARGET "" CACHE STRING "libmem target to download, used to construct LIBMEM_DOWNLOAD_URL (detected automatically if empty)")
 set(LIBMEM_USE_SHARED_LIBS OFF CACHE BOOL "Whether to use libmem as a shared library (ON) or as a static library (OFF)")
 

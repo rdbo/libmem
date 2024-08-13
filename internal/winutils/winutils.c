@@ -145,8 +145,8 @@ filetime_to_number(FILETIME *filetime)
 
 	/* The filetime struct is not little endian, so we need to
 	 * assign the low and high parts manually */
-	((uint32_t *)&number)[1] = filetime->dwLowDateTime;
-	((uint32_t *)&number)[0] = filetime->dwHighDateTime;
+	((uint32_t*)&number)[1] = filetime->dwHighDateTime;
+	((uint32_t*)&number)[0] = filetime->dwLowDateTime;
 
 	return number;
 }

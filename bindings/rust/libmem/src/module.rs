@@ -28,11 +28,11 @@ impl From<lm_module_t> for Module {
             size: raw_module.size,
             path: unsafe {
                 let bytes = CStr::from_ptr(path_ptr).to_bytes();
-                String::from_utf8_lossy(bytes).to_owned()
+                String::from_utf8_lossy(bytes).to_string().to_owned()
             },
             name: unsafe {
                 let bytes = CStr::from_ptr(name_ptr).to_bytes();
-                String::from_utf8_lossy(bytes).to_owned()
+                String::from_utf8_lossy(bytes).to_string().to_owned()
             },
         }
     }

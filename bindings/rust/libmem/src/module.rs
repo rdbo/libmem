@@ -26,8 +26,14 @@ impl From<lm_module_t> for Module {
             base: raw_module.base,
             end: raw_module.end,
             size: raw_module.size,
-            path: unsafe { CStr::from_ptr(path_ptr).to_str().unwrap().to_owned() },
-            name: unsafe { CStr::from_ptr(name_ptr).to_str().unwrap().to_owned() },
+            path: unsafe {
+                let bytes = CStr::from_ptr(path_ptr).to_bytes();
+                String::from_utf8_lossy(bytes).to_string().to_owned()
+            },
+            name: unsafe {
+                let bytes = CStr::from_ptr(name_ptr).to_bytes();
+                String::from_utf8_lossy(bytes).to_string().to_owned()
+            },
         }
     }
 }

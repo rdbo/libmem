@@ -18,7 +18,11 @@ fn download_and_resolve_libmem() {
     let version = env::var("CARGO_PKG_VERSION").unwrap();
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let os_name = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    let arch = if os_name == "windows" && env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "x86" {
+        "i686".to_string()
+    } else {
+        env::var("CARGO_CFG_TARGET_ARCH").unwrap()
+    };
     let target_env = if target_os == "linux" && cfg!(feature = "static") {
         // Always use musl for static linking on Linux
         "musl".to_owned()

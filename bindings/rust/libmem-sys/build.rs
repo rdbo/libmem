@@ -21,7 +21,7 @@ fn download_and_resolve_libmem() {
     let mut arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     
     if arch == "x86" {
-        arch = "i686";
+        arch = "i686".to_string();
     }
     let target_env = if target_os == "linux" && cfg!(feature = "static") {
         // Always use musl for static linking on Linux

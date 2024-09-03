@@ -99,7 +99,7 @@ jobs:
       contents: write # allows the action to create a release
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
       - name: Create release
         uses: ncipollo/release-action@v1
         with:

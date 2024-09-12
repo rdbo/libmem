@@ -133,19 +133,19 @@ libmem_raw_py = Extension(
 )
 
 setup(
-    name="libmem",
-    version=get_version(),
-    description="Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
-    long_description=readme(),
-    long_description_content_type="text/markdown",
-    author="rdbo",
-    url="https://github.com/rdbo/libmem",
+    name = "libmem",
+    version = get_version(),
+    description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
+    long_description = readme(),
+    long_description_content_type = "text/markdown",
+    author = "rdbo",
+    url = "https://github.com/rdbo/libmem",
     project_urls = {
         "Documentation" : "https://github.com/rdbo/libmem/blob/master/docs/DOCS.md",
         "Bug Tracker" : "https://github.com/rdbo/libmem/issues",
         "Discord Server" : "https://discord.com/invite/Qw8jsPD99X"
     },
-    keywords="gamehacking memory process hooking detouring hacking winapi linux freebsd",
+    keywords = "gamehacking memory process hooking detouring hacking winapi linux freebsd",
     license_files = ("LICENSE"),
     package_dir = { "" : "src" },
     packages = find_packages(where="src"),

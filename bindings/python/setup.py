@@ -11,30 +11,29 @@ import tarfile
 additional_include_dirs = []
 additional_library_dirs = []
 
-def get_version():
-    return "5.0.1"
-
 def get_operating_system():
     if sys.platform.find("bsd") != -1:
         return "bsd"
-
     if sys.platform == "win32":
         return "windows"
-
     return sys.platform
 
+
+operating_system = get_operating_system()
+
+def get_version():
+    return "5.0.1"
+
 def readme():
-    f = open("README.md", "r")
-    content = f.read()
-    f.close()
-    return content
+    with open("README.md", "r") as f:
+        return f.read()
 
 def search_installed_libmem():
     libmem_libs = ["liblibmem.so", "liblibmem.a", "libmem.lib", "libmem.dll"]
     lib_dirs = []
-    
+
     var_libdir = sysconfig.get_config_var("LIBDIR")
-    if var_libdir != None:
+    if var_libdir:
         lib_dirs.append(var_libdir)
 
     print(f"Library dirs: {lib_dirs}")
@@ -46,12 +45,16 @@ def search_installed_libmem():
                 return True
 
     print("Unable to find installed libmem")
-
     return False
 
 def download_and_extract_libmem():
     print("Downloading libmem binary release...")
-    cache_dir = "build/libmem-release"
+
+    # Get the directory where the current script (build.py) is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the absolute path for cache_dir relative to the script's directory
+    cache_dir = os.path.join(script_dir, "build", "libmem-release")
     pathlib.Path(cache_dir).mkdir(parents=True, exist_ok=True)
 
     version = get_version()
@@ -68,8 +71,8 @@ def download_and_extract_libmem():
     libmem_archive = f"{libmem_fullname}.tar.gz"
     print(f"Download archive name: {libmem_archive}")
 
-    download_url=f"https://github.com/rdbo/libmem/releases/download/{version}/{libmem_archive}"
-    archive_path=f"{cache_dir}{os.sep}{libmem_archive}"
+    download_url = f"https://github.com/rdbo/libmem/releases/download/{version}/{libmem_archive}"
+    archive_path = os.path.join(cache_dir, libmem_archive)
 
     if os.path.exists(archive_path):
         print("Archive already downloaded, skipping...")
@@ -77,20 +80,18 @@ def download_and_extract_libmem():
         print(f"Fetching libmem archive...")
         urlretrieve(download_url, archive_path)
 
-    extract_dir = f"{cache_dir}{os.sep}{libmem_fullname}"
+    extract_dir = os.path.join(cache_dir, libmem_fullname)
     if os.path.exists(extract_dir):
         print("Archive already extracted, skipping...")
     else:
         print("Extracting archive...")
-        tar = tarfile.open(archive_path, "r:gz")
-        tar.extractall(path=cache_dir)
+        with tarfile.open(archive_path, "r:gz") as tar:
+            tar.extractall(path=cache_dir)
 
-    include_dir = f"{extract_dir}/include"
-    lib_dir = f"{extract_dir}/lib"
-    if operating_system == "windows":
-        lib_dir = f"{lib_dir}/release"
-    additional_include_dirs.append(include_dir)
-    additional_library_dirs.append(lib_dir)
+    additional_include_dirs.append(os.path.join(extract_dir, "include"))
+    additional_library_dirs.append(os.path.join(extract_dir, "lib", "release"))
+    print(f"Include directories: {additional_include_dirs}")
+    print(f"Library directories: {additional_library_dirs}")
 
 def platform_libs():
     libs = ["libmem"]
@@ -106,7 +107,7 @@ def platform_libs():
 
     if not search_installed_libmem() and "clean" not in sys.argv:
         download_and_extract_libmem()
-    
+
     return libs
 
 def get_sources(src_dir):
@@ -118,21 +119,58 @@ def get_sources(src_dir):
     return sources
 
 libmem_raw_py = Extension(
-    name = "_libmem",
-    sources = get_sources(f"src{os.sep}libmem{os.sep}_libmem"),
-    libraries = platform_libs(),
-    include_dirs = additional_include_dirs,
-    library_dirs = additional_library_dirs
+    name="_libmem",
+    sources=get_sources(os.path.join("src", "libmem", "_libmem")),
+    libraries=platform_libs(),
+    include_dirs=additional_include_dirs,
+    library_dirs=additional_library_dirs,
+    **({
+        'extra_compile_args': ["/MT"],
+        'extra_link_args': [
+            "/EXPORT:LM_FreeMemory", "/EXPORT:LM_ProtMemory", 
+            "/EXPORT:LM_GetThread", "/EXPORT:LM_ReadMemory", 
+            "/EXPORT:LM_GetThreadEx", "/EXPORT:LM_FindModule", 
+            "/EXPORT:LM_HookCodeEx", "/EXPORT:LM_EnumProcesses", 
+            "/EXPORT:LM_FreeDemangledSymbol", "/EXPORT:LM_VmtNew", 
+            "/EXPORT:LM_UnloadModuleEx", "/EXPORT:LM_EnumThreadsEx", 
+            "/EXPORT:LM_FreeInstructions", "/EXPORT:LM_Disassemble", 
+            "/EXPORT:LM_LoadModuleEx", "/EXPORT:LM_EnumSegments", 
+            "/EXPORT:LM_EnumSymbolsDemangled", "/EXPORT:LM_CodeLengthEx",
+            "/EXPORT:LM_GetSystemBits", "/EXPORT:LM_FindSegment",
+            "/EXPORT:LM_VmtReset", "/EXPORT:LM_VmtUnhook", 
+            "/EXPORT:LM_IsProcessAlive", "/EXPORT:LM_ProtMemoryEx", 
+            "/EXPORT:LM_VmtGetOriginal", "/EXPORT:LM_FindSymbolAddress", 
+            "/EXPORT:LM_FindProcess", "/EXPORT:LM_DeepPointer",  
+            "/EXPORT:LM_WriteMemory", "/EXPORT:LM_SetMemory", 
+            "/EXPORT:LM_DataScanEx", "/EXPORT:LM_VmtFree", 
+            "/EXPORT:LM_SigScan", "/EXPORT:LM_VmtHook",  
+            "/EXPORT:LM_FindSegmentEx", "/EXPORT:LM_DemangleSymbol", 
+            "/EXPORT:LM_ReadMemoryEx", "/EXPORT:LM_PatternScan", 
+            "/EXPORT:LM_GetBits", "/EXPORT:LM_UnhookCode", 
+            "/EXPORT:LM_CodeLength", "/EXPORT:LM_GetThreadProcess", 
+            "/EXPORT:LM_FreeMemoryEx", "/EXPORT:LM_AllocMemory", 
+            "/EXPORT:LM_DisassembleEx", "/EXPORT:LM_LoadModule", 
+            "/EXPORT:LM_GetArchitecture", "/EXPORT:LM_Assemble", 
+            "/EXPORT:LM_SetMemoryEx", "/EXPORT:LM_EnumSymbols", 
+            "/EXPORT:LM_SigScanEx", "/EXPORT:LM_EnumThreads", 
+            "/EXPORT:LM_HookCode", "/EXPORT:LM_UnhookCodeEx", 
+            "/EXPORT:LM_AssembleEx", "/EXPORT:LM_AllocMemoryEx", 
+            "/EXPORT:LM_DeepPointerEx", "/EXPORT:LM_FreePayload", 
+            "/EXPORT:LM_PatternScanEx", "/EXPORT:LM_GetProcessEx", 
+            "/EXPORT:LM_EnumModules", "/EXPORT:LM_GetProcess", 
+            "/EXPORT:LM_UnloadModule"
+        ]
+    } if operating_system == 'windows' else {})
 )
 
 setup(
-    name = "libmem",
-    version = get_version(),
-    description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
-    long_description = readme(),
-    long_description_content_type = "text/markdown",
-    author = "rdbo",
-    url = "https://github.com/rdbo/libmem",
+    name="libmem",
+    version=get_version(),
+    description="Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
+    long_description=readme(),
+    long_description_content_type="text/markdown",
+    author="rdbo",
+    url="https://github.com/rdbo/libmem",
     project_urls = {
         "Documentation" : "https://github.com/rdbo/libmem/blob/master/docs/DOCS.md",
         "Bug Tracker" : "https://github.com/rdbo/libmem/issues",

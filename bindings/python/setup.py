@@ -11,6 +11,7 @@ import tarfile
 additional_include_dirs = []
 additional_library_dirs = []
 
+
 def get_operating_system():
     if sys.platform.find("bsd") != -1:
         return "bsd"
@@ -21,12 +22,15 @@ def get_operating_system():
 
 operating_system = get_operating_system()
 
+
 def get_version():
     return "5.0.1"
+
 
 def readme():
     with open("README.md", "r") as f:
         return f.read()
+
 
 def search_installed_libmem():
     libmem_libs = ["liblibmem.so", "liblibmem.a", "libmem.lib", "libmem.dll"]
@@ -46,6 +50,7 @@ def search_installed_libmem():
 
     print("Unable to find installed libmem")
     return False
+
 
 def download_and_extract_libmem():
     print("Downloading libmem binary release...")
@@ -71,7 +76,9 @@ def download_and_extract_libmem():
     libmem_archive = f"{libmem_fullname}.tar.gz"
     print(f"Download archive name: {libmem_archive}")
 
-    download_url = f"https://github.com/rdbo/libmem/releases/download/{version}/{libmem_archive}"
+    download_url = (
+        f"https://github.com/rdbo/libmem/releases/download/{version}/{libmem_archive}"
+    )
     archive_path = os.path.join(cache_dir, libmem_archive)
 
     if os.path.exists(archive_path):
@@ -89,12 +96,10 @@ def download_and_extract_libmem():
             tar.extractall(path=cache_dir)
 
     additional_include_dirs.append(os.path.join(extract_dir, "include"))
-    if operating_system == "windows":
-        additional_library_dirs.append(os.path.join(extract_dir, "lib", "release"))
-    else:
-        additional_library_dirs.append(os.path.join(extract_dir, "lib"))
+    additional_library_dirs.append(os.path.join(extract_dir, "lib", "release"))
     print(f"Include directories: {additional_include_dirs}")
     print(f"Library directories: {additional_library_dirs}")
+
 
 def platform_libs():
     libs = ["libmem"]
@@ -102,7 +107,7 @@ def platform_libs():
     os_libs = {
         "windows": ["user32", "psapi", "shell32", "ntdll"],
         "linux": ["dl", "stdc++"],
-        "bsd": ["dl", "kvm", "procstat", "elf", "stdc++"]
+        "bsd": ["dl", "kvm", "procstat", "elf", "stdc++"],
     }
 
     if operating_system in os_libs:
@@ -113,6 +118,7 @@ def platform_libs():
 
     return libs
 
+
 def get_sources(src_dir):
     sources = []
     for file in os.listdir(src_dir):
@@ -121,35 +127,38 @@ def get_sources(src_dir):
     print(f"libmem-py sources: {sources}")
     return sources
 
+
 libmem_raw_py = Extension(
     name="_libmem",
     sources=get_sources(os.path.join("src", "libmem", "_libmem")),
     libraries=platform_libs(),
     include_dirs=additional_include_dirs,
     library_dirs=additional_library_dirs,
-    **({
-        'extra_compile_args': ["/MT", "/DLM_EXPORT"]
-    } if operating_system == 'windows' else {})
+    **(
+        {"extra_compile_args": ["/MT", "/DLM_EXPORT"]}
+        if operating_system == "windows"
+        else {}
+    ),
 )
 
 setup(
-    name = "libmem",
-    version = get_version(),
-    description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
-    long_description = readme(),
-    long_description_content_type = "text/markdown",
-    author = "rdbo",
-    url = "https://github.com/rdbo/libmem",
-    project_urls = {
-        "Documentation" : "https://github.com/rdbo/libmem/blob/master/docs/DOCS.md",
-        "Bug Tracker" : "https://github.com/rdbo/libmem/issues",
-        "Discord Server" : "https://discord.com/invite/Qw8jsPD99X"
+    name="libmem",
+    version=get_version(),
+    description="Advanced Game Hacking Library (Windows/Linux/FreeBSD)",
+    long_description=readme(),
+    long_description_content_type="text/markdown",
+    author="rdbo",
+    url="https://github.com/rdbo/libmem",
+    project_urls={
+        "Documentation": "https://github.com/rdbo/libmem/blob/master/docs/DOCS.md",
+        "Bug Tracker": "https://github.com/rdbo/libmem/issues",
+        "Discord Server": "https://discord.com/invite/Qw8jsPD99X",
     },
-    keywords = "gamehacking memory process hooking detouring hacking winapi linux freebsd",
-    license_files = ("LICENSE"),
-    package_dir = { "" : "src" },
-    packages = find_packages(where="src"),
-    python_requires = ">=3.6",
-    ext_package = "libmem",
-    ext_modules = [libmem_raw_py],
+    keywords="gamehacking memory process hooking detouring hacking winapi linux freebsd",
+    license_files=("LICENSE"),
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
+    python_requires=">=3.6",
+    ext_package="libmem",
+    ext_modules=[libmem_raw_py],
 )

@@ -89,7 +89,10 @@ def download_and_extract_libmem():
             tar.extractall(path=cache_dir)
 
     additional_include_dirs.append(os.path.join(extract_dir, "include"))
-    additional_library_dirs.append(os.path.join(extract_dir, "lib", "release" if operating_system == "windows" else ""))
+    if operating_system == "windows":
+        additional_library_dirs.append(os.path.join(extract_dir, "lib", "release"))
+    else:
+        additional_library_dirs.append(os.path.join(extract_dir, "lib"))
     print(f"Include directories: {additional_include_dirs}")
     print(f"Library directories: {additional_library_dirs}")
 
@@ -125,41 +128,7 @@ libmem_raw_py = Extension(
     include_dirs=additional_include_dirs,
     library_dirs=additional_library_dirs,
     **({
-        'extra_compile_args': ["/MT"],
-        'extra_link_args': [
-            "/EXPORT:LM_FreeMemory", "/EXPORT:LM_ProtMemory", 
-            "/EXPORT:LM_GetThread", "/EXPORT:LM_ReadMemory", 
-            "/EXPORT:LM_GetThreadEx", "/EXPORT:LM_FindModule", 
-            "/EXPORT:LM_HookCodeEx", "/EXPORT:LM_EnumProcesses", 
-            "/EXPORT:LM_FreeDemangledSymbol", "/EXPORT:LM_VmtNew", 
-            "/EXPORT:LM_UnloadModuleEx", "/EXPORT:LM_EnumThreadsEx", 
-            "/EXPORT:LM_FreeInstructions", "/EXPORT:LM_Disassemble", 
-            "/EXPORT:LM_LoadModuleEx", "/EXPORT:LM_EnumSegments", 
-            "/EXPORT:LM_EnumSymbolsDemangled", "/EXPORT:LM_CodeLengthEx",
-            "/EXPORT:LM_GetSystemBits", "/EXPORT:LM_FindSegment",
-            "/EXPORT:LM_VmtReset", "/EXPORT:LM_VmtUnhook", 
-            "/EXPORT:LM_IsProcessAlive", "/EXPORT:LM_ProtMemoryEx", 
-            "/EXPORT:LM_VmtGetOriginal", "/EXPORT:LM_FindSymbolAddress", 
-            "/EXPORT:LM_FindProcess", "/EXPORT:LM_DeepPointer",  
-            "/EXPORT:LM_WriteMemory", "/EXPORT:LM_SetMemory", 
-            "/EXPORT:LM_DataScanEx", "/EXPORT:LM_VmtFree", 
-            "/EXPORT:LM_SigScan", "/EXPORT:LM_VmtHook",  
-            "/EXPORT:LM_FindSegmentEx", "/EXPORT:LM_DemangleSymbol", 
-            "/EXPORT:LM_ReadMemoryEx", "/EXPORT:LM_PatternScan", 
-            "/EXPORT:LM_GetBits", "/EXPORT:LM_UnhookCode", 
-            "/EXPORT:LM_CodeLength", "/EXPORT:LM_GetThreadProcess", 
-            "/EXPORT:LM_FreeMemoryEx", "/EXPORT:LM_AllocMemory", 
-            "/EXPORT:LM_DisassembleEx", "/EXPORT:LM_LoadModule", 
-            "/EXPORT:LM_GetArchitecture", "/EXPORT:LM_Assemble", 
-            "/EXPORT:LM_SetMemoryEx", "/EXPORT:LM_EnumSymbols", 
-            "/EXPORT:LM_SigScanEx", "/EXPORT:LM_EnumThreads", 
-            "/EXPORT:LM_HookCode", "/EXPORT:LM_UnhookCodeEx", 
-            "/EXPORT:LM_AssembleEx", "/EXPORT:LM_AllocMemoryEx", 
-            "/EXPORT:LM_DeepPointerEx", "/EXPORT:LM_FreePayload", 
-            "/EXPORT:LM_PatternScanEx", "/EXPORT:LM_GetProcessEx", 
-            "/EXPORT:LM_EnumModules", "/EXPORT:LM_GetProcess", 
-            "/EXPORT:LM_UnloadModule"
-        ]
+        'extra_compile_args': ["/MT", "/DLM_EXPORT"]
     } if operating_system == 'windows' else {})
 )
 

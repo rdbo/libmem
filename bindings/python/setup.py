@@ -89,7 +89,7 @@ def download_and_extract_libmem():
             tar.extractall(path=cache_dir)
 
     additional_include_dirs.append(os.path.join(extract_dir, "include"))
-    additional_library_dirs.append(os.path.join(extract_dir, "lib", "release"))
+    additional_library_dirs.append(os.path.join(extract_dir, "lib", "release" if operating_system == "windows" else ""))
     print(f"Include directories: {additional_include_dirs}")
     print(f"Library directories: {additional_library_dirs}")
 

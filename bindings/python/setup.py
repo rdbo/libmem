@@ -19,6 +19,9 @@ def get_operating_system():
     return sys.platform
 
 operating_system = get_operating_system()
+extension_extra_args = {
+    "extra_compile_args": ["/MT", "/DLM_EXPORT"]
+} if operating_system == "windows" else {}
 
 def get_version():
     return "5.0.1"
@@ -40,6 +43,8 @@ def search_installed_libmem():
         for file in os.listdir(dir):
             if file in libmem_libs:
                 print(f"Found installed libmem: {dir}{os.sep}{file}")
+                if file == "libmem.dll":
+                    extension_extra_args = {}
                 return True
 
     print("Unable to find installed libmem")
@@ -124,11 +129,7 @@ libmem_raw_py = Extension(
     libraries=platform_libs(),
     include_dirs=additional_include_dirs,
     library_dirs=additional_library_dirs,
-    **(
-        {"extra_compile_args": ["/MT", "/DLM_EXPORT"]}
-        if operating_system == "windows"
-        else {}
-    ),
+    **(extension_extra_args),
 )
 
 setup(

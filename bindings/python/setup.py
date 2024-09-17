@@ -11,7 +11,6 @@ import tarfile
 additional_include_dirs = []
 additional_library_dirs = []
 
-
 def get_operating_system():
     if sys.platform.find("bsd") != -1:
         return "bsd"
@@ -19,18 +18,13 @@ def get_operating_system():
         return "windows"
     return sys.platform
 
-
 operating_system = get_operating_system()
-
 
 def get_version():
     return "5.0.1"
 
-
 def readme():
-    with open("README.md", "r") as f:
-        return f.read()
-
+    open("README.md", "r").read()
 
 def search_installed_libmem():
     libmem_libs = ["liblibmem.so", "liblibmem.a", "libmem.lib", "libmem.dll"]
@@ -50,7 +44,6 @@ def search_installed_libmem():
 
     print("Unable to find installed libmem")
     return False
-
 
 def download_and_extract_libmem():
     print("Downloading libmem binary release...")
@@ -100,7 +93,6 @@ def download_and_extract_libmem():
     print(f"Include directories: {additional_include_dirs}")
     print(f"Library directories: {additional_library_dirs}")
 
-
 def platform_libs():
     libs = ["libmem"]
     operating_system = get_operating_system()
@@ -118,7 +110,6 @@ def platform_libs():
 
     return libs
 
-
 def get_sources(src_dir):
     sources = []
     for file in os.listdir(src_dir):
@@ -126,7 +117,6 @@ def get_sources(src_dir):
             sources.append(os.path.join(src_dir, file))
     print(f"libmem-py sources: {sources}")
     return sources
-
 
 libmem_raw_py = Extension(
     name="_libmem",

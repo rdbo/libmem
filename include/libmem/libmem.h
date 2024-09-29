@@ -60,6 +60,13 @@
 #define LM_PATH_MAX (4096) /* Fits up to 1024 4-byte UTF-8 characters */
 #define LM_INST_MAX (16) /* Maximum size of a single instruction */
 
+/* Path separator */
+#ifdef _WIN32
+#	define LM_PATHSEP '\\'
+#else
+#	define LM_PATHSEP '/'
+#endif
+
 /* Helpers */
 #define LM_ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
 #define LM_CHECK_PROT(prot) ((prot & LM_PROT_XRW) == prot)

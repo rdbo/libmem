@@ -27,6 +27,7 @@
 typedef struct {
 	lm_process_t *process_out;
 	lm_string_t   process_name;
+	lm_bool_t     match_path;
 	lm_size_t     len;
 } find_pid_t;
 
@@ -34,13 +35,22 @@ lm_bool_t LM_CALL
 find_process_callback(lm_process_t *process, lm_void_t *arg)
 {
 	find_pid_t *parg = (find_pid_t *)arg;
-	lm_size_t len;
 
 	assert(process && parg);
 
-	len = strlen(process->path);
-	if (len && len >= parg->len) {
+	if (parg->match_path) {
+		lm_size_t len;
+
+		len = strlen(process->path);
+		if (len < parg->len)
+			return LM_TRUE;
+
 		if (!strcmp(&process->path[len - parg->len], parg->process_name)) {
+			*(parg->process_out) = *process;
+			return LM_FALSE;
+		}
+	} else {
+		if (!strcmp(process->name, parg->process_name)) {
 			*(parg->process_out) = *process;
 			return LM_FALSE;
 		}
@@ -62,6 +72,7 @@ LM_FindProcess(lm_string_t   process_name,
 	arg.process_out = process_out;
 	arg.process_out->pid = LM_PID_BAD;
 	arg.process_name = process_name;
+	arg.match_path = strchr(process_name, LM_PATHSEP) ? LM_TRUE : LM_FALSE;
 	arg.len = strlen(arg.process_name);
 
 	LM_EnumProcesses(find_process_callback, (lm_void_t *)&arg);

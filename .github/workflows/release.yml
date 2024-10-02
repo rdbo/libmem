@@ -86,7 +86,7 @@ jobs:
           LIBMEM_BUILD_OUT_DIR: out/libmem-${{ needs.prepare.outputs.artifact-version }}-${{ matrix.target }}
           MSYS: 'winsymlinks:sys' # fix symlink issues when cloning on Windows
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libmem-${{ needs.prepare.outputs.artifact-version }}-${{ matrix.target }}
           path: out/libmem-${{ needs.prepare.outputs.artifact-version }}-${{ matrix.target }}.tar.gz

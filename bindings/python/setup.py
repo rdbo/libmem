@@ -24,7 +24,7 @@ extension_extra_args = {
 } if operating_system == "windows" else {}
 
 def get_version():
-    return "5.0.1"
+    return "5.0.2"
 
 def readme():
     open("README.md", "r").read()

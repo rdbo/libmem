@@ -11,14 +11,42 @@ repository = "https://github.com/rdbo/libmem"
 license = "AGPL-3.0"
 # license-file = "LICENSE"
 keywords = ["gamehacking", "memory", "hooking", "assembler", "disassembler"]
-categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "os::unix-apis"]
+categories = [
+    "os",
+    "os::windows-apis",
+    "os::linux-apis",
+    "os::freebsd-apis",
+    "os::unix-apis",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["fetch"]
+default = [
+    "fetch",
+    "asm",
+    "hook",
+    "memory",
+    "module",
+    "process",
+    "scan",
+    "segment",
+    "symbol",
+    "thread",
+    "vmt",
+]
 static = ["libmem-sys/static"]
 fetch = ["libmem-sys/fetch"]
+asm = []
+hook = []
+memory = []
+module = []
+process = []
+scan = []
+segment = []
+symbol = []
+thread = []
+vmt = []
 
 [dependencies]
 bitflags = "2.5.0"

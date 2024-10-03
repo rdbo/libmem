@@ -20,16 +20,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#[cfg(feature = "asm")]
 pub mod asm;
+#[cfg(feature = "hook")]
 pub mod hook;
+#[cfg(feature = "memory")]
 pub mod memory;
+#[cfg(feature = "module")]
 pub mod module;
+#[cfg(feature = "process")]
 pub mod process;
+#[cfg(feature = "scan")]
 pub mod scan;
+#[cfg(feature = "segment")]
 pub mod segment;
+#[cfg(feature = "symbol")]
 pub mod symbol;
+#[cfg(feature = "thread")]
 pub mod thread;
+#[cfg(feature = "vmt")]
 pub mod vmt;
+
 use std::fmt;
 
 use bitflags::bitflags;
@@ -214,13 +225,23 @@ impl fmt::Display for Bits {
     }
 }
 
+#[cfg(feature = "asm")]
 pub use asm::*;
+#[cfg(feature = "hook")]
 pub use hook::*;
+#[cfg(feature = "memory")]
 pub use memory::*;
+#[cfg(feature = "module")]
 pub use module::*;
+#[cfg(feature = "process")]
 pub use process::*;
+#[cfg(feature = "scan")]
 pub use scan::*;
+#[cfg(feature = "segment")]
 pub use segment::*;
+#[cfg(feature = "symbol")]
 pub use symbol::*;
+#[cfg(feature = "thread")]
 pub use thread::*;
+#[cfg(feature = "vmt")]
 pub use vmt::*;

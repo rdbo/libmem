@@ -12,13 +12,13 @@ fn test_get_process() {
 
 #[test]
 fn test_get_bits() {
-    assert!(get_bits() == (std::mem::size_of::<usize>() * 8));
+    assert!((std::mem::size_of::<usize>() * 8) == get_bits().into());
 }
 
 #[test]
 fn test_get_system_bits() {
     let bits = get_system_bits();
-    assert!(bits == 32 || bits == 64);
+    assert!(bits == Bits::Bits32 || bits == Bits::Bits64);
 }
 
 #[test]

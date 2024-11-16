@@ -97,6 +97,7 @@ set(LIBMEM_DEPS
 
 if (LIBMEM_BUILD_STATIC)
 	add_library(libmem STATIC ${LIBMEM_SRC})
+	target_compile_definitions(libmem PUBLIC LM_STATIC)
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()

@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 
 lm_bool_t
 get_stat_info(lm_pid_t pid, lm_pid_t *ppid_out, lm_time_t *start_time_out)
@@ -37,6 +38,9 @@ get_stat_info(lm_pid_t pid, lm_pid_t *ppid_out, lm_time_t *start_time_out)
 	unsigned long long starttime;
 	char path[PATH_MAX];
 	FILE *stat_file;
+	char stat_buf[512] = { 0 }; /* This buffer is big enough, because the process `comm`
+	                             * is truncated, and other values are relatively small. */
+	char *ptr;
 
 	/* At least one of the 'out' variables must be not NULL,
 	 * otherwise, this function would just be a big no-op */
@@ -52,16 +56,33 @@ get_stat_info(lm_pid_t pid, lm_pid_t *ppid_out, lm_time_t *start_time_out)
 	 * /proc/<pid>/stat contents:
 	 * 
 	 * (1) pid (%d)
-	 * (2) comm (%s)
+	 * (2) comm (%s) - up to 16 chars
 	 * (3) state (%c)
 	 * (4) ppid (%d)
 	 * ... (17 other unused values)
 	 * (22) starttime (%llu)
 	 */
 
+	if (fread(stat_buf, 1, sizeof(stat_buf), stat_file) == 0) {
+		goto CLOSE_EXIT;
+	}
+
+	/*
+	 * NOTE: Processes can have whitespaces and ')' in their 'comm' string of
+	 *       `/proc/<pid>/stat`, which can make parsing annoying. To circumvent
+	 *       that, we will just skip to the last closing parenthese, and skip
+	 *       through whitespaces from there.
+	 *       This means our pointer will be at the end of `comm (2)`, and we
+	 *       can use a scanf-like function to parse the rest
+	 */
+	ptr = strrchr(stat_buf, ')');
+	if (!ptr)
+		goto CLOSE_EXIT;
+	ptr = &ptr[1];
+
 	errno = 0;
-	const char *scanstr = "%*s %*s %*s %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu";
-	if (fscanf(stat_file, scanstr, &ppid, &starttime) == 0 || errno) {
+	if (sscanf(ptr, "%*s %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu",
+	           &ppid, &starttime) == 0 || errno) {
 		goto CLOSE_EXIT;
 	}
 

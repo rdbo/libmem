@@ -192,6 +192,17 @@ target_link_libraries(<YOUR_TARGET_NAME> PRIVATE libmem::libmem)
 ```
 
 ## Installing
+### vcpkg
+**Note**: Support vcpkg for package management
+
+1. Install vcpkg(https://github.com/microsoft/vcpkg.git)
+
+2. Installation package
+
+```
+vcpkg install libmem
+```
+For detailed commands on installing different versions, please refer to Microsoft's official instructions(https://learn.microsoft.com/zh-cn/vcpkg/get_started/overview)
 
 ### Windows
 **Note**: If you download a binary version of libmem in the GitHub releases, you only need to install the Windows SDK. Building is not necessary, just add `libmem/include` to your project's include directories and link it against the binary you downloaded.

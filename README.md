@@ -186,12 +186,26 @@ find_package(libmem CONFIG REQUIRED)
 ```
 
 Use the following to link against libmem (NOTE: it might be necessary to link against other dependencies - go to the `Dependencies` section for more information):
+
 ```cmake
 # Link against libmem
 target_link_libraries(<YOUR_TARGET_NAME> PRIVATE libmem::libmem)
 ```
 
 ## Installing
+
+### vcpkg
+**Note**: Support vcpkg for package management
+
+1. Install vcpkg (https://github.com/microsoft/vcpkg)
+
+2. Run the following command to install the libmem package:
+
+```
+vcpkg install libmem
+```
+
+For detailed commands on installing different versions and more information, please refer to Microsoft's official instructions (https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
 
 ### Windows
 **Note**: If you download a binary version of libmem in the GitHub releases, you only need to install the Windows SDK. Building is not necessary, just add `libmem/include` to your project's include directories and link it against the binary you downloaded.

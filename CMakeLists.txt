@@ -9,6 +9,10 @@ project(libmem
 	ASM
 )
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(targets_export_name libmem-target)
+
 message(STATUS
 	"[*] Platform: ${CMAKE_SYSTEM_NAME}"
 )
@@ -206,10 +210,40 @@ else()
 	set(CMAKE_INSTALL_PREFIX "/usr")
 endif()
 
-install(TARGETS libmem
-	LIBRARY DESTINATION lib)
-
-install(TARGETS libmem
-	RUNTIME DESTINATION lib)
-
 install(DIRECTORY ${LIBMEM_INC}/libmem DESTINATION include)
+
+install(TARGETS libmem
+    EXPORT ${targets_export_name}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    PUBLIC_HEADER DESTINATION include/libmem
+	RUNTIME DESTINATION bin
+)
+
+install(
+    EXPORT ${targets_export_name} 
+    NAMESPACE libmem:: 
+    FILE ${targets_export_name}.cmake
+    DESTINATION share/libmem
+)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/libmem-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/libmem-config.cmake
+    INSTALL_DESTINATION share/libmem
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/libmem-config-version.cmake"
+    VERSION 5.0.2
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/libmem-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/libmem-config-version.cmake 
+    DESTINATION share/libmem
+)

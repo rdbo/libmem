@@ -213,7 +213,10 @@ else()
 	set(CMAKE_INSTALL_PREFIX "/usr")
 endif()
 
-install(DIRECTORY ${LIBMEM_INC}/libmem DESTINATION include)
+install(
+	DIRECTORY ${LIBMEM_INC}/libmem
+	DESTINATION include
+)
 
 install(
 	TARGETS libmem

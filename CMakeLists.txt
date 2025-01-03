@@ -11,7 +11,10 @@ project(libmem
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(targets_export_name libmem-target)
+
+set(LIBMEM_VERSION 5.0.5)
 
 message(STATUS
 	"[*] Platform: ${CMAKE_SYSTEM_NAME}"
@@ -210,9 +213,13 @@ else()
 	set(CMAKE_INSTALL_PREFIX "/usr")
 endif()
 
-install(DIRECTORY ${LIBMEM_INC}/libmem DESTINATION include)
+install(
+	DIRECTORY ${LIBMEM_INC}/libmem
+	DESTINATION include
+)
 
-install(TARGETS libmem
+install(
+	TARGETS libmem
     EXPORT ${targets_export_name}
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -237,7 +244,7 @@ configure_package_config_file(
 
 write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/libmem-config-version.cmake"
-    VERSION 5.0.2
+    VERSION ${LIBMEM_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 

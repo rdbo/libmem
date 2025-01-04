@@ -194,7 +194,7 @@ else()
 	target_link_libraries(libmem ${LIBMEM_DEPS})
 endif()
 
-if(LIBMEM_BUILD_STATIC)
+if(LIBMEM_BUILD_STATIC AND NOT(EXTERNAL_DEPENDENCIES_VCPKG))
 	# Create a bundled static library containing all dependencies (to mimic the shared library behavior)
 	set_target_properties(libmem PROPERTIES OUTPUT_NAME "libmem_partial")
 	set(libmem_bundle_files "$<TARGET_FILE:libmem>")

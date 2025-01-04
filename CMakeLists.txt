@@ -65,22 +65,22 @@ message(STATUS
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+# External dependencies
+set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
+set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
+set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
+set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/src/capstone-engine-build")
+set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
+set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
+set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
+set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
+set(LLVM_INC "${LLVM_DIR}/include")
+
 if(EXTERNAL_DEPENDENCIES_VCPKG)
 	find_package(PkgConfig)
 	pkg_check_modules(keystone REQUIRED keystone)
 	find_package(capstone CONFIG REQUIRED)
 else()
-	# External dependencies
-	set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
-	set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
-	set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
-	set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/src/capstone-engine-build")
-	set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
-	set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
-	set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
-	set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
-	set(LLVM_INC "${LLVM_DIR}/include")
-
 	add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
 	add_library(capstone STATIC IMPORTED)
 	set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -126,12 +126,21 @@ endif()
 
 target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
-include_directories(${PROJECT_SOURCE_DIR}
-	${LIBMEM_INC}
-	${CAPSTONE_INC}
-	${KEYSTONE_INC}
-	${LLVM_INC}
-)
+if(EXTERNAL_DEPENDENCIES_VCPKG)
+	include_directories(
+		${PROJECT_SOURCE_DIR}
+		${LIBMEM_INC}
+		${LLVM_INC}
+	)
+else()
+	include_directories(
+		${PROJECT_SOURCE_DIR}
+		${LIBMEM_INC}
+		${CAPSTONE_INC}
+		${KEYSTONE_INC}
+		${LLVM_INC}
+	)
+endif()
 
 if (LIBMEM_BUILD_TESTS)
 	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
@@ -140,10 +149,14 @@ endif()
 
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
-add_dependencies(libmem
-	capstone-engine
-	keystone-engine
-)
+
+if(NOT(EXTERNAL_DEPENDENCIES_VCPKG))
+	add_dependencies(
+		libmem
+		capstone-engine
+		keystone-engine
+	)
+endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	set(LIBMEM_DEPS

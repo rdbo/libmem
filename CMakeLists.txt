@@ -13,7 +13,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(targets_export_name libmem-target)
-
 set(LIBMEM_VERSION 5.0.5)
 
 message(STATUS
@@ -65,6 +64,7 @@ message(STATUS
 
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
 if(EXTERNAL_DEPENDENCIES_VCPKG)
 	find_package(PkgConfig)
 	pkg_check_modules(keystone REQUIRED keystone)
@@ -88,6 +88,7 @@ else()
 	set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
 	# End of external dependencies
 endif()
+
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
@@ -110,6 +111,7 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
 	endif()
 	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/freebsd/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${LIBMEM_DIR}/src/common/*.cpp" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 endif()
+
 set(LIBMEM_DEPS
 	capstone
 	keystone
@@ -121,6 +123,7 @@ if (LIBMEM_BUILD_STATIC)
 else()
 	add_library(libmem SHARED ${LIBMEM_SRC})
 endif()
+
 target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
 include_directories(${PROJECT_SOURCE_DIR}

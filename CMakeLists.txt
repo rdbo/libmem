@@ -35,6 +35,11 @@ option(LIBMEM_BUILD_STATIC
 	OFF
 )
 
+option(LIBMEM_INSTALL_CONFIG
+	"Install CMake configs"
+	OFF
+)
+
 set(LIBMEM_ARCH ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "Force a specific architecture")
 
 message(STATUS
@@ -227,30 +232,32 @@ install(
 	RUNTIME DESTINATION bin
 )
 
-install(
-    EXPORT ${targets_export_name} 
-    NAMESPACE libmem:: 
-    FILE ${targets_export_name}.cmake
-    DESTINATION share/libmem
-)
+if(LIBMEM_INSTALL_CONFIG)
+	install(
+		EXPORT ${targets_export_name} 
+		NAMESPACE libmem:: 
+		FILE ${targets_export_name}.cmake
+		DESTINATION share/libmem
+	)
 
-include(CMakePackageConfigHelpers)
+	include(CMakePackageConfigHelpers)
 
-configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/libmem-config.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/libmem-config.cmake
-    INSTALL_DESTINATION share/libmem
-)
+	configure_package_config_file(
+		${CMAKE_CURRENT_SOURCE_DIR}/libmem-config.cmake.in
+		${CMAKE_CURRENT_BINARY_DIR}/libmem-config.cmake
+		INSTALL_DESTINATION share/libmem
+	)
 
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/libmem-config-version.cmake"
-    VERSION ${LIBMEM_VERSION}
-    COMPATIBILITY SameMajorVersion
-)
+	write_basic_package_version_file(
+		"${CMAKE_CURRENT_BINARY_DIR}/libmem-config-version.cmake"
+		VERSION ${LIBMEM_VERSION}
+		COMPATIBILITY SameMajorVersion
+	)
 
-install(
-    FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/libmem-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/libmem-config-version.cmake 
-    DESTINATION share/libmem
-)
+	install(
+		FILES
+		${CMAKE_CURRENT_BINARY_DIR}/libmem-config.cmake
+		${CMAKE_CURRENT_BINARY_DIR}/libmem-config-version.cmake 
+		DESTINATION share/libmem
+	)
+endif()

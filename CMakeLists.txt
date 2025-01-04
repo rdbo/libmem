@@ -35,6 +35,11 @@ option(LIBMEM_BUILD_STATIC
 	OFF
 )
 
+option(EXTERNAL_DEPENDENCIES_VCPKG
+	"Use external dependencies from vcpkg"
+	OFF
+)
+
 option(LIBMEM_INSTALL_CONFIG
 	"Install CMake configs"
 	OFF
@@ -60,25 +65,29 @@ message(STATUS
 
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+if(EXTERNAL_DEPENDENCIES_VCPKG)
+	find_package(PkgConfig)
+	pkg_check_modules(keystone REQUIRED keystone)
+	find_package(capstone CONFIG REQUIRED)
+else()
+	# External dependencies
+	set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
+	set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
+	set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
+	set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/src/capstone-engine-build")
+	set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
+	set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
+	set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
+	set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
+	set(LLVM_INC "${LLVM_DIR}/include")
 
-# External dependencies
-set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
-set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
-set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
-set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/src/capstone-engine-build")
-set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
-set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
-set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
-set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
-set(LLVM_INC "${LLVM_DIR}/include")
-
-add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
-add_library(capstone STATIC IMPORTED)
-set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
-add_library(keystone STATIC IMPORTED)
-set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
-# End of external dependencies
-
+	add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
+	add_library(capstone STATIC IMPORTED)
+	set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
+	add_library(keystone STATIC IMPORTED)
+	set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
+	# End of external dependencies
+endif()
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
 set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
@@ -163,7 +172,12 @@ else()
 	message(FATAL_ERROR "[!] Unsupported platform")
 endif()
 
-target_link_libraries(libmem ${LIBMEM_DEPS})
+if(EXTERNAL_DEPENDENCIES_VCPKG)
+    target_link_libraries(libmem PRIVATE ${LIBMEM_DEPS} ${keystone_LINK_LIBRARIES} capstone::capstone)
+else()
+	target_link_libraries(libmem ${LIBMEM_DEPS})
+endif()
+
 if(LIBMEM_BUILD_STATIC)
 	# Create a bundled static library containing all dependencies (to mimic the shared library behavior)
 	set_target_properties(libmem PROPERTIES OUTPUT_NAME "libmem_partial")
@@ -232,7 +246,7 @@ install(
 	RUNTIME DESTINATION bin
 )
 
-if(LIBMEM_INSTALL_CONFIG)
+if(EXTERNAL_DEPENDENCIES_VCPKG AND LIBMEM_INSTALL_CONFIG)
 	install(
 		EXPORT ${targets_export_name} 
 		NAMESPACE libmem:: 

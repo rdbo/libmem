@@ -5,7 +5,7 @@ include(ExternalProject)
 set(LIBMEM_VERSION_MAJOR 5)
 set(LIBMEM_VERSION_MINOR 0)
 set(LIBMEM_VERSION_PATCH 5)
-set(LIBMEM_VERSION ${LIBMEM_VERSION_MAJOR}.${LIBMEM_VERSION_MINOR}.${LIBMEM_VERSION_PATCH})
+set(LIBMEM_VERSION "${LIBMEM_VERSION_MAJOR}.${LIBMEM_VERSION_MINOR}.${LIBMEM_VERSION_PATCH}")
 
 project(
 	libmem
@@ -42,6 +42,11 @@ option(LIBMEM_BUILD_STATIC
 
 option(EXTERNAL_DEPENDENCIES_VCPKG
 	"Use external dependencies from vcpkg"
+	OFF
+)
+
+option(LIBMEM_INSTALL_PKGCONFIG
+	"Install pkgconfig"
 	OFF
 )
 
@@ -273,6 +278,18 @@ install(
     PUBLIC_HEADER DESTINATION include/libmem
 	RUNTIME DESTINATION bin
 )
+
+if(LIBMEM_INSTALL_PKGCONFIG)
+	configure_file(
+		${CMAKE_CURRENT_SOURCE_DIR}/libmem.pc.in
+		${CMAKE_CURRENT_BINARY_DIR}/libmem.pc @ONLY
+	)
+	install(
+		FILES       ${CMAKE_CURRENT_BINARY_DIR}/libmem.pc
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+		COMPONENT   pkgconfig
+	)
+endif()
 
 if(EXTERNAL_DEPENDENCIES_VCPKG AND LIBMEM_INSTALL_CONFIG)
 	install(

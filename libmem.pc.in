@@ -1,0 +1,14 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+exec_prefix="${prefix}"
+libdir="${prefix}/lib"
+includedir="${prefix}/include"
+
+Name: libmem
+Description: Cross-platform game hacking C++17 library for C, C++, Rust, and Python, supporting process/memory hacking, hooking, detouring, and DLL/SO injection.
+URL: https://github.com/rdbo/libmem
+Version: @LIBMEM_VERSION_MAJOR@.@LIBMEM_VERSION_MINOR@.@LIBMEM_VERSION_PATCH@
+Requires: @PKGCONF_REQ_PUB@
+Requires.private: @PKGCONF_REQ_PRIV@
+Cflags: -I"${includedir}"
+Libs: -L"${libdir}" -llibmem
+Libs.private: -L"${libdir}" -llibmem @PKGCONF_LIBS_PRIV@

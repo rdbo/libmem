@@ -2,18 +2,24 @@ cmake_minimum_required(VERSION 3.22.1)
 
 include(ExternalProject)
 
-project(libmem
-	LANGUAGES
-	C
-	CXX
-	ASM
+set(LIBMEM_VERSION_MAJOR 5)
+set(LIBMEM_VERSION_MINOR 0)
+set(LIBMEM_VERSION_PATCH 5)
+set(LIBMEM_VERSION ${LIBMEM_VERSION_MAJOR}.${LIBMEM_VERSION_MINOR}.${LIBMEM_VERSION_PATCH})
+
+project(
+	libmem
+	LANGUAGES C CXX ASM
+	VERSION ${LIBMEM_VERSION}
+	DESCRIPTION "Cross-platform game hacking C++17 library for C, C++, Rust, and Python, supporting process/memory hacking, hooking, detouring, and DLL/SO injection."
+    HOMEPAGE_URL "https://github.com/rdbo/libmem"
 )
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(targets_export_name libmem-target)
-set(LIBMEM_VERSION 5.0.5)
+
 
 message(STATUS
 	"[*] Platform: ${CMAKE_SYSTEM_NAME}"

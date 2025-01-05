@@ -132,6 +132,10 @@ endif()
 
 target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
+if(EXTERNAL_DEPENDENCIES_VCPKG AND LIBMEM_INSTALL_CONFIG)
+	target_include_directories(libmem INTERFACE $<INSTALL_INTERFACE:include>)
+endif()
+
 if(EXTERNAL_DEPENDENCIES_VCPKG)
 	include_directories(
 		${PROJECT_SOURCE_DIR}

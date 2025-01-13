@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-include(ExternalProject)
+set(CMAKE_CXX_STANDARD 17)
 
 project(libmem
 	LANGUAGES
@@ -28,6 +28,11 @@ option(LIBMEM_BUILD_STATIC
 	OFF
 )
 
+option(SYSTEM_DEPENDENCIES
+	"Use dependencies provided by vcpkg"
+	OFF
+)
+
 set(LIBMEM_ARCH ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "Force a specific architecture")
 
 message(STATUS
@@ -46,26 +51,33 @@ message(STATUS
 	"[*] Build static library: ${LIBMEM_BUILD_STATIC}"
 )
 
+message(STATUS
+	"[*] Use dependencies provided by vcpkg: ${SYSTEM_DEPENDENCIES}"
+)
+
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
-# External dependencies
-set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
-set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
-set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
-set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/src/capstone-engine-build")
-set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
-set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
-set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
-set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
-set(LLVM_INC "${LLVM_DIR}/include")
+if(NOT(SYSTEM_DEPENDENCIES))
+	include(ExternalProject)
+	# External dependencies
+	set(EXTERNAL_DEPENDENCIES_DIR "${PROJECT_SOURCE_DIR}/external")
+	set(CAPSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/capstone")
+	set(CAPSTONE_INC "${CAPSTONE_DIR}/include")
+	set(CAPSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/capstone-engine-prefix/src/capstone-engine-build")
+	set(KEYSTONE_DIR "${EXTERNAL_DEPENDENCIES_DIR}/keystone")
+	set(KEYSTONE_INC "${KEYSTONE_DIR}/include")
+	set(KEYSTONE_IMPORT_DIR "${PROJECT_BINARY_DIR}/external/keystone-engine-prefix/src/keystone-engine-build/llvm/lib")
+	set(LLVM_DIR "${EXTERNAL_DEPENDENCIES_DIR}/llvm")
+	set(LLVM_INC "${LLVM_DIR}/include")
 
-add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
-add_library(capstone STATIC IMPORTED)
-set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
-add_library(keystone STATIC IMPORTED)
-set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
-# End of external dependencies
+	add_subdirectory("${EXTERNAL_DEPENDENCIES_DIR}")
+	add_library(capstone STATIC IMPORTED)
+	set_target_properties(capstone PROPERTIES IMPORTED_LOCATION ${CAPSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}capstone${CMAKE_STATIC_LIBRARY_SUFFIX})
+	add_library(keystone STATIC IMPORTED)
+	set_target_properties(keystone PROPERTIES IMPORTED_LOCATION ${KEYSTONE_IMPORT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}keystone${CMAKE_STATIC_LIBRARY_SUFFIX})
+	# End of external dependencies
+endif()
 
 set(LIBMEM_DIR "${PROJECT_SOURCE_DIR}")
 set(LIBMEM_INC "${LIBMEM_DIR}/include")
@@ -89,25 +101,50 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
 	endif()
 	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/freebsd/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${LIBMEM_DIR}/src/common/*.cpp" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 endif()
-set(LIBMEM_DEPS
-	capstone
-	keystone
-	llvm
-)
 
-if (LIBMEM_BUILD_STATIC)
-	add_library(libmem STATIC ${LIBMEM_SRC})
+if(NOT(SYSTEM_DEPENDENCIES))
+	set(LIBMEM_DEPS
+		capstone
+		keystone
+		llvm
+	)
+	if (LIBMEM_BUILD_STATIC)
+		add_library(libmem STATIC ${LIBMEM_SRC})
+	else()
+		add_library(libmem SHARED ${LIBMEM_SRC})
+	endif()
+	include_directories(${PROJECT_SOURCE_DIR}
+		${LIBMEM_INC}
+		${CAPSTONE_INC}
+		${KEYSTONE_INC}
+		${LLVM_INC}
+	)
+	add_dependencies(libmem
+		capstone-engine
+		keystone-engine
+	)
 else()
-	add_library(libmem SHARED ${LIBMEM_SRC})
+	find_package(PkgConfig)
+	pkg_check_modules(keystone REQUIRED keystone)
+	find_package(capstone CONFIG REQUIRED)
+	set(LIBMEM_DEPS
+		capstone::capstone
+		"${keystone_LINK_LIBRARIES}"
+	)
+	file(GLOB_RECURSE LLVM_DEM_SRC "${LIBMEM_DIR}/external/llvm/lib/*.cpp")
+	if (LIBMEM_BUILD_STATIC)
+		add_library(libmem STATIC ${LIBMEM_SRC} ${LLVM_DEM_SRC})
+	else()
+		add_library(libmem SHARED ${LIBMEM_SRC} ${LLVM_DEM_SRC})
+	endif()
+	include_directories(${PROJECT_SOURCE_DIR}
+		${LIBMEM_INC}
+		"${keystone_INCLUDE_DIRS}"
+		"${LIBMEM_DIR}/external/llvm/include"
+	)
 endif()
-target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
-include_directories(${PROJECT_SOURCE_DIR}
-	${LIBMEM_INC}
-	${CAPSTONE_INC}
-	${KEYSTONE_INC}
-	${LLVM_INC}
-)
+target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
 if (LIBMEM_BUILD_TESTS)
 	set(TESTS_DIR "${PROJECT_SOURCE_DIR}/tests")
@@ -116,10 +153,6 @@ endif()
 
 set_target_properties(libmem PROPERTIES POSITION_INDEPENDENT_CODE True INCLUDES ${LIBMEM_INC})
 target_compile_definitions(libmem PUBLIC LM_EXPORT)
-add_dependencies(libmem
-	capstone-engine
-	keystone-engine
-)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	set(LIBMEM_DEPS
@@ -152,7 +185,7 @@ else()
 endif()
 
 target_link_libraries(libmem ${LIBMEM_DEPS})
-if(LIBMEM_BUILD_STATIC)
+if(LIBMEM_BUILD_STATIC AND NOT(SYSTEM_DEPENDENCIES))
 	# Create a bundled static library containing all dependencies (to mimic the shared library behavior)
 	set_target_properties(libmem PROPERTIES OUTPUT_NAME "libmem_partial")
 	set(libmem_bundle_files "$<TARGET_FILE:libmem>")

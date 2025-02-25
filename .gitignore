@@ -7,3 +7,4 @@ bindings/python/src/libmem.*
 examples/rust/target/
 clang-format
 .idea/
+.cache/

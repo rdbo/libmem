@@ -153,16 +153,18 @@ pub fn alloc_memory_ex(process: &Process, size: usize, prot: Prot) -> Option<Add
 }
 
 /// Frees memory previously allocated with `alloc_memory`
-pub unsafe fn free_memory(alloc: Address, size: usize) {
-    // The return of `LM_FreeMemory` will be ignored
-    unsafe { libmem_sys::LM_FreeMemory(alloc, size) };
+pub unsafe fn free_memory(alloc: Address, size: usize) -> Option<()> {
+    let result = unsafe { libmem_sys::LM_FreeMemory(alloc, size) };
+    (result == LM_TRUE).then_some(())
 }
 
 /// Frees memory previously allocated with `alloc_memory_ex`
-pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) {
+pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) -> Option<()> {
     let raw_process: lm_process_t = process.to_owned().into();
-    // The return of `LM_FreeMemoryEx` will be ignored
-    unsafe { libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size) };
+    let result = unsafe {
+        libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size)
+    };
+    (result == LM_TRUE).then_some(())
 }
 
 /// Resolves a deep pointer based on its base address and recursing offsets

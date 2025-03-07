@@ -41,6 +41,42 @@ pub fn read_memory_ex<T>(process: &Process, source: Address) -> Option<T> {
     (rdsize == size).then_some(unsafe { value.assume_init() })
 }
 
+/// Reads a buffer from a memory address
+/// Example:
+/// ```
+/// let mut buffer = vec![0; 1024];
+/// read_memory_buf(0xdeadbeef, &mut buffer);
+/// ```
+pub unsafe fn read_memory_buf(source: Address, buffer: &mut [u8]) -> Option<usize> {
+    let size = buffer.len();
+    let result = unsafe {
+        libmem_sys::LM_ReadMemory(source, buffer.as_mut_ptr(), size)
+    };
+
+    (result == size).then_some(result)
+}
+
+
+/// Reads a buffer from a memory address in a remote process
+/// Example:
+/// ```
+/// let mut buffer = vec![0; 1024];
+/// read_memory_buf_ex(&process, 0xdeadbeef, &mut buffer);
+/// ```
+pub fn read_memory_buf_ex(process: &Process, source: Address, buffer: &mut [u8]) -> Option<usize> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let result = unsafe {
+        libmem_sys::LM_ReadMemoryEx(
+            &raw_process as *const lm_process_t,
+            source,
+            buffer.as_mut_ptr(),
+            buffer.len(),
+        )
+    };
+
+    (result == buffer.len()).then_some(result)
+}
+
 /// Writes a value of type <T> into a memory address
 /// Example:
 /// ```
@@ -75,6 +111,40 @@ pub fn write_memory_ex<T: ?Sized>(process: &Process, dest: Address, value: &T) -
     };
 
     (result == size).then_some(())
+}
+
+/// Writes a buffer to a memory address
+/// Example:
+/// ```
+/// let buffer = vec![0; 1024];
+/// write_memory_buf(0xdeadbeef, &buffer);
+/// ```
+pub fn write_memory_buf(dest: Address, buffer: &[u8]) {
+    unsafe {
+        // This function can't actually fail, no need for extra checking.
+        // If it fails, the program will crash anyways.
+        libmem_sys::LM_WriteMemory(dest, buffer.as_ptr(), buffer.len())
+    };
+}
+
+/// Writes a buffer to a memory address in a remote process
+/// Example:
+/// ```
+/// let buffer = vec![0; 1024];
+/// write_memory_buf_ex(&process, 0xdeadbeef, &buffer);
+/// ```
+pub fn write_memory_buf_ex(process: &Process, dest: Address, buffer: &[u8]) -> Option<usize> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let result = unsafe {
+        libmem_sys::LM_WriteMemoryEx(
+            &raw_process as *const lm_process_t,
+            dest,
+            buffer.as_ptr(),
+            buffer.len(),
+        )
+    };
+
+    (result == buffer.len()).then_some(result)
 }
 
 /// Sets a memory region to a specific byte

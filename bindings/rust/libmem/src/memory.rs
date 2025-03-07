@@ -47,13 +47,13 @@ pub fn read_memory_ex<T>(process: &Process, source: Address) -> Option<T> {
 /// let mut buffer = vec![0; 1024];
 /// read_memory_buf(0xdeadbeef, &mut buffer);
 /// ```
-pub unsafe fn read_memory_buf(source: Address, buffer: &mut [u8]) -> Option<usize> {
+pub unsafe fn read_memory_buf(source: Address, buffer: &mut [u8]) {
     let size = buffer.len();
-    let result = unsafe {
+    unsafe {
+        // This function can't actually fail, no need for extra checking.
+        // If it fails, the program will crash anyways.
         libmem_sys::LM_ReadMemory(source, buffer.as_mut_ptr(), size)
     };
-
-    (result == size).then_some(result)
 }
 
 
@@ -119,12 +119,10 @@ pub fn write_memory_ex<T: ?Sized>(process: &Process, dest: Address, value: &T) -
 /// let buffer = vec![0; 1024];
 /// write_memory_buf(0xdeadbeef, &buffer);
 /// ```
-pub fn write_memory_buf(dest: Address, buffer: &[u8]) {
-    unsafe {
-        // This function can't actually fail, no need for extra checking.
-        // If it fails, the program will crash anyways.
-        libmem_sys::LM_WriteMemory(dest, buffer.as_ptr(), buffer.len())
-    };
+pub unsafe fn write_memory_buf(dest: Address, buffer: &[u8]) {
+    // This function can't actually fail, no need for extra checking.
+    // If it fails, the program will crash anyways.
+    libmem_sys::LM_WriteMemory(dest, buffer.as_ptr(), buffer.len());
 }
 
 /// Writes a buffer to a memory address in a remote process

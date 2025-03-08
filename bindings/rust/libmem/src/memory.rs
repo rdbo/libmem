@@ -11,13 +11,12 @@ use std::mem::{self, MaybeUninit};
 pub unsafe fn read_memory<T>(source: Address) -> T {
     let size = std::mem::size_of::<T>();
     let mut value: MaybeUninit<T> = MaybeUninit::uninit();
-    unsafe {
-        // This function can't actually fail, no need for extra checking.
-        // If it fails, the program will crash anyways.
-        libmem_sys::LM_ReadMemory(source, value.as_mut_ptr() as *mut u8, size);
 
-        value.assume_init()
-    }
+    // This function can't actually fail, no need for extra checking.
+    // If it fails, the program will crash anyways.
+    libmem_sys::LM_ReadMemory(source, value.as_mut_ptr() as *mut u8, size);
+
+    value.assume_init()
 }
 
 /// Reads a type <T> for a memory address in a remote process
@@ -41,19 +40,54 @@ pub fn read_memory_ex<T>(process: &Process, source: Address) -> Option<T> {
     (rdsize == size).then_some(unsafe { value.assume_init() })
 }
 
+/// Reads a buffer from a memory address
+/// Example:
+/// ```
+/// let mut buffer = vec![0; 1024];
+/// read_memory_buf(0xdeadbeef, &mut buffer);
+/// ```
+#[inline(always)]
+pub unsafe fn read_memory_buf(source: Address, buffer: &mut [u8]) {
+    // This function can't actually fail, no need for extra checking.
+    // If it fails, the program will crash anyways.
+    libmem_sys::LM_ReadMemory(source, buffer.as_mut_ptr(), buffer.len());
+}
+
+/// Reads a buffer from a memory address in a remote process
+/// Example:
+/// ```
+/// let mut buffer = vec![0; 1024];
+/// read_memory_buf_ex(&process, 0xdeadbeef, &mut buffer);
+/// ```
+pub fn read_memory_buf_ex(process: &Process, source: Address, buffer: &mut [u8]) -> Option<usize> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let result = unsafe {
+        libmem_sys::LM_ReadMemoryEx(
+            &raw_process as *const lm_process_t,
+            source,
+            buffer.as_mut_ptr(),
+            buffer.len(),
+        )
+    };
+
+    (result == buffer.len()).then_some(result)
+}
+
 /// Writes a value of type <T> into a memory address
 /// Example:
 /// ```
 /// let value_to_write: u32 = 1337;
 /// write_memory(0xdeadbeef, &value_to_write);
 /// ```
+#[inline(always)]
 pub unsafe fn write_memory<T: ?Sized>(dest: Address, value: &T) {
-    let size = mem::size_of_val(value);
-    unsafe {
-        // This function can't actually fail, no need for extra checking.
-        // If it fails, the program will crash anyways.
-        libmem_sys::LM_WriteMemory(dest, value as *const T as *const u8, size);
-    }
+    // This function can't actually fail, no need for extra checking.
+    // If it fails, the program will crash anyways.
+    libmem_sys::LM_WriteMemory(
+        dest,
+        value as *const T as *const u8,
+        mem::size_of_val(value),
+    );
 }
 
 /// Writes a value of type <T> into a memory address
@@ -77,17 +111,49 @@ pub fn write_memory_ex<T: ?Sized>(process: &Process, dest: Address, value: &T) -
     (result == size).then_some(())
 }
 
+/// Writes a buffer to a memory address
+/// Example:
+/// ```
+/// let buffer = vec![0; 1024];
+/// write_memory_buf(0xdeadbeef, &buffer);
+/// ```
+#[inline(always)]
+pub unsafe fn write_memory_buf(dest: Address, buffer: &[u8]) {
+    // This function can't actually fail, no need for extra checking.
+    // If it fails, the program will crash anyways.
+    libmem_sys::LM_WriteMemory(dest, buffer.as_ptr(), buffer.len());
+}
+
+/// Writes a buffer to a memory address in a remote process
+/// Example:
+/// ```
+/// let buffer = vec![0; 1024];
+/// write_memory_buf_ex(&process, 0xdeadbeef, &buffer);
+/// ```
+pub fn write_memory_buf_ex(process: &Process, dest: Address, buffer: &[u8]) -> Option<usize> {
+    let raw_process: lm_process_t = process.to_owned().into();
+    let result = unsafe {
+        libmem_sys::LM_WriteMemoryEx(
+            &raw_process as *const lm_process_t,
+            dest,
+            buffer.as_ptr(),
+            buffer.len(),
+        )
+    };
+
+    (result == buffer.len()).then_some(result)
+}
+
 /// Sets a memory region to a specific byte
 /// Example (sets all bytes from `dest` to `dest + size` to the `42`)
 /// ```
 /// set_memory(0xdeadbeef, 42, 1024);
 /// ```
+#[inline(always)]
 pub unsafe fn set_memory(dest: Address, byte: u8, size: usize) {
-    unsafe {
-        // This function can't actually fail, no need for extra checking.
-        // If it fails, the program will crash anyways.
-        libmem_sys::LM_SetMemory(dest, byte, size);
-    }
+    // This function can't actually fail, no need for extra checking.
+    // If it fails, the program will crash anyways.
+    libmem_sys::LM_SetMemory(dest, byte, size);
 }
 
 /// Sets a memory region to a specific byte
@@ -108,8 +174,7 @@ pub fn set_memory_ex(process: &Process, dest: Address, byte: u8, size: usize) ->
 /// Returns the previous protection of the first page on success
 pub unsafe fn prot_memory(address: Address, size: usize, prot: Prot) -> Option<Prot> {
     let mut oldprot: MaybeUninit<u32> = MaybeUninit::uninit();
-    let result =
-        unsafe { libmem_sys::LM_ProtMemory(address, size, prot.bits(), oldprot.as_mut_ptr()) };
+    let result = libmem_sys::LM_ProtMemory(address, size, prot.bits(), oldprot.as_mut_ptr());
 
     (result == LM_TRUE).then_some(unsafe { oldprot.assume_init() }.into())
 }
@@ -154,16 +219,15 @@ pub fn alloc_memory_ex(process: &Process, size: usize, prot: Prot) -> Option<Add
 
 /// Frees memory previously allocated with `alloc_memory`
 pub unsafe fn free_memory(alloc: Address, size: usize) -> Option<()> {
-    let result = unsafe { libmem_sys::LM_FreeMemory(alloc, size) };
+    let result = libmem_sys::LM_FreeMemory(alloc, size);
     (result == LM_TRUE).then_some(())
 }
 
 /// Frees memory previously allocated with `alloc_memory_ex`
 pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) -> Option<()> {
     let raw_process: lm_process_t = process.to_owned().into();
-    let result = unsafe {
-        libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size)
-    };
+    let result =
+        unsafe { libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size) };
     (result == LM_TRUE).then_some(())
 }
 
@@ -172,6 +236,7 @@ pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) -> Option<
 /// ```
 /// let pointer_scan_result = deep_pointer(program.base + 0xdeadbeef, vec![0xFA, 0xA0, 0xF0]);
 /// ```
+#[inline(always)]
 pub unsafe fn deep_pointer<T>(base: Address, offsets: &[Address]) -> *mut T {
     // This function cannot fail
     libmem_sys::LM_DeepPointer(base, offsets.as_ptr(), offsets.len()) as *mut T

@@ -19,7 +19,7 @@ fn download_and_resolve_libmem() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let os_name = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let mut arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-    
+
     if arch == "x86" {
         arch = "i686".to_string();
     }
@@ -106,6 +106,12 @@ fn main() {
     }
 
     // Resolve link dependencies
+    if cfg!(feature = "static") {
+        println!("cargo:rustc-link-lib=libmem");
+    } else {
+        println!("cargo:rustc-link-lib=dylib=libmem")
+    }
+
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let deps = if target_os == "windows" {
         vec!["user32", "psapi", "ntdll", "shell32"]
@@ -119,11 +125,5 @@ fn main() {
 
     for dep in deps {
         println!("cargo:rustc-link-lib={}", dep);
-    }
-
-    if cfg!(feature = "static") {
-        println!("cargo:rustc-link-lib=libmem");
-    } else {
-        println!("cargo:rustc-link-lib=dylib=libmem")
     }
 }

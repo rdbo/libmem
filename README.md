@@ -164,7 +164,7 @@ These bindings are done by the community/third-parties and are not affiliated wi
 
 Their code can have their own licenses as well, diverging from libmem's.
 
-- [Nim_Libmem](https://github.com/Hypnootika/Nim_Libmem)
+- [Nim_Libmem](https://github.com/Hypnootika/python_nim_libmem)
 - [Crazymem (NodeJS)](https://github.com/karliky/Crazymem)
 
 ## CMake Usage (without installing)

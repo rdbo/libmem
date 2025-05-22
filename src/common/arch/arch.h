@@ -34,7 +34,7 @@ generate_hook_payload(lm_address_t from, lm_address_t to, lm_size_t bits, lm_byt
 lm_size_t
 generate_no_ops(lm_byte_t *buf, lm_size_t size);
 
-/* NOTE: This function does heavy assuptions about processes running in a different
+/* NOTE: This function does heavy assumptions about processes running in a different
  *       bitsize than the current process. More testing should be done to check if
  *       it actually holds. */
 static inline lm_arch_t

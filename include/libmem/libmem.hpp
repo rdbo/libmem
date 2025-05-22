@@ -327,10 +327,10 @@ namespace libmem {
 		WriteMemory(dest, reinterpret_cast<uint8_t *>(&source), sizeof(T));
 	}
 
-	/// Writes memory into a destination address in a remote  process
+	/// Writes memory into a destination address in a remote process
 	LM_API size_t LM_CALL WriteMemory(const Process *process, Address dest, uint8_t *source, size_t size);
 
-	/// Writes memory into a destination address in a remote  process
+	/// Writes memory into a destination address in a remote process
 	template <typename T>
 	inline void WriteMemory(const Process *process, Address dest, T source)
 	{

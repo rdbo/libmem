@@ -34,7 +34,7 @@ Read `LICENSE` for more information
 - [x] Scan Memory by Pattern/Signature
 - [x] Resolve Pointer Scans/Pointer Maps
 - [x] Hook/Unhook Functions
-- [x] Assemble/Dissassemble Code (JIT)
+- [x] Assemble/Disassemble Code (JIT)
 - [x] VMT Hooking/Unhooking
 - [x] Load/Unload Modules
 - [x] Enumerate Process Threads
@@ -159,7 +159,7 @@ They are located in nearby comments, so you should be able to see them by hoveri
 
 Similarly, the bindings documentation is embedded with their packages, so your text editor/IDE should be able to access the documentation for each API.
 
-## Unnoficial Bindings
+## Unofficial Bindings
 These bindings are done by the community/third-parties and are not affiliated with the libmem project or its author.
 
 Their code can have their own licenses as well, diverging from libmem's.

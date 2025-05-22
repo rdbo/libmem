@@ -70,7 +70,7 @@ get_stat_info(lm_pid_t pid, lm_pid_t *ppid_out, lm_time_t *start_time_out)
 	/*
 	 * NOTE: Processes can have whitespaces and ')' in their 'comm' string of
 	 *       `/proc/<pid>/stat`, which can make parsing annoying. To circumvent
-	 *       that, we will just skip to the last closing parenthese, and skip
+	 *       that, we will just skip to the last closing parenthesis, and skip
 	 *       through whitespaces from there.
 	 *       This means our pointer will be at the end of `comm (2)`, and we
 	 *       can use a scanf-like function to parse the rest

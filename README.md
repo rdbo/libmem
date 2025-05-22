@@ -34,7 +34,7 @@ Read `LICENSE` for more information
 - [x] Scan Memory by Pattern/Signature
 - [x] Resolve Pointer Scans/Pointer Maps
 - [x] Hook/Unhook Functions
-- [x] Assemble/Dissassemble Code (JIT)
+- [x] Assemble/Disassemble Code (JIT)
 - [x] VMT Hooking/Unhooking
 - [x] Load/Unload Modules
 - [x] Enumerate Process Threads

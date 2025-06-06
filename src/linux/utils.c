@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <fcntl.h>
 
 lm_bool_t
 get_stat_info(lm_pid_t pid, lm_pid_t *ppid_out, lm_time_t *start_time_out)
@@ -113,15 +114,17 @@ get_process_path(lm_pid_t pid, lm_char_t *pathbuf, size_t pathsize)
 	
 	assert(pid != LM_PID_BAD && pathbuf != NULL && pathsize > 0);
 
-	snprintf(exe_path, sizeof(exe_path), "%s/%d/exe", PROCFS_PATH, pid);
-	len = readlink(exe_path, pathbuf, pathsize - 1);
-	if (len == -1) {
-		len = 0;
-	} else {
-		/* We reserved space for the null terminator in the call above,
-		 * so we can safely use 'len' to place it */
-		pathbuf[len] = '\0';
+	snprintf(exe_path, sizeof(exe_path), "%s/%d/cmdline", PROCFS_PATH, pid);
+    int fd = open(exe_path, O_RDONLY);
+	if (!fd) {
+        return 0;
 	}
 
-	return (lm_size_t)len;
+    len = read(fd, pathbuf, pathsize -1);
+    if (len == -1) {
+        len = 0;
+    }
+
+    close(fd);
+    return len;
 }

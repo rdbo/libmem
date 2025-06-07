@@ -123,6 +123,8 @@ get_process_path(lm_pid_t pid, lm_char_t *pathbuf, size_t pathsize)
     len = read(fd, pathbuf, pathsize -1);
     if (len == -1) {
         len = 0;
+    } else {
+        pathbuf[len] = '\0';
     }
 
     close(fd);

@@ -125,3 +125,25 @@ get_process_path(lm_pid_t pid, lm_char_t *pathbuf, size_t pathsize)
 
 	return (lm_size_t)len;
 }
+
+lm_size_t
+get_process_cmdline(lm_pid_t pid, lm_char_t *cmdbuf, lm_size_t cmdsize)
+{
+	lm_size_t size = 0;
+	char cmdline_path[PATH_MAX];
+	FILE *file;
+
+	assert(pid != LM_PID_BAD && cmdbuf != NULL && cmdsize > 0);
+
+	snprintf(cmdline_path, sizeof(cmdline_path), "%s/%d/cmdline", PROCFS_PATH, pid);
+
+	file = fopen(cmdline_path, "r");
+	if (!file)
+		return size;
+
+	size = fread(cmdbuf, 1, cmdsize - 1, file);
+
+	fclose(file);
+
+	return size;
+}

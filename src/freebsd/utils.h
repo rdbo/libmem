@@ -32,4 +32,7 @@
 lm_time_t
 get_process_start_time(struct kinfo_proc *proc);
 
+char *
+get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc);
+
 #endif

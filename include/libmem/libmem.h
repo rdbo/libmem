@@ -35,6 +35,7 @@
 
 #define LM_PATH_MAX (4096) /* Fits up to 1024 4-byte UTF-8 characters */
 #define LM_INST_MAX (16) /* Maximum size of a single instruction */
+#define LM_CMDLINE_MAX (8192)
 
 /* Path separator */
 #ifdef _WIN32
@@ -154,6 +155,7 @@ typedef struct lm_process_t {
 	lm_time_t start_time; /* Process start timestamp, in milliseconds since last boot */
 	lm_char_t path[LM_PATH_MAX];
 	lm_char_t name[LM_PATH_MAX];
+	lm_char_t cmdline[LM_CMDLINE_MAX];
 } lm_process_t;
 
 typedef struct lm_thread_t {

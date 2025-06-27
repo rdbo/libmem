@@ -66,6 +66,12 @@ enum_processes_callback(PROCESSENTRY32W *entry, void *arg)
 	process.bits = get_process_bits(hproc);
 	process.arch = get_architecture_from_bits(process.bits);
 
+	// Apparently Windows doesn't let you easily retrieve the process cmdline
+	// (NOTE: reading process memory is not gonna be an option!)
+	// If there is a non-intrusive way to get that information, feel free to
+	// contribute here.
+	process.cmdline[0] = '\0';
+
 	if (!parg->callback(&process, parg->arg))
 		return FALSE;
 
@@ -133,6 +139,7 @@ LM_GetProcess(lm_process_t *process_out)
 {
 	WCHAR path[MAX_PATH + 1] = { 0 };
 	PROCESSENTRY32W entry;
+	LPWSTR cmdline;
 
 	if (!process_out)
 		return LM_FALSE;
@@ -154,6 +161,10 @@ LM_GetProcess(lm_process_t *process_out)
 		return LM_FALSE;
 
 	if (!get_process_start_time(GetCurrentProcess(), &process_out->start_time))
+		return LM_FALSE;
+
+	cmdline = GetCommandLineW();
+	if (!wcstoutf8(cmdline, process_out->cmdline, sizeof(process_out->cmdline)))
 		return LM_FALSE;
 
 	process_out->bits = LM_GetBits(); /* Assume process bits == size of pointer */
@@ -199,6 +210,12 @@ LM_GetProcessEx(lm_pid_t      pid,
 
 	if (!get_process_start_time(GetCurrentProcess(), &process_out->start_time))
 		goto CLEAN_EXIT;
+
+	// Apparently Windows doesn't let you easily retrieve the process cmdline
+	// (NOTE: reading process memory is not gonna be an option!)
+	// If there is a non-intrusive way to get that information, feel free to
+	// contribute here.
+	process_out->cmdline[0] = '\0';
 
 	process_out->bits = get_process_bits(hproc);
 	process_out->arch = get_architecture_from_bits(process_out->bits);

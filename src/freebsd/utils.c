@@ -31,3 +31,39 @@ get_process_start_time(struct kinfo_proc *proc)
 	/* Turn the seconds and the microseconds from the 'struct timeval' into milliseconds */
 	return (lm_time_t)((proc->ki_start.tv_sec * 1000) + (proc->ki_start.tv_usec / 1000.0L));
 }
+
+char *
+get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
+{
+	char *buf = NULL;
+	char *ptr;
+	size_t length = 0;
+	size_t i;
+	char **args;
+	size_t size;
+
+	args = procstat_getargv(procstat, kipp, 0);
+
+	buf = calloc(1, length + sizeof(proc->ki_comm) + 1);
+	if (!buf)
+		return NULL;
+	strncpy(&buf[length], proc->ki_comm, sizeof(proc->ki_comm));
+	length += sizeof(proc->ki_comm);
+
+	length = strlen(buf); // TODO: check if ki_comm is already null terminated and then remove this line and resize the buffer.
+
+	for (i = 0; args[i] != NULL; ++i) {
+		size = strlen(args[i]);
+		ptr = buf;
+		buf = realloc(buf, length + size + 1)
+		if (!buf) {
+			free(ptr);
+			return NULL;
+		}
+		strncpy(&buf[length], args[i], size);
+		length += size;
+		buf[length] = '\0';
+	}
+
+	return buf;
+}

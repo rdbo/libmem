@@ -69,6 +69,10 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 			continue;
 		}
 
+		if (!get_process_cmdline(process.pid, process.cmdline, sizeof(process.cmdline))) {
+			continue;
+		}
+
 		process.bits = get_elf_bits(process.path);
 		process.arch = get_architecture_from_bits(process.bits);
 
@@ -110,6 +114,10 @@ LM_GetProcess(lm_process_t *process_out)
 		return LM_FALSE;
 	}
 
+	if (!get_process_cmdline(process_out->pid, process_out->cmdline, sizeof(process_out->cmdline))) {
+		return LM_FALSE;
+	}
+
 	process_out->bits = LM_GetBits();
 	process_out->arch = get_architecture_from_bits(process_out->bits);
 
@@ -136,6 +144,10 @@ LM_GetProcessEx(lm_pid_t      pid,
 	}
 
 	if (!get_stat_info(process_out->pid, &process_out->ppid, &process_out->start_time)) {
+		return LM_FALSE;
+	}
+
+	if (!get_process_cmdline(process_out->pid, process_out->cmdline, sizeof(process_out->cmdline))) {
 		return LM_FALSE;
 	}
 

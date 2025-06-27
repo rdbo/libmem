@@ -42,6 +42,7 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 	unsigned int i;
 	lm_process_t process;
 	FILE *elf;
+	char *cmdline;
 
 	if (!callback)
 		return result;
@@ -69,6 +70,12 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 		process.bits = get_elf_bits(process.path);
 
 		process.arch = get_architecture_from_bits(process.bits);
+
+		cmdline = get_process_cmdline(&procs[i]);
+		if (!cmdline)
+			continue;
+
+		snprintf(process.cmdline, sizeof(process.cmdline), "%s", cmdline);
 
 		if (callback(&process, arg) == LM_FALSE)
 			break;

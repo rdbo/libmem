@@ -59,7 +59,9 @@ char *test_LM_GetCommandLine(lm_process_t *pcurproc)
 	lm_char_t **cmdline;
 	lm_char_t **args;
 
+	printf("\r\nentered function\n\r");
 	cmdline = LM_GetCommandLine(pcurproc);
+	printf("\r\nran function\r\n");
 	mu_assert("failed to retrieve command line for current process", cmdline != NULL);
 	mu_assert("invalid first argument of command line", *cmdline != NULL);
 	printf("<CMDLINE:");

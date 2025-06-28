@@ -32,9 +32,10 @@ get_process_start_time(struct kinfo_proc *proc)
 	return (lm_time_t)((proc->ki_start.tv_sec * 1000) + (proc->ki_start.tv_usec / 1000.0L));
 }
 
-lm_char_t *
+lm_char_t **
 get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 {
+	lm_char_t **cmdargs = NULL;
 	lm_char_t *buf = NULL;
 	lm_char_t *ptr;
 	size_t length = 0;
@@ -52,23 +53,34 @@ get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 
 	length = strlen(buf); // TODO: check if ki_comm is already null terminated and then remove this line and resize the buffer.
 
+	cmdargs = calloc(1, sizeof(lm_char_t *));
+	if (!cmdargs) {
+		free(buf);
+		return NULL;
+	}
+
 	for (i = 0; args[i] != NULL; ++i) {
-		size = strlen(args[i]);
+		size = strlen(args[i]) + 1; // we will include the null term
 		ptr = buf;
-		buf = realloc(buf, (length + 1 + size + 1) * sizeof(lm_char_t))
+		buf = realloc(buf, (length + size) * sizeof(lm_char_t))
 		if (!buf) {
 			free(ptr);
 			return NULL;
 		}
 
-		buf[length] = ' ';
-		length += 1;
-		
 		strncpy(&buf[length], args[i], size);
+
+		ptr = cmdargs;
+		cmdargs = realloc(cmdargs, (i + 1) * sizeof(lm_char_t *));
+		if (!cmdargs) {
+			free(ptr);
+			free(buf);
+			return NULL;
+		}
+		cmdargs[i + 1] = &buf[length];
+
 		length += size;
 	}
 
-	buf[length] = '\0';
-
-	return buf;
+	return cmdargs;
 }

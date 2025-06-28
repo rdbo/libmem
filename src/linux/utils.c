@@ -126,16 +126,19 @@ get_process_path(lm_pid_t pid, lm_char_t *pathbuf, size_t pathsize)
 	return (lm_size_t)len;
 }
 
-lm_char_t *
+lm_char_t **
 get_process_cmdline(lm_pid_t pid)
 {
 	char cmdline_path[PATH_MAX];
 	FILE *file;
 	lm_char_t *cmdbuf = NULL;
-	lm_char_t *ptr;
+	lm_void_t *ptr;
 	size_t cmdlen = 0;
 	size_t len = 0;
 	const size_t chunk_size = 4096;
+	lm_char_t **cmdargs = NULL;
+	lm_size_t argc = 0;
+	size_t i;
 
 	assert(pid != LM_PID_BAD);
 
@@ -143,35 +146,53 @@ get_process_cmdline(lm_pid_t pid)
 
 	file = fopen(cmdline_path, "r");
 	if (!file)
-		return cmdbuf;
-
-	cmdbuf = calloc(sizeof(lm_char_t), chunk_size + 1);
-	if (!cmdbuf)
-		goto CLOSE_EXIT;
+		goto EXIT;
 
 	for (;;) {
+		ptr = cmdbuf;
+		cmdbuf = realloc(cmdbuf, cmdlen + chunk_size + 1);
+		if (!cmdbuf) {
+			if (ptr) free(ptr);
+			goto CLOSE_EXIT;
+		}
+
 		len = fread(&cmdbuf[cmdlen], sizeof(lm_char_t), chunk_size, file);
 		cmdlen += len;
 		if (len < chunk_size)
 			break;
 
-		ptr = cmdbuf;
-		cmdbuf = realloc(cmdbuf, cmdlen + chunk_size + 1);
-		if (!cmdbuf) {
-			free(ptr);
-			goto CLOSE_EXIT;
-		}
 	}
 
 	if (cmdlen == 0) {
 		free(cmdbuf);
-		cmdbuf = NULL;
 		goto CLOSE_EXIT;
 	}
 
-	cmdbuf[cmdlen] = '\0';
+	cmdbuf[cmdlen] = '\0'; // The /proc/<pid>/cmdline is null-terminated, but just to be sure...
 
+	// NOTE: `cmdbuf` will not be freed. We will reference it in the
+	//       `cmdargs`. To free it in the future, we can just free `*cmdargs`.
+
+	for (i = 0; i < cmdlen;) {
+		ptr = cmdargs;
+		cmdargs = realloc(cmdargs, (argc + 2) * sizeof(lm_char_t *));
+		if (!cmdargs) {
+			if (ptr) free(ptr);
+			goto FREE_EXIT;
+		}
+
+		cmdargs[argc] = &cmdbuf[i];
+		i += strlen(cmdargs[argc]) + 1;
+		++argc;
+	}
+	cmdargs[argc] = NULL;
+
+	goto EXIT;
+
+FREE_EXIT:
+	free(cmdbuf);
 CLOSE_EXIT:
 	fclose(file);
-	return cmdbuf;
+EXIT:
+	return cmdargs;
 }

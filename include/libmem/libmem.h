@@ -287,7 +287,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 		lm_process_t *process_out);
 
 /**
- * Retrieves the command line string of a process.
+ * Retrieves the command line arguments of a process.
  * WARN: Requires reading process memory on Windows.
  *
  * @param process The process to retrieve the command line from.
@@ -296,7 +296,7 @@ LM_GetProcessEx(lm_pid_t      pid,
  * process (must be freed with `LM_FreeCommandLine`), or `NULL`
  * if it fails.
  */
-LM_API lm_char_t * LM_CALL
+LM_API lm_char_t ** LM_CALL
 LM_GetCommandLine(lm_process_t *process);
 
 /**
@@ -305,7 +305,7 @@ LM_GetCommandLine(lm_process_t *process);
  * @param cmdline The allocated command line buffer
  */
 LM_API lm_void_t LM_CALL
-LM_FreeCommandLine(lm_char_t *cmdline);
+LM_FreeCommandLine(lm_char_t **cmdline);
 
 /**
  * Searches for a process by name and returns whether the process was

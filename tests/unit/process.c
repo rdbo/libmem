@@ -56,12 +56,18 @@ char *test_LM_GetProcessEx(lm_process_t *pcurproc)
 
 char *test_LM_GetCommandLine(lm_process_t *pcurproc)
 {
-	lm_char_t *cmdline;
+	lm_char_t **cmdline;
+	lm_char_t **args;
 
 	cmdline = LM_GetCommandLine(pcurproc);
 	mu_assert("failed to retrieve command line for current process", cmdline != NULL);
-	mu_assert("command line is empty", strlen(cmdline) > 0);
-	printf(" <CMDLINE: %s> ", cmdline);
+	mu_assert("invalid first argument of command line", *cmdline != NULL);
+	printf("<CMDLINE:");
+
+	for (args = cmdline; *args != NULL; ++args)
+		printf(" %s", *args);
+	printf("> ");
+
 	LM_FreeCommandLine(cmdline);
 
 	return NULL;

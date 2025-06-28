@@ -147,7 +147,7 @@ LM_GetProcessEx(lm_pid_t      pid,
 
 /********************************/
 
-LM_API lm_char_t * LM_CALL
+LM_API lm_char_t ** LM_CALL
 LM_GetCommandLine(lm_process_t *process)
 {
 	return get_process_cmdline(process->pid);

@@ -178,7 +178,7 @@ LM_GetCommandLine(lm_process_t *process)
 	struct procstat *ps;
 	struct kinfo_proc *proc;
 	unsigned int nprocs;
-	lm_char_t *cmdline = NULL;
+	lm_char_t **cmdargs = NULL;
 
 	assert(process != NULL);
 
@@ -190,12 +190,12 @@ LM_GetCommandLine(lm_process_t *process)
 	if (!proc)
 		goto CLOSE_EXIT;
 
-	cmdline = get_process_cmdline(ps, proc);
+	cmdargs = get_process_cmdline(ps, proc);
 
 	procstat_freeprocs(ps, proc);
 CLOSE_EXIT:
 	procstat_close(ps);
-	return cmdline;
+	return cmdargs;
 }
 
 /********************************/

@@ -211,11 +211,18 @@ CLEAN_EXIT:
 
 /********************************/
 
-LM_API lm_char_t * LM_CALL
+LM_API lm_char_t ** LM_CALL
 LM_GetCommandLine(lm_process_t *process)
 {
 	LPWSTR wcmdline;
-	size_t len;
+	LPWSTR *wcmdargs;
+	int argc;
+	size_t len = 0;
+	size_t cmdlen = 0;
+	lm_char_t *cmdline;
+	lm_void_t *ptr;
+	lm_char_t **cmdargs = NULL;
+	int i;
 
 	if (process->pid = (lm_pid_t)GetCurrentProcessId()) {
 		wcmdline = GetCommandLineW();
@@ -224,9 +231,50 @@ LM_GetCommandLine(lm_process_t *process)
 		             // GetCommandLineW on the target process through
 		             // CreateRemoteThread and then reading 8191 bytes
 		             // from there (maximum command line length).
+		             // NOTE: If this is to be supported, one should
+		             //       not forget to free the wcmdline buffer
+		             //       *only* for external processes.
 	}
 
-	return wcstoutf8(wcmdline, NULL, 0);
+	wcmdargs = CommandLineToArgvW(wcmdline, &argc);
+	if (!wcmdargs)
+		return NULL;
+
+	cmdargs = calloc((size_t)argc, sizeof(lm_char_t *));
+	if (!cmdargs)
+		goto FREE_EXIT;
+
+	for (i = 0; i < argc; ++i) {
+		len = wcslen(wcmdargs[i]) + 1; // we will include the null terminator in the length
+		ptr = cmdline;
+		cmdline = realloc(cmdline, (cmdlen + len) * sizeof(lm_char_t));
+		if (!cmdline) {
+			if (ptr) free(ptr);
+			goto FREE_EXIT2;
+		}
+
+		if (!wcstoutf8(wcmdargs[i], &cmdline[cmdlen], len)) {
+			free(cmdline);
+			goto FREE_EXIT2;
+		}
+
+		cmdargs[i] = &cmdline[cmdlen];
+
+		cmdlen += len;
+	}
+
+	if (cmdlen == 0) {
+		free(cmdline);
+		goto FREE_EXIT2;
+	}
+
+	goto FREE_EXIT;
+FREE_EXIT2:
+	free(cmdargs);
+	cmdargs = NULL;
+FREE_EXIT:
+	LocalFree(wcmdargs);
+	return cmdargs;
 }
 
 /********************************/

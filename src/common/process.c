@@ -25,11 +25,12 @@
 #include <string.h>
 
 LM_API lm_void_t LM_CALL
-LM_FreeCommandLine(lm_char_t *cmdline)
+LM_FreeCommandLine(lm_char_t **cmdline)
 {
 	assert(cmdline);
-	
-	free(cmdline);
+
+	free(*cmdline); // Free cmdbuf
+	free(cmdline);  // Free cmdargs
 }
 
 /********************************/

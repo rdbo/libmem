@@ -240,7 +240,7 @@ LM_GetCommandLine(lm_process_t *process)
 	if (!wcmdargs)
 		return NULL;
 
-	cmdargs = calloc((size_t)argc, sizeof(lm_char_t *));
+	cmdargs = calloc((size_t)argc + 1, sizeof(lm_char_t *));
 	if (!cmdargs)
 		goto FREE_EXIT;
 
@@ -262,6 +262,8 @@ LM_GetCommandLine(lm_process_t *process)
 
 		cmdlen += len;
 	}
+
+	cmdargs[i] = NULL;
 
 	if (cmdlen == 0) {
 		free(cmdline);

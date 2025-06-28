@@ -28,4 +28,4 @@ jobs:
           echo "Starting target..."
           ./build/tests/target &
           echo "Starting unit tests..."
-          sudo ./build/tests/unit
+          sudo ./build/tests/unit arg1 arg2 arg3

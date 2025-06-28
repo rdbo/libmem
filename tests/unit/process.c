@@ -62,8 +62,9 @@ char *test_LM_GetCommandLine(lm_process_t *pcurproc)
 	mu_assert("failed to retrieve command line for current process", cmdline != NULL);
 	mu_assert("command line is empty", strlen(cmdline) > 0);
 	printf(" <CMDLINE: %s> ", cmdline);
-
 	LM_FreeCommandLine(cmdline);
+
+	return NULL;
 }
 
 char *test_LM_FindProcess(lm_process_t *ptargetproc)

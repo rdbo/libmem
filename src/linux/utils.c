@@ -135,7 +135,7 @@ get_process_cmdline(lm_pid_t pid)
 	lm_char_t *ptr;
 	size_t cmdlen = 0;
 	size_t len = 0;
-	const size_t chunk_size = 1;
+	const size_t chunk_size = 4096;
 
 	assert(pid != LM_PID_BAD);
 

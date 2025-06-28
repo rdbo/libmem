@@ -216,7 +216,7 @@ LM_GetCommandLine(lm_process_t *process)
 {
 	LPWSTR wcmdline;
 	LPWSTR *wcmdargs;
-	int argc = 0;
+	int argc;
 	size_t len = 0;
 	size_t cmdlen = 0;
 	lm_char_t *cmdline;
@@ -224,7 +224,6 @@ LM_GetCommandLine(lm_process_t *process)
 	lm_char_t **cmdargs = NULL;
 	int i;
 
-	printf("GETCMDLINE\n");
 	if (process->pid = (lm_pid_t)GetCurrentProcessId()) {
 		wcmdline = GetCommandLineW();
 	} else {
@@ -237,7 +236,6 @@ LM_GetCommandLine(lm_process_t *process)
 		             //       *only* for external processes.
 	}
 
-	printf("GOT CMDLINE\n");
 	wcmdargs = CommandLineToArgvW(wcmdline, &argc);
 	if (!wcmdargs)
 		return NULL;
@@ -245,8 +243,6 @@ LM_GetCommandLine(lm_process_t *process)
 	cmdargs = calloc((size_t)argc + 1, sizeof(lm_char_t *));
 	if (!cmdargs)
 		goto FREE_EXIT;
-
-	printf("ALLOCATED (argc: %d)\n", argc);
 
 	for (i = 0; i < argc; ++i) {
 		len = wcslen(wcmdargs[i]) + 1; // we will include the null terminator in the length
@@ -267,16 +263,12 @@ LM_GetCommandLine(lm_process_t *process)
 		cmdlen += len;
 	}
 
-	printf("FINISHED LOOP: %s\n", cmdline);
+	cmdargs[i] = NULL;
 
 	if (cmdlen == 0) {
 		free(cmdline);
 		goto FREE_EXIT2;
 	}
-
-	cmdargs[i] = NULL;
-
-	printf("OK\n");
 
 	goto FREE_EXIT;
 FREE_EXIT2:

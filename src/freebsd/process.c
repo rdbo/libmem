@@ -42,7 +42,6 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 	unsigned int i;
 	lm_process_t process;
 	FILE *elf;
-	char *cmdline;
 
 	if (!callback)
 		return result;
@@ -70,12 +69,6 @@ LM_EnumProcesses(lm_bool_t (LM_CALL *callback)(lm_process_t *process,
 		process.bits = get_elf_bits(process.path);
 
 		process.arch = get_architecture_from_bits(process.bits);
-
-		cmdline = get_process_cmdline(&procs[i]);
-		if (!cmdline)
-			continue;
-
-		snprintf(process.cmdline, sizeof(process.cmdline), "%s", cmdline);
 
 		if (callback(&process, arg) == LM_FALSE)
 			break;
@@ -175,6 +168,34 @@ LM_GetProcessEx(lm_pid_t      pid,
 CLOSE_EXIT:
 	procstat_close(ps);
 	return result;
+}
+
+/********************************/
+
+LM_API lm_char_t * LM_CALL
+LM_GetCommandLine(lm_process_t *process)
+{
+	struct procstat *ps;
+	struct kinfo_proc *proc;
+	unsigned int nprocs;
+	lm_char_t *cmdline = NULL;
+
+	assert(process != NULL);
+
+	ps = procstat_open_sysctl();
+	if (!ps)
+		return result;
+
+	proc = procstat_getprocs(ps, KERN_PROC_PID, process->pid, &nprocs);
+	if (!proc)
+		goto CLOSE_EXIT;
+
+	cmdline = get_process_cmdline(ps, proc);
+
+	procstat_freeprocs(ps, proc);
+CLOSE_EXIT:
+	procstat_close(ps);
+	return cmdline;
 }
 
 /********************************/

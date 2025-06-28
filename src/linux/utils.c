@@ -126,24 +126,52 @@ get_process_path(lm_pid_t pid, lm_char_t *pathbuf, size_t pathsize)
 	return (lm_size_t)len;
 }
 
-lm_size_t
-get_process_cmdline(lm_pid_t pid, lm_char_t *cmdbuf, lm_size_t cmdsize)
+lm_char_t *
+get_process_cmdline(lm_pid_t pid)
 {
-	lm_size_t size = 0;
 	char cmdline_path[PATH_MAX];
 	FILE *file;
+	lm_char_t *cmdbuf = NULL;
+	lm_char_t *ptr;
+	size_t cmdlen = 0;
+	size_t len = 0;
+	const size_t chunk_size = 1;
 
-	assert(pid != LM_PID_BAD && cmdbuf != NULL && cmdsize > 0);
+	assert(pid != LM_PID_BAD);
 
 	snprintf(cmdline_path, sizeof(cmdline_path), "%s/%d/cmdline", PROCFS_PATH, pid);
 
 	file = fopen(cmdline_path, "r");
 	if (!file)
-		return size;
+		return cmdbuf;
 
-	size = fread(cmdbuf, 1, cmdsize - 1, file);
+	cmdbuf = calloc(sizeof(lm_char_t), chunk_size + 1);
+	if (!cmdbuf)
+		goto CLOSE_EXIT;
 
+	for (;;) {
+		len = fread(&cmdbuf[cmdlen], sizeof(lm_char_t), chunk_size, file);
+		cmdlen += len;
+		if (len < chunk_size)
+			break;
+
+		ptr = cmdbuf;
+		cmdbuf = realloc(cmdbuf, cmdlen + chunk_size + 1);
+		if (!cmdbuf) {
+			free(ptr);
+			goto CLOSE_EXIT;
+		}
+	}
+
+	if (cmdlen == 0) {
+		free(cmdbuf);
+		cmdbuf = NULL;
+		goto CLOSE_EXIT;
+	}
+
+	cmdbuf[cmdlen] = '\0';
+
+CLOSE_EXIT:
 	fclose(file);
-
-	return size;
+	return cmdbuf;
 }

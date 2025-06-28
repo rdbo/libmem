@@ -228,6 +228,38 @@ CLEAN_EXIT:
 
 /********************************/
 
+LM_API lm_char_t * LM_CALL
+LM_GetCommandLine(lm_process_t *process)
+{
+	lm_char_t *cmdline;
+	LPWSTR wcmdline;
+	size_t len;
+
+	if (process->pid = (lm_pid_t)GetCurrentProcessId()) {
+		wcmdline = GetCommandLineW();
+	} else {
+		return NULL; // Unsupported for now. May be possible by running
+		             // GetCommandLineW on the target process through
+		             // CreateRemoteThread and then reading 8191 bytes
+		             // from there (maximum command line length).
+	}
+
+	len = wcslen(wcmdline);
+
+	cmdline = calloc(sizeof(lm_char_t), len);
+	if (!cmdline)
+		return NULL;
+
+	if (!wcstoutf8(wcmdline, cmdline, sizeof(process->cmdline))) {
+		free(cmdline);
+		return NULL;
+	}
+
+	return cmdline;
+}
+
+/********************************/
+
 LM_API lm_size_t LM_CALL
 LM_GetSystemBits()
 {

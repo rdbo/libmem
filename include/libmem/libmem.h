@@ -155,7 +155,6 @@ typedef struct lm_process_t {
 	lm_time_t start_time; /* Process start timestamp, in milliseconds since last boot */
 	lm_char_t path[LM_PATH_MAX];
 	lm_char_t name[LM_PATH_MAX];
-	lm_char_t cmdline[LM_CMDLINE_MAX];
 } lm_process_t;
 
 typedef struct lm_thread_t {
@@ -286,6 +285,27 @@ LM_GetProcess(lm_process_t *process_out);
 LM_API lm_bool_t LM_CALL
 LM_GetProcessEx(lm_pid_t      pid,
 		lm_process_t *process_out);
+
+/**
+ * Retrieves the command line string of a process.
+ * WARN: Requires reading process memory on Windows.
+ *
+ * @param process The process to retrieve the command line from.
+ *
+ * @return An allocated string containing the command line of the
+ * process (must be freed with `LM_FreeCommandLine`), or `NULL`
+ * if it fails.
+ */
+LM_API lm_char_t * LM_CALL
+LM_GetCommandLine(lm_process_t *process);
+
+/**
+ * Frees a command line buffer obtained from `LM_GetCommandLine`
+ *
+ * @param cmdline The allocated command line buffer
+ */
+LM_API lm_void_t LM_CALL
+LM_FreeCommandLine(lm_char_t *cmdline);
 
 /**
  * Searches for a process by name and returns whether the process was

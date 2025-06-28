@@ -32,11 +32,11 @@ get_process_start_time(struct kinfo_proc *proc)
 	return (lm_time_t)((proc->ki_start.tv_sec * 1000) + (proc->ki_start.tv_usec / 1000.0L));
 }
 
-char *
+lm_char_t *
 get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 {
-	char *buf = NULL;
-	char *ptr;
+	lm_char_t *buf = NULL;
+	lm_char_t *ptr;
 	size_t length = 0;
 	size_t i;
 	char **args;
@@ -44,7 +44,7 @@ get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 
 	args = procstat_getargv(procstat, kipp, 0);
 
-	buf = calloc(1, length + sizeof(proc->ki_comm) + 1);
+	buf = calloc(sizeof(lm_char_t), length + sizeof(proc->ki_comm) + 1);
 	if (!buf)
 		return NULL;
 	strncpy(&buf[length], proc->ki_comm, sizeof(proc->ki_comm));
@@ -55,15 +55,20 @@ get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 	for (i = 0; args[i] != NULL; ++i) {
 		size = strlen(args[i]);
 		ptr = buf;
-		buf = realloc(buf, length + size + 1)
+		buf = realloc(buf, (length + 1 + size + 1) * sizeof(lm_char_t))
 		if (!buf) {
 			free(ptr);
 			return NULL;
 		}
+
+		buf[length] = ' ';
+		length += 1;
+		
 		strncpy(&buf[length], args[i], size);
 		length += size;
-		buf[length] = '\0';
 	}
+
+	buf[length] = '\0';
 
 	return buf;
 }

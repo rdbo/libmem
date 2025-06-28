@@ -24,6 +24,16 @@
 #include <assert.h>
 #include <string.h>
 
+LM_API lm_void_t LM_CALL
+LM_FreeCommandLine(lm_char_t *cmdline)
+{
+	assert(cmdline);
+	
+	free(cmdline);
+}
+
+/********************************/
+
 typedef struct {
 	lm_process_t *process_out;
 	lm_string_t   process_name;

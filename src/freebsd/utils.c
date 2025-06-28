@@ -71,7 +71,7 @@ get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 		strncpy(&buf[length], args[i], size);
 
 		ptr = cmdargs;
-		cmdargs = realloc(cmdargs, (i + 1) * sizeof(lm_char_t *));
+		cmdargs = realloc(cmdargs, (i + 2) * sizeof(lm_char_t *));
 		if (!cmdargs) {
 			free(ptr);
 			free(buf);
@@ -81,6 +81,9 @@ get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 
 		length += size;
 	}
+
+	cmdargs[0] = buf;
+	cmdargs[i + 1] = NULL;
 
 	return cmdargs;
 }

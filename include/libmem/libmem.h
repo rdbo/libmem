@@ -106,8 +106,10 @@ typedef uint32_t lm_prot_t;
  *        necessarily fully supported by libmem.
  */
 enum {
+	LM_ARCH_GENERIC = 0,
+	
 	/* ARM */
-	LM_ARCH_ARMV7 = 0, /* ARMv7 */
+	LM_ARCH_ARMV7, /* ARMv7 */
 	LM_ARCH_ARMV8,     /* ARMv8 */
 	LM_ARCH_THUMBV7,   /* ARMv7, thumb mode */
 	LM_ARCH_THUMBV8,   /* ARMv8, thumb mode */

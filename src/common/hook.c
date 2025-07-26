@@ -69,7 +69,9 @@ LM_HookCode(lm_address_t  from,
 		 * the same functionality over here.
 		 */
 		no_ops = (lm_byte_t *)alloca(hooksize);
-		generate_no_ops(no_ops, hooksize);
+		if (generate_no_ops(no_ops, hooksize) == 0)
+			goto TRAMP_EXIT;
+
 		if (LM_WriteMemory(tramp + aligned_size, no_ops, hooksize) == 0)
 			goto TRAMP_EXIT;
 

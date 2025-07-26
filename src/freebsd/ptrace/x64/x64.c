@@ -32,8 +32,6 @@
 #include <sys/mman.h>
 #include <memory.h>
 
-#define ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
-
 long
 ptrace_get_syscall_ret(pid_t pid)
 {

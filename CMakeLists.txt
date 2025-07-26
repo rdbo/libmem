@@ -73,20 +73,29 @@ set(INTERNAL_DIR "${LIBMEM_DIR}/internal")
 set(COMMON_DIR "${LIBMEM_DIR}/src/common")
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
-	file(GLOB_RECURSE LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c" "${LIBMEM_DIR}/src/common/*.c" "${LIBMEM_DIR}/src/common/*.cpp" "${INTERNAL_DIR}/winutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
+	# The only supported architecture for windows will be x86/x64
+	file(GLOB LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c" "${LIBMEM_DIR}/src/common/*.c" "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/common/*.cpp" "${INTERNAL_DIR}/winutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+	# Architecture specific files
 	if(${LIBMEM_ARCH} STREQUAL x86_64)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/linux/ptrace/x64/*.c")
 	elseif(${LIBMEM_ARCH} STREQUAL i686 OR ${LIBMEM_ARCH} STREQUAL i386)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/linux/ptrace/x86/*.c")
+	else()
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/generic.c" "${LIBMEM_DIR}/src/linux/ptrace/generic/*.c")
 	endif()
+
 	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/linux/*.c" "${LIBMEM_DIR}/src/linux/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${LIBMEM_DIR}/src/common/*.cpp" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+	# Architecture specific files
 	if(${LIBMEM_ARCH} STREQUAL x86_64 OR ${LIBMEM_ARCH} STREQUAL amd64)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/freebsd/ptrace/x64/*.c")
 	elseif(${LIBMEM_ARCH} STREQUAL i686 OR ${LIBMEM_ARCH} STREQUAL i386)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/freebsd/ptrace/x86/*.c")
+	else()
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/generic.c" "${LIBMEM_DIR}/src/linux/ptrace/generic/*.c")
 	endif()
+
 	file(GLOB LIBMEM_SRC ${LIBMEM_ARCH_SRC} "${LIBMEM_DIR}/src/freebsd/*.c" "${LIBMEM_DIR}/src/freebsd/ptrace/*.c" "${LIBMEM_DIR}/src/common/*.c" "${LIBMEM_DIR}/src/common/*.cpp" "${INTERNAL_DIR}/posixutils/*.c" "${INTERNAL_DIR}/elfutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
 endif()
 set(LIBMEM_DEPS

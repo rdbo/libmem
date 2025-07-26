@@ -25,6 +25,8 @@
 
 #include <unistd.h>
 
+#define ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+
 typedef struct {
 	int syscall_num;
 	long args[6];

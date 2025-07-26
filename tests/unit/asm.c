@@ -37,7 +37,7 @@
 	if (check_size) check_content = memcmp(payload, arch##_##ASM_BYTES, size) == 0; \
 	printf("<%s PAYLOAD: { ", #arch); \
 	for (i = 0; i < size; ++i) printf("%hhx ", payload[i]); \
-	printf("}>"); \
+	printf("}> "); \
 	LM_FreePayload(payload); \
 	mu_assert("payload size of " #arch " is incorrect", check_size); \
 	\
@@ -82,7 +82,7 @@ char *test_LM_Assemble(void *arg)
 		payload = X86_INST_BYTES;
 		break;
 	default:
-		printf("<WARN: Architecture untested>");
+		printf("<WARN: Architecture untested> ");
 		fflush(stdout);
 		return NULL;
 	}
@@ -129,7 +129,7 @@ char *test_LM_Disassemble(void *arg)
 		payload = X86_INST_BYTES;
 		break;
 	default:
-		printf("<WARN: Architecture untested>");
+		printf("<WARN: Architecture untested> ");
 		fflush(stdout);
 		return NULL;
 	}

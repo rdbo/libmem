@@ -95,6 +95,7 @@ impl fmt::Display for Prot {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Arch {
+    GENERIC,
     ARMV7,
     ARMV8,
     THUMBV7,
@@ -124,6 +125,7 @@ impl TryFrom<lm_arch_t> for Arch {
     type Error = ();
     fn try_from(value: lm_arch_t) -> Result<Self, Self::Error> {
         match value {
+            LM_ARCH_GENERIC => Ok(Self::GENERIC),
             LM_ARCH_ARMV7 => Ok(Self::ARMV7),
             LM_ARCH_ARMV8 => Ok(Self::ARMV8),
             LM_ARCH_THUMBV7 => Ok(Self::THUMBV7),
@@ -155,6 +157,7 @@ impl TryFrom<lm_arch_t> for Arch {
 impl Into<lm_arch_t> for Arch {
     fn into(self) -> lm_arch_t {
         match self {
+            Self::GENERIC => LM_ARCH_GENERIC,
             Self::ARMV7 => LM_ARCH_ARMV7,
             Self::ARMV8 => LM_ARCH_ARMV8,
             Self::THUMBV7 => LM_ARCH_THUMBV7,

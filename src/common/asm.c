@@ -71,7 +71,7 @@ LM_AssembleEx(lm_string_t  code,
 	size_t asmsize;
 	size_t count;
 
-	if (!code || arch >= LM_ARCH_MAX || !payload_out)
+	if (!code || arch == LM_ARCH_GENERIC || arch >= LM_ARCH_MAX || !payload_out)
 		return size;
 
 	switch (arch) {

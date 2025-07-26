@@ -61,6 +61,7 @@ py_lm_arch_str(PyObject *self)
 	const char *archstr;
 
 	switch (pyarch->arch) {
+	case LM_ARCH_GENERIC: archstr = "LM_ARCH_GENERIC"; break;
 	case LM_ARCH_ARMV7: archstr = "LM_ARCH_ARMV7"; break;
 	case LM_ARCH_ARMV8: archstr = "LM_ARCH_ARMV8"; break;
 	case LM_ARCH_THUMBV7: archstr = "LM_ARCH_THUMBV7"; break;

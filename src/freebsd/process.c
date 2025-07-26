@@ -172,7 +172,7 @@ CLOSE_EXIT:
 
 /********************************/
 
-LM_API lm_char_t * LM_CALL
+LM_API lm_char_t ** LM_CALL
 LM_GetCommandLine(lm_process_t *process)
 {
 	struct procstat *ps;

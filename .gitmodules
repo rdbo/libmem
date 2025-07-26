@@ -1,10 +1,10 @@
 [submodule "capstone"]
 	path = external/capstone
-	url = https://github.com/capstone-engine/capstone
+	url = https://github.com/rdbo/capstone
 	branch = v4
 [submodule "keystone"]
 	path = external/keystone
-	url = https://github.com/keystone-engine/keystone
+	url = https://github.com/rdbo/keystone
 	branch = master
 [submodule "vcvars-bash"]
 	path = external/vcvars-bash

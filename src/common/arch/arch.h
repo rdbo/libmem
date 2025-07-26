@@ -89,9 +89,9 @@ get_architecture_from_bits(lm_size_t bits)
 	case LM_ARCH_SPARC:
 	case LM_ARCH_SPARC64:
 		if (bits == 64)
-			target_arch = LM_ARCH_SPARC;
-		else
 			target_arch = LM_ARCH_SPARC64;
+		else
+			target_arch = LM_ARCH_SPARC;
 		break;
 	default:
 		target_arch = arch;

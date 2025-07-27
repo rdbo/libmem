@@ -57,8 +57,10 @@ namespace libmem {
 	};
 
 	enum class Arch: uint32_t {
+		GENERIC = 0,
+
 		/* ARM */
-		ARMV7 = 0, /* ARMv7 */
+		ARMV7,     /* ARMv7 */
 		ARMV8,     /* ARMv8 */
 		THUMBV7,   /* ARMv7, thumb mode */
 		THUMBV8,   /* ARMv8, thumb mode */

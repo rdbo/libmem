@@ -33,6 +33,10 @@ def get_process_ex(pid: int) -> Optional[Process]:
     return _libmem.LM_GetProcessEx(pid)
 get_process_ex.__doc__ = _libmem.LM_GetProcessEx.__doc__
 
+def get_command_line(proc: Process) -> Optional[List[str]]:
+    return _libmem.LM_GetCommandLine(proc)
+get_command_line.__doc__ = _libmem.LM_GetCommandLine.__doc__
+
 def find_process(process_name: str) -> Optional[Process]:
     return _libmem.LM_FindProcess(process_name)
 find_process.__doc__ = _libmem.LM_FindProcess.__doc__

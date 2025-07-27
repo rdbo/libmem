@@ -28,6 +28,11 @@ print(parent_proc)
 
 separator()
 
+print("[*] Current Process Command Line")
+print(" ".join(get_command_line(curproc)))
+
+separator()
+
 print("[*] Remote Process")
 proc = find_process("target")
 print(proc)

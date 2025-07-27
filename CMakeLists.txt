@@ -75,7 +75,7 @@ set(COMMON_DIR "${LIBMEM_DIR}/src/common")
 if(${CMAKE_SYSTEM_NAME} STREQUAL Windows OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	# The only supported architecture for windows will be x86/x64
 	file(GLOB LIBMEM_SRC "${LIBMEM_DIR}/src/win/*.c" "${LIBMEM_DIR}/src/common/*.c" "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/common/*.cpp" "${INTERNAL_DIR}/winutils/*.c" "${INTERNAL_DIR}/demangler/*.cpp")
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Android)
 	# Architecture specific files
 	if(${LIBMEM_ARCH} STREQUAL x86_64)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/linux/ptrace/x64/*.c")

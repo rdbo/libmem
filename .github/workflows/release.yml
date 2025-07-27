@@ -53,12 +53,12 @@ jobs:
               {"target": "i686-linux-musl-static", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-musl-shared", "runs-on": "ubuntu-latest"}
               {"target": "x86_64-linux-musl-static", "runs-on": "ubuntu-latest"}
-              {"target": "i686-windows-msvc-shared-md", "runs-on": "windows-2019"}
-              {"target": "i686-windows-msvc-static-md", "runs-on": "windows-2019"}
-              {"target": "i686-windows-msvc-static-mt", "runs-on": "windows-2019"}
-              {"target": "x86_64-windows-msvc-shared-md", "runs-on": "windows-2019"}
-              {"target": "x86_64-windows-msvc-static-md", "runs-on": "windows-2019"}
-              {"target": "x86_64-windows-msvc-static-mt", "runs-on": "windows-2019"}
+              {"target": "i686-windows-msvc-shared-md", "runs-on": "windows-2025"}
+              {"target": "i686-windows-msvc-static-md", "runs-on": "windows-2025"}
+              {"target": "i686-windows-msvc-static-mt", "runs-on": "windows-2025"}
+              {"target": "x86_64-windows-msvc-shared-md", "runs-on": "windows-2025"}
+              {"target": "x86_64-windows-msvc-static-md", "runs-on": "windows-2025"}
+              {"target": "x86_64-windows-msvc-static-mt", "runs-on": "windows-2025"}
               '
           )
           printf 'Matrix: %s\n' "$(jq <<< "$matrix")"

@@ -4,7 +4,7 @@ on: [workflow_dispatch]
 
 jobs:
   build-and-test:
-    runs-on: windows-2019
+    runs-on: windows-2025
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

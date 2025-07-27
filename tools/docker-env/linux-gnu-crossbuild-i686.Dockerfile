@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:oldstable
 
 # Create Debian Buster (glibc 2.28) image for cross-building i686 linux GNU binaries
 

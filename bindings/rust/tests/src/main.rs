@@ -6,7 +6,7 @@ use libmem::{
     enum_modules_ex, enum_processes, enum_segments, enum_segments_ex, enum_symbols,
     enum_symbols_demangled, find_module, find_module_ex, find_process, find_segment,
     find_segment_ex, find_symbol_address, find_symbol_address_demangled, free_memory,
-    free_memory_ex, get_bits, get_process, get_process_ex, get_system_bits, get_thread,
+    free_memory_ex, get_bits, get_process, get_process_ex, get_command_line, get_system_bits, get_thread,
     get_thread_ex, get_thread_process, hook_code, hook_code_ex, is_process_alive, load_module,
     load_module_ex, pattern_scan, pattern_scan_ex, prot_memory, prot_memory_ex, read_memory,
     read_memory_ex, set_memory, set_memory_ex, sig_scan, sig_scan_ex, unhook_code, unhook_code_ex,
@@ -36,6 +36,9 @@ fn main() {
 
     let process = get_process().unwrap();
     println!("[*] Current Process: {}", process);
+
+    let cmdline = get_command_line(&process).unwrap().join(" ");
+    println!("[*] Current Process Command Line: {}", cmdline);
 
     let target_process = find_process("target").unwrap();
     println!("[*] Target Process: {}", target_process);

@@ -574,6 +574,14 @@ extern "C" {
     pub fn LM_GetProcessEx(pid: lm_pid_t, process_out: *mut lm_process_t) -> lm_bool_t;
 }
 extern "C" {
+    #[doc = "Retrieves the command line arguments of a process."]
+    pub fn LM_GetCommandLine(process: *const lm_process_t) -> *mut *mut lm_char_t;
+}
+extern "C" {
+    #[doc = "Frees a command line buffer obtained from `LM_GetCommandLine`"]
+    pub fn LM_FreeCommandLine(cmdline: *mut *mut lm_char_t);
+}
+extern "C" {
     #[doc = " Searches for a process by name and returns whether the process was\n found or not.\n\n @param process_name The name of the process you are trying to find\n (e.g `game.exe`). It can also be a relative path, such as\n `/game/hello` for a process at `/usr/share/game/hello`.\n @param process_out A pointer to the `lm_process_t` structure that will be\n populated with information about the found process.\n\n @return `LM_TRUE` if the process with the specified name was found\n successfully or `LM_FALSE` otherwise."]
     pub fn LM_FindProcess(process_name: lm_string_t, process_out: *mut lm_process_t) -> lm_bool_t;
 }

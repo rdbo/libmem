@@ -121,6 +121,29 @@ pub fn get_process_ex(pid: Pid) -> Option<Process> {
     }
 }
 
+/// Retrieves the command line arguments of a process.
+pub fn get_command_line(process: &Process) -> Option<Vec<String>> {
+    let mut cmdargs = Vec::new();
+    let raw_process: lm_process_t = process.to_owned().into();
+    unsafe {
+        let raw_cmdargs = libmem_sys::LM_GetCommandLine(&raw_process as *const lm_process_t);
+        if raw_cmdargs.is_null() {
+            return None;
+        }
+
+        let mut argptr = raw_cmdargs;
+        while !(*argptr).is_null() {
+            let arg = CStr::from_ptr(*argptr).to_str().unwrap().to_owned();
+            cmdargs.push(arg);
+            argptr = argptr.offset(1);
+        }
+
+        libmem_sys::LM_FreeCommandLine(raw_cmdargs);
+    }
+
+    Some(cmdargs)
+}
+
 /// Searches for a process by its name
 pub fn find_process(name: &str) -> Option<Process> {
     let mut raw_process: MaybeUninit<lm_process_t> = MaybeUninit::uninit();

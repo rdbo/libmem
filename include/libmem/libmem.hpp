@@ -204,6 +204,9 @@ namespace libmem {
 	/// Gets a process by its process ID
 	LM_API std::optional<Process> LM_CALL GetProcess(Pid pid);
 
+	/// Retrieves the command line arguments of a process
+	LM_API std::optional<std::vector<std::string>> LM_CALL GetCommandLine(const Process *process);
+
 	/// Finds a process by its name
 	LM_API std::optional<Process> LM_CALL FindProcess(const char *process_name);
 

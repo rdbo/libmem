@@ -107,6 +107,15 @@ LM_API_EXPORT int main()
 	std::cout << "[*] Current Process (by PID): " << LM::GetProcess(cur_process.pid).value().to_string() << std::endl;
 
 	separator();
+
+	auto cmdline = LM::GetCommandLine(&cur_process).value();
+	std::cout << "[*] Current Process Command Line: ";
+	for (auto &arg : cmdline) {
+		std::cout << arg << " ";
+	}
+	std::cout << std::endl;
+
+	separator();
 	
 	auto process = LM::FindProcess("target").value();
 	std::cout << "[*] Target Process: " << process.to_string() << std::endl;

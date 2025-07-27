@@ -261,6 +261,25 @@ std::optional<Process> libmem::GetProcess(Pid pid)
 	return { Process(&proc) };
 }
 
+std::optional<std::vector<std::string>> libmem::GetCommandLine(const Process *process)
+{
+	std::vector<std::string> cmdargs;
+	lm_char_t **cmdline;
+	lm_char_t **ptr;
+	lm_process_t proc;
+
+	proc = process->convert();
+	cmdline = LM_GetCommandLine(&proc);
+	if (!cmdline)
+		return std::nullopt;
+
+	for (ptr = cmdline; *ptr != NULL; ptr = &ptr[1]) {
+		cmdargs.push_back(std::string(*ptr));
+	}
+
+	return { cmdargs };
+}
+
 std::optional<Process> libmem::FindProcess(const char *process_name)
 {
 	lm_process_t process;

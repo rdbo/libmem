@@ -31,6 +31,9 @@ aarch64)
 esac
 
 echo "===== TOOLSETS ====="
-. "$(dirname -- "$0")/vcvarsall.sh" all
+. "$(dirname -- "$0")/../../external/vcvars-bash/vcvarsall.sh" all
 echo "===================="
+
+echo
+
 exec "$(dirname -- "$0")/../../external/vcvars-bash/vcvarsrun.sh" "$_vcvars_arch" -vcvars_ver="$_vcvars_ver" -- "$@"

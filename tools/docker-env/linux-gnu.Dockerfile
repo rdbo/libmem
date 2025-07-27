@@ -16,5 +16,7 @@ RUN wget -O- "https://github.com/Kitware/CMake/releases/download/v3.27.8/cmake-3
 RUN groupadd -g 911 build \
     && useradd -mN -u 911 -g 911 build
 
+RUN test -f /usr/bin/python || ln -s /usr/bin/python3 /usr/bin/python
+
 COPY --chmod=700 entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]

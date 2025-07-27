@@ -22,12 +22,13 @@ fi
 case "$_arch" in
 aarch64)
   # aarch64 require v143 toolset (to support ARM64/ARM64EC and MT/MTd runtime)
-  _vcvars_ver=15.0
+  _vcvars_ver=auto
   ;;
 *)
   # default to v141 toolset (goal is to support the lowest version possible)
-  _vcvars_ver=15.0
+  _vcvars_ver=auto
   ;;
 esac
 
+. "$(dirname -- "$0")/../../external/vcvars-bash/vcvarsrun.sh" all # dump toolset versions
 exec "$(dirname -- "$0")/../../external/vcvars-bash/vcvarsrun.sh" "$_vcvars_arch" -vcvars_ver="$_vcvars_ver" -- "$@"

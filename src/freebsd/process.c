@@ -184,7 +184,7 @@ LM_GetCommandLine(lm_process_t *process)
 
 	ps = procstat_open_sysctl();
 	if (!ps)
-		return result;
+		return cmdargs;
 
 	proc = procstat_getprocs(ps, KERN_PROC_PID, process->pid, &nprocs);
 	if (!proc)

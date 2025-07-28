@@ -21,6 +21,7 @@
  */
 
 #include "utils.h"
+#include <string.h>
 #include <assert.h>
 
 lm_time_t
@@ -43,7 +44,7 @@ get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 	char **args;
 	size_t size;
 
-	args = procstat_getargv(procstat, kipp, 0);
+	args = procstat_getargv(procstat, proc, 0);
 
 	buf = calloc(sizeof(lm_char_t), length + sizeof(proc->ki_comm) + 1);
 	if (!buf)
@@ -62,7 +63,7 @@ get_process_cmdline(struct procstat *procstat, struct kinfo_proc *proc)
 	for (i = 0; args[i] != NULL; ++i) {
 		size = strlen(args[i]) + 1; // we will include the null term
 		ptr = buf;
-		buf = realloc(buf, (length + size) * sizeof(lm_char_t))
+		buf = realloc(buf, (length + size) * sizeof(lm_char_t));
 		if (!buf) {
 			free(ptr);
 			return NULL;

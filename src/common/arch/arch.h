@@ -34,6 +34,12 @@ generate_hook_payload(lm_address_t from, lm_address_t to, lm_size_t bits, lm_byt
 lm_size_t
 generate_no_ops(lm_byte_t *buf, lm_size_t size);
 
+// Used to allocate memory for the trampoline.
+// Needs to be greater or equal to the max hook size,
+// aligned to the nop size of the specific architecture.
+lm_size_t
+get_max_hook_size();
+
 /* NOTE: This function does heavy assumptions about processes running in a different
  *       bitsize than the current process. More testing should be done to check if
  *       it actually holds. */

@@ -81,6 +81,8 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux OR ${CMAKE_SYSTEM_NAME} STREQUAL Andr
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/linux/ptrace/x64/*.c")
 	elseif(${LIBMEM_ARCH} STREQUAL i686 OR ${LIBMEM_ARCH} STREQUAL i386)
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/x86.c" "${LIBMEM_DIR}/src/linux/ptrace/x86/*.c")
+	elseif(${LIBMEM_ARCH} STREQUAL aarch64)
+		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/aarch64.c" "${LIBMEM_DIR}/src/linux/ptrace/generic/*.c")
 	else()
 		set(LIBMEM_ARCH_SRC "${LIBMEM_DIR}/src/common/arch/generic.c" "${LIBMEM_DIR}/src/linux/ptrace/generic/*.c")
 	endif()

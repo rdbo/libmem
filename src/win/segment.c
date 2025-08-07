@@ -48,7 +48,7 @@ LM_EnumSegments(lm_bool_t (LM_CALL *callback)(lm_segment_t *segment,
 		segment.base = (lm_address_t)meminfo.BaseAddress;
 		segment.size = (lm_size_t)meminfo.RegionSize;
 		segment.end = segment.base + segment.size;
-		segment.prot = get_prot(meminfo.AllocationProtect);
+		segment.prot = get_prot(meminfo.Protect);
 
 		if (callback(&segment, arg) == LM_FALSE)
 			break;
@@ -91,7 +91,7 @@ LM_EnumSegmentsEx(const lm_process_t *process,
 		segment.base = (lm_address_t)meminfo.BaseAddress;
 		segment.size = (lm_size_t)meminfo.RegionSize;
 		segment.end = segment.base + segment.size;
-		segment.prot = get_prot(meminfo.AllocationProtect);
+		segment.prot = get_prot(meminfo.Protect);
 
 		if (callback(&segment, arg) == LM_FALSE)
 			break;

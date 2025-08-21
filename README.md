@@ -196,7 +196,6 @@ target_link_libraries(<YOUR_TARGET_NAME> PRIVATE libmem::libmem)
 
 ### vcpkg
 
-
 [![vcpkg](https://img.shields.io/vcpkg/v/libmem)](https://vcpkg.io/en/package/libmem)
 
 **Note**: Support vcpkg for package management

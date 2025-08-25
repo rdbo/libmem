@@ -379,27 +379,33 @@ namespace libmem {
 	}
 
 	/// Resolves a deep pointer (also known as pointer scan or pointer map) in a remote process
-	LM_API [[nodiscard]] std::optional<Address> LM_CALL DeepPointer(const Process *process, Address base, const std::vector<Address> &offsets);
+	LM_API [[nodiscard]] std::optional<Address> LM_CALL DeepPointer(const Process *process, Address base,
+		                                                            const std::vector<Address> &offsets);
 
 	// Scan API
 
 	/// Scans for some data in the current process
-	LM_API [[nodiscard]] std::optional<Address> LM_CALL DataScan(std::vector<uint8_t> data, Address address, size_t scansize);
+	LM_API [[nodiscard]] std::optional<Address> LM_CALL DataScan(std::vector<uint8_t> data, Address address,
+	                                                             size_t scansize);
 
 	/// Scans for some data in a remote process
-	LM_API [[nodiscard]] std::optional<Address> LM_CALL DataScan(const Process *process, std::vector<uint8_t> data, Address address, size_t scansize);
+	LM_API [[nodiscard]] std::optional<Address> LM_CALL DataScan(const Process *process, std::vector<uint8_t> data,
+		                                                         Address address, size_t scansize);
 
 	/// Scans for a byte pattern with a mask in the current process
-	LM_API [[nodiscard]] std::optional<Address> LM_CALL PatternScan(std::vector<uint8_t> pattern, const char *mask, Address address, size_t scansize);
+	LM_API [[nodiscard]] std::optional<Address> LM_CALL PatternScan(std::vector<uint8_t> pattern, const char *mask,
+		                                                            Address address, size_t scansize);
 
 	/// Scans for a byte pattern with a mask in a remote process
-	LM_API [[nodiscard]] std::optional<Address> LM_CALL PatternScan(const Process *process, std::vector<uint8_t> pattern, const char *mask, Address address, size_t scansize);
+	LM_API [[nodiscard]] std::optional<Address> LM_CALL PatternScan(const Process *process, std::vector<uint8_t> pattern,
+		                                                            const char *mask, Address address, size_t scansize);
 
 	/// Scans for a byte signature in the current process (e.g "DE AD ?? BE EF")
 	LM_API [[nodiscard]] std::optional<Address> LM_CALL SigScan(const char *signature, Address address, size_t scansize);
 
 	/// Scans for a byte signature in a remote process (e.g "DE AD ?? BE EF")
-	LM_API [[nodiscard]] std::optional<Address> LM_CALL SigScan(const Process *process, const char *signature, Address address, size_t scansize);
+	LM_API [[nodiscard]] std::optional<Address> LM_CALL SigScan(const Process *process, const char *signature,
+		                                                        Address address, size_t scansize);
 
 	// Assemble/Disassemble API
 
@@ -410,14 +416,17 @@ namespace libmem {
 	LM_API [[nodiscard]] std::optional<Inst> LM_CALL Assemble(const char *code);
 
 	/// Assembles one or more instructions into machine code
-	LM_API [[nodiscard]] std::optional<std::vector<uint8_t>> LM_CALL Assemble(const char *code, Arch arch, Address runtime_address);
+	LM_API [[nodiscard]] std::optional<std::vector<uint8_t>> LM_CALL Assemble(const char *code, Arch arch,
+		                                                                      Address runtime_address);
 
 	/// Disassembles a single instruction from machine code in the current architecture
 	LM_API [[nodiscard]] std::optional<Inst> LM_CALL Disassemble(Address machine_code);
 
 	/// Disassembles one or more instructions from machine code
 	/// NOTE: 'max_size' and 'instruction_count' can't both be 0, choose one if you want to
-	LM_API [[nodiscard]] std::optional<std::vector<Inst>> LM_CALL Disassemble(Address machine_code, Arch arch, size_t max_size, size_t instruction_count, Address runtime_address);
+	LM_API [[nodiscard]] std::optional<std::vector<Inst>> LM_CALL Disassemble(Address machine_code, Arch arch,
+		                                                                      size_t max_size, size_t instruction_count,
+		                                                                      Address runtime_address);
 
 	/// Calculates the instruction aligned length based on a minimum size in the current process
 	LM_API [[nodiscard]] size_t LM_CALL CodeLength(Address machine_code, size_t min_length);
@@ -431,7 +440,8 @@ namespace libmem {
 	LM_API [[nodiscard]] std::optional<Trampoline> LM_CALL HookCode(Address from, Address to);
 
 	/// Places a hook in the address 'from', jumping to the address 'to' in a remote process
-	LM_API [[nodiscard]] std::optional<RemoteTrampoline> LM_CALL HookCode(const Process *process, Address from, Address to);
+	LM_API [[nodiscard]] std::optional<RemoteTrampoline> LM_CALL HookCode(const Process *process, Address from,
+		                                                                  Address to);
 
 	/// Removes the hook/detour placed in the address 'from', restoring the original code in the current process
 	/// NOTE: the trampoline will become unusable after this operation

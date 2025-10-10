@@ -7,6 +7,6 @@ Description: Advanced Game Hacking Library for C, Modern C++ (static)
 Version: @PACKAGE_VERSION@
 Requires.private: @PROJECT_REQUIRES_PRIVATE@
 Conflicts: libmem
-Libs: -L${libdir} -llibmem
+Libs: -L${libdir} @LIBRARY_NAME@
 Libs.private: @LIBMEM_PC_PRIVATE_LIBS@
 Cflags: -I${includedir} -ULM_EXPORT

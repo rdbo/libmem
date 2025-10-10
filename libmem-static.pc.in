@@ -2,11 +2,11 @@ prefix=@CMAKE_INSTALL_PREFIX@
 libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 
-Name: libmem
-Description: Advanced Game Hacking Library for C, Modern C++
+Name: libmem-static
+Description: Advanced Game Hacking Library for C, Modern C++ (static)
 Version: @PACKAGE_VERSION@
-Requires: @PROJECT_REQUIRES_PRIVATE@
-Conflicts: libmem-static
+Requires.private: @PROJECT_REQUIRES_PRIVATE@
+Conflicts: libmem
 Libs: -L${libdir} -llibmem
 Libs.private: @LIBMEM_PC_PRIVATE_LIBS@
-Cflags: -I${includedir} -DLM_EXPORT
+Cflags: -I${includedir} -ULM_EXPORT

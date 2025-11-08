@@ -110,6 +110,7 @@ LM_FindModuleEx(const lm_process_t *process,
 	arg.name = name;
 	arg.name_len = strlen(name);
 	arg.module_out = module_out;
+	arg.match_path = strchr(name, LM_PATHSEP) ? LM_TRUE : LM_FALSE;
 
 	return LM_EnumModulesEx(process, find_module_callback, (lm_void_t *)&arg) == LM_TRUE && module_out->size > 0 ?
 		LM_TRUE : LM_FALSE;

@@ -267,7 +267,7 @@ Generate the CMake cache:
 ```
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-fpermissive -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 ```
 
 Compile libmem:

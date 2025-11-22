@@ -12,8 +12,12 @@ RUN dpkg --add-architecture i386 \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /cmake
+
 RUN wget -O- "https://github.com/Kitware/CMake/releases/download/v3.27.8/cmake-3.27.8-linux-$(uname -m).tar.gz" \
-      | tar -xz --strip-components=1 -C /
+      | tar -xz --strip-components=1 -C /cmake
+
+RUN cp /cmake/bin/* /bin/
 
 RUN groupadd -g 911 build \
     && useradd -mN -u 911 -g 911 build

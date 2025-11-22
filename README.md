@@ -347,20 +347,25 @@ BSD:
   
 ## API Overview
 ```
+** Process APIs **
 LM_EnumProcesses
 LM_GetProcess
 LM_GetProcessEx
+LM_GetCommandLine
+LM_FreeCommandLine
 LM_FindProcess
 LM_IsProcessAlive
 LM_GetBits
 LM_GetSystemBits
 
+** Thread APIs **
 LM_EnumThreads
 LM_EnumThreadsEx
 LM_GetThread
 LM_GetThreadEx
 LM_GetThreadProcess
 
+** Module APIs **
 LM_EnumModules
 LM_EnumModulesEx
 LM_FindModule
@@ -370,6 +375,7 @@ LM_LoadModuleEx
 LM_UnloadModule
 LM_UnloadModuleEx
 
+** Symbol APIs **
 LM_EnumSymbols
 LM_FindSymbolAddress
 LM_DemangleSymbol
@@ -377,11 +383,13 @@ LM_FreeDemangledSymbol
 LM_EnumSymbolsDemangled
 LM_FindSymbolAddressDemangled
 
+** Memory Segment APIs **
 LM_EnumSegments
 LM_EnumSegmentsEx
 LM_FindSegment
 LM_FindSegmentEx
 
+** Memory APIs **
 LM_ReadMemory
 LM_ReadMemoryEx
 LM_WriteMemory
@@ -394,9 +402,10 @@ LM_AllocMemory
 LM_AllocMemoryEx
 LM_FreeMemory
 LM_FreeMemoryEx
+
+** Scanning APIs **
 LM_DeepPointer
 LM_DeepPointerEx
-
 LM_DataScan
 LM_DataScanEx
 LM_PatternScan
@@ -404,6 +413,7 @@ LM_PatternScanEx
 LM_SigScan
 LM_SigScanEx
 
+** Assembler APIs **
 LM_GetArchitecture
 LM_Assemble
 LM_AssembleEx
@@ -414,11 +424,11 @@ LM_FreeInstructions
 LM_CodeLength
 LM_CodeLengthEx
 
+** Hooking APIs **
 LM_HookCode
 LM_HookCodeEx
 LM_UnhookCode
 LM_UnhookCodeEx
-
 LM_VmtNew
 LM_VmtHook
 LM_VmtUnhook

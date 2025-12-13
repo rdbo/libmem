@@ -16,6 +16,7 @@ fn download_and_resolve_libmem() {
 
     // Get download URL
     let version = env::var("CARGO_PKG_VERSION").unwrap();
+    let target_triple = env::var("TARGET").unwrap();
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let os_name = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let mut arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
@@ -23,23 +24,37 @@ fn download_and_resolve_libmem() {
     if arch == "x86" {
         arch = "i686".to_string();
     }
-    let target_env = if target_os == "linux" && cfg!(feature = "static") {
-        // Always use musl for static linking on Linux
-        "musl".to_owned()
+
+    // Special handling for Windows GNU triples
+    let (fullname, archive) = if target_triple == "x86_64-pc-windows-gnu" {
+        let fullname = format!("libmem-{}-x86_64-windows-gnu-msvcrt-static", version);
+        let archive = format!("{}.tar.gz", fullname);
+        (fullname, archive)
+    } else if target_triple == "i686-pc-windows-gnu" {
+        let fullname = format!("libmem-{}-i686-windows-gnu-msvcrt-static", version);
+        let archive = format!("{}.tar.gz", fullname);
+        (fullname, archive)
     } else {
-        env::var("CARGO_CFG_TARGET_ENV").unwrap()
+        let target_env = if target_os == "linux" && cfg!(feature = "static") {
+            // Always use musl for static linking on Linux
+            "musl".to_owned()
+        } else {
+            env::var("CARGO_CFG_TARGET_ENV").unwrap()
+        };
+        let build_type = if target_os == "windows" {
+            "static-mt"
+        } else {
+            "static"
+        };
+        let fullname = format!(
+            "libmem-{}-{}-{}-{}-{}",
+            version, arch, os_name, target_env, build_type
+        );
+        let archive_ext = "tar.gz";
+        let archive = format!("{}.{}", fullname, archive_ext);
+        (fullname, archive)
     };
-    let build_type = if target_os == "windows" {
-        "static-mt"
-    } else {
-        "static"
-    };
-    let fullname = format!(
-        "libmem-{}-{}-{}-{}-{}",
-        version, arch, os_name, target_env, build_type
-    );
-    let archive_ext = "tar.gz";
-    let archive = format!("{}.{}", fullname, archive_ext);
+
     let download_url = format!(
         "https://github.com/rdbo/libmem/releases/download/{}/{}",
         version, archive

@@ -19,6 +19,7 @@ categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "o
 default = ["fetch"]
 static = []
 fetch = ["static", "dep:reqwest", "dep:flate2", "dep:tar"] # Currently, this feature will not do dynamic linking
+test = ["fetch"] # This feature is for testing the build script
 
 [build-dependencies]
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"], optional = true }

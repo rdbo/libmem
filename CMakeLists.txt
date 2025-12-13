@@ -121,6 +121,13 @@ else()
 endif()
 target_include_directories(libmem PRIVATE "${LIBMEM_DIR}/src" "${INTERNAL_DIR}" "${COMMON_DIR}")
 
+if(MINGW AND CMAKE_HOST_LINUX)
+	target_compile_options(libmem PRIVATE
+    	-Wno-int-conversion
+    	-Wno-incompatible-pointer-types
+	)
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}
 	${LIBMEM_INC}
 	${CAPSTONE_INC}
@@ -183,7 +190,7 @@ if(LIBMEM_BUILD_STATIC)
 		endif()
 	endforeach()
 
-	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
+	if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL Windows AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN OR (MINGW AND CMAKE_HOST_LINUX))
 		file(WRITE "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "CREATE liblibmem.a\n" )
 		foreach(libmem_bundle_file IN LISTS libmem_bundle_files)
 			file(APPEND "${CMAKE_BINARY_DIR}/liblibmem.ar.in" "ADDLIB ${libmem_bundle_file}\n")

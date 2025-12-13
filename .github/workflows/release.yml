@@ -59,6 +59,12 @@ jobs:
               {"target": "x86_64-windows-msvc-shared-md", "runs-on": "windows-2025"}
               {"target": "x86_64-windows-msvc-static-md", "runs-on": "windows-2025"}
               {"target": "x86_64-windows-msvc-static-mt", "runs-on": "windows-2025"}
+              {"target": "i686-windows-gnu-msvcrt-shared", "runs-on": "ubuntu-latest"}
+              {"target": "i686-windows-gnu-msvcrt-static", "runs-on": "ubuntu-latest"}
+              {"target": "x86_64-windows-gnu-msvcrt-shared", "runs-on": "ubuntu-latest"}
+              {"target": "x86_64-windows-gnu-msvcrt-static", "runs-on": "ubuntu-latest"}
+              {"target": "x86_64-windows-gnu-ucrt-shared", "runs-on": "ubuntu-latest"}
+              {"target": "x86_64-windows-gnu-ucrt-static", "runs-on": "ubuntu-latest"}
               '
           )
           printf 'Matrix: %s\n' "$(jq <<< "$matrix")"

@@ -1,6 +1,6 @@
 [package]
 name = "libmem-sys"
-version = "5.1.1"
+version = "5.1.2"
 authors = ["rdbo"]
 edition = "2021"
 description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)"
@@ -19,6 +19,7 @@ categories = ["os", "os::windows-apis", "os::linux-apis", "os::freebsd-apis", "o
 default = ["fetch"]
 static = []
 fetch = ["static", "dep:reqwest", "dep:flate2", "dep:tar"] # Currently, this feature will not do dynamic linking
+test = ["fetch"] # This feature is for testing the build script
 
 [build-dependencies]
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"], optional = true }

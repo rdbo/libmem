@@ -1,6 +1,6 @@
 [package]
 name = "libmem-sys"
-version = "5.1.2"
+version = "5.1.4"
 authors = ["rdbo"]
 edition = "2021"
 description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)"

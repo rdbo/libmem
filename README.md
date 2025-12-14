@@ -179,7 +179,7 @@ include(FetchContent)
 FetchContent_Declare(libmem-config URL "https://raw.githubusercontent.com/rdbo/libmem/config-v1/libmem-config.cmake" DOWNLOAD_NO_EXTRACT TRUE)
 FetchContent_MakeAvailable(libmem-config)
 set(CMAKE_PREFIX_PATH "${libmem-config_SOURCE_DIR}" "${CMAKE_PREFIX_PATH}")
-set(LIBMEM_DOWNLOAD_VERSION "5.1.2")
+set(LIBMEM_DOWNLOAD_VERSION "5.1.4")
 
 # Find libmem package
 find_package(libmem CONFIG REQUIRED)

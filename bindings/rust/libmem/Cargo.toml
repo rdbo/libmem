@@ -1,6 +1,6 @@
 [package]
 name = "libmem"
-version = "5.1.2"
+version = "5.1.4"
 authors = ["rdbo"]
 edition = "2021"
 description = "Advanced Game Hacking Library (Windows/Linux/FreeBSD)"
@@ -22,4 +22,4 @@ fetch = ["libmem-sys/fetch"]
 
 [dependencies]
 bitflags = "2.5.0"
-libmem-sys = { version = "5.1.2", path = "../libmem-sys", default-features = false }
+libmem-sys = { version = "5.1.4", path = "../libmem-sys", default-features = false }

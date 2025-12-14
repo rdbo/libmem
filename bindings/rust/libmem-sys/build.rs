@@ -34,6 +34,10 @@ fn download_and_resolve_libmem() {
         let fullname = format!("libmem-{}-i686-windows-gnu-msvcrt-static", version);
         let archive = format!("{}.tar.gz", fullname);
         (fullname, archive)
+    } else if target_triple == "x86_64-pc-windows-gnullvm" {
+        let fullname = format!("libmem-{}-x86_64-windows-gnu-ucrt-static", version);
+        let archive = format!("{}.tar.gz", fullname);
+        (fullname, archive)
     } else {
         let target_env = if target_os == "linux" && cfg!(feature = "static") {
             // Always use musl for static linking on Linux

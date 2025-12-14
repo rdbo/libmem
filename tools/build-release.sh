@@ -276,10 +276,7 @@ function do_build() {
     { set +x; } 2>/dev/null
 
     # Copy libraries
-    # Organize by build type (release/debug) instead of variant name
-    local build_type_lower
-    build_type_lower=$(echo "$variant_build_type" | tr '[:upper:]' '[:lower:]')
-    local variant_out_dir="${_OUT_DIR}/lib/${build_type_lower}"
+    local variant_out_dir="${_OUT_DIR}/lib/${variant_name}"
     mkdir -p -- "$variant_out_dir"
     function copy_lib() {
       install -vD -m644 -- "${variant_build_dir}/${1}" "${variant_out_dir}/${2:-$(basename -- "$1")}"
@@ -308,20 +305,20 @@ function do_build() {
     build_variant debug Debug -DLIBMEM_BUILD_STATIC=ON -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug
     ;;
   *-windows-gnu-msvcrt-shared)
-    build_variant release-shared Release -DLIBMEM_BUILD_STATIC=OFF
-    build_variant debug-shared Debug -DLIBMEM_BUILD_STATIC=OFF
+    build_variant release Release -DLIBMEM_BUILD_STATIC=OFF
+    build_variant debug Debug -DLIBMEM_BUILD_STATIC=OFF
     ;;
   *-windows-gnu-msvcrt-static)
-    build_variant release-static Release -DLIBMEM_BUILD_STATIC=ON
-    build_variant debug-static Debug -DLIBMEM_BUILD_STATIC=ON
+    build_variant release Release -DLIBMEM_BUILD_STATIC=ON
+    build_variant debug Debug -DLIBMEM_BUILD_STATIC=ON
     ;;
   *-windows-gnu-ucrt-shared)
-    build_variant release-shared Release -DLIBMEM_BUILD_STATIC=OFF
-    build_variant debug-shared Debug -DLIBMEM_BUILD_STATIC=OFF
+    build_variant release Release -DLIBMEM_BUILD_STATIC=OFF
+    build_variant debug Debug -DLIBMEM_BUILD_STATIC=OFF
     ;;
   *-windows-gnu-ucrt-static)
-    build_variant release-static Release -DLIBMEM_BUILD_STATIC=ON
-    build_variant debug-static Debug -DLIBMEM_BUILD_STATIC=ON
+    build_variant release Release -DLIBMEM_BUILD_STATIC=ON
+    build_variant debug Debug -DLIBMEM_BUILD_STATIC=ON
     ;;
   *-shared)
     build_variant ./ Release -DLIBMEM_BUILD_STATIC=OFF

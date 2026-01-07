@@ -19,8 +19,8 @@ pub struct Process {
 
 impl From<lm_process_t> for Process {
     fn from(raw_process: lm_process_t) -> Self {
-        let path_ptr = &raw_process.path as *const i8;
-        let name_ptr = &raw_process.name as *const i8;
+        let path_ptr = &raw_process.path as *const std::ffi::c_char;
+        let name_ptr = &raw_process.name as *const std::ffi::c_char;
 
         Self {
             pid: raw_process.pid,

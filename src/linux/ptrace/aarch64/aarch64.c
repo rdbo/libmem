@@ -10,12 +10,12 @@
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License version 3
  * as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -26,36 +26,53 @@
 #include <assert.h>
 #include <errno.h>
 #include <sys/ptrace.h>
-#include <sys/reg.h>
-#include <sys/user.h>
+#include <sys/uio.h>
 #include <sys/syscall.h>
 #include <sys/mman.h>
+#include <asm/ptrace.h>
+#include <linux/elf.h>
 #include <memory.h>
+
+static int
+ptrace_getregs(pid_t pid, struct user_pt_regs *regs)
+{
+	struct iovec iov = { .iov_base = regs, .iov_len = sizeof(*regs) };
+	return ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &iov);
+}
+
+static int
+ptrace_setregs(pid_t pid, struct user_pt_regs *regs)
+{
+	struct iovec iov = { .iov_base = regs, .iov_len = sizeof(*regs) };
+	return ptrace(PTRACE_SETREGSET, pid, NT_PRSTATUS, &iov);
+}
 
 long
 ptrace_get_syscall_ret(pid_t pid)
 {
-	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, 0 * sizeof(long), NULL);
+	struct user_pt_regs regs;
+	if (ptrace_getregs(pid, &regs) == -1)
+		return -1;
+	return regs.regs[0];
 }
 
 size_t
 ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **orig_regs, void **orig_code)
 {
 	static const char shellcode[] = { 0x01, 0x00, 0x00, 0xD4 }; /* svc #0 */
-	struct user_regs_struct regs;
+	struct user_pt_regs regs;
 	size_t shellcode_size = sizeof(shellcode);
 
 	assert((bits == 32 || bits == 64) && ptsys != NULL && orig_regs != NULL && *orig_regs == NULL && orig_code != NULL && *orig_code == NULL);
 
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+	if (ptrace_getregs(pid, &regs) == -1)
 		return 0;
 
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
 
-	*(struct user_regs_struct *)(*orig_regs) = regs;
+	*(struct user_pt_regs *)(*orig_regs) = regs;
 
 	/* Setup registers */
 	regs.regs[8] = ptsys->syscall_num;
@@ -74,7 +91,7 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 	if (ptrace_read(pid, regs.pc, *orig_code, shellcode_size) != shellcode_size)
 		goto FREE_EXIT;
 
-	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+	if (ptrace_setregs(pid, &regs) == -1)
 		goto FREE_EXIT;
 
 	if (ptrace_write(pid, (long)regs.pc, shellcode, shellcode_size) == 0)
@@ -82,7 +99,7 @@ ptrace_setup_syscall(pid_t pid, size_t bits, ptrace_syscall_t *ptsys, void **ori
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
+	ptrace_setregs(pid, (struct user_pt_regs *)(*orig_regs));
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:
@@ -95,11 +112,11 @@ EXIT:
 void
 ptrace_restore_syscall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
-	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+	struct user_pt_regs *pregs = (struct user_pt_regs *)orig_regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
-	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
+	ptrace_setregs(pid, pregs);
 	ptrace_write(pid, pregs->pc, orig_code, shellcode_size);
 
 	free(orig_regs);
@@ -111,7 +128,7 @@ ptrace_alloc(pid_t pid, size_t bits, size_t size, int prot)
 {
 	long alloc;
 	ptrace_syscall_t ptsys;
-	
+
 	ptsys.syscall_num = SYS_mmap;
 
 	/* Setup mmap arguments */
@@ -166,18 +183,18 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 		0x00, 0x00, 0x20, 0xD4
 	};
 	size_t shellcode_size = sizeof(shellcode);
-	struct user_regs_struct regs;
+	struct user_pt_regs regs;
 	size_t i;
 
 	assert((bits == 32 || bits == 64) && ptlib && orig_regs && orig_code);
 
-	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+	if (ptrace_getregs(pid, &regs) == -1)
 		return 0;
 
 	*orig_regs = malloc(sizeof(regs));
 	if (*orig_regs == NULL)
 		return 0;
-	**(struct user_regs_struct **)orig_regs = regs;
+	**(struct user_pt_regs **)orig_regs = regs;
 
 	/* Setup stack */
 	regs.regs[17] = ptlib->address;
@@ -201,7 +218,7 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 	if (ptrace_read(pid, regs.pc, *orig_code, shellcode_size) != shellcode_size)
 		goto FREE_EXIT;
 
-	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+	if (ptrace_setregs(pid, &regs) == -1)
 		goto FREE_EXIT;
 
 	if (ptrace_write(pid, regs.pc, shellcode, shellcode_size) == 0)
@@ -209,7 +226,7 @@ ptrace_setup_libcall(pid_t pid, size_t bits, ptrace_libcall_t *ptlib, void **ori
 
 	goto EXIT;
 CLEAN_EXIT:
-	ptrace(PTRACE_SETREGS, pid, NULL, *orig_regs);
+	ptrace_setregs(pid, (struct user_pt_regs *)(*orig_regs));
 FREE_EXIT:
 	free(*orig_code);
 FREE_REGS_EXIT:
@@ -222,11 +239,11 @@ EXIT:
 void
 ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shellcode_size)
 {
-	struct user_regs_struct *pregs = (struct user_regs_struct *)orig_regs;
+	struct user_pt_regs *pregs = (struct user_pt_regs *)orig_regs;
 
 	assert(orig_regs != NULL && orig_code != NULL && shellcode_size > 0);
 
-	ptrace(PTRACE_SETREGS, pid, NULL, pregs);
+	ptrace_setregs(pid, pregs);
 	ptrace_write(pid, pregs->pc, orig_code, shellcode_size);
 
 	free(orig_regs);
@@ -236,6 +253,8 @@ ptrace_restore_libcall(pid_t pid, void *orig_regs, void *orig_code, size_t shell
 long
 ptrace_get_libcall_ret(pid_t pid)
 {
-	errno = 0;
-	return ptrace(PTRACE_PEEKUSER, pid, 0 * sizeof(long), NULL);
+	struct user_pt_regs regs;
+	if (ptrace_getregs(pid, &regs) == -1)
+		return -1;
+	return regs.regs[0];
 }

@@ -19,8 +19,8 @@ pub struct Module {
 
 impl From<lm_module_t> for Module {
     fn from(raw_module: lm_module_t) -> Self {
-        let path_ptr = &raw_module.path as *const i8;
-        let name_ptr = &raw_module.name as *const i8;
+        let path_ptr = &raw_module.path as *const std::ffi::c_char;
+        let name_ptr = &raw_module.name as *const std::ffi::c_char;
 
         Self {
             base: raw_module.base,

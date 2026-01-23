@@ -40,10 +40,12 @@
 #endif
 
 /* Resolve import/export */
-#ifdef LM_EXPORT
+#if defined(LM_EXPORT)
 #	define LM_API LM_API_EXPORT
-#else
+#elif defined(LM_IMPORT)
 #	define LM_API LM_API_IMPORT
+#else
+#	define LM_API
 #endif
 
 /* Calling convention */

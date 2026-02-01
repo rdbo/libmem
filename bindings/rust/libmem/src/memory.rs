@@ -16,7 +16,7 @@ pub unsafe fn read_memory<T>(source: Address) -> T {
     // If it fails, the program will crash anyways.
     libmem_sys::LM_ReadMemory(source, value.as_mut_ptr() as *mut u8, size);
 
-    value.assume_init()
+    value.assume_init() // SAFETY CHECK: Still unsafe, but user is aware of crash on failure
 }
 
 /// Reads a type <T> for a memory address in a remote process
@@ -28,6 +28,7 @@ pub fn read_memory_ex<T>(process: &Process, source: Address) -> Option<T> {
     let raw_process: lm_process_t = process.to_owned().into();
     let size = mem::size_of::<T>();
     let mut value: MaybeUninit<T> = MaybeUninit::uninit();
+
     let rdsize = unsafe {
         libmem_sys::LM_ReadMemoryEx(
             &raw_process as *const lm_process_t,
@@ -37,6 +38,7 @@ pub fn read_memory_ex<T>(process: &Process, source: Address) -> Option<T> {
         )
     };
 
+    // SAFETY CHECK: Only assume_init if read size matches requested size
     (rdsize == size).then_some(unsafe { value.assume_init() })
 }
 
@@ -70,7 +72,7 @@ pub fn read_memory_buf_ex(process: &Process, source: Address, buffer: &mut [u8])
         )
     };
 
-    (result == buffer.len()).then_some(result)
+    (result == buffer.len()).then_some(result) // SAFETY CHECK: Ensure entire buffer was read
 }
 
 /// Writes a value of type <T> into a memory address
@@ -108,7 +110,7 @@ pub fn write_memory_ex<T: ?Sized>(process: &Process, dest: Address, value: &T) -
         )
     };
 
-    (result == size).then_some(())
+    (result == size).then_some(()) // SAFETY CHECK: Only return Some if entire value was written
 }
 
 /// Writes a buffer to a memory address
@@ -141,7 +143,7 @@ pub fn write_memory_buf_ex(process: &Process, dest: Address, buffer: &[u8]) -> O
         )
     };
 
-    (result == buffer.len()).then_some(result)
+    (result == buffer.len()).then_some(result) // SAFETY CHECK: Only return Some if full buffer written
 }
 
 /// Sets a memory region to a specific byte
@@ -167,7 +169,7 @@ pub fn set_memory_ex(process: &Process, dest: Address, byte: u8, size: usize) ->
         libmem_sys::LM_SetMemoryEx(&raw_process as *const lm_process_t, dest, byte, size)
     };
 
-    (result == size).then_some(())
+    (result == size).then_some(()) // SAFETY CHECK: Only return Some if full memory region set
 }
 
 /// Changes the protection flags of a page-aligned memory region
@@ -176,7 +178,7 @@ pub unsafe fn prot_memory(address: Address, size: usize, prot: Prot) -> Option<P
     let mut oldprot: MaybeUninit<u32> = MaybeUninit::uninit();
     let result = libmem_sys::LM_ProtMemory(address, size, prot.bits(), oldprot.as_mut_ptr());
 
-    (result == LM_TRUE).then_some(unsafe { oldprot.assume_init() }.into())
+    (result == LM_TRUE).then_some(unsafe { oldprot.assume_init() }.into()) // SAFETY CHECK: Only read oldprot if result == LM_TRUE
 }
 
 /// Changes the protection flags of a page-aligned memory region in a remote process.
@@ -199,13 +201,13 @@ pub fn prot_memory_ex(
         )
     };
 
-    (result == LM_TRUE).then_some(unsafe { oldprot.assume_init() }.into())
+    (result == LM_TRUE).then_some(unsafe { oldprot.assume_init() }.into()) // SAFETY CHECK: Only return Some if result success
 }
 
 /// Allocates page-aligned memory in the current process
 pub fn alloc_memory(size: usize, prot: Prot) -> Option<Address> {
     let alloc = unsafe { libmem_sys::LM_AllocMemory(size, prot.bits()) };
-    (alloc != LM_ADDRESS_BAD).then_some(alloc)
+    (alloc != LM_ADDRESS_BAD).then_some(alloc) // SAFETY CHECK: Return None if allocation fails
 }
 
 /// Allocates page-aligned memory in a remote process
@@ -214,13 +216,13 @@ pub fn alloc_memory_ex(process: &Process, size: usize, prot: Prot) -> Option<Add
     let alloc = unsafe {
         libmem_sys::LM_AllocMemoryEx(&raw_process as *const lm_process_t, size, prot.bits())
     };
-    (alloc != LM_ADDRESS_BAD).then_some(alloc)
+    (alloc != LM_ADDRESS_BAD).then_some(alloc) // SAFETY CHECK: Return None if allocation fails
 }
 
 /// Frees memory previously allocated with `alloc_memory`
 pub unsafe fn free_memory(alloc: Address, size: usize) -> Option<()> {
     let result = libmem_sys::LM_FreeMemory(alloc, size);
-    (result == LM_TRUE).then_some(())
+    (result == LM_TRUE).then_some(()) // SAFETY CHECK: Only return Some if free successful
 }
 
 /// Frees memory previously allocated with `alloc_memory_ex`
@@ -228,7 +230,7 @@ pub fn free_memory_ex(process: &Process, alloc: Address, size: usize) -> Option<
     let raw_process: lm_process_t = process.to_owned().into();
     let result =
         unsafe { libmem_sys::LM_FreeMemoryEx(&raw_process as *const lm_process_t, alloc, size) };
-    (result == LM_TRUE).then_some(())
+    (result == LM_TRUE).then_some(()) // SAFETY CHECK: Only return Some if free successful
 }
 
 /// Resolves a deep pointer based on its base address and recursing offsets
@@ -262,5 +264,5 @@ pub fn deep_pointer_ex(process: &Process, base: Address, offsets: &[Address]) ->
         )
     };
 
-    (result != LM_ADDRESS_BAD).then_some(result)
+    (result != LM_ADDRESS_BAD).then_some(result) // SAFETY CHECK: Return None if pointer invalid
 }

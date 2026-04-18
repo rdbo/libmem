@@ -166,6 +166,7 @@ Their code can have their own licenses as well, diverging from libmem's.
 
 - [Nim_Libmem](https://github.com/Hypnootika/python_nim_libmem)
 - [Crazymem (NodeJS)](https://github.com/karliky/Crazymem)
+- [Go Libmem](https://github.com/alexanderthegreat96/libmem-go)
 
 ## CMake Usage (without installing)
 Add the following commands to your `CMakeLists.txt`.

@@ -43,7 +43,14 @@ fn get_fetch_information() -> FetchInfo {
 
     // Patch build type
     let build_type = if target_env == "msvc" {
-        "static-mt"
+        // Detect CRT linkage
+        let target_features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or_default();
+        let crt_static = target_features.split(',').any(|f| f == "crt-static");
+        if crt_static {
+            "static-mt"
+        } else {
+            "static-md"
+        }
     } else {
         "static"
     };
@@ -154,22 +161,34 @@ fn download_and_resolve_libmem() {
 fn run_tests() {
     use std::collections::HashMap;
     let test_cases = HashMap::from([
-        // expected, [version, os, arch, env, abi]
+        // expected, [version, os, arch, env, abi, target_feature]
         (
             "libmem-1337-x86_64-linux-musl-static",
-            ["1337", "linux", "x86_64", "musl", ""],
+            ["1337", "linux", "x86_64", "musl", "", ""],
         ),
         (
             "libmem-1337-x86_64-windows-gnu-msvcrt-static",
-            ["1337", "windows", "x86_64", "gnu", ""],
+            ["1337", "windows", "x86_64", "gnu", "", ""],
         ),
         (
             "libmem-1337-x86_64-windows-gnu-ucrt-static",
-            ["1337", "windows", "x86_64", "gnu", "llvm"],
+            ["1337", "windows", "x86_64", "gnu", "llvm", ""],
+        ),
+        (
+            "libmem-1337-x86_64-windows-msvc-static-md",
+            ["1337", "windows", "x86_64", "msvc", "", ""],
+        ),
+        (
+            "libmem-1337-x86_64-windows-msvc-static-mt",
+            ["1337", "windows", "x86_64", "msvc", "", "crt-static"],
+        ),
+        (
+            "libmem-1337-i686-windows-msvc-static-mt",
+            ["1337", "windows", "x86", "msvc", "", "fxsr,sse,crt-static"],
         ),
         (
             "libmem-1337-aarch64-android-static",
-            ["1337", "android", "aarch64", "", ""],
+            ["1337", "android", "aarch64", "", "", ""],
         ),
     ]);
 
@@ -179,6 +198,7 @@ fn run_tests() {
         env::set_var("CARGO_CFG_TARGET_ARCH", cargo_vars[2]);
         env::set_var("CARGO_CFG_TARGET_ENV", cargo_vars[3]);
         env::set_var("CARGO_CFG_TARGET_ABI", cargo_vars[4]);
+        env::set_var("CARGO_CFG_TARGET_FEATURE", cargo_vars[5]);
         let fetch_info = get_fetch_information();
         assert_eq!(expected, fetch_info.release_target);
     }
